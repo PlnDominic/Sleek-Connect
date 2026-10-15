@@ -1,13 +1,6 @@
 import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
-import {
-  imageFiles,
-  type AgeBandId,
-  type Category,
-  type ImageKey,
-  type Product,
-  type ProductDetails,
-} from '@sleek/shared';
+import { asImageKey, type AgeBand, type AgeBandId, type Category, type Product, type ProductDetails } from '@sleek/shared';
 import { createSupabase } from './supabase/server';
 import type { Database } from './supabase/database.types';
 
@@ -15,10 +8,11 @@ type Tables = Database['public']['Tables'];
 type ProductRow = Tables['products']['Row'] & {
   product_sizes: Pick<Tables['product_sizes']['Row'], 'code' | 'label' | 'price_ghs' | 'is_default' | 'sort_order'>[];
   product_age_bands: Pick<Tables['product_age_bands']['Row'], 'age_band_id'>[];
+  inventory_levels: { size_code: string; in_stock: boolean | null }[];
 };
 
 const productColumns =
-  '*, product_sizes(code, label, price_ghs, is_default, sort_order), product_age_bands(age_band_id)';
+  '*, product_sizes(code, label, price_ghs, is_default, sort_order), product_age_bands(age_band_id), inventory_levels(size_code, in_stock)';
 
 export interface DeliveryOption {
   id: string;
@@ -31,11 +25,10 @@ function unwrap<T>({ data, error }: { data: T | null; error: { message: string }
   return data as T;
 }
 
-const toImageKey = (key: string | null): ImageKey | undefined =>
-  key && key in imageFiles ? (key as ImageKey) : undefined;
-
 function toProduct(row: ProductRow): Product {
   const sizes = [...row.product_sizes].sort((a, b) => a.sort_order - b.sort_order);
+  // A sellable unit with no stock row can't be bought (see place_order).
+  const inStock = (code: string) => row.inventory_levels.some((i) => i.size_code === code && i.in_stock);
   return {
     slug: row.slug,
     name: row.name,
@@ -49,12 +42,15 @@ function toProduct(row: ProductRow): Product {
     badge: row.badge ?? undefined,
     tag: row.tag,
     summary: row.summary,
-    image: toImageKey(row.image_key),
+    image: asImageKey(row.image_key),
     tint: row.tint,
     kind: row.kind,
-    sizes: sizes.length ? sizes.map((s) => ({ id: s.code, label: s.label, price: s.price_ghs })) : undefined,
+    sizes: sizes.length
+      ? sizes.map((s) => ({ id: s.code, label: s.label, price: s.price_ghs, inStock: inStock(s.code) }))
+      : undefined,
     defaultSize: sizes.find((s) => s.is_default)?.code,
     ageBands: row.product_age_bands.map((b) => b.age_band_id as AgeBandId),
+    inStock: sizes.length ? sizes.some((s) => inStock(s.code)) : inStock(''),
     details: (row.details as ProductDetails | null) ?? undefined,
   };
 }
@@ -86,7 +82,7 @@ export async function getHomeCatalog() {
     id: c.id,
     name: c.name,
     department: c.department,
-    image: toImageKey(c.image_key),
+    image: asImageKey(c.image_key),
     tint: c.tint,
     kind: c.kind,
   }));
@@ -144,4 +140,29 @@ export async function getCheckoutOptions(): Promise<{ areas: string[]; deliveryO
     areas: areas.map((a) => a.name),
     deliveryOptions: options.map((o) => ({ id: o.id, label: o.label, fee: o.fee_ghs })),
   };
+}
+
+export async function getAgeBands(): Promise<AgeBand[]> {
+  'use cache';
+  cacheLife('minutes');
+  cacheTag('catalog');
+
+  const rows = unwrap(await createSupabase().from('age_bands').select('id, label, stage').order('sort_order'));
+  return rows.map((b) => ({ id: b.id as AgeBandId, label: b.label, stage: b.stage }));
+}
+
+/** Published products suitable for an age band, by name. */
+export async function getAgeBandProducts(band: string): Promise<Product[]> {
+  'use cache';
+  cacheLife('minutes');
+  cacheTag('catalog');
+
+  const rows = unwrap(
+    await createSupabase()
+      .from('products')
+      .select(`${productColumns}, band:product_age_bands!inner(age_band_id)`)
+      .eq('band.age_band_id', band)
+      .order('name'),
+  );
+  return rows.map((r) => toProduct(r as unknown as ProductRow));
 }

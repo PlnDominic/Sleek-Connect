@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { Icon } from '@/components/Icon';
 import { Logo } from '@/components/Logo';
 import { SiteFooter } from '@/components/SiteFooter';
@@ -20,7 +21,9 @@ export default async function CheckoutPage() {
           <Logo size={22} />
           <ol aria-label="Checkout steps" className={styles.steps}>
             <li className={styles.stepDone}>
-              <span className={styles.stepMark}>✓</span>Bag
+              <Link href="/bag" className={styles.stepLink}>
+                <span className={styles.stepMark}>✓</span>Bag
+              </Link>
             </li>
             <li aria-hidden="true" className={styles.stepSep}>
               ›

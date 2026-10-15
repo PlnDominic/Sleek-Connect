@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useTransition, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useState, useTransition, type FormEvent, type ReactNode } from 'react';
 import {
   defaultDeliveryArea,
   formatPrice,
@@ -15,18 +15,13 @@ import { useBag, type ResolvedBagItem } from '@sleek/shared/bag';
 import { Icon } from '@/components/Icon';
 import { ProductImage } from '@/components/ProductImage';
 import type { DeliveryOption } from '@/lib/catalog';
-import { placeOrder } from './actions';
+import { placeOrder, type PlaceOrderResult } from './actions';
+import { useOrderStatus, type OrderStatus } from './useOrderStatus';
 import styles from './checkout.module.css';
 
 type PaymentMethod = 'momo' | 'card';
 
-interface PlacedOrder {
-  orderNumber: string;
-  items: ResolvedBagItem[];
-  subtotal: number;
-  deliveryFee: number | null;
-  total: number | null;
-}
+type PlacedOrder = Omit<Extract<PlaceOrderResult, { ok: true }>, 'ok'> & { items: ResolvedBagItem[] };
 
 interface CheckoutFormProps {
   areas: string[];
@@ -35,6 +30,10 @@ interface CheckoutFormProps {
 
 const windowDetail = (option: DeliveryOption) =>
   option.id === 'same_day' ? `Order before ${pending.sameDayCutoffTime}` : `${pending.deliveryDays} working days`;
+
+const clockTime = new Intl.DateTimeFormat('en-GH', { hour: 'numeric', minute: '2-digit', timeZone: 'Africa/Accra' });
+
+const paidStatuses: OrderStatus['status'][] = ['paid', 'packed', 'out_for_delivery', 'delivered'];
 
 export function CheckoutForm({ areas, deliveryOptions }: CheckoutFormProps) {
   const bag = useBag();
@@ -46,6 +45,14 @@ export function CheckoutForm({ areas, deliveryOptions }: CheckoutFormProps) {
   const [cardNotice, setCardNotice] = useState(false);
   const [placed, setPlaced] = useState<PlacedOrder | null>(null);
   const [placing, startPlacing] = useTransition();
+  const live = useOrderStatus(placed?.orderToken ?? null);
+  const isPaid = !!live && paidStatuses.includes(live.status);
+
+  // The bag is kept until the order is paid, so a failed or expired payment can simply be retried.
+  const { clear } = bag;
+  useEffect(() => {
+    if (isPaid) clear();
+  }, [isPaid, clear]);
 
   const networkLabel = momoNetworks.find((n) => n.id === network)!.label;
   const walletDisplay = wallet.trim() || 'your phone';
@@ -89,12 +96,14 @@ export function CheckoutForm({ areas, deliveryOptions }: CheckoutFormProps) {
       }
       setPlaced({
         orderNumber: result.orderNumber,
-        items: orderedItems,
+        orderToken: result.orderToken,
+        reservedUntil: result.reservedUntil,
         subtotal: result.subtotal,
         deliveryFee: result.deliveryFee,
         total: result.total,
+        payment: result.payment,
+        items: orderedItems,
       });
-      bag.clear();
     });
   };
 
@@ -273,13 +282,12 @@ export function CheckoutForm({ areas, deliveryOptions }: CheckoutFormProps) {
         </dl>
 
         {placed ? (
-          <div role="status" className={styles.statusPanel}>
-            <strong>Check your phone</strong>
-            <span>
-              Order {placed.orderNumber} is waiting for payment. Approve the {networkLabel} prompt sent to {walletDisplay}{' '}
-              with your PIN. We never see your PIN.
-            </span>
-          </div>
+          <OrderProgress
+            order={placed}
+            live={live}
+            prompt={`Approve the ${networkLabel} prompt sent to ${walletDisplay} with your PIN. We never see your PIN.`}
+            onRetry={() => setPlaced(null)}
+          />
         ) : (
           <>
             <button type="submit" form="checkout-form" className={styles.payButton} disabled={items.length === 0 || placing}>
@@ -304,6 +312,82 @@ export function CheckoutForm({ areas, deliveryOptions }: CheckoutFormProps) {
         )}
       </aside>
     </main>
+  );
+}
+
+interface OrderProgressProps {
+  order: PlacedOrder;
+  live: OrderStatus | null;
+  prompt: string;
+  onRetry: () => void;
+}
+
+/** What happened to the order after it was placed, kept up to date from the server. */
+function OrderProgress({ order, live, prompt, onRetry }: OrderProgressProps) {
+  const status = live?.status ?? 'pending_payment';
+  const paymentStatus = live?.paymentStatus ?? null;
+  const heldUntil = clockTime.format(new Date(order.reservedUntil));
+
+  if (paidStatuses.includes(status)) {
+    return (
+      <div role="status" className={styles.statusPanel} data-tone="success">
+        <strong>Payment received</strong>
+        <span>Thank you. Order {order.orderNumber} is confirmed and we&apos;re getting it ready.</span>
+      </div>
+    );
+  }
+
+  if (paymentStatus === 'succeeded') {
+    return (
+      <div role="status" className={styles.statusPanel}>
+        <strong>We&apos;re checking your payment</strong>
+        <span>
+          We received a payment for order {order.orderNumber} that needs a manual check. We&apos;ll contact you about it.
+        </span>
+      </div>
+    );
+  }
+
+  if (status === 'cancelled') {
+    const message =
+      paymentStatus === 'failed'
+        ? `The payment for order ${order.orderNumber} didn’t go through, so the order was cancelled. You haven’t been charged.`
+        : `Order ${order.orderNumber} wasn’t paid in time, so it was cancelled and the items were released.`;
+    return (
+      <div role="status" className={styles.statusPanel} data-tone="problem">
+        <strong>{paymentStatus === 'failed' ? 'Payment not completed' : 'Order expired'}</strong>
+        <span>{message} Your bag still has everything in it.</span>
+        <button type="button" className={styles.retry} onClick={onRetry}>
+          Try again
+        </button>
+      </div>
+    );
+  }
+
+  if (order.payment.kind === 'unavailable') {
+    return (
+      <div role="status" className={styles.statusPanel}>
+        <strong>Order {order.orderNumber} placed</strong>
+        <span>
+          Your items are held until {heldUntil}. {order.payment.reason}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div role="status" className={styles.statusPanel}>
+      <strong>Check your phone</strong>
+      <span>
+        Order {order.orderNumber} is waiting for payment. {prompt} Your items are held until {heldUntil}.
+      </span>
+      {order.payment.testMode && (
+        <span className={styles.testNote}>
+          Test mode: no real prompt was sent. Run <code>npm run payments:simulate -- {order.orderNumber} succeeded</code>{' '}
+          to approve it.
+        </span>
+      )}
+    </div>
   );
 }
 

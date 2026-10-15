@@ -27,6 +27,9 @@ function lit(value: SqlValue): string {
   return `${lit(JSON.stringify(value))}::jsonb`;
 }
 
+/** Starting stock for every sellable unit, so the local store can take orders. */
+const STARTER_STOCK = 25;
+
 const rows = (values: SqlValue[][]) => values.map((row) => `  (${row.map(lit).join(', ')})`).join(',\n');
 const productId = (slug: string) => `(select id from public.products where slug = ${lit(slug)})`;
 
@@ -91,6 +94,15 @@ ${products
 insert into public.merchandising_slots (slot, product_id, position)
 ${Object.entries(slots)
   .flatMap(([slot, list]) => list.map((p, i) => `select ${lit(slot)}, ${productId(p.slug)}, ${i}`))
+  .join('\nunion all\n')};
+
+insert into public.inventory_levels (product_id, size_code, on_hand)
+${products
+  .flatMap((p) =>
+    (p.sizes?.length ? p.sizes.map((s) => s.id) : ['']).map(
+      (code) => `select ${productId(p.slug)}, ${lit(code)}, ${STARTER_STOCK}`,
+    ),
+  )
   .join('\nunion all\n')};
 
 insert into public.delivery_areas (name, sort_order) values

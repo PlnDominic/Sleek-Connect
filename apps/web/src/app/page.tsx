@@ -4,6 +4,7 @@ import { colors, formatPrice, pending, type Category, type IconName, type Produc
 import { AddToBagButton } from '@/components/AddToBagButton';
 import { Icon } from '@/components/Icon';
 import { NewArrivalsRail } from '@/components/NewArrivalsRail';
+import { ProductCard } from '@/components/ProductCard';
 import { ProductImage } from '@/components/ProductImage';
 import { SiteFooter } from '@/components/SiteFooter';
 import { AnnouncementBar, SiteHeader } from '@/components/SiteHeader';
@@ -177,45 +178,6 @@ function Categories({ categories }: { categories: Category[] }) {
   );
 }
 
-function ProductCard({ product }: { product: Product }) {
-  return (
-    <article className={styles.productCard}>
-      <div className={styles.productCardTop}>
-        {product.badge ? (
-          <span className={styles.badge} style={{ background: product.badge === 'New' ? colors.ink : colors.accent }}>
-            {product.badge}
-          </span>
-        ) : (
-          <span />
-        )}
-        <button type="button" aria-label={`Save ${product.name}`} className={styles.saveButton}>
-          <Icon name="heart" size={17} />
-        </button>
-      </div>
-      <ProductImage
-        image={product.image}
-        tint={colors.surfaceSunken}
-        kind={product.kind}
-        alt={product.name}
-        sizes="(max-width: 600px) 50vw, 200px"
-        className={styles.productCardImage}
-      />
-      <Link href={`/products/${product.slug}`} className={styles.productCardName}>
-        {product.name}
-      </Link>
-      <span className={styles.priceRow}>
-        <strong>{formatPrice(product.price)}</strong>
-        {product.was && <s>{formatPrice(product.was)}</s>}
-      </span>
-      <div className={styles.productCardFooter}>
-        <span>{product.tag}</span>
-        <AddToBagButton product={product} label={`Add ${product.name} to bag`} className={styles.roundAdd}>
-          <Icon name="bag" size={15} strokeWidth={2} />
-        </AddToBagButton>
-      </div>
-    </article>
-  );
-}
 
 function NewArrivals({ products }: { products: Product[] }) {
   return (
@@ -251,10 +213,15 @@ function BestSellers({ products }: { products: Product[] }) {
               </span>
               <span className={styles.bestSummary}>{p.summary}</span>
               <div className={styles.bestActions}>
-                <AddToBagButton product={p} className={styles.quickAdd}>
-                  Quick Add
+                <AddToBagButton product={p} disabled={p.inStock === false} className={styles.quickAdd}>
+                  {p.inStock === false ? 'Sold out' : 'Quick Add'}
                 </AddToBagButton>
-                <AddToBagButton product={p} label={`Add ${p.name} to bag`} className={styles.squareAdd}>
+                <AddToBagButton
+                  product={p}
+                  disabled={p.inStock === false}
+                  label={`Add ${p.name} to bag`}
+                  className={styles.squareAdd}
+                >
                   <Icon name="bag" size={16} />
                 </AddToBagButton>
               </div>

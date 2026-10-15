@@ -9,12 +9,13 @@ interface AddToBagButtonProps {
   className: string;
   children: ReactNode;
   label?: string;
+  disabled?: boolean;
 }
 
-export function AddToBagButton({ product, className, children, label }: AddToBagButtonProps) {
+export function AddToBagButton({ product, className, children, label, disabled }: AddToBagButtonProps) {
   const { add } = useBag();
   return (
-    <button type="button" aria-label={label} className={className} onClick={() => add(product)}>
+    <button type="button" aria-label={label} className={className} disabled={disabled} onClick={() => add(product)}>
       {children}
     </button>
   );

@@ -6,3 +6,6 @@
 .env.keys
 .env.local
 .env.*.local
+
+# Local secrets, e.g. the Google OAuth client for `supabase start`
+.env

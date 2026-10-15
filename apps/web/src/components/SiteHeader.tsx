@@ -32,7 +32,7 @@ const navLinks = [
   { label: 'New Arrivals', href: '/#new-arrivals' },
   { label: 'Best Sellers', href: '/#best-sellers' },
   { label: 'Categories', href: '/#categories', menu: true },
-  { label: 'Shop by Age', href: '#' },
+  { label: 'Shop by Age', href: '/shop-by-age' },
   { label: 'Gifts', href: '#' },
   { label: 'Contact', href: '#' },
 ];
@@ -58,9 +58,9 @@ export function SiteHeader({ current }: { current?: string }) {
           <button type="button" aria-label="Saved items" className={styles.iconButton}>
             <Icon name="heart" size={21} />
           </button>
-          <button type="button" aria-label="Account" className={styles.iconButton}>
+          <Link href="/account" aria-label="Account" className={styles.iconButton}>
             <Icon name="user" size={21} />
-          </button>
+          </Link>
           <BagButton variant="icon" />
         </div>
       </div>

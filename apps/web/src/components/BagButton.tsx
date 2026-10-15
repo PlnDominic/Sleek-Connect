@@ -11,7 +11,7 @@ export function BagButton({ variant }: { variant: 'icon' | 'pill' }) {
 
   if (variant === 'pill') {
     return (
-      <Link href="/checkout" aria-label={label} className={styles.bagPill}>
+      <Link href="/bag" aria-label={label} className={styles.bagPill}>
         <Icon name="bag" />
         Bag <span className={styles.bagPillCount}>{count}</span>
       </Link>
@@ -19,7 +19,7 @@ export function BagButton({ variant }: { variant: 'icon' | 'pill' }) {
   }
 
   return (
-    <Link href="/checkout" aria-label={label} className={styles.iconButton}>
+    <Link href="/bag" aria-label={label} className={styles.iconButton}>
       <Icon name="bag" size={21} />
       {count > 0 && <span className={styles.badge}>{count}</span>}
     </Link>

@@ -22,8 +22,11 @@
   by hand.
 - Orders are created only by the `public.place_order` function, which prices lines from the database. Never trust
   prices sent by a client.
-- The web app uses the publishable key only. Never put the Supabase secret or service-role key in app code or
-  `NEXT_PUBLIC_*` variables.
+- The web app uses the publishable key, except the server-side payment code (`apps/web/src/lib/payments`, the payment
+  webhook), which reads `SUPABASE_SECRET_KEY` through `lib/supabase/admin.ts` (`server-only`). Never use the secret key
+  anywhere else, in client code, or in `NEXT_PUBLIC_*` variables.
+- Orders become paid only through `public.confirm_payment`, after the webhook has verified the provider's
+  notification. Stock is reserved by `place_order` and released by `release_order_reservation`.
 
 ## Checks before pushing
 

@@ -1,22 +1,39 @@
 'use server';
 
-import { createSupabase } from '@/lib/supabase/server';
+import type { MomoNetwork } from '@sleek/shared';
+import { startOrderPayment, type PaymentStart } from '@/lib/payments/start';
+import { createUserSupabase } from '@/lib/supabase/server';
 
 export interface PlaceOrderInput {
   customer: { name: string; phone: string; area: string; ghanapostGps?: string; directions?: string };
   deliveryOption: string;
-  payment: { method: 'momo' | 'card'; network?: string; wallet?: string };
+  payment: { method: 'momo'; network: MomoNetwork; wallet: string };
   items: { slug: string; size?: string; quantity: number }[];
   isGift: boolean;
 }
 
 export type PlaceOrderResult =
-  | { ok: true; orderNumber: string; subtotal: number; deliveryFee: number | null; total: number | null }
+  | {
+      ok: true;
+      orderNumber: string;
+      /** Lets the browser follow the order's payment status without signing in. */
+      orderToken: string;
+      /** When the reserved stock is released if the order isn't paid (ISO timestamp). */
+      reservedUntil: string;
+      subtotal: number;
+      deliveryFee: number | null;
+      total: number | null;
+      payment: Exclude<PaymentStart, { kind: 'failed' }>;
+    }
   | { ok: false; error: string };
 
-/** Creates a pending-payment order. The database prices every line; client prices are never sent. */
+/**
+ * Creates an order, reserves its stock and starts payment. The database prices every line and the payment amount;
+ * client prices are never sent. Signed-in shoppers' orders are linked to their account.
+ */
 export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResult> {
-  const { data, error } = await createSupabase()
+  const supabase = await createUserSupabase();
+  const { data, error } = await supabase
     .rpc('place_order', {
       p_customer: {
         name: input.customer.name,
@@ -26,7 +43,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         directions: input.customer.directions ?? null,
       },
       p_delivery_option: input.deliveryOption,
-      p_payment: { method: input.payment.method, network: input.payment.network ?? null, wallet: input.payment.wallet ?? null },
+      p_payment: { method: input.payment.method, network: input.payment.network, wallet: input.payment.wallet },
       p_items: input.items.map((i) => ({ slug: i.slug, size: i.size ?? null, quantity: i.quantity })),
       p_is_gift: input.isGift,
     })
@@ -39,12 +56,24 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     return { ok: false, error: 'We couldn’t place your order. Please try again.' };
   }
 
+  // The generated types can't express that these are NULL until delivery fees are set.
+  const deliveryFee = (data.delivery_fee_ghs as number | null) ?? null;
+  const total = (data.total_ghs as number | null) ?? null;
+
+  const payment = await startOrderPayment(
+    { token: data.order_token, number: data.order_number, total },
+    { network: input.payment.network, wallet: input.payment.wallet },
+  );
+  if (payment.kind === 'failed') return { ok: false, error: payment.reason };
+
   return {
     ok: true,
     orderNumber: data.order_number,
+    orderToken: data.order_token,
+    reservedUntil: data.reserved_until,
     subtotal: data.subtotal_ghs,
-    // The generated types can't express that these are NULL until fees are set.
-    deliveryFee: (data.delivery_fee_ghs as number | null) ?? null,
-    total: (data.total_ghs as number | null) ?? null,
+    deliveryFee,
+    total,
+    payment,
   };
 }

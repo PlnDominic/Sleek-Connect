@@ -104,6 +104,29 @@ select 'app_new_arrivals_kids', (select id from public.products where slug = 'wo
 union all
 select 'app_new_arrivals_kids', (select id from public.products where slug = 'wooden-number-puzzle'), 3;
 
+insert into public.inventory_levels (product_id, size_code, on_hand)
+select (select id from public.products where slug = 'gentle-baby-wash-shampoo'), '200', 25
+union all
+select (select id from public.products where slug = 'gentle-baby-wash-shampoo'), '400', 25
+union all
+select (select id from public.products where slug = 'vitamin-c-brightening-serum'), '30', 25
+union all
+select (select id from public.products where slug = 'whipped-shea-body-butter'), '', 25
+union all
+select (select id from public.products where slug = 'velvet-matte-lip-colour'), '', 25
+union all
+select (select id from public.products where slug = 'organic-cotton-bodysuits'), '', 25
+union all
+select (select id from public.products where slug = 'wooden-stacking-blocks'), '', 25
+union all
+select (select id from public.products where slug = 'wooden-number-puzzle'), '', 25
+union all
+select (select id from public.products where slug = 'newborn-gift-hamper'), '', 25
+union all
+select (select id from public.products where slug = 'argan-hair-oil'), '', 25
+union all
+select (select id from public.products where slug = 'shea-cocoa-body-butter'), '', 25;
+
 insert into public.delivery_areas (name, sort_order) values
   ('East Legon', 0),
   ('Osu', 1),

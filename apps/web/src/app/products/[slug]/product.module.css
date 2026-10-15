@@ -173,6 +173,17 @@
   color: var(--c-canvas);
 }
 
+.sizeButton[data-sold-out='true'] {
+  color: var(--c-text-placeholder);
+  text-decoration: line-through;
+}
+
+.sizeButton[data-sold-out='true'][aria-pressed='true'] {
+  color: var(--c-canvas);
+  background: var(--c-text-faint);
+  border-color: var(--c-text-faint);
+}
+
 .buyRow {
   display: flex;
   flex-wrap: wrap;
@@ -219,6 +230,12 @@
 
 .addButton {
   background: var(--c-ink);
+}
+
+.addButton:disabled,
+.momoButton:disabled {
+  background: var(--c-line-strong);
+  cursor: not-allowed;
 }
 
 .momoButton {

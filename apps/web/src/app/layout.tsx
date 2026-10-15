@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
+import { AuthProvider } from '@/components/AuthProvider';
 import { WebBagProvider } from '@/components/WebBagProvider';
 import { themeVars } from '@/lib/theme';
 import './globals.css';
@@ -23,7 +24,9 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html lang="en-GH" className={jakarta.variable} style={themeVars}>
       <body>
-        <WebBagProvider>{children}</WebBagProvider>
+        <AuthProvider>
+          <WebBagProvider>{children}</WebBagProvider>
+        </AuthProvider>
       </body>
     </html>
   );

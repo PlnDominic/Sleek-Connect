@@ -25,6 +25,11 @@ export const imageFiles: Record<ImageKey, string> = {
   giftCollection: 'gift-collection.jpg',
 };
 
+/** Narrows a stored image key to one the apps have a photo for. */
+export function asImageKey(key: string | null | undefined): ImageKey | undefined {
+  return key && key in imageFiles ? (key as ImageKey) : undefined;
+}
+
 export type Department = 'beauty' | 'kids';
 
 /** Shape used for the tinted placeholder when a product has no photo yet. */
@@ -53,6 +58,8 @@ export interface ProductSize {
   id: string;
   label: string;
   price: number;
+  /** Undefined when stock isn't known (e.g. the bundled catalogue). */
+  inStock?: boolean;
 }
 
 export interface Product {
@@ -77,6 +84,8 @@ export interface Product {
   sizes?: ProductSize[];
   defaultSize?: string;
   ageBands?: AgeBandId[];
+  /** False when no size can be bought right now; undefined when stock isn't known. */
+  inStock?: boolean;
   /** Sub-collection shown in the breadcrumb, e.g. "Bath time". */
   collection?: string;
   details?: ProductDetails;
@@ -273,6 +282,12 @@ export function getSize(product: Product, sizeId?: string): ProductSize | undefi
 
 export function unitPrice(product: Product, sizeId?: string): number {
   return getSize(product, sizeId)?.price ?? product.price;
+}
+
+/** Whether a size (or a one-size product) can be bought; true when stock isn't known. */
+export function isAvailable(product: Product, sizeId?: string): boolean {
+  if (product.sizes?.length) return getSize(product, sizeId)?.inStock !== false;
+  return product.inStock !== false;
 }
 
 export const departmentLabels: Record<Department, string> = {
