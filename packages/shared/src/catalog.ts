@@ -1,3 +1,8 @@
+/**
+ * Starter catalogue from the design handoff.
+ * The web store reads the catalogue from Supabase; this file generates supabase/seed.sql
+ * (`npm run db:seed:generate`) and is what the mobile app reads until it moves to Supabase.
+ */
 import { colors } from './tokens';
 
 /** Photos shipped in `assets/images`. Each app maps these keys to its own image source. */
@@ -55,6 +60,8 @@ export interface Product {
   name: string;
   brand?: string;
   department: Department;
+  /** Category id from `categories`. */
+  category: string;
   kidsFilter?: KidsFilter;
   /** Price in GHS for the default size. */
   price: number;
@@ -99,6 +106,7 @@ export const products: Product[] = [
     name: 'Gentle Baby Wash & Shampoo',
     brand: 'Little Nest',
     department: 'kids',
+    category: 'baby-care',
     kidsFilter: 'bath',
     price: 85,
     badge: 'New',
@@ -134,6 +142,7 @@ export const products: Product[] = [
     slug: 'vitamin-c-brightening-serum',
     name: 'Vitamin C Brightening Serum',
     department: 'beauty',
+    category: 'skincare',
     price: 220,
     was: 260,
     badge: '-15%',
@@ -149,6 +158,7 @@ export const products: Product[] = [
     slug: 'whipped-shea-body-butter',
     name: 'Whipped Shea Body Butter',
     department: 'beauty',
+    category: 'skincare',
     price: 145,
     badge: 'New',
     tag: 'Fragrance-free',
@@ -161,6 +171,7 @@ export const products: Product[] = [
     slug: 'velvet-matte-lip-colour',
     name: 'Velvet Matte Lip Colour',
     department: 'beauty',
+    category: 'makeup',
     price: 75,
     was: 90,
     badge: '-15%',
@@ -174,6 +185,7 @@ export const products: Product[] = [
     slug: 'organic-cotton-bodysuits',
     name: 'Organic Cotton Bodysuits, 3-pack',
     department: 'kids',
+    category: 'baby-care',
     kidsFilter: 'clothing',
     price: 160,
     badge: 'New',
@@ -187,6 +199,7 @@ export const products: Product[] = [
     slug: 'wooden-stacking-blocks',
     name: 'Wooden Stacking Blocks',
     department: 'kids',
+    category: 'kids-toys',
     kidsFilter: 'toys',
     price: 120,
     was: 135,
@@ -201,6 +214,7 @@ export const products: Product[] = [
     slug: 'wooden-number-puzzle',
     name: 'Wooden Number Puzzle',
     department: 'kids',
+    category: 'kids-toys',
     kidsFilter: 'toys',
     price: 135,
     tag: 'Ages 2–5 · Chunky pieces',
@@ -213,6 +227,7 @@ export const products: Product[] = [
     slug: 'newborn-gift-hamper',
     name: 'Newborn Gift Hamper',
     department: 'kids',
+    category: 'baby-care',
     kidsFilter: 'gifts',
     price: 450,
     tag: 'Ages 0–6m',
@@ -226,6 +241,7 @@ export const products: Product[] = [
     slug: 'argan-hair-oil',
     name: 'Argan Hair Oil, 250 ml',
     department: 'beauty',
+    category: 'hair-care',
     price: 130,
     badge: 'New',
     tag: 'All hair types',
@@ -237,6 +253,7 @@ export const products: Product[] = [
     slug: 'shea-cocoa-body-butter',
     name: 'Shea & Cocoa Body Butter',
     department: 'beauty',
+    category: 'skincare',
     price: 145,
     tag: 'Fragrance-free · 200 g',
     summary: 'Rich, fast-absorbing moisture made with Ghanaian shea.',

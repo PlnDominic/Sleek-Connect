@@ -1,43 +1,34 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import {
-  defaultDeliveryArea,
-  city,
-  departmentLabels,
-  formatPrice,
-  getProduct,
-  pending,
-  products,
-  relatedProducts,
-} from '@sleek/shared';
+import { city, defaultDeliveryArea, departmentLabels, formatPrice, pending } from '@sleek/shared';
 import { Icon } from '@/components/Icon';
 import { ProductImage } from '@/components/ProductImage';
 import { SiteFooter } from '@/components/SiteFooter';
 import { CompactHeader } from '@/components/SiteHeader';
+import { getProduct, getRelatedProducts, listProductSlugs } from '@/lib/catalog';
 import { ProductGallery } from './ProductGallery';
 import { ProductInfoTabs } from './ProductInfoTabs';
 import { PurchasePanel } from './PurchasePanel';
 import styles from './product.module.css';
 
-export function generateStaticParams() {
-  return products.map((p) => ({ slug: p.slug }));
+export async function generateStaticParams() {
+  return (await listProductSlugs()).map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: PageProps<'/products/[slug]'>): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const product = await getProduct(slug);
   return product ? { title: product.name, description: product.details?.description ?? product.summary } : {};
 }
 
 export default async function ProductPage({ params }: PageProps<'/products/[slug]'>) {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const [product, related] = await Promise.all([getProduct(slug), getRelatedProducts(slug)]);
   if (!product) notFound();
 
   const details = product.details;
   const highlights = details?.highlights ?? [product.tag];
-  const related = relatedProducts.filter((p) => p.slug !== product.slug);
 
   return (
     <>

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Icon } from '@/components/Icon';
 import { Logo } from '@/components/Logo';
 import { SiteFooter } from '@/components/SiteFooter';
+import { getCheckoutOptions } from '@/lib/catalog';
 import { CheckoutForm } from './CheckoutForm';
 import styles from './checkout.module.css';
 
@@ -9,7 +10,9 @@ export const metadata: Metadata = {
   title: 'Checkout',
 };
 
-export default function CheckoutPage() {
+export default async function CheckoutPage() {
+  const { areas, deliveryOptions } = await getCheckoutOptions();
+
   return (
     <div className={styles.page}>
       <header className={styles.header}>
@@ -38,7 +41,7 @@ export default function CheckoutPage() {
           </span>
         </div>
       </header>
-      <CheckoutForm />
+      <CheckoutForm areas={areas} deliveryOptions={deliveryOptions} />
       <SiteFooter />
     </div>
   );

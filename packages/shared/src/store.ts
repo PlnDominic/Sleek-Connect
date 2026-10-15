@@ -18,7 +18,10 @@ export const pending = {
   ingredientList: '[Full INCI list as printed on the pack, in order of concentration]',
 } as const;
 
-/** Delivery fees in GHS. `null` means the fee has not been set and is shown as a placeholder. */
+/**
+ * Starting delivery fees in GHS, written to supabase/seed.sql. The live fees are in the `delivery_options` table.
+ * `null` means the fee has not been set and is shown as a placeholder.
+ */
 export const deliveryFees: { standard: number | null; sameDay: number | null } = {
   standard: null,
   sameDay: null,
@@ -51,17 +54,12 @@ export const sampleOrder = {
   ] satisfies { title: string; detail: string; state: OrderStepState }[],
 };
 
-export interface BagLine {
-  slug: string;
-  sizeId?: string;
-  qty: number;
-}
-
-/** Bag contents shown in the design's checkout. Both apps start from this until a real cart service exists. */
-export const sampleBag: BagLine[] = [
+/** Bag contents shown in the design's mobile checkout; the mobile app starts with these. */
+export const sampleBag: { slug: string; sizeId?: string; qty: number }[] = [
   { slug: 'gentle-baby-wash-shampoo', sizeId: '400', qty: 1 },
   { slug: 'vitamin-c-brightening-serum', sizeId: '30', qty: 1 },
 ];
+
 export const city = 'Accra';
 
 export const paymentMethodsLine = 'MTN MoMo · Telecel Cash · AT Money · Visa · Mastercard';

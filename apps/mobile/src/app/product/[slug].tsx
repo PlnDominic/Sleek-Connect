@@ -122,7 +122,7 @@ export default function ProductScreen() {
         <Pressable
           accessibilityRole="button"
           onPress={() => {
-            add(product.slug, sizeId);
+            add(product, sizeId);
             router.push('/checkout');
           }}
           style={({ pressed }) => [styles.cta, pressed && { opacity: 0.85 }]}

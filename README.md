@@ -3,25 +3,30 @@
 Storefront for authentic beauty products and safe, age-appropriate kids' products, delivered across Accra.
 Business and product requirements live in [`docs/`](docs/) (BRD and PRD, v0.1 drafts).
 
-This repo implements the **Sleek Connect Storefront** design handoff: three web screens and five mobile app screens.
+Stack: **Node.js + Next.js** for the web store, **Supabase** for the database and API, and **React Native with
+Expo** for the mobile app (App Store and Google Play, tested in Expo Go). The web store is being built first.
 
-| Workspace | What it is | Screens from the design |
+| Workspace | What it is | Status |
 | --- | --- | --- |
-| [`apps/web`](apps/web) | Next.js 16 storefront (App Router, CSS Modules) | Home · Product detail · Checkout |
-| [`apps/mobile`](apps/mobile) | Expo SDK 57 app (Expo Router) for Android and iOS | Home · Shop by age · Product · Mobile Money checkout · Order tracking |
-| [`packages/shared`](packages/shared) | Design tokens, catalogue, icons, photos and bag state used by both apps | n/a |
+| [`apps/web`](apps/web) | Next.js 16 storefront: Home, Product detail, Checkout | Active. Reads the catalogue from Supabase and places orders there |
+| [`supabase`](supabase) | Database schema (migrations), access rules and starter data | Active |
+| [`apps/mobile`](apps/mobile) | Expo SDK 57 app: Home, Shop by age, Product, Mobile Money checkout, Order tracking | On hold until the web store is done; still uses the bundled catalogue |
+| [`packages/shared`](packages/shared) | Design tokens, icons, types, starter catalogue and bag state used by both apps | Active |
 
-## Getting started
+## Run it locally
 
-Requires Node 20+ and npm.
+Requires Node 20+, npm and Docker (for the local Supabase stack).
 
 ```sh
-npm install            # installs every workspace
-npm run dev:web        # web storefront on http://localhost:3000
-npm run dev:mobile     # Expo dev server; press i / a / w for iOS, Android or web
+npm install
+npm run db:start                                 # local Supabase; first run downloads the Docker images
+cp apps/web/.env.example apps/web/.env.local     # paste API_URL and PUBLISHABLE_KEY printed by db:start
+npm run dev:web                                  # http://localhost:3000
 ```
 
-Checks run across all workspaces:
+`npm run db:start` applies the migrations and loads `supabase/seed.sql`, the starter catalogue from the design.
+
+Checks:
 
 ```sh
 npm run typecheck
@@ -29,38 +34,56 @@ npm run lint
 npm run build:web
 ```
 
-For the mobile app, `npx expo-doctor` (inside `apps/mobile`) checks native dependency health, and
-`npx expo export --platform web` produces a static web build you can preview in a browser.
+## Connect a hosted Supabase project
 
-## How it fits together
+1. Create a project in the Supabase dashboard.
+2. Link it and push the schema plus the starter catalogue:
 
-- **Tokens** (`packages/shared/src/tokens.ts`): colours, radii and shadows from the design. The web app exposes them as
-  CSS custom properties (`--c-accent`, `--r-xl`, …); the mobile app reads them directly.
-- **Catalogue** (`packages/shared/src/catalog.ts`): products, categories, age bands and the home-page collections.
-  Products without a photo render a tinted placeholder with a simple product-shape icon.
-- **Icons** (`packages/shared/src/icons.ts`): the design's inline SVG icons as data, drawn with `<svg>` on the web and
-  `react-native-svg` on mobile.
-- **Bag** (`@sleek/shared/bag`): an in-memory bag shared by both apps. It starts with the two items shown in the
-  design's checkout.
+   ```sh
+   npx supabase login
+   npx supabase link --project-ref <your-project-ref>
+   npx supabase db push --include-seed
+   ```
+
+3. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (Project Settings → API) in
+   `apps/web/.env.local` and in your hosting provider. Only the publishable key is needed; never use the secret key in
+   the web app.
+
+## Database overview
+
+| Table | Purpose | Who can read it |
+| --- | --- | --- |
+| `products`, `product_sizes`, `product_age_bands`, `categories`, `age_bands` | Catalogue | Everyone (published products only) |
+| `merchandising_slots` | Ordered product lists such as `home_new_arrivals`, `home_best_sellers`, `product_related` | Everyone |
+| `delivery_areas`, `delivery_options` | Where you deliver and what it costs | Everyone |
+| `orders`, `order_items` | Orders and what was bought | The signed-in shopper who placed them; staff via the dashboard |
+
+- Nothing is writable through the public API. Edit the catalogue in the Supabase dashboard (Table Editor); changes show
+  on the site within a few minutes.
+- Checkout calls `place_order`, which checks the details, prices every line from the database and creates an order
+  with status `pending_payment`.
+- Schema changes go in new migrations: `npx supabase migration new <name>`, then `npm run db:reset` and
+  `npm run db:types`.
+- To change the starter catalogue, edit `packages/shared/src/catalog.ts` and run `npm run db:seed:generate`.
 
 ## Placeholders still to fill in
 
-The design leaves values the business hasn't set yet (the BRD and PRD mark them "To be set") as bracketed text such as
-`[X]`, `[fee]` or `[Reg. number]`. They all live in `packages/shared/src/store.ts`:
+The design shows values the business hasn't set yet (marked "To be set" in the BRD and PRD) as bracketed text such as
+`[X]` or `[Reg. number]`.
 
-- `pending`: free-delivery threshold, sale percentage, delivery days and cut-off times, return window, FDA
-  registration, batch and expiry text, ingredient list.
-- `deliveryFees`: set a number and the checkout totals are calculated instead of showing `[fee]` / `[total]`.
-- `sampleCustomer`, `sampleBag`, `sampleOrder`: stand-ins for account, cart and order data until there is a backend.
+- **Delivery fees:** set `fee_ghs` in the `delivery_options` table. Checkout then shows real delivery fees and totals,
+  and orders store them.
+- **Display text:** free-delivery threshold, sale percentage, delivery days and cut-off times, return window, FDA
+  registration, batch and expiry, and the ingredient list are in `pending` in `packages/shared/src/store.ts`.
 
 ## Not built yet
 
-- **Backend:** no API, accounts, cart persistence, search results or order history.
-- **Payments:** "Pay with MoMo" shows the designed "Check your phone" approval step, but no payment provider is
-  connected. Card payment shows a "coming soon" message.
-- **Pages the design doesn't cover:** listing, category, help and policy pages, plus the app's Shop, Saved and Account
-  tabs. Links to them are placeholders, Shop lists the whole catalogue, and Saved and Account show simple empty states.
-- **Photos:** the handoff included seven photos (in `packages/shared/assets/images`). Other products and categories use
-  placeholders until real product photography is added. The "texture view" thumbnail on the baby-wash page reuses the
-  shea butter photo, as in the design.
-- **App icons:** `apps/mobile/assets` and `apps/web/src/app/favicon.ico` are still the framework defaults.
+- **Payments:** orders are recorded as `pending_payment`, but no Mobile Money or card provider is connected, so no
+  payment prompt is actually sent. Card shows "coming soon".
+- **Accounts:** phone-number sign-in (PRD FR-002) isn't built yet. Orders are placed as guest orders.
+- **Admin:** there's no admin console yet; staff use the Supabase dashboard.
+- **Pages the design doesn't cover:** listing, category, search results, order tracking on the web, help and policy
+  pages. Links to them are placeholders.
+- **Photos:** the handoff included seven photos (`packages/shared/assets/images`, referenced by `image_key`). Other
+  products use a tinted placeholder until real photography is added.
+- **App icons:** still the framework defaults.

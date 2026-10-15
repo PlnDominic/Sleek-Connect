@@ -114,7 +114,7 @@ export default function ShopByAgeScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`Add ${p.name} to bag`}
-              onPress={() => add(p.slug, p.defaultSize)}
+              onPress={() => add(p)}
               style={styles.add}
             >
               <Icon name="plus" size={18} color={colors.canvas} strokeWidth={2} />

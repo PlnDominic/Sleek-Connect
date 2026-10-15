@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
-import { BagProvider } from '@sleek/shared/bag';
+import { WebBagProvider } from '@/components/WebBagProvider';
 import { themeVars } from '@/lib/theme';
 import './globals.css';
 
@@ -23,7 +23,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html lang="en-GH" className={jakarta.variable} style={themeVars}>
       <body>
-        <BagProvider>{children}</BagProvider>
+        <WebBagProvider>{children}</WebBagProvider>
       </body>
     </html>
   );

@@ -1,36 +1,32 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import {
-  bestSellers,
-  categories,
-  colors,
-  formatPrice,
-  getProduct,
-  newArrivals,
-  pending,
-  type IconName,
-  type Product,
-} from '@sleek/shared';
+import { colors, formatPrice, pending, type Category, type IconName, type Product } from '@sleek/shared';
 import { AddToBagButton } from '@/components/AddToBagButton';
 import { Icon } from '@/components/Icon';
 import { NewArrivalsRail } from '@/components/NewArrivalsRail';
 import { ProductImage } from '@/components/ProductImage';
 import { SiteFooter } from '@/components/SiteFooter';
 import { AnnouncementBar, SiteHeader } from '@/components/SiteHeader';
+import { getHomeCatalog, getProductsBySlugs } from '@/lib/catalog';
 import { images } from '@/lib/images';
 import styles from './home.module.css';
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [{ categories, newArrivals, bestSellers }, heroProducts] = await Promise.all([
+    getHomeCatalog(),
+    getProductsBySlugs(heroCards.map((c) => c.slug)),
+  ]);
+
   return (
     <>
       <AnnouncementBar />
       <SiteHeader current="Home" />
       <main>
-        <Hero />
+        <Hero products={heroProducts} />
         <FeatureStrip />
-        <Categories />
-        <NewArrivals />
-        <BestSellers />
+        <Categories categories={categories} />
+        <NewArrivals products={newArrivals} />
+        <BestSellers products={bestSellers} />
         <Promotions />
         <TrustBar />
       </main>
@@ -46,7 +42,7 @@ const heroCards = [
   { slug: 'gentle-baby-wash-shampoo', label: 'Baby Wash, 400 ml', className: styles.floatBabyWash },
 ];
 
-function Hero() {
+function Hero({ products }: { products: Product[] }) {
   return (
     <section className={styles.hero}>
       <div className={`container ${styles.heroInner}`}>
@@ -103,7 +99,8 @@ function Hero() {
             className={styles.heroModel}
           />
           {heroCards.map((card) => {
-            const product = getProduct(card.slug)!;
+            const product = products.find((p) => p.slug === card.slug);
+            if (!product) return null;
             return (
               <Link key={card.slug} href={`/products/${card.slug}`} className={`${styles.floatCard} ${card.className}`}>
                 <ProductImage image={product.image} tint={product.tint} kind={product.kind} alt="" sizes="126px" className={styles.floatImage} />
@@ -159,7 +156,7 @@ function SectionHeader({ title, linkLabel, href = '#' }: { title: string; linkLa
   );
 }
 
-function Categories() {
+function Categories({ categories }: { categories: Category[] }) {
   return (
     <section id="categories" className={`container ${styles.section}`}>
       <SectionHeader title="Shop by Categories" linkLabel="View All Categories" />
@@ -212,7 +209,7 @@ function ProductCard({ product }: { product: Product }) {
       </span>
       <div className={styles.productCardFooter}>
         <span>{product.tag}</span>
-        <AddToBagButton slug={product.slug} sizeId={product.defaultSize} label={`Add ${product.name} to bag`} className={styles.roundAdd}>
+        <AddToBagButton product={product} label={`Add ${product.name} to bag`} className={styles.roundAdd}>
           <Icon name="bag" size={15} strokeWidth={2} />
         </AddToBagButton>
       </div>
@@ -220,12 +217,12 @@ function ProductCard({ product }: { product: Product }) {
   );
 }
 
-function NewArrivals() {
+function NewArrivals({ products }: { products: Product[] }) {
   return (
     <section id="new-arrivals" className={`container ${styles.section}`}>
       <SectionHeader title="New Arrivals" linkLabel="View All New Arrivals" />
       <NewArrivalsRail>
-        {newArrivals.map((p) => (
+        {products.map((p) => (
           <ProductCard key={p.slug} product={p} />
         ))}
       </NewArrivalsRail>
@@ -233,12 +230,12 @@ function NewArrivals() {
   );
 }
 
-function BestSellers() {
+function BestSellers({ products }: { products: Product[] }) {
   return (
     <section id="best-sellers" className={`container ${styles.section}`}>
       <SectionHeader title="Best Sellers" linkLabel="View All Best Sellers" />
       <div className={styles.bestGrid}>
-        {bestSellers.map((p) => (
+        {products.map((p) => (
           <article key={p.slug} className={styles.bestCard}>
             <div className={styles.bestMedia}>
               <ProductImage image={p.image} tint={colors.surfaceSunken} kind={p.kind} alt={p.name} sizes="200px" className={styles.bestImage} />
@@ -254,10 +251,10 @@ function BestSellers() {
               </span>
               <span className={styles.bestSummary}>{p.summary}</span>
               <div className={styles.bestActions}>
-                <AddToBagButton slug={p.slug} sizeId={p.defaultSize} className={styles.quickAdd}>
+                <AddToBagButton product={p} className={styles.quickAdd}>
                   Quick Add
                 </AddToBagButton>
-                <AddToBagButton slug={p.slug} sizeId={p.defaultSize} label={`Add ${p.name} to bag`} className={styles.squareAdd}>
+                <AddToBagButton product={p} label={`Add ${p.name} to bag`} className={styles.squareAdd}>
                   <Icon name="bag" size={16} />
                 </AddToBagButton>
               </div>

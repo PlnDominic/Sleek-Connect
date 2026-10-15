@@ -15,7 +15,7 @@ export function PurchasePanel({ product }: { product: Product }) {
   const [added, setAdded] = useState(false);
 
   const addToBag = () => {
-    add(product.slug, sizeId, qty);
+    add(product, sizeId, qty);
     setAdded(true);
   };
 
@@ -66,7 +66,7 @@ export function PurchasePanel({ product }: { product: Product }) {
           type="button"
           className={styles.momoButton}
           onClick={() => {
-            add(product.slug, sizeId, qty);
+            add(product, sizeId, qty);
             router.push('/checkout');
           }}
         >

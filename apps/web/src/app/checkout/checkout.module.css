@@ -444,3 +444,9 @@
   line-height: 1.5;
   color: var(--c-on-dark-muted);
 }
+
+.error {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--c-accent-deep);
+}
