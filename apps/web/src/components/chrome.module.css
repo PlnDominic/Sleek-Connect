@@ -1,0 +1,271 @@
+/* Logo */
+.logo {
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  text-decoration: none;
+  color: var(--c-ink);
+  white-space: nowrap;
+}
+
+.logo:hover {
+  color: var(--c-ink);
+}
+
+.logoOnDark {
+  color: var(--c-canvas);
+}
+
+.logoAccent {
+  color: var(--c-accent);
+}
+
+.logoAccentOnDark {
+  color: var(--c-accent-warm);
+}
+
+/* Announcement bar */
+.announce {
+  background: var(--c-ink);
+  color: var(--c-canvas);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 10px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 40px;
+}
+
+.announceItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.star {
+  color: var(--c-gold);
+}
+
+/* Full site header */
+.header {
+  background: var(--c-canvas);
+  border-bottom: 1px solid var(--c-line-soft);
+}
+
+.headerInner {
+  min-height: 80px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 32px;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 34px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.nav a {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav a[aria-current='page'] {
+  color: var(--c-accent);
+  font-weight: 600;
+  padding: 28px 0 26px;
+  border-bottom: 2px solid var(--c-accent);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.iconButton {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--c-ink);
+}
+
+.badge {
+  position: absolute;
+  right: 5px;
+  top: 6px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: var(--r-pill);
+  background: var(--c-accent);
+  color: var(--c-canvas);
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 720px) {
+  .nav {
+    order: 3;
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+
+  .nav a {
+    white-space: nowrap;
+  }
+
+  .nav a[aria-current='page'] {
+    padding: 6px 0;
+  }
+}
+
+/* Compact header (product page) */
+.compact {
+  border-bottom: 1px solid var(--c-line);
+}
+
+.compactInner {
+  padding-top: 18px;
+  padding-bottom: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 32px;
+}
+
+.search {
+  flex: 1 1 320px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--c-surface);
+  border-radius: var(--r-pill);
+  padding: 0 18px;
+  height: 48px;
+}
+
+.search label {
+  display: flex;
+  color: var(--c-text-muted);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font-size: 15px;
+  outline: none;
+}
+
+.bagPill {
+  height: 44px;
+  padding: 0 14px;
+  border: 0;
+  background: var(--c-surface);
+  border-radius: var(--r-xxl);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.bagPillCount {
+  background: var(--c-accent);
+  color: var(--c-canvas);
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  padding: 2px 8px;
+}
+
+/* Footer */
+.footer {
+  background: var(--c-ink);
+  color: var(--c-on-dark);
+}
+
+.footerTop {
+  padding-top: 56px;
+  padding-bottom: 40px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+}
+
+.footerBrand {
+  flex: 2 1 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.footerBlurb {
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 340px;
+}
+
+.footerPayments {
+  font-size: 13px;
+}
+
+.footerCol {
+  flex: 1 1 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.footerCol strong {
+  color: var(--c-canvas);
+  margin-bottom: 4px;
+}
+
+.footerCol a {
+  color: var(--c-on-dark);
+  text-decoration: none;
+}
+
+.footerCol a:hover {
+  color: var(--c-canvas);
+}
+
+.footerBottom {
+  border-top: 1px solid var(--c-dark-line);
+}
+
+.footerBottomInner {
+  padding-top: 20px;
+  padding-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.footerBottom a {
+  color: var(--c-canvas);
+  font-weight: 600;
+  text-decoration: underline;
+}

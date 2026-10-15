@@ -1,0 +1,20 @@
+{
+  "name": "sleek-connect",
+  "private": true,
+  "version": "0.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace @sleek/web",
+    "dev:mobile": "npm run start --workspace @sleek/mobile",
+    "build:web": "npm run build --workspace @sleek/web",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "overrides": {
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  }
+}
