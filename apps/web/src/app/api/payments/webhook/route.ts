@@ -1,3 +1,5 @@
+import { after } from 'next/server';
+import { dispatchNotifications } from '@/lib/notifications/dispatch';
 import { getPaymentProvider, WebhookSignatureError } from '@/lib/payments';
 import { createAdminSupabase } from '@/lib/supabase/admin';
 import type { Json } from '@/lib/supabase/database.types';
@@ -41,5 +43,7 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Could not record the payment.' }, { status: 500 });
   }
 
+  // A paid order queues its confirmation message; send it once the provider has its answer.
+  after(() => dispatchNotifications());
   return Response.json({ received: true, orderStatus: data.order_status, paymentStatus: data.payment_status });
 }

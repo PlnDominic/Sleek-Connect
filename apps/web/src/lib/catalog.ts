@@ -52,6 +52,12 @@ function toProduct(row: ProductRow): Product {
     ageBands: row.product_age_bands.map((b) => b.age_band_id as AgeBandId),
     inStock: sizes.length ? sizes.some((s) => inStock(s.code)) : inStock(''),
     details: (row.details as ProductDetails | null) ?? undefined,
+    compliance: {
+      ingredients: row.ingredients ?? undefined,
+      countryOfOrigin: row.country_of_origin ?? undefined,
+      regulatoryReference: row.regulatory_reference ?? undefined,
+      periodAfterOpening: row.period_after_opening ?? undefined,
+    },
   };
 }
 
@@ -105,8 +111,16 @@ export async function getProduct(slug: string): Promise<Product | null> {
   cacheLife('minutes');
   cacheTag('catalog');
 
-  const row = unwrap(await createSupabase().from('products').select(productColumns).eq('slug', slug).maybeSingle());
-  return row ? toProduct(row as ProductRow) : null;
+  const supabase = createSupabase();
+  const [row, batches] = await Promise.all([
+    supabase.from('products').select(productColumns).eq('slug', slug).maybeSingle().then(unwrap),
+    supabase.rpc('product_current_batches', { p_slug: slug }).then(unwrap),
+  ]);
+  if (!row) return null;
+  return {
+    ...toProduct(row as ProductRow),
+    currentBatches: batches.map((b) => ({ sizeId: b.size_code || undefined, batch: b.batch_code, expiresOn: b.expires_on ?? undefined })),
+  };
 }
 
 export async function getRelatedProducts(excludeSlug: string): Promise<Product[]> {

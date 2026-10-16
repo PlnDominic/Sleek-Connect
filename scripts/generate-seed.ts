@@ -105,6 +105,16 @@ ${products
   )
   .join('\nunion all\n')};
 
+-- Starter stock sits in one sample batch per unit; beauty and bath products get a sample expiry date.
+insert into public.stock_batches (product_id, size_code, batch_code, expires_on, quantity, note)
+select i.product_id, i.size_code, 'STARTER',
+       case when p.department = 'beauty' or p.kids_filter = 'bath' then date '2028-12-31' end,
+       i.on_hand, 'Sample starter stock'
+from public.inventory_levels i join public.products p on p.id = i.product_id;
+
+insert into public.stock_movements (product_id, size_code, batch_id, reason, quantity, sellable_change, note)
+select b.product_id, b.size_code, b.id, 'opening', b.quantity, b.quantity, b.note from public.stock_batches b;
+
 insert into public.delivery_areas (name, sort_order) values
 ${rows(deliveryAreas.map((name, i) => [name, i]))};
 

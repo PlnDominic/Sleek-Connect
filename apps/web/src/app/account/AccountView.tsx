@@ -81,6 +81,11 @@ export function AccountView() {
       <h2 id="signed-in-title">{name ? `Hello, ${name}` : 'Signed in'}</h2>
       {user.email && <p className={styles.muted}>Signed in with Google as {user.email}</p>}
 
+      <nav className={styles.links} aria-label="Account">
+        <Link href="/account/orders">Your orders</Link>
+        <Link href="/bag">Your bag</Link>
+      </nav>
+
       {consented ? (
         <p className={styles.saved}>
           Your bag is saved to this account, so it follows you to any device.{' '}

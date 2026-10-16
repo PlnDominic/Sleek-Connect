@@ -10,7 +10,8 @@ interface AuthValue {
   loading: boolean;
   /** Whether the signed-in shopper has confirmed they're 18+ and accepted the terms (PRD FR-003). */
   consented: boolean;
-  signInWithGoogle: (next?: string) => Promise<void>;
+  /** `consent`: the shopper ticked the 18+/terms box, so the callback records it. Staff sign-in passes false. */
+  signInWithGoogle: (next?: string, options?: { consent?: boolean }) => Promise<void>;
   recordConsent: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -49,11 +50,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [userId]);
 
-  const signInWithGoogle = useCallback(async (next = '/account') => {
-    // Reaching this button requires ticking the consent box, so the callback records it.
+  const signInWithGoogle = useCallback(async (next = '/account', { consent = true }: { consent?: boolean } = {}) => {
     const callback = new URL('/auth/callback', window.location.origin);
     callback.searchParams.set('next', next);
-    callback.searchParams.set('consent', '1');
+    if (consent) callback.searchParams.set('consent', '1');
     const { error } = await createBrowserSupabase().auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: callback.toString() },

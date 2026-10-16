@@ -22,9 +22,17 @@
   by hand.
 - Orders are created only by the `public.place_order` function, which prices lines from the database. Never trust
   prices sent by a client.
-- The web app uses the publishable key, except the server-side payment code (`apps/web/src/lib/payments`, the payment
-  webhook), which reads `SUPABASE_SECRET_KEY` through `lib/supabase/admin.ts` (`server-only`). Never use the secret key
-  anywhere else, in client code, or in `NEXT_PUBLIC_*` variables.
+- The web app uses the publishable key, except the server-side payment and messaging code (`apps/web/src/lib/payments`,
+  `apps/web/src/lib/notifications`, the payment webhook), which reads `SUPABASE_SECRET_KEY` through
+  `lib/supabase/admin.ts` (`server-only`). Never use the secret key anywhere else, in client code, or in `NEXT_PUBLIC_*`
+  variables.
+- Staff changes go only through `public.admin_*` functions, which call `public.require_staff(...)` (role plus two-step
+  verification) and log to `stock_movements` / `audit_log`. The admin console runs as the signed-in staff member;
+  never give it the secret key.
+- Staff must never read `orders.delivery_code` or `orders.public_token` (the proof of delivery). Those columns have no
+  select grant; when you add a column to `orders`, add it to the column grant in a migration, and list columns
+  explicitly in staff queries (no `select *`).
+- After adding a migration or changing the seed, run `npm run db:setup:generate` to refresh `supabase/setup.sql`.
 - Orders become paid only through `public.confirm_payment`, after the webhook has verified the provider's
   notification. Stock is reserved by `place_order` and released by `release_order_reservation`.
 

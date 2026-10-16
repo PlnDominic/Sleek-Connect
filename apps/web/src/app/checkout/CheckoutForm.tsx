@@ -333,6 +333,9 @@ function OrderProgress({ order, live, prompt, onRetry }: OrderProgressProps) {
       <div role="status" className={styles.statusPanel} data-tone="success">
         <strong>Payment received</strong>
         <span>Thank you. Order {order.orderNumber} is confirmed and we&apos;re getting it ready.</span>
+        <Link href={`/orders/${order.orderToken}`} className={styles.retry}>
+          View order and receipt
+        </Link>
       </div>
     );
   }
@@ -371,6 +374,9 @@ function OrderProgress({ order, live, prompt, onRetry }: OrderProgressProps) {
         <span>
           Your items are held until {heldUntil}. {order.payment.reason}
         </span>
+        <Link href={`/orders/${order.orderToken}`} className={styles.statusLink}>
+          Follow this order
+        </Link>
       </div>
     );
   }
@@ -381,6 +387,9 @@ function OrderProgress({ order, live, prompt, onRetry }: OrderProgressProps) {
       <span>
         Order {order.orderNumber} is waiting for payment. {prompt} Your items are held until {heldUntil}.
       </span>
+      <Link href={`/orders/${order.orderToken}`} className={styles.statusLink}>
+        Follow this order
+      </Link>
       {order.payment.testMode && (
         <span className={styles.testNote}>
           Test mode: no real prompt was sent. Run <code>npm run payments:simulate -- {order.orderNumber} succeeded</code>{' '}

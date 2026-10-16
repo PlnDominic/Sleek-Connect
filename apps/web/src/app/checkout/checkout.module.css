@@ -479,8 +479,21 @@
   color: var(--c-canvas);
 }
 
+.statusLink {
+  color: var(--c-canvas);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.statusLink:hover {
+  color: var(--c-canvas);
+}
+
 .retry {
   align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
   height: 40px;
   padding: 0 18px;
   border: 0;

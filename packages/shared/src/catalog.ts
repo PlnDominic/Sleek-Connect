@@ -89,6 +89,17 @@ export interface Product {
   /** Sub-collection shown in the breadcrumb, e.g. "Bath time". */
   collection?: string;
   details?: ProductDetails;
+  /** Regulatory and pack information (PRD FR-014). Missing values render as placeholders. */
+  compliance?: ProductCompliance;
+  /** The batch a shopper would receive next for each size (earliest expiry first). */
+  currentBatches?: { sizeId?: string; batch: string; expiresOn?: string }[];
+}
+
+export interface ProductCompliance {
+  ingredients?: string;
+  countryOfOrigin?: string;
+  regulatoryReference?: string;
+  periodAfterOpening?: string;
 }
 
 /** Product-page content. Fields the catalogue team hasn't supplied render as placeholders. */

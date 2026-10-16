@@ -17,6 +17,8 @@ export function ProductInfoTabs({ product }: { product: Product }) {
   const [active, setActive] = useState<TabId>('ingredients');
   const baseId = useId();
   const details = product.details;
+  const compliance = product.compliance;
+  const batches = product.currentBatches ?? [];
 
   const onKeyDown = (event: KeyboardEvent) => {
     const index = tabs.findIndex((t) => t.id === active);
@@ -52,7 +54,7 @@ export function ProductInfoTabs({ product }: { product: Product }) {
             <p>
               <strong>Full ingredient list (INCI)</strong>
             </p>
-            <p className={styles.muted}>{pending.ingredientList}</p>
+            <p className={styles.muted}>{compliance?.ingredients ?? pending.ingredientList}</p>
             {details?.freeFrom && (
               <div className={styles.tagList}>
                 {details.freeFrom.map((item) => (
@@ -65,7 +67,8 @@ export function ProductInfoTabs({ product }: { product: Product }) {
         {active === 'safety' && (
           <div className={styles.factGrid}>
             <Fact label="Recommended age" value={details?.recommendedAge ?? '[Recommended age]'} />
-            <Fact label="FDA Ghana registration" value={pending.fdaRegistration} />
+            <Fact label="FDA Ghana registration" value={compliance?.regulatoryReference ?? pending.fdaRegistration} />
+            {compliance?.countryOfOrigin && <Fact label="Made in" value={compliance.countryOfOrigin} />}
             <Fact label="Warnings" value={details?.warnings ?? '[Warnings as printed on the pack]'} small />
           </div>
         )}
@@ -75,9 +78,20 @@ export function ProductInfoTabs({ product }: { product: Product }) {
               The batch and expiry of the exact unit we pack for you are printed on your receipt and shown in your order.
             </p>
             <div className={styles.factGrid}>
-              <Fact label="Current stock batch" value={pending.batchNumber} />
-              <Fact label="Earliest expiry in stock" value={pending.expiryDate} />
-              <Fact label="Period after opening" value={pending.periodAfterOpening} />
+              {batches.length === 0 && (
+                <>
+                  <Fact label="Current stock batch" value={pending.batchNumber} />
+                  <Fact label="Earliest expiry in stock" value={pending.expiryDate} />
+                </>
+              )}
+              {batches.map((b) => (
+                <Fact
+                  key={b.sizeId ?? 'one-size'}
+                  label={`Current batch${b.sizeId ? `, ${product.sizes?.find((s) => s.id === b.sizeId)?.label ?? b.sizeId}` : ''}`}
+                  value={`${b.batch}${b.expiresOn ? ` · expires ${b.expiresOn}` : ''}`}
+                />
+              ))}
+              <Fact label="Period after opening" value={compliance?.periodAfterOpening ?? pending.periodAfterOpening} />
             </div>
           </div>
         )}

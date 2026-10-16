@@ -15,6 +15,7 @@
     "db:start": "supabase start -x studio,imgproxy,mailpit,logflare,vector,edge-runtime,supavisor,realtime,storage-api,postgres-meta",
     "db:reset": "supabase db reset",
     "db:seed:generate": "tsx scripts/generate-seed.ts",
+    "db:setup:generate": "tsx scripts/bundle-setup.ts",
     "db:types": "supabase gen types typescript --local > apps/web/src/lib/supabase/database.types.ts",
     "payments:simulate": "tsx scripts/simulate-payment.ts"
   },
