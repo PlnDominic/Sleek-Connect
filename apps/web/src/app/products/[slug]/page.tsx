@@ -6,7 +6,7 @@ import { Icon } from '@/components/Icon';
 import { ProductImage } from '@/components/ProductImage';
 import { SiteFooter } from '@/components/SiteFooter';
 import { CompactHeader } from '@/components/SiteHeader';
-import { getProduct, getRelatedProducts, listProductSlugs } from '@/lib/catalog';
+import { getProduct, getRelatedProducts, getStoreInfo, listProductSlugs } from '@/lib/catalog';
 import { ProductGallery } from './ProductGallery';
 import { ProductInfoTabs } from './ProductInfoTabs';
 import { PurchasePanel } from './PurchasePanel';
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: PageProps<'/products/[slug]'>
 
 export default async function ProductPage({ params }: PageProps<'/products/[slug]'>) {
   const { slug } = await params;
-  const [product, related] = await Promise.all([getProduct(slug), getRelatedProducts(slug)]);
+  const [product, related, store] = await Promise.all([getProduct(slug), getRelatedProducts(slug), getStoreInfo()]);
   if (!product) notFound();
 
   const details = product.details;
@@ -36,11 +36,13 @@ export default async function ProductPage({ params }: PageProps<'/products/[slug
       <nav aria-label="Breadcrumb" className={`container ${styles.breadcrumb}`}>
         <Link href="/">Home</Link>
         <span aria-hidden="true">/</span>
-        <Link href="#">{departmentLabels[product.department]}</Link>
+        <Link href={`/shop/${product.department}`}>{departmentLabels[product.department]}</Link>
         {product.collection && (
           <>
             <span aria-hidden="true">/</span>
-            <Link href="#">{product.collection}</Link>
+            <Link href={product.category ? `/shop/${product.department}/${product.category}` : `/shop/${product.department}`}>
+              {product.collection}
+            </Link>
           </>
         )}
         <span aria-hidden="true">/</span>
@@ -80,8 +82,8 @@ export default async function ProductPage({ params }: PageProps<'/products/[slug
                 <strong>
                   Delivery to {defaultDeliveryArea}, {city}
                 </strong>{' '}
-                <Link href="#" className={styles.serviceLink}>
-                  Change
+                <Link href="/help#delivery" className={styles.serviceLink}>
+                  Delivery areas
                 </Link>
                 <br />
                 <span className={styles.muted}>
@@ -93,11 +95,17 @@ export default async function ProductPage({ params }: PageProps<'/products/[slug
             <div className={styles.serviceRow}>
               <Icon name="refresh" size={22} />
               <span>
-                <strong>Returns</strong>
+                <strong>Returns</strong>{' '}
+                <Link href="/help#returns" className={styles.serviceLink}>
+                  How returns work
+                </Link>
                 <br />
                 <span className={styles.muted}>
-                  Unopened and sealed within {pending.returnWindowDays} days. Damaged or not genuine: full refund to your
-                  MoMo wallet or card.
+                  {product.returnable === false
+                    ? `Can’t be returned once delivered, unless it arrives damaged, wrong or expired (tell us within ${store.returnWindowDays} days).`
+                    : `Unopened and sealed within ${store.returnWindowDays} days of delivery.`}{' '}
+                  {product.returnNote && <>{product.returnNote} </>}
+                  Damaged or not genuine: full refund to your MoMo wallet or card.
                 </span>
               </span>
             </div>

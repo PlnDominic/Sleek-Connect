@@ -10,8 +10,12 @@ const links = [
   { href: '/admin/orders', label: 'Orders' },
   { href: '/admin/products', label: 'Products' },
   { href: '/admin/inventory', label: 'Inventory' },
+  { href: '/admin/returns', label: 'Returns' },
+  { href: '/admin/support', label: 'Support' },
+  { href: '/admin/content', label: 'Content' },
   { href: '/admin/riders', label: 'Riders' },
   { href: '/admin/staff', label: 'Staff', adminOnly: true },
+  { href: '/admin/settings', label: 'Settings', adminOnly: true },
 ];
 
 export function AdminNav({ role }: { role: StaffRole }) {

@@ -1,4 +1,4 @@
-# Sleek Connect – working notes
+# Sleek Connect Store – working notes
 
 ## Git
 
@@ -35,6 +35,16 @@
 - After adding a migration or changing the seed, run `npm run db:setup:generate` to refresh `supabase/setup.sql`.
 - Orders become paid only through `public.confirm_payment`, after the webhook has verified the provider's
   notification. Stock is reserved by `place_order` and released by `release_order_reservation`.
+- The order token must not reach anything staff can read either. Return photos are stored under
+  `public.return_photo_folder(token)` (a hash), not the token.
+- Anonymous functions that send customer messages or reveal orders (`create_support_case`, `find_order`) are rate
+  limited in the database. Keep that in mind for any new public function that queues an SMS.
+
+## Caching (web)
+
+- Catalogue reads are `'use cache'` functions tagged `catalog`; admin server actions call `updateTag('catalog')`.
+- In a component that reads `searchParams` (a dynamic hole), await `searchParams` before calling cached functions.
+  Otherwise the build-time result is frozen into the page shell and replayed once after staff change the catalogue.
 
 ## Checks before pushing
 

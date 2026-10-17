@@ -15,13 +15,16 @@ export default async function Dashboard() {
   const count = (q: PromiseLike<{ count: number | null }>) => Promise.resolve(q).then((r) => r.count ?? 0);
   const orders = () => db.from('orders').select('id', { count: 'exact', head: true });
 
-  const [toPack, ready, out, failed, review, refunds, stock, expiring, recent] = await Promise.all([
+  const [toPack, ready, out, failed, review, refunds, returnsToReview, returnRefunds, openCases, stock, expiring, recent] = await Promise.all([
     count(orders().in('status', ['paid', 'packing'])),
     count(orders().eq('status', 'packed')),
     count(orders().eq('status', 'out_for_delivery')),
     count(orders().eq('status', 'delivery_failed')),
     count(orders().eq('needs_review', true)),
     count(orders().eq('refund_due', true)),
+    count(db.from('return_requests').select('id', { count: 'exact', head: true }).eq('status', 'requested')),
+    count(db.from('return_requests').select('id', { count: 'exact', head: true }).eq('status', 'received')),
+    count(db.from('support_cases').select('id', { count: 'exact', head: true }).eq('status', 'open')),
     db.rpc('admin_stock_overview'),
     db.rpc('admin_expiring_batches'),
     db.from('orders').select('order_number, status, customer_name, total_ghs, created_at').order('created_at', { ascending: false }).limit(8),
@@ -35,6 +38,9 @@ export default async function Dashboard() {
     { label: 'Delivery failed', value: failed, href: '/admin/orders?view=failed', alert: failed > 0 },
     { label: 'Needs review', value: review, href: '/admin/orders?view=review', alert: review > 0 },
     { label: 'Refunds due', value: refunds, href: '/admin/orders?view=refund', alert: refunds > 0 },
+    { label: 'Returns to review', value: returnsToReview, href: '/admin/returns', alert: returnsToReview > 0 },
+    { label: 'Return refunds due', value: returnRefunds, href: '/admin/returns?view=received', alert: returnRefunds > 0 },
+    { label: 'Open support cases', value: openCases, href: '/admin/support', alert: openCases > 0 },
     { label: 'Low stock', value: low.length, href: '/admin/inventory?show=low', alert: low.length > 0 },
     { label: 'Expiry alerts', value: (expiring.data ?? []).length, href: '/admin/inventory', alert: (expiring.data ?? []).length > 0 },
   ];

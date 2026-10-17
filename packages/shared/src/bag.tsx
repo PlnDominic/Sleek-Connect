@@ -16,6 +16,8 @@ export interface BagItem {
   qty: number;
   /** False when the server reports the item is sold out. */
   inStock?: boolean;
+  /** Safety warning to show with the line (e.g. "Not suitable for children under 3"). */
+  warning?: string;
 }
 
 export interface ResolvedBagItem extends BagItem {
@@ -94,6 +96,7 @@ export function bagItemFrom(product: Product, sizeId = product.defaultSize, qty 
     kind: product.kind,
     qty: clampQty(qty),
     inStock: isAvailable(product, sizeId),
+    warning: product.warningLabel,
   };
 }
 

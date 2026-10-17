@@ -71,6 +71,20 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"banners": {
+                  Row: {
+                    "body": string | null,"countdown_to": string | null,"cta_href": string | null,"cta_label": string | null,"ends_at": string | null,"id": string,"image_key": string | null,"is_active": boolean,"kicker": string | null,"placement": string,"secondary_cta_href": string | null,"secondary_cta_label": string | null,"sort_order": number,"starts_at": string | null,"theme": string,"title": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body"?: string | null,"countdown_to"?: string | null,"cta_href"?: string | null,"cta_label"?: string | null,"ends_at"?: string | null,"id"?: string,"image_key"?: string | null,"is_active"?: boolean,"kicker"?: string | null,"placement": string,"secondary_cta_href"?: string | null,"secondary_cta_label"?: string | null,"sort_order"?: number,"starts_at"?: string | null,"theme"?: string,"title": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "body"?: string | null,"countdown_to"?: string | null,"cta_href"?: string | null,"cta_label"?: string | null,"ends_at"?: string | null,"id"?: string,"image_key"?: string | null,"is_active"?: boolean,"kicker"?: string | null,"placement"?: string,"secondary_cta_href"?: string | null,"secondary_cta_label"?: string | null,"sort_order"?: number,"starts_at"?: string | null,"theme"?: string,"title"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"categories": {
                   Row: {
                     "department": Database["public"]['Enums']["department"],"expiry_alert_days": number | null,"id": string,"image_key": string | null,"kind": Database["public"]['Enums']["product_kind"],"low_stock_threshold": number | null,"name": string,"sort_order": number,"tint": string
@@ -245,6 +259,20 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"order_lookup_failures": {
+                  Row: {
+                    "at": string,"key": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "at"?: string,"key": string
+                  }
+                  Update: {
+                    "at"?: string,"key"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"orders": {
                   Row: {
                     "area": string,"cancel_reason": string | null,"courier_reference": string | null,"created_at": string,"customer_name": string,"delivered_at": string | null,"delivered_to": string | null,"delivery_attempts": number,"delivery_code": string,"delivery_code_failures": number,"delivery_fee_ghs": number | null,"delivery_option_id": string,"ghanapost_gps": string | null,"id": string,"is_gift": boolean,"momo_network": Database["public"]['Enums']["momo_network"] | null,"needs_review": boolean,"order_number": string,"paid_at": string | null,"payment_method": Database["public"]['Enums']["payment_method"],"phone": string,"public_token": string,"refund_due": boolean,"reservation_expires_at": string | null,"rider_directions": string | null,"rider_id": string | null,"status": Database["public"]['Enums']["order_status"],"subtotal_ghs": number,"total_ghs": number | null,"updated_at": string,"user_id": string | null,"wallet_number": string | null
@@ -345,14 +373,14 @@ isOneToOne: false
                   ]
                 },"products": {
                   Row: {
-                    "badge": string | null,"brand": string | null,"category_id": string | null,"collection": string | null,"country_of_origin": string | null,"created_at": string,"department": Database["public"]['Enums']["department"],"details": Json | null,"id": string,"image_key": string | null,"ingredients": string | null,"is_published": boolean,"kids_filter": Database["public"]['Enums']["kids_filter"] | null,"kind": Database["public"]['Enums']["product_kind"],"name": string,"period_after_opening": string | null,"price_ghs": number,"recall_reason": string | null,"recalled_at": string | null,"regulatory_reference": string | null,"slug": string,"summary": string,"tag": string,"tint": string,"updated_at": string,"was_price_ghs": number | null
+                    "badge": string | null,"brand": string | null,"category_id": string | null,"collection": string | null,"country_of_origin": string | null,"created_at": string,"department": Database["public"]['Enums']["department"],"details": Json | null,"id": string,"image_key": string | null,"ingredients": string | null,"is_published": boolean,"kids_filter": Database["public"]['Enums']["kids_filter"] | null,"kind": Database["public"]['Enums']["product_kind"],"name": string,"period_after_opening": string | null,"price_ghs": number,"recall_reason": string | null,"recalled_at": string | null,"regulatory_reference": string | null,"return_note": string | null,"returnable": boolean,"shades": (string)[],"skin_types": (string)[],"slug": string,"summary": string,"tag": string,"tint": string,"updated_at": string,"warning_label": string | null,"was_price_ghs": number | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "badge"?: string | null,"brand"?: string | null,"category_id"?: string | null,"collection"?: string | null,"country_of_origin"?: string | null,"created_at"?: string,"department": Database["public"]['Enums']["department"],"details"?: Json | null,"id"?: string,"image_key"?: string | null,"ingredients"?: string | null,"is_published"?: boolean,"kids_filter"?: Database["public"]['Enums']["kids_filter"] | null,"kind": Database["public"]['Enums']["product_kind"],"name": string,"period_after_opening"?: string | null,"price_ghs": number,"recall_reason"?: string | null,"recalled_at"?: string | null,"regulatory_reference"?: string | null,"slug": string,"summary": string,"tag": string,"tint": string,"updated_at"?: string,"was_price_ghs"?: number | null
+                    "badge"?: string | null,"brand"?: string | null,"category_id"?: string | null,"collection"?: string | null,"country_of_origin"?: string | null,"created_at"?: string,"department": Database["public"]['Enums']["department"],"details"?: Json | null,"id"?: string,"image_key"?: string | null,"ingredients"?: string | null,"is_published"?: boolean,"kids_filter"?: Database["public"]['Enums']["kids_filter"] | null,"kind": Database["public"]['Enums']["product_kind"],"name": string,"period_after_opening"?: string | null,"price_ghs": number,"recall_reason"?: string | null,"recalled_at"?: string | null,"regulatory_reference"?: string | null,"return_note"?: string | null,"returnable"?: boolean,"shades"?: (string)[],"skin_types"?: (string)[],"slug": string,"summary": string,"tag": string,"tint": string,"updated_at"?: string,"warning_label"?: string | null,"was_price_ghs"?: number | null
                   }
                   Update: {
-                    "badge"?: string | null,"brand"?: string | null,"category_id"?: string | null,"collection"?: string | null,"country_of_origin"?: string | null,"created_at"?: string,"department"?: Database["public"]['Enums']["department"],"details"?: Json | null,"id"?: string,"image_key"?: string | null,"ingredients"?: string | null,"is_published"?: boolean,"kids_filter"?: Database["public"]['Enums']["kids_filter"] | null,"kind"?: Database["public"]['Enums']["product_kind"],"name"?: string,"period_after_opening"?: string | null,"price_ghs"?: number,"recall_reason"?: string | null,"recalled_at"?: string | null,"regulatory_reference"?: string | null,"slug"?: string,"summary"?: string,"tag"?: string,"tint"?: string,"updated_at"?: string,"was_price_ghs"?: number | null
+                    "badge"?: string | null,"brand"?: string | null,"category_id"?: string | null,"collection"?: string | null,"country_of_origin"?: string | null,"created_at"?: string,"department"?: Database["public"]['Enums']["department"],"details"?: Json | null,"id"?: string,"image_key"?: string | null,"ingredients"?: string | null,"is_published"?: boolean,"kids_filter"?: Database["public"]['Enums']["kids_filter"] | null,"kind"?: Database["public"]['Enums']["product_kind"],"name"?: string,"period_after_opening"?: string | null,"price_ghs"?: number,"recall_reason"?: string | null,"recalled_at"?: string | null,"regulatory_reference"?: string | null,"return_note"?: string | null,"returnable"?: boolean,"shades"?: (string)[],"skin_types"?: (string)[],"slug"?: string,"summary"?: string,"tag"?: string,"tint"?: string,"updated_at"?: string,"warning_label"?: string | null,"was_price_ghs"?: number | null
                   }
                   Relationships: [
                     {
@@ -376,6 +404,52 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"return_items": {
+                  Row: {
+                    "order_item_id": string,"outcome": Database["public"]['Enums']["return_outcome"] | null,"quantity": number,"return_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "order_item_id": string,"outcome"?: Database["public"]['Enums']["return_outcome"] | null,"quantity": number,"return_id": string
+                  }
+                  Update: {
+                    "order_item_id"?: string,"outcome"?: Database["public"]['Enums']["return_outcome"] | null,"quantity"?: number,"return_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "return_items_order_item_id_fkey"
+      columns: ["order_item_id"]
+isOneToOne: false
+      referencedRelation: "order_items"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "return_items_return_id_fkey"
+      columns: ["return_id"]
+isOneToOne: false
+      referencedRelation: "return_requests"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"return_requests": {
+                  Row: {
+                    "case_number": string,"created_at": string,"decided_at": string | null,"decided_by": string | null,"decision_note": string | null,"details": string | null,"id": string,"order_id": string,"photo_paths": (string)[],"reason": Database["public"]['Enums']["return_reason"],"received_at": string | null,"received_by": string | null,"refund_amount_ghs": number | null,"refund_reference": string | null,"refunded_at": string | null,"status": Database["public"]['Enums']["return_status"]
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "case_number"?: string,"created_at"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"decision_note"?: string | null,"details"?: string | null,"id"?: string,"order_id": string,"photo_paths"?: (string)[],"reason": Database["public"]['Enums']["return_reason"],"received_at"?: string | null,"received_by"?: string | null,"refund_amount_ghs"?: number | null,"refund_reference"?: string | null,"refunded_at"?: string | null,"status"?: Database["public"]['Enums']["return_status"]
+                  }
+                  Update: {
+                    "case_number"?: string,"created_at"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"decision_note"?: string | null,"details"?: string | null,"id"?: string,"order_id"?: string,"photo_paths"?: (string)[],"reason"?: Database["public"]['Enums']["return_reason"],"received_at"?: string | null,"received_by"?: string | null,"refund_amount_ghs"?: number | null,"refund_reference"?: string | null,"refunded_at"?: string | null,"status"?: Database["public"]['Enums']["return_status"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "return_requests_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "orders"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"riders": {
                   Row: {
@@ -459,17 +533,37 @@ isOneToOne: false
                   ]
                 },"store_settings": {
                   Row: {
-                    "expiry_alert_days": number,"id": boolean,"low_stock_threshold": number,"max_delivery_attempts": number,"require_delivery_code": boolean,"reservation_minutes": number
+                    "expiry_alert_days": number,"id": boolean,"low_stock_threshold": number,"max_delivery_attempts": number,"require_delivery_code": boolean,"reservation_minutes": number,"return_window_days": number,"support_email": string | null,"support_hours": string | null,"support_phone": string | null,"support_whatsapp": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "expiry_alert_days"?: number,"id"?: boolean,"low_stock_threshold"?: number,"max_delivery_attempts"?: number,"require_delivery_code"?: boolean,"reservation_minutes"?: number
+                    "expiry_alert_days"?: number,"id"?: boolean,"low_stock_threshold"?: number,"max_delivery_attempts"?: number,"require_delivery_code"?: boolean,"reservation_minutes"?: number,"return_window_days"?: number,"support_email"?: string | null,"support_hours"?: string | null,"support_phone"?: string | null,"support_whatsapp"?: string | null
                   }
                   Update: {
-                    "expiry_alert_days"?: number,"id"?: boolean,"low_stock_threshold"?: number,"max_delivery_attempts"?: number,"require_delivery_code"?: boolean,"reservation_minutes"?: number
+                    "expiry_alert_days"?: number,"id"?: boolean,"low_stock_threshold"?: number,"max_delivery_attempts"?: number,"require_delivery_code"?: boolean,"reservation_minutes"?: number,"return_window_days"?: number,"support_email"?: string | null,"support_hours"?: string | null,"support_phone"?: string | null,"support_whatsapp"?: string | null
                   }
                   Relationships: [
                     
+                  ]
+                },"support_cases": {
+                  Row: {
+                    "case_number": string,"created_at": string,"email": string | null,"id": string,"message": string,"name": string,"order_id": string | null,"order_reference": string | null,"phone": string,"replied_at": string | null,"replied_by": string | null,"staff_reply": string | null,"status": Database["public"]['Enums']["support_status"],"topic": Database["public"]['Enums']["support_topic"]
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "case_number"?: string,"created_at"?: string,"email"?: string | null,"id"?: string,"message": string,"name": string,"order_id"?: string | null,"order_reference"?: string | null,"phone": string,"replied_at"?: string | null,"replied_by"?: string | null,"staff_reply"?: string | null,"status"?: Database["public"]['Enums']["support_status"],"topic": Database["public"]['Enums']["support_topic"]
+                  }
+                  Update: {
+                    "case_number"?: string,"created_at"?: string,"email"?: string | null,"id"?: string,"message"?: string,"name"?: string,"order_id"?: string | null,"order_reference"?: string | null,"phone"?: string,"replied_at"?: string | null,"replied_by"?: string | null,"staff_reply"?: string | null,"status"?: Database["public"]['Enums']["support_status"],"topic"?: Database["public"]['Enums']["support_topic"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "support_cases_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "orders"
+      referencedColumns: ["id"]
+    }
                   ]
                 }
           }
@@ -482,6 +576,12 @@ isOneToOne: false
                            },
 "admin_cancel_order":
 { Args: { "p_order_id": string,"p_reason": string }; Returns: undefined
+                           },
+"admin_decide_return":
+{ Args: { "p_approve": boolean,"p_note"?: string,"p_return_id": string }; Returns: undefined
+                           },
+"admin_delete_banner":
+{ Args: { "p_id": string }; Returns: undefined
                            },
 "admin_dispatch_order":
 { Args: { "p_courier_reference"?: string,"p_note"?: string,"p_order_id": string,"p_rider_id"?: string }; Returns: undefined
@@ -499,6 +599,9 @@ isOneToOne: false
                            },
 "admin_mark_delivery_failed":
 { Args: { "p_note"?: string,"p_order_id": string,"p_reason": Database["public"]['Enums']["delivery_failure_reason"] }; Returns: undefined
+                           },
+"admin_mark_return_refunded":
+{ Args: { "p_reference": string,"p_return_id": string }; Returns: undefined
                            },
 "admin_pack_orders":
 { Args: { "p_order_ids": (string)[] }; Returns: {
@@ -518,14 +621,23 @@ isOneToOne: false
 "admin_recall_product":
 { Args: { "p_product_id": string,"p_reason": string }; Returns: undefined
                            },
+"admin_receive_return":
+{ Args: { "p_note"?: string,"p_outcomes": Json,"p_return_id": string }; Returns: undefined
+                           },
 "admin_receive_stock":
 { Args: { "p_batch_code": string,"p_expires_on": string,"p_note"?: string,"p_product_id": string,"p_quantity": number,"p_size_code": string }; Returns: string
+                           },
+"admin_reply_support_case":
+{ Args: { "p_case_id": string,"p_close"?: boolean,"p_reply": string }; Returns: undefined
                            },
 "admin_resolve_order_flag":
 { Args: { "p_flag": string,"p_note": string,"p_order_id": string }; Returns: undefined
                            },
 "admin_return_to_stock":
 { Args: { "p_note"?: string,"p_order_id": string }; Returns: undefined
+                           },
+"admin_save_banner":
+{ Args: { "p": Json }; Returns: string
                            },
 "admin_save_product":
 { Args: { "p": Json }; Returns: Json
@@ -535,6 +647,9 @@ isOneToOne: false
                            },
 "admin_set_batch_status":
 { Args: { "p_batch_id": string,"p_note": string,"p_status": Database["public"]['Enums']["batch_status"] }; Returns: undefined
+                           },
+"admin_set_collection":
+{ Args: { "p_slot": string,"p_slugs": (string)[] }; Returns: undefined
                            },
 "admin_set_product_published":
 { Args: { "p_product_id": string,"p_published": boolean }; Returns: (string)[]
@@ -550,6 +665,9 @@ isOneToOne: false
               "available": number,"category_name": string,"expiring_soon": boolean,"is_low": boolean,"is_published": boolean,"low_stock_threshold": number,"next_expiry": string,"on_hand": number,"product_id": string,"product_name": string,"reserved": number,"size_code": string,"size_label": string,"slug": string
             }[]
                            },
+"admin_update_settings":
+{ Args: { "p": Json }; Returns: undefined
+                           },
 "admin_write_off_batch":
 { Args: { "p_batch_id": string,"p_note": string }; Returns: undefined
                            },
@@ -558,6 +676,9 @@ isOneToOne: false
                            },
 "audit":
 { Args: { "p_action": string,"p_details"?: Json,"p_entity": string,"p_entity_id": string }; Returns: undefined
+                           },
+"can_upload_return_photo":
+{ Args: { "p_name": string }; Returns: boolean
                            },
 "change_batch_status":
 { Args: { "p_batch_id": string,"p_note": string,"p_reason": Database["public"]['Enums']["stock_movement_reason"],"p_status": Database["public"]['Enums']["batch_status"] }; Returns: undefined
@@ -572,6 +693,9 @@ isOneToOne: false
               "order_number": string,"order_status": Database["public"]['Enums']["order_status"],"payment_status": Database["public"]['Enums']["payment_status"]
             }[]
                            },
+"create_support_case":
+{ Args: { "p_email"?: string,"p_message": string,"p_name": string,"p_order_number"?: string,"p_order_token"?: string,"p_phone": string,"p_topic": Database["public"]['Enums']["support_topic"] }; Returns: string
+                           },
 "current_staff_role":
 { Args: Record<PropertyKey, never>; Returns: Database["public"]['Enums']["staff_role"]
                            },
@@ -581,12 +705,15 @@ isOneToOne: false
 "expire_unpaid_orders":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
+"find_order":
+{ Args: { "p_order_number": string,"p_phone": string }; Returns: string
+                           },
 "finish_notification":
 { Args: { "p_error"?: string,"p_id": string,"p_outcome": string,"p_provider"?: string,"p_reference"?: string }; Returns: undefined
                            },
 "get_bag":
 { Args: Record<PropertyKey, never>; Returns: {
-              "image_key": string,"in_stock": boolean,"kind": Database["public"]['Enums']["product_kind"],"name": string,"quantity": number,"size_code": string,"size_label": string,"slug": string,"tint": string,"unit_price_ghs": number
+              "image_key": string,"in_stock": boolean,"kind": Database["public"]['Enums']["product_kind"],"name": string,"quantity": number,"size_code": string,"size_label": string,"slug": string,"tint": string,"unit_price_ghs": number,"warning_label": string
             }[]
                            },
 "get_order":
@@ -664,17 +791,34 @@ isOneToOne: false
 "product_publish_problems":
 { Args: { "p_product_id": string }; Returns: (string)[]
                            },
+"queue_customer_message":
+{ Args: { "p_email": string,"p_order_id": string,"p_payload": Json,"p_phone": string,"p_template": string }; Returns: undefined
+                           },
+"queue_return_message":
+{ Args: { "p_return_id": string,"p_template": string }; Returns: undefined
+                           },
 "record_signup_consent":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
 "release_order_reservation":
 { Args: { "p_order_id": string,"p_reason": string }; Returns: undefined
                            },
+"request_return":
+{ Args: { "p_details"?: string,"p_items": Json,"p_order_token": string,"p_photo_paths"?: (string)[],"p_reason": Database["public"]['Enums']["return_reason"] }; Returns: string
+                           },
 "require_staff":
 { Args: { "p_roles"?: (Database["public"]['Enums']["staff_role"])[] }; Returns: Database["public"]['Enums']["staff_role"]
                            },
 "return_order_batches":
 { Args: { "p_note": string,"p_order_id": string }; Returns: undefined
+                           },
+"return_photo_folder":
+{ Args: { "p_order_token": string }; Returns: string
+                           },
+"search_products":
+{ Args: { "p_limit"?: number,"p_query": string }; Returns: {
+              "score": number,"slug": string
+            }[]
                            },
 "set_bag":
 { Args: { "p_items": Json }; Returns: undefined
@@ -687,7 +831,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "batch_status": "available"|"quarantined"|"recalled"|"expired","delivery_failure_reason": "customer_unreachable"|"customer_absent"|"wrong_address"|"refused"|"rider_issue"|"other","department": "beauty"|"kids","kids_filter": "bath"|"toys"|"clothing"|"gifts","momo_network": "mtn"|"telecel"|"at","notification_channel": "sms"|"email","notification_status": "queued"|"sending"|"sent"|"failed"|"not_sent","order_status": "pending_payment"|"paid"|"packing"|"packed"|"out_for_delivery"|"delivery_failed"|"delivered"|"cancelled"|"returned","payment_method": "momo"|"card","payment_status": "pending"|"succeeded"|"failed"|"expired","product_kind": "bottle"|"jar"|"tube"|"garment"|"toy"|"gift","staff_role": "admin"|"catalogue"|"operations"|"support"|"finance"|"read_only","stock_movement_reason": "opening"|"received"|"sold"|"picked"|"returned"|"restocked"|"adjusted"|"damaged"|"lost"|"found"|"quarantined"|"released"|"recalled"|"expired"|"written_off"
+            "batch_status": "available"|"quarantined"|"recalled"|"expired","delivery_failure_reason": "customer_unreachable"|"customer_absent"|"wrong_address"|"refused"|"rider_issue"|"other","department": "beauty"|"kids","kids_filter": "bath"|"toys"|"clothing"|"gifts","momo_network": "mtn"|"telecel"|"at","notification_channel": "sms"|"email","notification_status": "queued"|"sending"|"sent"|"failed"|"not_sent","order_status": "pending_payment"|"paid"|"packing"|"packed"|"out_for_delivery"|"delivery_failed"|"delivered"|"cancelled"|"returned","payment_method": "momo"|"card","payment_status": "pending"|"succeeded"|"failed"|"expired","product_kind": "bottle"|"jar"|"tube"|"garment"|"toy"|"gift","return_outcome": "restock"|"quarantine"|"write_off","return_reason": "damaged"|"wrong_item"|"not_as_described"|"expired_or_near_expiry"|"changed_mind"|"other","return_status": "requested"|"approved"|"rejected"|"received"|"refunded","staff_role": "admin"|"catalogue"|"operations"|"support"|"finance"|"read_only","stock_movement_reason": "opening"|"received"|"sold"|"picked"|"returned"|"restocked"|"adjusted"|"damaged"|"lost"|"found"|"quarantined"|"released"|"recalled"|"expired"|"written_off","support_status": "open"|"answered"|"closed","support_topic": "delivery"|"damaged_or_wrong"|"payment"|"product_question"|"account"|"other"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -807,7 +951,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "batch_status": ["available", "quarantined", "recalled", "expired"],"delivery_failure_reason": ["customer_unreachable", "customer_absent", "wrong_address", "refused", "rider_issue", "other"],"department": ["beauty", "kids"],"kids_filter": ["bath", "toys", "clothing", "gifts"],"momo_network": ["mtn", "telecel", "at"],"notification_channel": ["sms", "email"],"notification_status": ["queued", "sending", "sent", "failed", "not_sent"],"order_status": ["pending_payment", "paid", "packing", "packed", "out_for_delivery", "delivery_failed", "delivered", "cancelled", "returned"],"payment_method": ["momo", "card"],"payment_status": ["pending", "succeeded", "failed", "expired"],"product_kind": ["bottle", "jar", "tube", "garment", "toy", "gift"],"staff_role": ["admin", "catalogue", "operations", "support", "finance", "read_only"],"stock_movement_reason": ["opening", "received", "sold", "picked", "returned", "restocked", "adjusted", "damaged", "lost", "found", "quarantined", "released", "recalled", "expired", "written_off"]
+            "batch_status": ["available", "quarantined", "recalled", "expired"],"delivery_failure_reason": ["customer_unreachable", "customer_absent", "wrong_address", "refused", "rider_issue", "other"],"department": ["beauty", "kids"],"kids_filter": ["bath", "toys", "clothing", "gifts"],"momo_network": ["mtn", "telecel", "at"],"notification_channel": ["sms", "email"],"notification_status": ["queued", "sending", "sent", "failed", "not_sent"],"order_status": ["pending_payment", "paid", "packing", "packed", "out_for_delivery", "delivery_failed", "delivered", "cancelled", "returned"],"payment_method": ["momo", "card"],"payment_status": ["pending", "succeeded", "failed", "expired"],"product_kind": ["bottle", "jar", "tube", "garment", "toy", "gift"],"return_outcome": ["restock", "quarantine", "write_off"],"return_reason": ["damaged", "wrong_item", "not_as_described", "expired_or_near_expiry", "changed_mind", "other"],"return_status": ["requested", "approved", "rejected", "received", "refunded"],"staff_role": ["admin", "catalogue", "operations", "support", "finance", "read_only"],"stock_movement_reason": ["opening", "received", "sold", "picked", "returned", "restocked", "adjusted", "damaged", "lost", "found", "quarantined", "released", "recalled", "expired", "written_off"],"support_status": ["open", "answered", "closed"],"support_topic": ["delivery", "damaged_or_wrong", "payment", "product_question", "account", "other"]
           }
         }
 } as const

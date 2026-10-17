@@ -4,7 +4,7 @@ import { AdminGate } from './AdminGate';
 import styles from './admin.module.css';
 
 export const metadata: Metadata = {
-  title: { default: 'Admin', template: '%s | Sleek Connect admin' },
+  title: { default: 'Admin', template: '%s | Sleek Connect Store admin' },
   robots: { index: false, follow: false },
 };
 

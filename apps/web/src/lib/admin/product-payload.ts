@@ -32,6 +32,11 @@ export interface ProductPayload {
   country_of_origin?: string;
   regulatory_reference?: string;
   period_after_opening?: string;
+  skin_types?: string[];
+  shades?: string[];
+  warning_label?: string;
+  returnable?: boolean;
+  return_note?: string;
   sizes: SizePayload[];
   age_bands: string[];
   publish: boolean;
@@ -62,13 +67,18 @@ export interface ProductRow {
   country_of_origin: string | null;
   regulatory_reference: string | null;
   period_after_opening: string | null;
+  skin_types: string[];
+  shades: string[];
+  warning_label: string | null;
+  returnable: boolean;
+  return_note: string | null;
   is_published: boolean;
   product_sizes: { code: string; label: string; price_ghs: number; is_default: boolean; sort_order: number }[];
   product_age_bands: { age_band_id: string }[];
 }
 
 export const productRowColumns =
-  'id, slug, name, brand, department, category_id, kids_filter, kind, price_ghs, was_price_ghs, badge, tag, summary, image_key, tint, details, ingredients, country_of_origin, regulatory_reference, period_after_opening, is_published, recalled_at, recall_reason, product_sizes(code, label, price_ghs, is_default, sort_order), product_age_bands(age_band_id)';
+  'id, slug, name, brand, department, category_id, kids_filter, kind, price_ghs, was_price_ghs, badge, tag, summary, image_key, tint, details, ingredients, country_of_origin, regulatory_reference, period_after_opening, skin_types, shades, warning_label, returnable, return_note, is_published, recalled_at, recall_reason, product_sizes(code, label, price_ghs, is_default, sort_order), product_age_bands(age_band_id)';
 
 export function rowToPayload(row: ProductRow): ProductPayload {
   const d = (row.details ?? {}) as Record<string, unknown>;
@@ -100,6 +110,11 @@ export function rowToPayload(row: ProductRow): ProductPayload {
     country_of_origin: row.country_of_origin ?? undefined,
     regulatory_reference: row.regulatory_reference ?? undefined,
     period_after_opening: row.period_after_opening ?? undefined,
+    skin_types: row.skin_types,
+    shades: row.shades,
+    warning_label: row.warning_label ?? undefined,
+    returnable: row.returnable,
+    return_note: row.return_note ?? undefined,
     sizes: [...row.product_sizes]
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((s) => ({ code: s.code, label: s.label, price_ghs: s.price_ghs, is_default: s.is_default })),

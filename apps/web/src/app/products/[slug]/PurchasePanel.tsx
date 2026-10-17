@@ -54,6 +54,16 @@ export function PurchasePanel({ product }: { product: Product }) {
         </div>
       )}
 
+      {product.warningLabel && (
+        <p className={styles.safetyWarning} id="safety-warning">
+          <Icon name="alert" size={18} strokeWidth={2} />
+          <span>
+            <strong>Safety: </strong>
+            {product.warningLabel}
+          </span>
+        </p>
+      )}
+
       <div className={styles.buyRow}>
         <div className={styles.qty}>
           <button type="button" aria-label="Decrease quantity" onClick={() => setQty((q) => Math.max(1, q - 1))}>
@@ -70,7 +80,13 @@ export function PurchasePanel({ product }: { product: Product }) {
             +
           </button>
         </div>
-        <button type="button" className={styles.addButton} onClick={addToBag} disabled={!available}>
+        <button
+          type="button"
+          className={styles.addButton}
+          onClick={addToBag}
+          disabled={!available}
+          aria-describedby={product.warningLabel ? 'safety-warning' : undefined}
+        >
           {!available ? 'Sold out' : added ? 'Added to bag' : 'Add to bag'}
         </button>
         <button

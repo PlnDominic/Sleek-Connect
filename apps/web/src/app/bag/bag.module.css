@@ -89,6 +89,20 @@
   color: var(--c-accent-deep);
 }
 
+.safety {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #6b4700;
+}
+
+.safety svg {
+  flex: none;
+  margin-top: 2px;
+}
+
 .lineControls {
   display: flex;
   align-items: center;

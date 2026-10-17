@@ -1,8 +1,10 @@
 import Link from 'next/link';
-import { pending } from '@sleek/shared';
+import { pending, type Category } from '@sleek/shared';
+import { getCategories } from '@/lib/catalog';
 import { BagButton } from './BagButton';
 import { Icon } from './Icon';
 import { Logo } from './Logo';
+import { SearchBox } from './SearchBox';
 import styles from './chrome.module.css';
 
 export function AnnouncementBar() {
@@ -28,33 +30,67 @@ export function AnnouncementBar() {
 
 const navLinks = [
   { label: 'Home', href: '/' },
-  { label: 'Shop', href: '/#new-arrivals' },
-  { label: 'New Arrivals', href: '/#new-arrivals' },
+  { label: 'Shop', href: '/shop' },
+  { label: 'New Arrivals', href: '/shop?sort=newest' },
   { label: 'Best Sellers', href: '/#best-sellers' },
-  { label: 'Categories', href: '/#categories', menu: true },
+  { label: 'Categories', href: '/shop', menu: true },
   { label: 'Shop by Age', href: '/shop-by-age' },
-  { label: 'Gifts', href: '#' },
-  { label: 'Contact', href: '#' },
+  { label: 'Gifts', href: '/search?q=gift' },
+  { label: 'Contact', href: '/help#contact' },
 ];
 
+const departmentNames = { beauty: 'Beauty', kids: 'Baby & Kids' } as const;
+
+/** The Categories menu: every department and its categories. */
+function CategoriesMenu({ categories, current }: { categories: Category[]; current: boolean }) {
+  return (
+    <div className={styles.menu}>
+      <Link href="/shop" aria-current={current ? 'page' : undefined} aria-haspopup="true">
+        Categories
+        <Icon name="chevronDown" size={14} strokeWidth={2} />
+      </Link>
+      <div className={styles.menuPanel}>
+        {(['beauty', 'kids'] as const).map((d) => (
+          <div key={d} className={styles.menuColumn}>
+            <Link href={`/shop/${d}`} className={styles.menuHeading}>
+              {departmentNames[d]}
+            </Link>
+            {categories
+              .filter((c) => c.department === d)
+              .map((c) => (
+                <Link key={c.id} href={`/shop/${d}/${c.id}`}>
+                  {c.name}
+                </Link>
+              ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /** Full header with the main navigation, used on the home page. */
-export function SiteHeader({ current }: { current?: string }) {
+export async function SiteHeader({ current }: { current?: string }) {
+  const categories = await getCategories();
   return (
     <header className={styles.header}>
       <div className={`container ${styles.headerInner}`}>
         <Logo />
         <nav aria-label="Main" className={styles.nav}>
-          {navLinks.map((link) => (
-            <Link key={link.label} href={link.href} aria-current={link.label === current ? 'page' : undefined}>
-              {link.label}
-              {link.menu && <Icon name="chevronDown" size={14} strokeWidth={2} />}
-            </Link>
-          ))}
+          {navLinks.map((link) =>
+            link.menu ? (
+              <CategoriesMenu key={link.label} categories={categories} current={link.label === current} />
+            ) : (
+              <Link key={link.label} href={link.href} aria-current={link.label === current ? 'page' : undefined}>
+                {link.label}
+              </Link>
+            ),
+          )}
         </nav>
         <div className={styles.actions}>
-          <button type="button" aria-label="Search" className={styles.iconButton}>
+          <Link href="/search" aria-label="Search" className={styles.iconButton}>
             <Icon name="search" size={21} />
-          </button>
+          </Link>
           <button type="button" aria-label="Saved items" className={styles.iconButton}>
             <Icon name="heart" size={21} />
           </button>
@@ -74,13 +110,7 @@ export function CompactHeader() {
     <header className={styles.compact}>
       <div className={`container ${styles.compactInner}`}>
         <Logo />
-        <form role="search" className={styles.search}>
-          <label htmlFor="site-search">
-            <Icon name="search" size={18} strokeWidth={2} />
-            <span className="visually-hidden">Search products</span>
-          </label>
-          <input id="site-search" name="q" type="search" placeholder="Search serums, baby wash, gift sets..." />
-        </form>
+        <SearchBox compact />
         <BagButton variant="pill" />
       </div>
     </header>

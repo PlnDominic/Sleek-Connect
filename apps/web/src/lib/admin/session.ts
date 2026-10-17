@@ -54,7 +54,13 @@ const permissions = {
   'orders.review': ['operations', 'support'],
   'orders.refund': ['finance', 'operations'],
   'riders.edit': ['operations'],
+  'content.edit': ['catalogue'],
+  'returns.decide': ['support', 'operations'],
+  'returns.receive': ['operations'],
+  'returns.refund': ['finance', 'operations'],
+  'support.reply': ['support', 'operations'],
   'staff.manage': [],
+  'settings.edit': [],
 } satisfies Record<string, StaffRole[]>;
 
 export type Permission = keyof typeof permissions;

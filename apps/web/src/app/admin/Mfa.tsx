@@ -59,7 +59,7 @@ export function MfaEnroll() {
       }
       const { data, error: enrollError } = await supabase.auth.mfa.enroll({
         factorType: 'totp',
-        friendlyName: `Sleek Connect admin ${new Date().toISOString().slice(0, 10)}`,
+        friendlyName: `Sleek Connect Store admin ${new Date().toISOString().slice(0, 10)}`,
       });
       if (enrollError || !data) {
         setError('Couldn’t start the set-up. Refresh the page to try again.');

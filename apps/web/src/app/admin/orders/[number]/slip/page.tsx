@@ -64,7 +64,7 @@ export default async function SlipPage({ params }: PageProps<'/admin/orders/[num
 
       <section className={styles.sheet} aria-labelledby="slip-title">
         <div className={styles.slipHead}>
-          <h1 id="slip-title">Sleek Connect</h1>
+          <h1 id="slip-title">Sleek Connect Store</h1>
           <span>
             Order {order.order_number}
             <br />
@@ -111,7 +111,7 @@ export default async function SlipPage({ params }: PageProps<'/admin/orders/[num
         {order.is_gift && (
           <div className={styles.gift}>
             <strong>A gift for you</strong>
-            <span>Prices are left out because this order is a gift. With love, from Sleek Connect.</span>
+            <span>Prices are left out because this order is a gift. With love, from Sleek Connect Store.</span>
           </div>
         )}
         <p className={styles.small}>Authentic, batch-checked products. Questions? Reply to your order SMS.</p>

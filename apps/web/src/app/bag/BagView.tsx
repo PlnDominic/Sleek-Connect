@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { formatPrice } from '@sleek/shared';
 import { MAX_ITEM_QTY, useBag } from '@sleek/shared/bag';
 import { useAuth } from '@/components/AuthProvider';
+import { Icon } from '@/components/Icon';
 import { ProductImage } from '@/components/ProductImage';
 import styles from './bag.module.css';
 
@@ -59,6 +60,11 @@ export function BagView() {
                       {item.sizeLabel ? `${item.sizeLabel} · ` : ''}
                       {formatPrice(item.unitPrice)} each
                     </span>
+                    {item.warning && (
+                      <span className={styles.safety}>
+                        <Icon name="alert" size={14} strokeWidth={2} /> {item.warning}
+                      </span>
+                    )}
                     {item.inStock === false && <span className={styles.warning}>Sold out: remove to continue</span>}
                     <div className={styles.lineControls}>
                       <div className={styles.qty}>

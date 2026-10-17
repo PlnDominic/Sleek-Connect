@@ -30,7 +30,13 @@ export interface CustomerOrder {
   delivered_at: string | null;
   delivered_to: string | null;
   refund_due: boolean;
+  /** Last moment a return can be requested (delivered orders only). */
+  return_until: string | null;
+  /** True while a return can still be requested. */
+  return_open: boolean;
+  returns: CustomerReturn[];
   items: {
+    id: string;
     name: string;
     slug: string | null;
     size_label: string | null;
@@ -40,10 +46,48 @@ export interface CustomerOrder {
     image_key: ImageKey | null;
     tint: string | null;
     kind: ProductKind | null;
+    warning_label: string | null;
+    returnable: boolean;
+    return_note: string | null;
+    /** Units already in a return that wasn't rejected. */
+    return_requested: number;
     batches: { code: string; expires_on: string | null; quantity: number }[];
   }[];
   events: { status: OrderStatus; at: string; reason: DeliveryFailureReason | null }[];
 }
+
+export type ReturnStatus = 'requested' | 'approved' | 'rejected' | 'received' | 'refunded';
+export type ReturnReason = 'damaged' | 'wrong_item' | 'not_as_described' | 'expired_or_near_expiry' | 'changed_mind' | 'other';
+
+export interface CustomerReturn {
+  case_number: string;
+  status: ReturnStatus;
+  reason: ReturnReason;
+  created_at: string;
+  decision_note: string | null;
+  refund_amount_ghs: number | null;
+  items: { name: string; size_label: string | null; quantity: number }[];
+}
+
+export const returnReasons: Record<ReturnReason, string> = {
+  damaged: 'Arrived damaged or leaking',
+  wrong_item: 'Wrong item or size',
+  not_as_described: 'Not as described',
+  expired_or_near_expiry: 'Expired or close to expiry',
+  changed_mind: 'Changed my mind (unopened)',
+  other: 'Something else',
+};
+
+/** Reasons where we got it wrong, so items that can't normally be returned still can. */
+export const faultReasons: ReturnReason[] = ['damaged', 'wrong_item', 'expired_or_near_expiry'];
+
+export const returnStatusLabels: Record<ReturnStatus, string> = {
+  requested: 'Waiting for review',
+  approved: 'Approved: we’ll arrange collection',
+  rejected: 'Not accepted',
+  received: 'Item received: refund in progress',
+  refunded: 'Refunded',
+};
 
 export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -170,7 +214,7 @@ export function orderHeadline(order: CustomerOrder): { title: string; body: stri
         title: 'Delivered',
         body: `Delivered${order.delivered_to ? ` to ${order.delivered_to}` : ''}${
           order.delivered_at ? ` on ${formatDate(order.delivered_at)}` : ''
-        }. Thank you for shopping with Sleek Connect.`,
+        }. Thank you for shopping with Sleek Connect Store.`,
       };
     case 'delivery_failed': {
       const reason = [...order.events].reverse().find((e) => e.reason)?.reason;

@@ -508,6 +508,20 @@
   background: var(--c-ink);
 }
 
+.promoLight {
+  background: var(--c-surface);
+  color: var(--c-ink);
+}
+
+.promoLight .promoText {
+  color: var(--c-text-muted);
+}
+
+.promoLight .promoCta {
+  background: var(--c-ink);
+  color: var(--c-canvas);
+}
+
 .promoKicker {
   font-size: 13px;
   font-weight: 500;

@@ -146,6 +146,24 @@
   gap: 10px;
 }
 
+.safetyWarning {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: #fdf0d6;
+  color: #5f4000;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.safetyWarning svg {
+  flex: none;
+  margin-top: 1px;
+}
+
 .label {
   font-size: 14px;
   font-weight: 600;

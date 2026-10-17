@@ -5,7 +5,8 @@ import { kidsFilters, productKinds } from './product-payload';
 export const importColumns = [
   'slug', 'name', 'brand', 'department', 'category', 'kids_filter', 'kind', 'price', 'was_price', 'tag', 'summary',
   'description', 'highlights', 'free_from', 'recommended_age', 'warnings', 'how_to_use', 'ingredients',
-  'country_of_origin', 'regulatory_reference', 'period_after_opening', 'age_bands', 'sizes', 'publish',
+  'country_of_origin', 'regulatory_reference', 'period_after_opening', 'skin_types', 'shades', 'warning_label',
+  'returnable', 'return_note', 'age_bands', 'sizes', 'publish',
 ] as const;
 
 export type ImportColumn = (typeof importColumns)[number];
@@ -59,6 +60,7 @@ export function readImport(grid: string[][]): { rows: ImportRow[]; error?: strin
     }
     if (values.was_price && Number.isNaN(Number(values.was_price))) errors.push('was_price must be a number');
     if (values.publish && !/^(yes|no|true|false|y|n)$/i.test(values.publish)) errors.push('publish must be yes or no');
+    if (values.returnable && !/^(yes|no|true|false|y|n)$/i.test(values.returnable)) errors.push('returnable must be yes or no');
     return { line: i + 2, values, errors };
   });
   return { rows };
@@ -92,6 +94,11 @@ export function rowPayload(v: ImportRow['values'], existing?: ProductPayload): P
     country_of_origin: pick('country_of_origin', existing?.country_of_origin),
     regulatory_reference: pick('regulatory_reference', existing?.regulatory_reference),
     period_after_opening: pick('period_after_opening', existing?.period_after_opening),
+    skin_types: v.skin_types ? list(v.skin_types) : existing?.skin_types,
+    shades: v.shades ? list(v.shades) : existing?.shades,
+    warning_label: pick('warning_label', existing?.warning_label),
+    returnable: v.returnable ? /^(yes|true|y)$/i.test(v.returnable) : (existing?.returnable ?? true),
+    return_note: pick('return_note', existing?.return_note),
     age_bands: v.age_bands ? list(v.age_bands) : (existing?.age_bands ?? []),
     sizes: sizes.length ? sizes : (existing?.sizes ?? []),
     publish: v.publish ? /^(yes|true|y)$/i.test(v.publish) : (existing?.publish ?? false),

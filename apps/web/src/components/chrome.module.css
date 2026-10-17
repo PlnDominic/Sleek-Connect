@@ -84,6 +84,44 @@
   border-bottom: 2px solid var(--c-accent);
 }
 
+.menu {
+  position: relative;
+}
+
+.menuPanel {
+  display: none;
+  position: absolute;
+  z-index: 30;
+  top: 100%;
+  left: -20px;
+  padding: 18px 20px;
+  gap: 32px;
+  grid-template-columns: repeat(2, max-content);
+  background: var(--c-canvas);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-xl);
+  box-shadow: 0 16px 40px rgb(0 0 0 / 0.12);
+}
+
+.menu:hover .menuPanel,
+.menu:focus-within .menuPanel {
+  display: grid;
+}
+
+.menuColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menuColumn a {
+  white-space: nowrap;
+}
+
+.menuColumn .menuHeading {
+  font-weight: 700;
+}
+
 .actions {
   display: flex;
   align-items: center;
@@ -130,6 +168,11 @@
 
   .nav a {
     white-space: nowrap;
+  }
+
+  /* No hover on small screens: Categories goes straight to /shop. */
+  .menuPanel {
+    display: none !important;
   }
 
   .nav a[aria-current='page'] {

@@ -13,6 +13,8 @@ import {
   formatDateTime,
   orderHeadline,
   paymentSummary,
+  returnReasons,
+  returnStatusLabels,
   statusShort,
 } from '@/lib/orders';
 import { AutoRefresh } from './AutoRefresh';
@@ -46,6 +48,7 @@ async function OrderDetails({ params }: { params: PageProps<'/orders/[token]'>['
   const headline = orderHeadline(order);
   const timeline = buildTimeline(order);
   const live = !finalStatuses.includes(order.status);
+  const canReturn = order.return_open && order.items.some((i) => i.quantity > i.return_requested);
 
   return (
     <>
@@ -129,6 +132,7 @@ async function OrderDetails({ params }: { params: PageProps<'/orders/[token]'>['
                     <span>
                       {item.size_label ? `${item.size_label} · ` : ''}Qty {item.quantity}
                     </span>
+                    {item.warning_label && <span className={styles.itemWarning}>{item.warning_label}</span>}
                     {item.batches.length > 0 && (
                       <span>
                         Batch{' '}
@@ -192,12 +196,61 @@ async function OrderDetails({ params }: { params: PageProps<'/orders/[token]'>['
             </dl>
           </section>
 
+          {order.returns.length > 0 && (
+            <section className={styles.panel} aria-labelledby="returns-title">
+              <h2 id="returns-title" className={styles.panelTitle}>
+                Returns
+              </h2>
+              <ul className={styles.returns}>
+                {order.returns.map((r) => (
+                  <li key={r.case_number}>
+                    <div className={styles.returnHead}>
+                      <strong>{r.case_number}</strong>
+                      <span className={styles.returnStatus} data-status={r.status}>
+                        {returnStatusLabels[r.status]}
+                      </span>
+                    </div>
+                    <span className={styles.muted}>
+                      {returnReasons[r.reason]} · requested {formatDate(r.created_at)}
+                    </span>
+                    <span>
+                      {r.items.map((i) => `${i.quantity} × ${i.name}${i.size_label ? ` (${i.size_label})` : ''}`).join(', ')}
+                    </span>
+                    {r.decision_note && <span className={styles.muted}>Note from us: {r.decision_note}</span>}
+                    {r.refund_amount_ghs !== null && (
+                      <span>
+                        Refund: {formatPrice(r.refund_amount_ghs)}
+                        {r.status === 'refunded' ? ' (sent)' : ''}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {order.return_open && order.return_until && (
+            <p className={styles.muted}>
+              {canReturn
+                ? `You can request a return until ${formatDateTime(order.return_until)}.`
+                : 'Everything in this order is already in a return.'}
+            </p>
+          )}
+
           <div className={styles.actions}>
+            {canReturn && (
+              <Link href={`/orders/${token}/return`} className={styles.primary}>
+                Request a return
+              </Link>
+            )}
             {order.paid_at && (
               <Link href={`/orders/${token}/receipt`} className={styles.primary}>
                 View receipt
               </Link>
             )}
+            <Link href={`/help/report?order=${token}`} className={styles.secondary}>
+              Report a problem
+            </Link>
             <Link href="/" className={styles.secondary}>
               Continue shopping
             </Link>

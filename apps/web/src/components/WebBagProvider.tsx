@@ -27,6 +27,7 @@ function accountBag(userId: string): BagRemote {
           kind: row.kind,
           qty: row.quantity,
           inStock: row.in_stock,
+          warning: row.warning_label ?? undefined,
         }),
       );
     },

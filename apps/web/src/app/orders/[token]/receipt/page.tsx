@@ -132,7 +132,7 @@ async function Receipt({ params }: { params: PageProps<'/orders/[token]/receipt'
         </table>
 
         <footer className={styles.footer}>
-          Sleek Connect · Accra, Ghana · Authentic beauty and kids essentials. Keep this receipt for returns and
+          Sleek Connect Store · Accra, Ghana · Authentic beauty and kids essentials. Keep this receipt for returns and
           refunds.
         </footer>
       </article>

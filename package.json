@@ -12,7 +12,7 @@
     "build:web": "npm run build --workspace @sleek/web",
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "db:start": "supabase start -x studio,imgproxy,mailpit,logflare,vector,edge-runtime,supavisor,realtime,storage-api,postgres-meta",
+    "db:start": "supabase start -x studio,imgproxy,mailpit,logflare,vector,edge-runtime,supavisor,realtime,postgres-meta",
     "db:reset": "supabase db reset",
     "db:seed:generate": "tsx scripts/generate-seed.ts",
     "db:setup:generate": "tsx scripts/bundle-setup.ts",

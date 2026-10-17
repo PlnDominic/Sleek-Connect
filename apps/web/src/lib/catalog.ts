@@ -52,6 +52,12 @@ function toProduct(row: ProductRow): Product {
     ageBands: row.product_age_bands.map((b) => b.age_band_id as AgeBandId),
     inStock: sizes.length ? sizes.some((s) => inStock(s.code)) : inStock(''),
     details: (row.details as ProductDetails | null) ?? undefined,
+    warningLabel: row.warning_label ?? undefined,
+    returnable: row.returnable,
+    returnNote: row.return_note ?? undefined,
+    skinTypes: row.skin_types.length ? row.skin_types : undefined,
+    shades: row.shades.length ? row.shades : undefined,
+    createdAt: row.created_at,
     compliance: {
       ingredients: row.ingredients ?? undefined,
       countryOfOrigin: row.country_of_origin ?? undefined,
@@ -153,6 +159,62 @@ export async function getCheckoutOptions(): Promise<{ areas: string[]; deliveryO
   return {
     areas: areas.map((a) => a.name),
     deliveryOptions: options.map((o) => ({ id: o.id, label: o.label, fee: o.fee_ghs })),
+  };
+}
+
+/** Every published product, by name. */
+export async function allPublishedProducts(): Promise<Product[]> {
+  'use cache';
+  cacheLife('minutes');
+  cacheTag('catalog');
+
+  const rows = unwrap(await createSupabase().from('products').select(productColumns).order('name'));
+  return rows.map((r) => toProduct(r as ProductRow));
+}
+
+export async function getCategories(): Promise<Category[]> {
+  'use cache';
+  cacheLife('minutes');
+  cacheTag('catalog');
+
+  const rows = unwrap(await createSupabase().from('categories').select('*').order('sort_order'));
+  return rows.map((c) => ({
+    id: c.id,
+    name: c.name,
+    department: c.department,
+    image: asImageKey(c.image_key),
+    tint: c.tint,
+    kind: c.kind,
+  }));
+}
+
+export interface StoreInfo {
+  returnWindowDays: number;
+  reservationMinutes: number;
+  supportPhone?: string;
+  supportWhatsapp?: string;
+  supportEmail?: string;
+  supportHours?: string;
+}
+
+/** The return window, payment hold and support contacts, as admins set them in the admin console. */
+export async function getStoreInfo(): Promise<StoreInfo> {
+  'use cache';
+  cacheLife('minutes');
+  cacheTag('catalog');
+
+  const { data: s, error } = await createSupabase()
+    .from('store_settings')
+    .select('return_window_days, reservation_minutes, support_phone, support_whatsapp, support_email, support_hours')
+    .single();
+  if (error) throw new Error(`Supabase query failed: ${error.message}`);
+  return {
+    returnWindowDays: s.return_window_days,
+    reservationMinutes: s.reservation_minutes,
+    supportPhone: s.support_phone ?? undefined,
+    supportWhatsapp: s.support_whatsapp ?? undefined,
+    supportEmail: s.support_email ?? undefined,
+    supportHours: s.support_hours ?? undefined,
   };
 }
 

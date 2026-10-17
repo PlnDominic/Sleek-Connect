@@ -62,6 +62,14 @@ union all
 select (select id from public.products where slug = 'newborn-gift-hamper'), '0-6m';
 
 insert into public.merchandising_slots (slot, product_id, position)
+select 'home_hero', (select id from public.products where slug = 'vitamin-c-brightening-serum'), 0
+union all
+select 'home_hero', (select id from public.products where slug = 'whipped-shea-body-butter'), 1
+union all
+select 'home_hero', (select id from public.products where slug = 'velvet-matte-lip-colour'), 2
+union all
+select 'home_hero', (select id from public.products where slug = 'gentle-baby-wash-shampoo'), 3
+union all
 select 'home_new_arrivals', (select id from public.products where slug = 'gentle-baby-wash-shampoo'), 0
 union all
 select 'home_new_arrivals', (select id from public.products where slug = 'vitamin-c-brightening-serum'), 1

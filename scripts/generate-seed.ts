@@ -34,6 +34,10 @@ const rows = (values: SqlValue[][]) => values.map((row) => `  (${row.map(lit).jo
 const productId = (slug: string) => `(select id from public.products where slug = ${lit(slug)})`;
 
 const slots: Record<string, Product[]> = {
+  // Floating cards around the hero image on the home page.
+  home_hero: ['vitamin-c-brightening-serum', 'whipped-shea-body-butter', 'velvet-matte-lip-colour', 'gentle-baby-wash-shampoo'].map(
+    (slug) => products.find((p) => p.slug === slug)!,
+  ),
   home_new_arrivals: newArrivals,
   home_best_sellers: bestSellers,
   product_related: relatedProducts,

@@ -192,13 +192,25 @@ export function ProductForm({ product, categories, ageBands, imageKeys, problems
             <textarea name="ingredients" defaultValue={product?.ingredients} />,
             'As printed on the pack',
           )}
-          {field('warnings', 'Safety notes', <textarea name="warnings" defaultValue={product?.warnings} />, 'Shown above “Add to bag”, e.g. small parts warnings')}
+          {field(
+            'warning_label',
+            'Safety warning label',
+            <input name="warning_label" defaultValue={product?.warning_label} maxLength={200} placeholder="e.g. Choking hazard: small parts. Not for children under 3." />,
+            'Short and prominent: shown above “Add to bag” and in the bag. Leave empty if none.',
+          )}
+          {field('warnings', 'Safety notes', <textarea name="warnings" defaultValue={product?.warnings} />, 'The full safety notes, shown in the product details')}
           {field('how_to_use', 'How to use', <textarea name="how_to_use" defaultValue={product?.how_to_use} />)}
           <div className={styles.row}>
             {field('country_of_origin', 'Country of origin', <input name="country_of_origin" defaultValue={product?.country_of_origin} />)}
             {field('regulatory_reference', 'FDA registration number', <input name="regulatory_reference" defaultValue={product?.regulatory_reference} />)}
             {field('period_after_opening', 'Use within after opening', <input name="period_after_opening" defaultValue={product?.period_after_opening} placeholder="e.g. 12M" />)}
           </div>
+          {cosmetic && (
+            <div className={styles.row}>
+              {field('skin_types', 'Skin types', <textarea name="skin_types" defaultValue={product?.skin_types?.join('\n')} />, 'One per line, e.g. Dry, Oily, Sensitive. Used by the shop filters.')}
+              {field('shades', 'Shades', <textarea name="shades" defaultValue={product?.shades?.join('\n')} />, 'One per line, for makeup. Used by the shop filters.')}
+            </div>
+          )}
           {department === 'kids' && (
             <>
               {field('recommended_age', 'Recommended age', <input name="recommended_age" defaultValue={product?.recommended_age} placeholder="e.g. From birth (0+)" />)}
@@ -215,6 +227,19 @@ export function ProductForm({ product, categories, ageBands, imageKeys, problems
               </fieldset>
             </>
           )}
+        </section>
+
+        <section className={styles.panel}>
+          <h2>Returns</h2>
+          <label className={styles.check}>
+            <input type="checkbox" name="returnable" defaultChecked={product?.returnable ?? true} />
+            Can be returned within the return window
+          </label>
+          <p className={styles.muted}>
+            Untick for items that can’t come back once opened (e.g. lipstick, opened skincare). Customers can still return
+            them if they arrive damaged, wrong or expired.
+          </p>
+          {field('return_note', 'Return note', <input name="return_note" defaultValue={product?.return_note} maxLength={200} placeholder="e.g. Unopened and sealed only." />, 'Optional, shown on the product page')}
         </section>
 
         <section className={styles.panel}>

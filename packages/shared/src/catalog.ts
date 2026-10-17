@@ -93,6 +93,17 @@ export interface Product {
   compliance?: ProductCompliance;
   /** The batch a shopper would receive next for each size (earliest expiry first). */
   currentBatches?: { sizeId?: string; batch: string; expiresOn?: string }[];
+  /** Prominent safety warning shown above "Add to bag" and in the bag (PRD FR-017). */
+  warningLabel?: string;
+  /** False for items that can't be returned unless they arrive damaged, wrong or expired (e.g. opened cosmetics). */
+  returnable?: boolean;
+  /** Extra return terms shown on the product page. */
+  returnNote?: string;
+  /** Category-specific filter values (PRD FR-013). */
+  skinTypes?: string[];
+  shades?: string[];
+  /** When the product was added, for "newest" sorting. */
+  createdAt?: string;
 }
 
 export interface ProductCompliance {
