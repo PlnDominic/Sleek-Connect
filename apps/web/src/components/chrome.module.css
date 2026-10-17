@@ -1,5 +1,6 @@
 /* Logo */
 .logo {
+  font-size: var(--logo-size, 24px);
   font-weight: 800;
   letter-spacing: -0.03em;
   text-decoration: none;
@@ -156,10 +157,45 @@
   justify-content: center;
 }
 
-@media (max-width: 720px) {
+/* Keep the logo, menu and icons on one line down to laptop widths. */
+@media (max-width: 1279px) {
+  .headerInner {
+    column-gap: 24px;
+  }
+
+  .nav {
+    column-gap: 22px;
+  }
+}
+
+/* Narrower: logo and icons on the first row, the menu on its own row below. */
+@media (max-width: 1199px) {
+  .headerInner {
+    padding-top: 12px;
+    padding-bottom: 4px;
+    row-gap: 4px;
+  }
+
   .nav {
     order: 3;
     width: 100%;
+  }
+
+  .nav a[aria-current='page'] {
+    padding: 8px 0 6px;
+  }
+}
+
+@media (max-width: 720px) {
+  .logo {
+    font-size: calc(var(--logo-size, 24px) * 0.72);
+  }
+
+  .headerInner {
+    column-gap: 12px;
+  }
+
+  .nav {
     flex-wrap: nowrap;
     overflow-x: auto;
     scrollbar-width: none;
@@ -177,6 +213,17 @@
 
   .nav a[aria-current='page'] {
     padding: 6px 0;
+  }
+}
+
+/* Small phones: the wishlist icon (not working yet) makes way for the full logo. */
+@media (max-width: 480px) {
+  .wishlist {
+    display: none;
+  }
+
+  .iconButton {
+    width: 40px;
   }
 }
 

@@ -75,8 +75,9 @@
 
 .brand {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 8px;
+  gap: 2px 8px;
   text-decoration: none;
   color: var(--c-canvas);
   padding: 0 8px;

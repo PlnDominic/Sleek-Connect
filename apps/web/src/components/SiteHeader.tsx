@@ -91,7 +91,7 @@ export async function SiteHeader({ current }: { current?: string }) {
           <Link href="/search" aria-label="Search" className={styles.iconButton}>
             <Icon name="search" size={21} />
           </Link>
-          <button type="button" aria-label="Saved items" className={styles.iconButton}>
+          <button type="button" aria-label="Saved items" className={`${styles.iconButton} ${styles.wishlist}`}>
             <Icon name="heart" size={21} />
           </button>
           <Link href="/account" aria-label="Account" className={styles.iconButton}>
