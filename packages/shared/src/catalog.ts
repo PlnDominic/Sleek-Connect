@@ -93,6 +93,8 @@ export interface Product {
   compliance?: ProductCompliance;
   /** The batch a shopper would receive next for each size (earliest expiry first). */
   currentBatches?: { sizeId?: string; batch: string; expiresOn?: string }[];
+  /** Photos uploaded in the admin console, main photo first. They take precedence over `image`. */
+  photos?: { url: string; alt?: string }[];
   /** Prominent safety warning shown above "Add to bag" and in the bag (PRD FR-017). */
   warningLabel?: string;
   /** False for items that can't be returned unless they arrive damaged, wrong or expired (e.g. opened cosmetics). */

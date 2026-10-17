@@ -216,7 +216,7 @@
   }
 }
 
-/* Small phones: the wishlist icon (not working yet) makes way for the full logo. */
+/* Small phones: the saved-items icon makes way for the full logo (saved items stay a tap away on product cards). */
 @media (max-width: 480px) {
   .wishlist {
     display: none;

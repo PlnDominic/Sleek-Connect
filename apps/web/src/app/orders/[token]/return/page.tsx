@@ -6,6 +6,7 @@ import { Suspense } from 'react';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SiteHeader } from '@/components/SiteHeader';
 import { formatDateTime } from '@/lib/orders';
+import { photoUrl } from '@/lib/photos';
 import { getCustomerOrder } from '../data';
 import { ReturnForm } from './ReturnForm';
 import styles from '../../../help/help.module.css';
@@ -84,6 +85,7 @@ async function ReturnDetails({ params }: { params: PageProps<'/orders/[token]/re
               returnable: i.returnable,
               returnNote: i.return_note,
               image: i.image_key,
+              photo: photoUrl(i.photo_path) ?? null,
               tint: i.tint,
               kind: i.kind,
             }))}

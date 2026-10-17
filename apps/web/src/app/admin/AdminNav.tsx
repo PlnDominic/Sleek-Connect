@@ -15,6 +15,8 @@ const links = [
   { href: '/admin/content', label: 'Content' },
   { href: '/admin/riders', label: 'Riders' },
   { href: '/admin/staff', label: 'Staff', adminOnly: true },
+  { href: '/admin/delivery', label: 'Delivery', adminOnly: true },
+  { href: '/admin/audit', label: 'Audit log', adminOnly: true },
   { href: '/admin/settings', label: 'Settings', adminOnly: true },
 ];
 

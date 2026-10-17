@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { city, formatPrice, momoNetworks, pending } from '@sleek/shared';
+import { city, formatPrice, momoNetworks } from '@sleek/shared';
 import { Icon } from '@/components/Icon';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SiteHeader } from '@/components/SiteHeader';
-import { getCheckoutOptions, getStoreInfo, type StoreInfo } from '@/lib/catalog';
+import { getDeliveryConfig, getStoreInfo, type StoreInfo } from '@/lib/catalog';
+import { estimate, type DeliveryConfig } from '@/lib/delivery';
 import { telHref, whatsappHref } from '@/lib/contact';
 import styles from './help.module.css';
 
@@ -26,7 +27,8 @@ const topics = [
 ];
 
 export default async function HelpPage() {
-  const [store, { areas, deliveryOptions }] = await Promise.all([getStoreInfo(), getCheckoutOptions()]);
+  const [store, delivery] = await Promise.all([getStoreInfo(), getDeliveryConfig()]);
+  const zoneName = new Map(delivery.zones.map((z) => [z.id, z.name]));
   const days = store.returnWindowDays;
 
   return (
@@ -95,23 +97,32 @@ export default async function HelpPage() {
             <Faq q={`Where do you deliver in ${city}?`} open>
               <p>We deliver to these areas:</p>
               <ul>
-                {areas.map((a) => (
-                  <li key={a}>{a}</li>
+                {delivery.areas.map((a) => (
+                  <li key={a.name}>
+                    {a.name}
+                    {a.zoneId && zoneName.has(a.zoneId) ? ` (${zoneName.get(a.zoneId)})` : ''}
+                  </li>
                 ))}
               </ul>
             </Faq>
             <Faq q="How much is delivery, and how long does it take?">
               <ul>
-                {deliveryOptions.map((o) => (
+                {delivery.options.map((o) => (
                   <li key={o.id}>
-                    {o.label}: {o.fee === null ? '[fee to be confirmed]' : o.fee === 0 ? 'free' : formatPrice(o.fee)}
+                    <strong>{o.label}</strong>: {estimate(o)}. <DeliveryFees option={o.id} delivery={delivery} />
                   </li>
                 ))}
               </ul>
-              <p>
-                Order before {pending.orderCutoffTime} for delivery in {pending.deliveryDays} working days. The fee for
-                your order is shown at checkout before you pay.
-              </p>
+              {delivery.freeThreshold !== null && (
+                <p>
+                  {delivery.options
+                    .filter((o) => o.freeEligible)
+                    .map((o) => o.label)
+                    .join(' and ') || 'Delivery'}{' '}
+                  is free on orders of {formatPrice(delivery.freeThreshold)} or more.
+                </p>
+              )}
+              <p>The fee for your order is shown at checkout before you pay.</p>
             </Faq>
             <Faq q="How do I track my order?">
               <p>
@@ -196,6 +207,23 @@ export default async function HelpPage() {
         </div>
       </main>
       <SiteFooter />
+    </>
+  );
+}
+
+/** "GH₵ 20 (Outer Accra: GH₵ 45, not available in Far East)". */
+function DeliveryFees({ option, delivery }: { option: string; delivery: DeliveryConfig }) {
+  const base = delivery.options.find((o) => o.id === option)?.fee ?? null;
+  const show = (fee: number | null) => (fee === null ? '[fee to be confirmed]' : fee === 0 ? 'free' : formatPrice(fee));
+  const exceptions = delivery.zones.flatMap((z) => {
+    const rate = delivery.rates.find((r) => r.zoneId === z.id && r.optionId === option);
+    if (!rate) return [];
+    return [rate.available ? `${z.name}: ${show(rate.fee ?? base)}` : `not available in ${z.name}`];
+  });
+  return (
+    <>
+      {show(base)}
+      {exceptions.length > 0 && ` (${exceptions.join(', ')})`}
     </>
   );
 }

@@ -120,7 +120,7 @@ async function Receipt({ params }: { params: PageProps<'/orders/[token]/receipt'
               <th scope="row" colSpan={3}>
                 Delivery ({order.delivery_option})
               </th>
-              <td>{formatPriceOr(order.delivery_fee_ghs, '[fee]')}</td>
+              <td>{order.delivery_fee_ghs === 0 ? 'Free' : formatPriceOr(order.delivery_fee_ghs, '[fee]')}</td>
             </tr>
             <tr className={styles.total}>
               <th scope="row" colSpan={3}>

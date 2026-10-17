@@ -3,6 +3,7 @@
 import { useEffect, useMemo, type ReactNode } from 'react';
 import { asImageKey } from '@sleek/shared';
 import { BagProvider, useBag, type BagItem, type BagRemote, type BagStorage } from '@sleek/shared/bag';
+import { photoUrl } from '@/lib/photos';
 import { createBrowserSupabase } from '@/lib/supabase/browser';
 import { useAuth } from './AuthProvider';
 
@@ -23,6 +24,7 @@ function accountBag(userId: string): BagRemote {
           sizeLabel: row.size_label ?? undefined,
           unitPrice: row.unit_price_ghs,
           image: asImageKey(row.image_key),
+          photo: photoUrl(row.photo_path),
           tint: row.tint,
           kind: row.kind,
           qty: row.quantity,

@@ -152,6 +152,7 @@ insert into public.delivery_areas (name, sort_order) values
   ('Spintex', 3),
   ('Dansoman', 4);
 
-insert into public.delivery_options (id, label, fee_ghs, sort_order) values
-  ('standard', 'Standard', null, 0),
-  ('same_day', 'Same day', null, 1);
+-- Standard delivery becomes free once a free-delivery threshold is set (Admin → Delivery).
+insert into public.delivery_options (id, label, fee_ghs, free_eligible, sort_order) values
+  ('standard', 'Standard', null, true, 0),
+  ('same_day', 'Same day', null, false, 1);

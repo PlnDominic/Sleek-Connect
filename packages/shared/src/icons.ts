@@ -37,6 +37,7 @@ export const icons = {
   chevronRight: { shapes: [path('M9 6l6 6-6 6')] },
   search: { shapes: [circle(11, 11, 7), path('M20 20l-4-4')] },
   heart: { shapes: [path('M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z')] },
+  heartFilled: { filled: true, shapes: [path('M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z')] },
   user: { shapes: [circle(12, 8, 4), path('M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6')] },
   bag: { shapes: [path('M5 8h14l-1 12H6z'), path('M9 8V6a3 3 0 0 1 6 0v2')] },
   arrowRight: { shapes: [path('M5 12h14M13 6l6 6-6 6')] },

@@ -352,6 +352,71 @@
   border: 1px solid var(--c-line-strong);
 }
 
+button.primary,
+button.secondary,
+.danger {
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button.primary {
+  border: 0;
+}
+
+button.secondary {
+  background: var(--c-canvas);
+  color: var(--c-ink);
+}
+
+.danger {
+  height: 48px;
+  padding: 0 22px;
+  border-radius: var(--r-lg);
+  border: 0;
+  background: var(--c-accent-deep);
+  color: var(--c-canvas);
+}
+
+button:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.error {
+  color: var(--c-accent-deep);
+  font-size: 14px;
+}
+
+.cancelBox {
+  flex-basis: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-xl);
+}
+
+.cancelField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  max-width: 320px;
+}
+
+.cancelField select {
+  height: 44px;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-xxl);
+  padding: 0 12px;
+  background: var(--c-canvas);
+  font: inherit;
+  font-weight: 400;
+}
+
 .itemWarning {
   color: #6b4700;
   font-weight: 600;

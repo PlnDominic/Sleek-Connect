@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { city, defaultDeliveryArea, departmentLabels, formatPrice, pending } from '@sleek/shared';
+import { city, defaultDeliveryArea, departmentLabels, formatPrice } from '@sleek/shared';
 import { Icon } from '@/components/Icon';
 import { ProductImage } from '@/components/ProductImage';
+import { SaveButton } from '@/components/SaveButton';
 import { SiteFooter } from '@/components/SiteFooter';
 import { CompactHeader } from '@/components/SiteHeader';
-import { getProduct, getRelatedProducts, getStoreInfo, listProductSlugs } from '@/lib/catalog';
+import { getDeliveryConfig, getProduct, getRelatedProducts, getStoreInfo, listProductSlugs } from '@/lib/catalog';
+import { estimate } from '@/lib/delivery';
 import { ProductGallery } from './ProductGallery';
 import { ProductInfoTabs } from './ProductInfoTabs';
 import { PurchasePanel } from './PurchasePanel';
@@ -24,7 +26,12 @@ export async function generateMetadata({ params }: PageProps<'/products/[slug]'>
 
 export default async function ProductPage({ params }: PageProps<'/products/[slug]'>) {
   const { slug } = await params;
-  const [product, related, store] = await Promise.all([getProduct(slug), getRelatedProducts(slug), getStoreInfo()]);
+  const [product, related, store, delivery] = await Promise.all([
+    getProduct(slug),
+    getRelatedProducts(slug),
+    getStoreInfo(),
+    getDeliveryConfig(),
+  ]);
   if (!product) notFound();
 
   const details = product.details;
@@ -56,7 +63,10 @@ export default async function ProductPage({ params }: PageProps<'/products/[slug
 
         <div className={styles.info}>
           <div className={styles.titleBlock}>
-            {product.brand && <span className={styles.brand}>{product.brand}</span>}
+            <div className={styles.titleTop}>
+              {product.brand && <span className={styles.brand}>{product.brand}</span>}
+              <SaveButton slug={product.slug} name={product.name} className={styles.save} withLabel />
+            </div>
             <h1 className={styles.title}>{product.name}</h1>
             <p className={styles.description}>{details?.description ?? product.summary}</p>
           </div>
@@ -87,8 +97,10 @@ export default async function ProductPage({ params }: PageProps<'/products/[slug
                 </Link>
                 <br />
                 <span className={styles.muted}>
-                  Order before {pending.orderCutoffTime} for delivery in {pending.deliveryDays} working days. Tracked from
-                  packing to door.
+                  {delivery.options
+                    .map((o) => `${o.label}: ${estimate(o).replace(/^./, (c) => c.toLowerCase())}`)
+                    .join('. ')}
+                  . Tracked from packing to door.
                 </span>
               </span>
             </div>
@@ -124,6 +136,7 @@ export default async function ProductPage({ params }: PageProps<'/products/[slug
             <Link key={r.slug} href={`/products/${r.slug}`} className={styles.relatedCard}>
               <ProductImage
                 image={r.image}
+                photo={r.photos?.[0]?.url}
                 tint={r.tint}
                 kind={r.kind}
                 alt={r.name}

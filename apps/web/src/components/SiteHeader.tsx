@@ -1,18 +1,21 @@
 import Link from 'next/link';
-import { pending, type Category } from '@sleek/shared';
-import { getCategories } from '@/lib/catalog';
+import { formatPrice, pending, type Category } from '@sleek/shared';
+import { getCategories, getStoreInfo } from '@/lib/catalog';
 import { BagButton } from './BagButton';
 import { Icon } from './Icon';
 import { Logo } from './Logo';
+import { SavedLink } from './SavedLink';
 import { SearchBox } from './SearchBox';
 import styles from './chrome.module.css';
 
-export function AnnouncementBar() {
+export async function AnnouncementBar() {
+  const { freeDeliveryThreshold } = await getStoreInfo();
   return (
     <div className={styles.announce}>
       <span className={styles.announceItem}>
         <Icon name="truck" size={15} strokeWidth={2} />
-        Free delivery in Accra on orders over GH₵ {pending.freeDeliveryThreshold}
+        Free delivery in Accra on orders over{' '}
+        {freeDeliveryThreshold === undefined ? `GH₵ ${pending.freeDeliveryThreshold}` : formatPrice(freeDeliveryThreshold)}
       </span>
       <span className={styles.announceItem}>
         <span className={styles.star}>
@@ -91,9 +94,7 @@ export async function SiteHeader({ current }: { current?: string }) {
           <Link href="/search" aria-label="Search" className={styles.iconButton}>
             <Icon name="search" size={21} />
           </Link>
-          <button type="button" aria-label="Saved items" className={`${styles.iconButton} ${styles.wishlist}`}>
-            <Icon name="heart" size={21} />
-          </button>
+          <SavedLink className={styles.wishlist} />
           <Link href="/account" aria-label="Account" className={styles.iconButton}>
             <Icon name="user" size={21} />
           </Link>

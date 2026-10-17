@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Icon } from '@/components/Icon';
 import { Logo } from '@/components/Logo';
 import { SiteFooter } from '@/components/SiteFooter';
-import { getCheckoutOptions } from '@/lib/catalog';
+import { getDeliveryConfig } from '@/lib/catalog';
 import { CheckoutForm } from './CheckoutForm';
 import styles from './checkout.module.css';
 
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function CheckoutPage() {
-  const { areas, deliveryOptions } = await getCheckoutOptions();
+  const delivery = await getDeliveryConfig();
 
   return (
     <div className={styles.page}>
@@ -44,7 +44,7 @@ export default async function CheckoutPage() {
           </span>
         </div>
       </header>
-      <CheckoutForm areas={areas} deliveryOptions={deliveryOptions} />
+      <CheckoutForm delivery={delivery} />
       <SiteFooter />
     </div>
   );

@@ -99,30 +99,90 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
-                },"delivery_areas": {
+                },"customer_addresses": {
                   Row: {
-                    "is_active": boolean,"name": string,"sort_order": number
+                    "area": string,"created_at": string,"directions": string | null,"ghanapost_gps": string | null,"id": string,"is_default": boolean,"label": string | null,"phone": string,"recipient_name": string,"updated_at": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "is_active"?: boolean,"name": string,"sort_order"?: number
+                    "area": string,"created_at"?: string,"directions"?: string | null,"ghanapost_gps"?: string | null,"id"?: string,"is_default"?: boolean,"label"?: string | null,"phone": string,"recipient_name": string,"updated_at"?: string,"user_id"?: string
                   }
                   Update: {
-                    "is_active"?: boolean,"name"?: string,"sort_order"?: number
+                    "area"?: string,"created_at"?: string,"directions"?: string | null,"ghanapost_gps"?: string | null,"id"?: string,"is_default"?: boolean,"label"?: string | null,"phone"?: string,"recipient_name"?: string,"updated_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     
                   ]
-                },"delivery_options": {
+                },"delivery_areas": {
                   Row: {
-                    "fee_ghs": number | null,"id": string,"label": string,"sort_order": number
+                    "is_active": boolean,"name": string,"sort_order": number,"zone_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "fee_ghs"?: number | null,"id": string,"label": string,"sort_order"?: number
+                    "is_active"?: boolean,"name": string,"sort_order"?: number,"zone_id"?: string | null
                   }
                   Update: {
-                    "fee_ghs"?: number | null,"id"?: string,"label"?: string,"sort_order"?: number
+                    "is_active"?: boolean,"name"?: string,"sort_order"?: number,"zone_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "delivery_areas_zone_id_fkey"
+      columns: ["zone_id"]
+isOneToOne: false
+      referencedRelation: "delivery_zones"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"delivery_options": {
+                  Row: {
+                    "cutoff_time": string | null,"days_max": number | null,"days_min": number | null,"fee_ghs": number | null,"free_eligible": boolean,"id": string,"label": string,"sort_order": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cutoff_time"?: string | null,"days_max"?: number | null,"days_min"?: number | null,"fee_ghs"?: number | null,"free_eligible"?: boolean,"id": string,"label": string,"sort_order"?: number
+                  }
+                  Update: {
+                    "cutoff_time"?: string | null,"days_max"?: number | null,"days_min"?: number | null,"fee_ghs"?: number | null,"free_eligible"?: boolean,"id"?: string,"label"?: string,"sort_order"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"delivery_rates": {
+                  Row: {
+                    "fee_ghs": number | null,"is_available": boolean,"option_id": string,"zone_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "fee_ghs"?: number | null,"is_available"?: boolean,"option_id": string,"zone_id": string
+                  }
+                  Update: {
+                    "fee_ghs"?: number | null,"is_available"?: boolean,"option_id"?: string,"zone_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "delivery_rates_option_id_fkey"
+      columns: ["option_id"]
+isOneToOne: false
+      referencedRelation: "delivery_options"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "delivery_rates_zone_id_fkey"
+      columns: ["zone_id"]
+isOneToOne: false
+      referencedRelation: "delivery_zones"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"delivery_zones": {
+                  Row: {
+                    "id": string,"name": string,"sort_order": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "id": string,"name": string,"sort_order"?: number
+                  }
+                  Update: {
+                    "id"?: string,"name"?: string,"sort_order"?: number
                   }
                   Relationships: [
                     
@@ -351,6 +411,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"product_images": {
+                  Row: {
+                    "alt": string | null,"created_at": string,"id": string,"path": string,"product_id": string,"sort_order": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "alt"?: string | null,"created_at"?: string,"id"?: string,"path": string,"product_id": string,"sort_order"?: number
+                  }
+                  Update: {
+                    "alt"?: string | null,"created_at"?: string,"id"?: string,"path"?: string,"product_id"?: string,"sort_order"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "product_images_product_id_fkey"
+      columns: ["product_id"]
+isOneToOne: false
+      referencedRelation: "products"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"product_sizes": {
                   Row: {
                     "code": string,"is_default": boolean,"label": string,"price_ghs": number,"product_id": string,"sort_order": number
@@ -533,14 +613,14 @@ isOneToOne: false
                   ]
                 },"store_settings": {
                   Row: {
-                    "expiry_alert_days": number,"id": boolean,"low_stock_threshold": number,"max_delivery_attempts": number,"require_delivery_code": boolean,"reservation_minutes": number,"return_window_days": number,"support_email": string | null,"support_hours": string | null,"support_phone": string | null,"support_whatsapp": string | null
+                    "expiry_alert_days": number,"free_delivery_threshold_ghs": number | null,"id": boolean,"low_stock_threshold": number,"max_delivery_attempts": number,"require_delivery_code": boolean,"reservation_minutes": number,"return_window_days": number,"support_email": string | null,"support_hours": string | null,"support_phone": string | null,"support_whatsapp": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "expiry_alert_days"?: number,"id"?: boolean,"low_stock_threshold"?: number,"max_delivery_attempts"?: number,"require_delivery_code"?: boolean,"reservation_minutes"?: number,"return_window_days"?: number,"support_email"?: string | null,"support_hours"?: string | null,"support_phone"?: string | null,"support_whatsapp"?: string | null
+                    "expiry_alert_days"?: number,"free_delivery_threshold_ghs"?: number | null,"id"?: boolean,"low_stock_threshold"?: number,"max_delivery_attempts"?: number,"require_delivery_code"?: boolean,"reservation_minutes"?: number,"return_window_days"?: number,"support_email"?: string | null,"support_hours"?: string | null,"support_phone"?: string | null,"support_whatsapp"?: string | null
                   }
                   Update: {
-                    "expiry_alert_days"?: number,"id"?: boolean,"low_stock_threshold"?: number,"max_delivery_attempts"?: number,"require_delivery_code"?: boolean,"reservation_minutes"?: number,"return_window_days"?: number,"support_email"?: string | null,"support_hours"?: string | null,"support_phone"?: string | null,"support_whatsapp"?: string | null
+                    "expiry_alert_days"?: number,"free_delivery_threshold_ghs"?: number | null,"id"?: boolean,"low_stock_threshold"?: number,"max_delivery_attempts"?: number,"require_delivery_code"?: boolean,"reservation_minutes"?: number,"return_window_days"?: number,"support_email"?: string | null,"support_hours"?: string | null,"support_phone"?: string | null,"support_whatsapp"?: string | null
                   }
                   Relationships: [
                     
@@ -565,14 +645,40 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"wishlist_items": {
+                  Row: {
+                    "created_at": string,"product_id": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"product_id": string,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"product_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "wishlist_items_product_id_fkey"
+      columns: ["product_id"]
+isOneToOne: false
+      referencedRelation: "products"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
             [_ in never]: never
           }
           Functions: {
-            "admin_adjust_batch":
+            "admin_add_product_image":
+{ Args: { "p_alt"?: string,"p_path": string,"p_product_id": string }; Returns: string
+                           },
+"admin_adjust_batch":
 { Args: { "p_batch_id": string,"p_change": number,"p_note": string,"p_reason": Database["public"]['Enums']["stock_movement_reason"] }; Returns: undefined
+                           },
+"admin_arrange_product_images":
+{ Args: { "p_photos": Json,"p_product_id": string }; Returns: undefined
                            },
 "admin_cancel_order":
 { Args: { "p_order_id": string,"p_reason": string }; Returns: undefined
@@ -581,6 +687,9 @@ isOneToOne: false
 { Args: { "p_approve": boolean,"p_note"?: string,"p_return_id": string }; Returns: undefined
                            },
 "admin_delete_banner":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"admin_delete_delivery_zone":
 { Args: { "p_id": string }; Returns: undefined
                            },
 "admin_dispatch_order":
@@ -627,6 +736,9 @@ isOneToOne: false
 "admin_receive_stock":
 { Args: { "p_batch_code": string,"p_expires_on": string,"p_note"?: string,"p_product_id": string,"p_quantity": number,"p_size_code": string }; Returns: string
                            },
+"admin_remove_product_image":
+{ Args: { "p_id": string }; Returns: string
+                           },
 "admin_reply_support_case":
 { Args: { "p_case_id": string,"p_close"?: boolean,"p_reply": string }; Returns: undefined
                            },
@@ -639,6 +751,15 @@ isOneToOne: false
 "admin_save_banner":
 { Args: { "p": Json }; Returns: string
                            },
+"admin_save_delivery_area":
+{ Args: { "p": Json }; Returns: undefined
+                           },
+"admin_save_delivery_option":
+{ Args: { "p": Json }; Returns: undefined
+                           },
+"admin_save_delivery_zone":
+{ Args: { "p_id": string,"p_name": string,"p_sort_order"?: number }; Returns: undefined
+                           },
 "admin_save_product":
 { Args: { "p": Json }; Returns: Json
                            },
@@ -650,6 +771,9 @@ isOneToOne: false
                            },
 "admin_set_collection":
 { Args: { "p_slot": string,"p_slugs": (string)[] }; Returns: undefined
+                           },
+"admin_set_delivery_rate":
+{ Args: { "p_available": boolean,"p_fee": number,"p_option_id": string,"p_zone_id": string }; Returns: undefined
                            },
 "admin_set_product_published":
 { Args: { "p_product_id": string,"p_published": boolean }; Returns: (string)[]
@@ -680,6 +804,9 @@ isOneToOne: false
 "can_upload_return_photo":
 { Args: { "p_name": string }; Returns: boolean
                            },
+"cancel_my_order":
+{ Args: { "p_order_token": string,"p_reason"?: string }; Returns: undefined
+                           },
 "change_batch_status":
 { Args: { "p_batch_id": string,"p_note": string,"p_reason": Database["public"]['Enums']["stock_movement_reason"],"p_status": Database["public"]['Enums']["batch_status"] }; Returns: undefined
                            },
@@ -699,6 +826,9 @@ isOneToOne: false
 "current_staff_role":
 { Args: Record<PropertyKey, never>; Returns: Database["public"]['Enums']["staff_role"]
                            },
+"delete_address":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
 "expire_batches":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
@@ -713,7 +843,7 @@ isOneToOne: false
                            },
 "get_bag":
 { Args: Record<PropertyKey, never>; Returns: {
-              "image_key": string,"in_stock": boolean,"kind": Database["public"]['Enums']["product_kind"],"name": string,"quantity": number,"size_code": string,"size_label": string,"slug": string,"tint": string,"unit_price_ghs": number,"warning_label": string
+              "image_key": string,"in_stock": boolean,"kind": Database["public"]['Enums']["product_kind"],"name": string,"photo_path": string,"quantity": number,"size_code": string,"size_label": string,"slug": string,"tint": string,"unit_price_ghs": number,"warning_label": string
             }[]
                            },
 "get_order":
@@ -722,6 +852,11 @@ isOneToOne: false
 "get_order_status":
 { Args: { "p_order_token": string }; Returns: {
               "order_number": string,"payment_status": Database["public"]['Enums']["payment_status"],"reserved_until": string,"status": Database["public"]['Enums']["order_status"],"total_ghs": number
+            }[]
+                           },
+"get_wishlist":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "saved_at": string,"slug": string
             }[]
                            },
 "lock_order_for":
@@ -815,6 +950,9 @@ isOneToOne: false
 "return_photo_folder":
 { Args: { "p_order_token": string }; Returns: string
                            },
+"save_address":
+{ Args: { "p": Json }; Returns: string
+                           },
 "search_products":
 { Args: { "p_limit"?: number,"p_query": string }; Returns: {
               "score": number,"slug": string
@@ -825,6 +963,9 @@ isOneToOne: false
                            },
 "set_order_event_context":
 { Args: { "p_details"?: Json,"p_note": string }; Returns: undefined
+                           },
+"set_wishlist":
+{ Args: { "p_saved": boolean,"p_slugs": (string)[] }; Returns: undefined
                            },
 "start_payment":
 { Args: { "p_order_token": string,"p_provider": string,"p_reference": string }; Returns: number

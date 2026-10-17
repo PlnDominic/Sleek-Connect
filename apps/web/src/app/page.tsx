@@ -123,7 +123,7 @@ function Hero({ banner, products }: { banner: Banner; products: Product[] }) {
           />
           {products.slice(0, floatPositions.length).map((product, i) => (
             <Link key={product.slug} href={`/products/${product.slug}`} className={`${styles.floatCard} ${floatPositions[i]}`}>
-              <ProductImage image={product.image} tint={product.tint} kind={product.kind} alt="" sizes="126px" className={styles.floatImage} />
+              <ProductImage image={product.image} photo={product.photos?.[0]?.url} tint={product.tint} kind={product.kind} alt="" sizes="126px" className={styles.floatImage} />
               <span className={styles.floatName}>{product.name}</span>
               <strong className={styles.floatPrice}>{formatPrice(product.price)}</strong>
             </Link>
@@ -218,7 +218,7 @@ function BestSellers({ products }: { products: Product[] }) {
         {products.map((p) => (
           <article key={p.slug} className={styles.bestCard}>
             <div className={styles.bestMedia}>
-              <ProductImage image={p.image} tint={colors.surfaceSunken} kind={p.kind} alt={p.name} sizes="200px" className={styles.bestImage} />
+              <ProductImage image={p.image} photo={p.photos?.[0]?.url} tint={colors.surfaceSunken} kind={p.kind} alt={p.name} sizes="200px" className={styles.bestImage} />
               <span className={styles.bestBadge}>Bestseller</span>
             </div>
             <div className={styles.bestBody}>

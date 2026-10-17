@@ -34,6 +34,8 @@ export interface CustomerOrder {
   return_until: string | null;
   /** True while a return can still be requested. */
   return_open: boolean;
+  /** True until packing starts: the customer can cancel online (PRD FR-052). */
+  can_cancel: boolean;
   returns: CustomerReturn[];
   items: {
     id: string;
@@ -46,6 +48,8 @@ export interface CustomerOrder {
     image_key: ImageKey | null;
     tint: string | null;
     kind: ProductKind | null;
+    photo_path: string | null;
+    size_code: string | null;
     warning_label: string | null;
     returnable: boolean;
     return_note: string | null;

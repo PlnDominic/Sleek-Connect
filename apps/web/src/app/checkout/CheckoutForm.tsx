@@ -1,20 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState, useTransition, type FormEvent, type ReactNode } from 'react';
-import {
-  defaultDeliveryArea,
-  formatPrice,
-  formatPriceOr,
-  momoNetworks,
-  pending,
-  sampleCustomer,
-  type MomoNetwork,
-} from '@sleek/shared';
+import { useEffect, useRef, useState, useTransition, type FormEvent, type ReactNode } from 'react';
+import { defaultDeliveryArea, formatPrice, formatPriceOr, momoNetworks, sampleCustomer, type MomoNetwork } from '@sleek/shared';
 import { useBag, type ResolvedBagItem } from '@sleek/shared/bag';
+import { useAuth } from '@/components/AuthProvider';
 import { Icon } from '@/components/Icon';
 import { ProductImage } from '@/components/ProductImage';
-import type { DeliveryOption } from '@/lib/catalog';
+import { estimate, quote, type DeliveryConfig } from '@/lib/delivery';
+import { createBrowserSupabase } from '@/lib/supabase/browser';
 import { placeOrder, type PlaceOrderResult } from './actions';
 import { useOrderStatus, type OrderStatus } from './useOrderStatus';
 import styles from './checkout.module.css';
@@ -24,20 +18,35 @@ type PaymentMethod = 'momo' | 'card';
 type PlacedOrder = Omit<Extract<PlaceOrderResult, { ok: true }>, 'ok'> & { items: ResolvedBagItem[] };
 
 interface CheckoutFormProps {
-  areas: string[];
-  deliveryOptions: DeliveryOption[];
+  delivery: DeliveryConfig;
 }
 
-const windowDetail = (option: DeliveryOption) =>
-  option.id === 'same_day' ? `Order before ${pending.sameDayCutoffTime}` : `${pending.deliveryDays} working days`;
+interface SavedAddress {
+  id: string;
+  label: string | null;
+  recipient_name: string;
+  phone: string;
+  area: string;
+  ghanapost_gps: string | null;
+  directions: string | null;
+  is_default: boolean;
+}
 
 const clockTime = new Intl.DateTimeFormat('en-GH', { hour: 'numeric', minute: '2-digit', timeZone: 'Africa/Accra' });
 
 const paidStatuses: OrderStatus['status'][] = ['paid', 'packed', 'out_for_delivery', 'delivered'];
 
-export function CheckoutForm({ areas, deliveryOptions }: CheckoutFormProps) {
+export function CheckoutForm({ delivery }: CheckoutFormProps) {
   const bag = useBag();
-  const [deliveryId, setDeliveryId] = useState(deliveryOptions[0]?.id ?? '');
+  const { user, consented } = useAuth();
+  const areas = delivery.areas.map((a) => a.name);
+  const formRef = useRef<HTMLFormElement>(null);
+  const [area, setArea] = useState(areas.includes(defaultDeliveryArea) ? defaultDeliveryArea : (areas[0] ?? ''));
+  const [chosenId, setChosenId] = useState(delivery.options[0]?.id ?? '');
+  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+  const [saveAddress, setSaveAddress] = useState(true);
+  // Estimates depend on the time of day, so they're refined once the page is in the browser.
+  const [now, setNow] = useState<Date>();
   const [method, setMethod] = useState<PaymentMethod>('momo');
   const [network, setNetwork] = useState<MomoNetwork>('mtn');
   const [wallet, setWallet] = useState('');
@@ -54,9 +63,59 @@ export function CheckoutForm({ areas, deliveryOptions }: CheckoutFormProps) {
     if (isPaid) clear();
   }, [isPaid, clear]);
 
+  useEffect(() => {
+    const tick = () => setNow(new Date());
+    tick();
+    const timer = setInterval(tick, 60_000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const fillAddress = (a: SavedAddress) => {
+    const form = formRef.current;
+    if (!form) return;
+    const set = (name: string, value: string | null) => {
+      (form.elements.namedItem(name) as HTMLInputElement).value = value ?? '';
+    };
+    set('name', a.recipient_name);
+    set('phone', a.phone);
+    set('gps', a.ghanapost_gps);
+    set('directions', a.directions);
+    if (areas.includes(a.area)) setArea(a.area);
+    setSaveAddress(false);
+  };
+
+  // Signed-in shoppers can pick a saved address; the default one fills the form.
+  const signedIn = Boolean(user && consented);
+  useEffect(() => {
+    if (!signedIn) return;
+    let cancelled = false;
+    createBrowserSupabase()
+      .from('customer_addresses')
+      .select('id, label, recipient_name, phone, area, ghanapost_gps, directions, is_default')
+      .order('is_default', { ascending: false })
+      .order('updated_at', { ascending: false })
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        setAddresses(data);
+        const preferred = data.find((a) => a.is_default);
+        const form = formRef.current;
+        if (preferred && form && !(form.elements.namedItem('name') as HTMLInputElement).value) fillAddress(preferred);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // fillAddress only touches the form and area state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signedIn]);
+
   const networkLabel = momoNetworks.find((n) => n.id === network)!.label;
   const walletDisplay = wallet.trim() || 'your phone';
-  const fee = deliveryOptions.find((o) => o.id === deliveryId)?.fee ?? null;
+  // Prices follow the area's zone and free delivery (the database recalculates them when the order is placed).
+  const quotes = new Map(delivery.options.map((o) => [o.id, quote(delivery, area, o.id, bag.subtotal)]));
+  const deliveryId = quotes.get(chosenId)?.available ? chosenId : (delivery.options.find((o) => quotes.get(o.id)?.available)?.id ?? '');
+  const fee = quotes.get(deliveryId)?.fee ?? null;
+  const freeOption = delivery.options.find((o) => o.freeEligible && quotes.get(o.id)?.available);
+  const toFree = delivery.freeThreshold !== null && freeOption ? delivery.freeThreshold - bag.subtotal : null;
 
   // Once placed, the summary shows what the server priced, not the (now empty) bag.
   const items = placed?.items ?? bag.items;
@@ -89,6 +148,7 @@ export function CheckoutForm({ areas, deliveryOptions }: CheckoutFormProps) {
         payment: { method: 'momo', network, wallet },
         items: orderedItems.map((i) => ({ slug: i.slug, size: i.sizeId, quantity: i.qty })),
         isGift: form.get('gift') === 'on',
+        saveAddress: signedIn && saveAddress,
       });
       if (!result.ok) {
         setError(result.error);
@@ -114,11 +174,32 @@ export function CheckoutForm({ areas, deliveryOptions }: CheckoutFormProps) {
 
   return (
     <main className={styles.main}>
-      <form id="checkout-form" className={styles.forms} onSubmit={onSubmit}>
+      <form id="checkout-form" ref={formRef} className={styles.forms} onSubmit={onSubmit}>
         <fieldset disabled={!!placed} className={styles.fieldset}>
           <div className={styles.forms}>
             <section className={styles.panel}>
               <h2 className={styles.panelTitle}>1. Delivery details</h2>
+              {addresses.length > 0 && (
+                <Field id="saved" label="Saved addresses">
+                  <select
+                    id="saved"
+                    defaultValue=""
+                    onChange={(e) => {
+                      const chosen = addresses.find((a) => a.id === e.target.value);
+                      if (chosen) fillAddress(chosen);
+                    }}
+                  >
+                    <option value="" disabled>
+                      Choose a saved address
+                    </option>
+                    {addresses.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {[a.label, a.recipient_name, a.area].filter(Boolean).join(' · ')}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              )}
               <div className={styles.fieldGrid}>
                 <Field id="fn" label="Full name">
                   <input id="fn" name="name" type="text" autoComplete="name" required placeholder={sampleCustomer.name} />
@@ -127,7 +208,7 @@ export function CheckoutForm({ areas, deliveryOptions }: CheckoutFormProps) {
                   <input id="ph" name="phone" type="tel" autoComplete="tel" required placeholder={sampleCustomer.phone} />
                 </Field>
                 <Field id="area" label="Area in Accra">
-                  <select id="area" name="area" required defaultValue={areas.includes(defaultDeliveryArea) ? defaultDeliveryArea : areas[0]}>
+                  <select id="area" name="area" required value={area} onChange={(e) => setArea(e.target.value)}>
                     {areas.map((area) => (
                       <option key={area}>{area}</option>
                     ))}
@@ -147,26 +228,48 @@ export function CheckoutForm({ areas, deliveryOptions }: CheckoutFormProps) {
               >
                 <input id="dir" name="directions" type="text" maxLength={300} placeholder="Landmark, gate colour, house number" />
               </Field>
+              {signedIn && (
+                <label className={styles.giftCheck}>
+                  <input type="checkbox" checked={saveAddress} onChange={(e) => setSaveAddress(e.target.checked)} />
+                  Save this address to my account
+                </label>
+              )}
               <fieldset className={styles.fieldset}>
                 <legend className={styles.legend}>Delivery window</legend>
                 <div className={styles.windowGrid}>
-                  {deliveryOptions.map((option) => (
-                    <label key={option.id} className={styles.choice} data-checked={deliveryId === option.id}>
-                      <input
-                        type="radio"
-                        name="window"
-                        checked={deliveryId === option.id}
-                        onChange={() => setDeliveryId(option.id)}
-                      />
-                      <span>
-                        <strong>{option.label}</strong>
+                  {delivery.options.map((option) => {
+                    const q = quotes.get(option.id)!;
+                    return (
+                      <label
+                        key={option.id}
+                        className={styles.choice}
+                        data-checked={deliveryId === option.id}
+                        data-disabled={!q.available || undefined}
+                      >
+                        <input
+                          type="radio"
+                          name="window"
+                          disabled={!q.available}
+                          checked={deliveryId === option.id}
+                          onChange={() => setChosenId(option.id)}
+                        />
                         <span>
-                          {windowDetail(option)} · {formatPriceOr(option.fee, '[fee]')}
+                          <strong>{option.label}</strong>
+                          <span>
+                            {q.available
+                              ? `${estimate(option, now)} · ${q.free ? 'Free' : formatPriceOr(q.fee, '[fee]')}`
+                              : `Not available in ${area}`}
+                          </span>
                         </span>
-                      </span>
-                    </label>
-                  ))}
+                      </label>
+                    );
+                  })}
                 </div>
+                {toFree !== null && toFree > 0 && !placed && (
+                  <p className={styles.note}>
+                    Add {formatPrice(toFree)} more for free {freeOption!.label.toLowerCase()} delivery.
+                  </p>
+                )}
               </fieldset>
             </section>
 
@@ -241,7 +344,7 @@ export function CheckoutForm({ areas, deliveryOptions }: CheckoutFormProps) {
         )}
         {items.map((item) => (
           <div key={`${item.slug}-${item.sizeId}`} className={styles.line}>
-            <ProductImage image={item.image} tint={item.tint} kind={item.kind} alt="" sizes="64px" className={styles.lineImage} />
+            <ProductImage image={item.image} photo={item.photo} tint={item.tint} kind={item.kind} alt="" sizes="64px" className={styles.lineImage} />
             <span className={styles.lineText}>
               <strong>{item.name}</strong>
               <span>
@@ -273,7 +376,7 @@ export function CheckoutForm({ areas, deliveryOptions }: CheckoutFormProps) {
           </div>
           <div>
             <dt>Delivery</dt>
-            <dd>{formatPriceOr(shownFee, '[fee]')}</dd>
+            <dd>{shownFee === 0 ? 'Free' : formatPriceOr(shownFee, '[fee]')}</dd>
           </div>
           <div className={styles.totalRow}>
             <dt>Total</dt>

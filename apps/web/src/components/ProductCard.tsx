@@ -3,6 +3,7 @@ import { colors, formatPrice, type Product } from '@sleek/shared';
 import { AddToBagButton } from './AddToBagButton';
 import { Icon } from './Icon';
 import { ProductImage } from './ProductImage';
+import { SaveButton } from './SaveButton';
 import styles from './ProductCard.module.css';
 
 /** Product tile used in the home page rails and listing grids. */
@@ -18,12 +19,11 @@ export function ProductCard({ product }: { product: Product }) {
         ) : (
           <span />
         )}
-        <button type="button" aria-label={`Save ${product.name}`} className={styles.saveButton}>
-          <Icon name="heart" size={17} />
-        </button>
+        <SaveButton slug={product.slug} name={product.name} className={styles.saveButton} />
       </div>
       <ProductImage
         image={product.image}
+        photo={product.photos?.[0]?.url}
         tint={colors.surfaceSunken}
         kind={product.kind}
         alt={product.name}

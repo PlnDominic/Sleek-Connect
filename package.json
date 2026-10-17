@@ -17,7 +17,8 @@
     "db:seed:generate": "tsx scripts/generate-seed.ts",
     "db:setup:generate": "tsx scripts/bundle-setup.ts",
     "db:types": "supabase gen types typescript --local > apps/web/src/lib/supabase/database.types.ts",
-    "payments:simulate": "tsx scripts/simulate-payment.ts"
+    "payments:simulate": "tsx scripts/simulate-payment.ts",
+    "test": "bash tests/run-all.sh"
   },
   "overrides": {
     "react": "19.2.3",
@@ -25,6 +26,7 @@
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.117.3",
+    "playwright": "1.56.1",
     "supabase": "^2.121.0",
     "tsx": "^4.23.15"
   }

@@ -8,7 +8,8 @@ Expo** for the mobile app (App Store and Google Play, tested in Expo Go). The we
 
 | Workspace | What it is | Status |
 | --- | --- | --- |
-| [`apps/web`](apps/web) | Next.js 16 storefront (Home, Shop and category pages with filters, Search, Shop by age, Product, Bag, Checkout, Account, order tracking, receipts, returns and the help centre) and the staff admin console at `/admin` | Active. Runs on Supabase |
+| [`apps/web`](apps/web) | Next.js 16 storefront (Home, Shop and category pages with filters, Search, Shop by age, Product, Bag, Checkout, Account with addresses and saved items, order tracking, receipts, cancellation, returns and the help centre) and the staff admin console at `/admin` | Active. Runs on Supabase |
+| [`tests`](tests) | Database and browser test suites (`npm test`), also run by GitHub Actions | Active |
 | [`supabase`](supabase) | Database schema (migrations), access rules and starter data | Active |
 | [`apps/mobile`](apps/mobile) | Expo SDK 57 app: Home, Shop by age, Product, Mobile Money checkout, Order tracking | On hold until the web store is done; still uses the bundled catalogue |
 | [`packages/shared`](packages/shared) | Design tokens, icons, types, starter catalogue and bag state used by both apps | Active |
@@ -49,6 +50,7 @@ Checks:
 npm run typecheck
 npm run lint
 npm run build:web
+npm test              # every test suite (see Testing); `npm test -- db` runs only the database ones
 ```
 
 ## Connect a hosted Supabase project
@@ -68,13 +70,25 @@ npm run build:web
    Later schema changes arrive as new files in `supabase/migrations`. Run only the new ones, in order (SQL Editor),
    or `npx supabase db push`. Never re-run `setup.sql` on a project that has data.
 
-   The migrations also create the private `return-photos` Storage bucket for return photos, so Storage must be enabled
-   (it is by default on hosted projects).
+   The migrations also create two Storage buckets, so Storage must be enabled (it is by default on hosted projects):
+   `product-images` (public: product photos staff upload) and `return-photos` (private: photos customers attach to a
+   return).
 3. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (Project Settings → API) in
    `apps/web/.env.local` and in your hosting provider. Also set `SUPABASE_SECRET_KEY` (Project Settings → API keys).
    Only the server-side payment and messaging code reads it. Never give it a `NEXT_PUBLIC_` name.
 4. In Authentication → URL Configuration, set the Site URL to your live address and add
    `https://<your-domain>/auth/callback` (and `http://localhost:3000/auth/callback` for local work) to the redirect URLs.
+
+## Testing
+
+`tests/` holds the automated checks: database suites that call the API as shoppers and as each staff role, and browser
+suites (Playwright) that click through the store and the admin console. `npm test` resets the local database before
+each suite, builds the web app and starts it on port 3000. It needs the local stack running (`npm run db:start`),
+`apps/web/.env.local` pointing at it with the test settings shown in [Run it locally](#run-it-locally), and Chromium for
+Playwright (`npx playwright install chromium`, once). Screenshots and logs land in `tests/.output`.
+
+GitHub Actions runs the same checks (typecheck, lint, every suite) on each push to `main` and on pull requests; see
+`.github/workflows/ci.yml`. A failed run keeps its screenshots and logs as a downloadable artifact.
 
 ## Deploy on Vercel
 
@@ -95,7 +109,8 @@ The build reads the catalogue from Supabase, so the Supabase variables must be s
 | `products`, `product_sizes`, `product_age_bands`, `categories`, `age_bands` | Catalogue | Everyone (published products only) |
 | `merchandising_slots` | Ordered product lists such as `home_hero`, `home_new_arrivals`, `home_best_sellers`, `product_related` | Everyone |
 | `banners` | Home page hero and promo cards, with optional start and end times and a countdown | Everyone sees live ones; staff see all |
-| `delivery_areas`, `delivery_options` | Where you deliver and what it costs | Everyone |
+| `delivery_areas`, `delivery_zones`, `delivery_rates`, `delivery_options` | Where you deliver, zones that charge their own fee or skip an option, standard fees, estimates and cut-offs. Edited in Admin → Delivery | Everyone |
+| `product_images` | Uploaded product photos (files in the `product-images` bucket), in gallery order | Everyone (published products only) |
 | `inventory_levels` | Stock per product and size: `on_hand` and `reserved` | Everyone sees only `in_stock`; counts are staff-only |
 | `store_settings` | Store rules (payment hold, return window, delivery attempts, stock alerts) and support contacts. Edited in Admin → Settings | Everyone |
 | `orders`, `order_items` | Orders and what was bought | The signed-in shopper who placed them, and staff (never the delivery code) |
@@ -110,6 +125,8 @@ The build reads the catalogue from Supabase, so the Supabase variables must be s
 | `staff_members`, `audit_log` | Who can use the admin console, and an append-only record of sensitive changes | Staff; the audit log is admins only |
 | `profiles` | When a shopper confirmed they're 18+ and accepted the terms | The shopper |
 | `bag_items` | Signed-in shoppers' saved bags | The shopper |
+| `customer_addresses` | Signed-in shoppers' saved delivery addresses (up to 10, one default) | The shopper |
+| `wishlist_items` | Signed-in shoppers' saved products | The shopper |
 
 - Nothing is writable through the public API except via the functions the app calls. Staff change the catalogue,
   stock and orders in the admin console, which goes through `admin_*` database functions that check the person's role
@@ -163,11 +180,19 @@ What's in it:
   and close.
 - **Content:** home page banners (hero and promo cards, scheduled or with a countdown) and the featured product lists
   (hero products, New Arrivals, Best Sellers, "You may also like").
-- **Riders**, **Staff** and **Settings** (the last two admins only). Settings holds the support phone, WhatsApp, email
-  and hours shown in the help centre, the return window, the payment hold and the stock alert levels; every change is
-  audited.
+- **Riders**, **Staff**, **Delivery**, **Audit log** and **Settings** (all but Riders admins only):
+  - **Delivery:** the areas you deliver to, zones (groups of areas with their own fee, or without an option such as
+    same day), each option's standard fee, estimate in working days and cut-off time, and the free-delivery threshold.
+  - **Audit log:** every sensitive change, filterable by kind and by staff member.
+  - **Settings:** the support phone, WhatsApp, email and hours shown in the help centre, the return window, the payment
+    hold and the stock alert levels.
 
-Product photos can't be uploaded yet: pick one of the design's photos or leave the placeholder picture.
+  Every change on these pages is audited.
+
+Product photos are uploaded on the product's page in the admin console (up to 8 per product, JPEG, PNG or WebP under
+5 MB). The first is the main photo in listings, the bag and orders; staff set the order and a description for screen
+readers. Next.js resizes them for each screen. Products without uploaded photos keep the design's sample picture or
+the tinted placeholder.
 
 ## Orders and delivery
 
@@ -183,8 +208,27 @@ printable receipt once paid. Signed-in shoppers find their orders under Account 
   audited). Turn the code off with `store_settings.require_delivery_code`.
 - **Failed deliveries:** record the reason; the customer is told. Send it out again, up to
   `store_settings.max_delivery_attempts` (2) attempts, or return it to stock, which flags it for a refund.
-- **Cancelling:** possible until the order leaves the warehouse. Stock goes back on sale, and paid orders are flagged
-  "refund due". Refunds are made outside the system for now, then recorded on the order.
+- **Cancelling:** staff can cancel until the order leaves the warehouse. Customers can cancel from their order page
+  until packing starts (PRD FR-052), with a reason that goes into the history. Either way stock goes back on sale, and
+  paid orders are flagged "refund due". Refunds are made outside the system for now, then recorded on the order.
+- **Buy again** (PRD FR-051): delivered, cancelled and returned orders have a button that puts the items back in the
+  bag, naming any that are no longer available.
+
+## Delivery pricing
+
+Checkout charges the fee of the shopper's area (PRD FR-040): areas in a zone pay the zone's fee for each option, other
+areas pay the option's standard fee, and a zone can leave out an option entirely. Once the bag reaches the free-delivery
+threshold, the options marked "free over the threshold" cost nothing. Checkout shows each option's price and estimate
+for the chosen area ("1–2 working days", "Today if you order by 2:00 pm"), and how much more is needed for free
+delivery (PRD FR-041). `place_order` applies the same rules, so the charge never depends on what the browser shows.
+
+## Accounts: addresses and saved items
+
+- **Saved addresses** (PRD FR-023): signed-in shoppers keep up to 10 addresses under Account → Your addresses, one
+  of them the default. Checkout fills in the default, offers the others, and can save a new address with the order.
+  A map pin isn't built yet.
+- **Saved items** (PRD FR-063): the heart on any product saves it. Guests keep the list on their device; signing in
+  adds it to the account so it follows them. `/saved` lists them.
 
 ## Shopping: categories, search and filters
 
@@ -306,11 +350,11 @@ Setup:
 The design shows values the business hasn't set yet (marked "To be set" in the BRD and PRD) as bracketed text such as
 `[X]` or `[Reg. number]`.
 
-- **Delivery fees:** set `fee_ghs` in the `delivery_options` table. Checkout then shows real delivery fees and totals,
-  and orders store them.
+- **Delivery fees, estimates, cut-offs and free delivery:** Admin → Delivery. Until a fee is set, checkout shows
+  `[fee]` and orders have no total yet.
 - **Support contacts and the return window:** Admin → Settings. The help centre shows placeholders until they're set.
-- **Display text:** free-delivery threshold, sale percentage, delivery days and cut-off times are in `pending` in
-  `packages/shared/src/store.ts` (the mobile app also reads the return window from there). Banner text, including the
+- **Display text:** the sale percentage and shopper count are in `pending` in `packages/shared/src/store.ts` (the mobile
+  app also reads its delivery days and return window from there). Banner text, including the
   starter "Up To [X]% Off" card, is edited in Admin → Content. FDA number, ingredients, batch and expiry come from the
   catalogue and stock. The placeholders show only for products that don't have them yet.
 
@@ -318,13 +362,11 @@ The design shows values the business hasn't set yet (marked "To be set" in the B
 
 - **Real payment, SMS and email providers:** the flows are in place (see [Payments](#payments) and
   [Customer messages](#customer-messages)), but no provider is connected yet. Card shows "coming soon".
-- **Accounts:** Google sign-in only; phone-number sign-in (PRD FR-002), saved addresses and customer cancellation
-  aren't built.
-- **Admin:** no product photo upload, refunds through a payment provider, finance reports, audit log viewer, or
-  editing of delivery areas and fees (edit the `delivery_areas` and `delivery_options` tables).
+- **Accounts:** Google sign-in only; phone-number sign-in (PRD FR-002), editing the profile, signing out of all
+  devices, and data export or deletion (FR-057) aren't built. Addresses have no map pin.
+- **Admin:** no refunds through a payment provider, finance reports, or supplier and purchase-order records.
 - **Policy pages:** the Terms of Service and Privacy Notice (which the sign-in asks shoppers to accept) aren't written.
   Their footer links are placeholders.
-- **Wishlist:** the heart buttons on product cards don't save anything yet.
-- **Photos:** the handoff included seven photos (`packages/shared/assets/images`, referenced by `image_key`). Other
-  products use a tinted placeholder until real photography is added.
+- **Photos:** only the seven photos from the design handoff exist so far (`packages/shared/assets/images`, referenced by
+  `image_key`). Upload real photos in the admin console.
 - **App icons:** still the framework defaults.

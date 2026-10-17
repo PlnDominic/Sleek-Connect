@@ -11,6 +11,8 @@ export interface BagItem {
   sizeLabel?: string;
   unitPrice: number;
   image?: ImageKey;
+  /** URL of an uploaded product photo; shown instead of `image`. */
+  photo?: string;
   tint: string;
   kind: ProductKind;
   qty: number;
@@ -92,6 +94,7 @@ export function bagItemFrom(product: Product, sizeId = product.defaultSize, qty 
     sizeLabel: getSize(product, sizeId)?.label,
     unitPrice: unitPrice(product, sizeId),
     image: product.image,
+    photo: product.photos?.[0]?.url,
     tint: product.tint,
     kind: product.kind,
     qty: clampQty(qty),

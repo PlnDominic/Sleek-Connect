@@ -195,6 +195,10 @@
   border: 2px solid var(--c-ink);
 }
 
+.choice[data-disabled='true'] {
+  opacity: 0.55;
+}
+
 .choice input {
   width: 18px;
   height: 18px;

@@ -4,10 +4,12 @@ import { notFound } from 'next/navigation';
 import { can, requireStaffPage } from '@/lib/admin/session';
 import { productRowColumns, rowToPayload, type ProductRow } from '@/lib/admin/product-payload';
 import { UUID_PATTERN } from '@/lib/orders';
+import { photoUrl } from '@/lib/photos';
 import { ActionForm } from '../../ActionForm';
 import { Flash } from '../../Flash';
 import { liftRecall, recallProduct } from '../actions';
 import { productFormOptions } from '../data';
+import { PhotoManager } from '../PhotoManager';
 import { ProductForm } from '../ProductForm';
 import styles from '../../admin.module.css';
 
@@ -20,10 +22,11 @@ export default async function EditProductPage({ params, searchParams }: PageProp
   if (!UUID_PATTERN.test(id)) notFound();
   const query = await searchParams;
 
-  const [{ data: row }, { data: problems }, options] = await Promise.all([
+  const [{ data: row }, { data: problems }, options, { data: photos }] = await Promise.all([
     staff.supabase.from('products').select(productRowColumns).eq('id', id).maybeSingle(),
     staff.supabase.rpc('product_publish_problems', { p_product_id: id }),
     productFormOptions(staff.supabase),
+    staff.supabase.from('product_images').select('id, path, alt').eq('product_id', id).order('sort_order').order('created_at'),
   ]);
   if (!row) notFound();
   const product = row as unknown as ProductRow & { recalled_at: string | null; recall_reason: string | null };
@@ -62,6 +65,11 @@ export default async function EditProductPage({ params, searchParams }: PageProp
           )}
         </div>
       )}
+      <PhotoManager
+        productId={product.id}
+        photos={(photos ?? []).map((p) => ({ id: p.id, url: photoUrl(p.path), alt: p.alt ?? '' }))}
+        canEdit={can(staff.role, 'catalogue.edit')}
+      />
       <ProductForm
         {...options}
         product={rowToPayload(product)}

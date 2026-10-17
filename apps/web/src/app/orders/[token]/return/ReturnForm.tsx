@@ -16,6 +16,7 @@ export interface ReturnableItem {
   returnable: boolean;
   returnNote: string | null;
   image: string | null;
+  photo: string | null;
   tint: string | null;
   kind: ProductKind | null;
 }
@@ -156,6 +157,7 @@ export function ReturnForm({ token, photoFolder, orderNumber, items }: ReturnFor
                 <li key={item.id} className={styles.line} data-disabled={!item.returnable && reason !== '' && !fault}>
                   <ProductImage
                     image={asImageKey(item.image)}
+                    photo={item.photo ?? undefined}
                     tint={item.tint ?? '#EAEAEA'}
                     kind={item.kind ?? 'gift'}
                     alt=""

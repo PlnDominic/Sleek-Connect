@@ -46,13 +46,21 @@
 - In a component that reads `searchParams` (a dynamic hole), await `searchParams` before calling cached functions.
   Otherwise the build-time result is frozen into the page shell and replayed once after staff change the catalogue.
 
+- Storage buckets: `product-images` is public (only catalogue staff write to it, under `<product id>/`); `return-photos` is
+  private. Files are added and removed through the Storage API (never by deleting rows in `storage.objects`), and the
+  matching table row goes through an `admin_*` or shopper function.
+
 ## Checks before pushing
 
 ```sh
 npm run typecheck
 npm run lint
 npm run build:web        # needs Supabase env vars in apps/web/.env.local
+npm test                 # all suites against the local stack; `npm test -- db` for the database ones only
 ```
+
+Add or extend a suite in `tests/` for every feature (database rules in `db-*.cjs`, screens in `e2e-*.cjs`) and register
+new files in `tests/run-all.sh`. GitHub Actions (`.github/workflows/ci.yml`) runs the same checks on every push.
 
 Next.js 16 differs from older versions; read `node_modules/next/dist/docs/` before using unfamiliar APIs
 (see `apps/web/AGENTS.md`). Expo guidance is in `apps/mobile/AGENTS.md`.

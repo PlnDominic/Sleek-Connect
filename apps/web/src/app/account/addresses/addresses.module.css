@@ -1,0 +1,163 @@
+.main {
+  padding-top: 32px;
+  padding-bottom: 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 860px;
+}
+
+.main h1 {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.muted {
+  color: var(--c-text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.card {
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-xl);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 15px;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.badge {
+  padding: 2px 10px;
+  border-radius: var(--r-pill);
+  background: var(--c-teal-soft);
+  color: var(--c-teal-ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.link {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  color: var(--c-ink);
+  cursor: pointer;
+}
+
+.panel {
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-xl);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.panel h2 {
+  font-size: 20px;
+}
+
+.form,
+.fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.form {
+  margin-top: 8px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.optional {
+  font-weight: 400;
+  color: var(--c-text-muted);
+}
+
+.field input,
+.field select {
+  height: 46px;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-xxl);
+  padding: 0 14px;
+  font: inherit;
+  font-weight: 400;
+  background: var(--c-canvas);
+}
+
+.check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 14px;
+}
+
+.primary {
+  align-self: flex-start;
+  height: 46px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: var(--r-lg);
+  background: var(--c-ink);
+  color: var(--c-canvas);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary:disabled {
+  opacity: 0.7;
+}
+
+.success {
+  color: var(--c-teal-ink);
+  font-size: 14px;
+}
+
+.error {
+  color: var(--c-accent-deep);
+  font-size: 14px;
+}

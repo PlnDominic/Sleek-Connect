@@ -122,10 +122,11 @@ select b.product_id, b.size_code, b.id, 'opening', b.quantity, b.quantity, b.not
 insert into public.delivery_areas (name, sort_order) values
 ${rows(deliveryAreas.map((name, i) => [name, i]))};
 
-insert into public.delivery_options (id, label, fee_ghs, sort_order) values
+-- Standard delivery becomes free once a free-delivery threshold is set (Admin → Delivery).
+insert into public.delivery_options (id, label, fee_ghs, free_eligible, sort_order) values
 ${rows([
-  ['standard', 'Standard', deliveryFees.standard, 0],
-  ['same_day', 'Same day', deliveryFees.sameDay, 1],
+  ['standard', 'Standard', deliveryFees.standard, true, 0],
+  ['same_day', 'Same day', deliveryFees.sameDay, false, 1],
 ])};
 `;
 

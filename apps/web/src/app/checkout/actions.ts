@@ -10,6 +10,8 @@ export interface PlaceOrderInput {
   payment: { method: 'momo'; network: MomoNetwork; wallet: string };
   items: { slug: string; size?: string; quantity: number }[];
   isGift: boolean;
+  /** Also save the delivery details to the signed-in shopper's addresses. */
+  saveAddress?: boolean;
 }
 
 export type PlaceOrderResult =
@@ -54,6 +56,20 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     if (error?.code === '22023') return { ok: false, error: error.message };
     console.error('place_order failed', error);
     return { ok: false, error: 'We couldn’t place your order. Please try again.' };
+  }
+
+  if (input.saveAddress) {
+    // Best effort: the order is placed either way.
+    const { error: saveError } = await supabase.rpc('save_address', {
+      p: {
+        recipient_name: input.customer.name,
+        phone: input.customer.phone,
+        area: input.customer.area,
+        ghanapost_gps: input.customer.ghanapostGps ?? '',
+        directions: input.customer.directions ?? '',
+      },
+    });
+    if (saveError && saveError.code !== '22023') console.error('save_address failed', saveError);
   }
 
   // The generated types can't express that these are NULL until delivery fees are set.

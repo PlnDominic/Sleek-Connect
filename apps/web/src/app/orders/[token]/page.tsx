@@ -17,7 +17,10 @@ import {
   returnStatusLabels,
   statusShort,
 } from '@/lib/orders';
+import { getProductsBySlugs } from '@/lib/catalog';
+import { photoUrl } from '@/lib/photos';
 import { AutoRefresh } from './AutoRefresh';
+import { BuyAgain, CancelOrder } from './OrderActions';
 import { getCustomerOrder } from './data';
 import styles from './order.module.css';
 
@@ -49,6 +52,9 @@ async function OrderDetails({ params }: { params: PageProps<'/orders/[token]'>['
   const timeline = buildTimeline(order);
   const live = !finalStatuses.includes(order.status);
   const canReturn = order.return_open && order.items.some((i) => i.quantity > i.return_requested);
+  const reorderable = ['delivered', 'cancelled', 'returned'].includes(order.status);
+  const slugs = order.items.flatMap((i) => (i.slug ? [i.slug] : []));
+  const products = reorderable && slugs.length ? await getProductsBySlugs(slugs) : [];
 
   return (
     <>
@@ -121,6 +127,7 @@ async function OrderDetails({ params }: { params: PageProps<'/orders/[token]'>['
                 <li key={`${item.name}-${item.size_label}`}>
                   <ProductImage
                     image={asImageKey(item.image_key)}
+                    photo={photoUrl(item.photo_path)}
                     tint={item.tint ?? '#EAEAEA'}
                     kind={item.kind ?? 'gift'}
                     alt=""
@@ -153,7 +160,7 @@ async function OrderDetails({ params }: { params: PageProps<'/orders/[token]'>['
               </div>
               <div>
                 <dt>Delivery ({order.delivery_option})</dt>
-                <dd>{formatPriceOr(order.delivery_fee_ghs, '[fee]')}</dd>
+                <dd>{order.delivery_fee_ghs === 0 ? 'Free' : formatPriceOr(order.delivery_fee_ghs, '[fee]')}</dd>
               </div>
               <div className={styles.totalRow}>
                 <dt>Total</dt>
@@ -238,6 +245,13 @@ async function OrderDetails({ params }: { params: PageProps<'/orders/[token]'>['
           )}
 
           <div className={styles.actions}>
+            {reorderable && (
+              <BuyAgain
+                lines={order.items.map((i) => ({ slug: i.slug, sizeCode: i.size_code, quantity: i.quantity, name: i.name }))}
+                products={products}
+              />
+            )}
+            {order.can_cancel && <CancelOrder token={token} paid={Boolean(order.paid_at)} />}
             {canReturn && (
               <Link href={`/orders/${token}/return`} className={styles.primary}>
                 Request a return

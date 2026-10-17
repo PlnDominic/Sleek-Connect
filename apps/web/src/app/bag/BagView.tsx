@@ -46,6 +46,7 @@ export function BagView() {
                 <li key={`${item.slug}-${item.sizeId ?? ''}`} className={styles.line}>
                   <ProductImage
                     image={item.image}
+                    photo={item.photo}
                     tint={item.tint}
                     kind={item.kind}
                     alt=""

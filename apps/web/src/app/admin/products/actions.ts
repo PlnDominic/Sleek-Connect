@@ -150,3 +150,44 @@ export async function importProducts(rows: ImportRow[]): Promise<ImportResult[]>
   updateTag('catalog');
   return results;
 }
+
+export type PhotoResult = { ok: boolean; message: string };
+
+const photoError = (error: { code?: string; message: string }): PhotoResult =>
+  error.code === '22023' || error.code === '42501'
+    ? { ok: false, message: error.message }
+    : (console.error(error), { ok: false, message: 'That didn’t work. Please try again.' });
+
+/** Records a photo the browser has just uploaded to Storage. */
+export async function addProductPhoto(productId: string, path: string): Promise<PhotoResult> {
+  const supabase = await createUserSupabase();
+  const { error } = await supabase.rpc('admin_add_product_image', { p_product_id: productId, p_path: path });
+  if (error) {
+    // Don't leave an orphaned file behind.
+    await supabase.storage.from('product-images').remove([path]);
+    return photoError(error);
+  }
+  updateTag('catalog');
+  refresh();
+  return { ok: true, message: 'Photo added.' };
+}
+
+export async function arrangeProductPhotos(productId: string, photos: { id: string; alt: string }[]): Promise<PhotoResult> {
+  const supabase = await createUserSupabase();
+  const { error } = await supabase.rpc('admin_arrange_product_images', { p_product_id: productId, p_photos: photos as unknown as Json });
+  if (error) return photoError(error);
+  updateTag('catalog');
+  refresh();
+  return { ok: true, message: 'Photos saved.' };
+}
+
+export async function removeProductPhoto(photoId: string): Promise<PhotoResult> {
+  const supabase = await createUserSupabase();
+  const { data: path, error } = await supabase.rpc('admin_remove_product_image', { p_id: photoId });
+  if (error) return photoError(error);
+  const { error: storageError } = await supabase.storage.from('product-images').remove([path]);
+  if (storageError) console.error('Removing the photo file failed', storageError);
+  updateTag('catalog');
+  refresh();
+  return { ok: true, message: 'Photo removed.' };
+}

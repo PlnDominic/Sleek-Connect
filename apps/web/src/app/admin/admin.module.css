@@ -570,3 +570,52 @@ details.inline > summary {
     padding: 0;
   }
 }
+
+/* Product photos */
+
+.photos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.photo {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.photoImage {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: var(--r-md);
+  background: var(--c-surface-sunken);
+  flex: none;
+}
+
+.photoBody {
+  flex: 1 1 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+label.secondary {
+  cursor: pointer;
+}
+
+.json {
+  margin: 6px 0 0;
+  max-width: 420px;
+  max-height: 260px;
+  overflow: auto;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

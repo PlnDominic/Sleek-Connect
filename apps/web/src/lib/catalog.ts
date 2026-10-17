@@ -1,6 +1,8 @@
 import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
 import { asImageKey, type AgeBand, type AgeBandId, type Category, type Product, type ProductDetails } from '@sleek/shared';
+import type { DeliveryConfig } from './delivery';
+import { photoUrl } from './photos';
 import { createSupabase } from './supabase/server';
 import type { Database } from './supabase/database.types';
 
@@ -9,16 +11,11 @@ type ProductRow = Tables['products']['Row'] & {
   product_sizes: Pick<Tables['product_sizes']['Row'], 'code' | 'label' | 'price_ghs' | 'is_default' | 'sort_order'>[];
   product_age_bands: Pick<Tables['product_age_bands']['Row'], 'age_band_id'>[];
   inventory_levels: { size_code: string; in_stock: boolean | null }[];
+  product_images: Pick<Tables['product_images']['Row'], 'path' | 'alt' | 'sort_order'>[];
 };
 
 const productColumns =
-  '*, product_sizes(code, label, price_ghs, is_default, sort_order), product_age_bands(age_band_id), inventory_levels(size_code, in_stock)';
-
-export interface DeliveryOption {
-  id: string;
-  label: string;
-  fee: number | null;
-}
+  '*, product_sizes(code, label, price_ghs, is_default, sort_order), product_age_bands(age_band_id), inventory_levels(size_code, in_stock), product_images(path, alt, sort_order)';
 
 function unwrap<T>({ data, error }: { data: T | null; error: { message: string } | null }): T {
   if (error) throw new Error(`Supabase query failed: ${error.message}`);
@@ -43,6 +40,9 @@ function toProduct(row: ProductRow): Product {
     tag: row.tag,
     summary: row.summary,
     image: asImageKey(row.image_key),
+    photos: row.product_images.length
+      ? [...row.product_images].sort((a, b) => a.sort_order - b.sort_order).map((i) => ({ url: photoUrl(i.path), alt: i.alt ?? undefined }))
+      : undefined,
     tint: row.tint,
     kind: row.kind,
     sizes: sizes.length
@@ -146,19 +146,38 @@ export async function listProductSlugs(): Promise<string[]> {
   return rows.map((r) => r.slug);
 }
 
-export async function getCheckoutOptions(): Promise<{ areas: string[]; deliveryOptions: DeliveryOption[] }> {
+/** Delivery areas, zones, fees, free-delivery threshold and estimates, as admins set them in Admin → Delivery. */
+export async function getDeliveryConfig(): Promise<DeliveryConfig> {
   'use cache';
   cacheLife('minutes');
   cacheTag('catalog');
 
   const supabase = createSupabase();
-  const [areas, options] = await Promise.all([
-    supabase.from('delivery_areas').select('name').order('sort_order').then(unwrap),
-    supabase.from('delivery_options').select('id, label, fee_ghs').order('sort_order').then(unwrap),
+  const [areas, zones, rates, options, settings] = await Promise.all([
+    supabase.from('delivery_areas').select('name, zone_id').eq('is_active', true).order('sort_order').then(unwrap),
+    supabase.from('delivery_zones').select('id, name').order('sort_order').then(unwrap),
+    supabase.from('delivery_rates').select('zone_id, option_id, fee_ghs, is_available').then(unwrap),
+    supabase
+      .from('delivery_options')
+      .select('id, label, fee_ghs, free_eligible, days_min, days_max, cutoff_time')
+      .order('sort_order')
+      .then(unwrap),
+    supabase.from('store_settings').select('free_delivery_threshold_ghs').single().then(unwrap),
   ]);
   return {
-    areas: areas.map((a) => a.name),
-    deliveryOptions: options.map((o) => ({ id: o.id, label: o.label, fee: o.fee_ghs })),
+    areas: areas.map((a) => ({ name: a.name, zoneId: a.zone_id })),
+    zones,
+    rates: rates.map((r) => ({ zoneId: r.zone_id, optionId: r.option_id, fee: r.fee_ghs, available: r.is_available })),
+    options: options.map((o) => ({
+      id: o.id,
+      label: o.label,
+      fee: o.fee_ghs,
+      freeEligible: o.free_eligible,
+      daysMin: o.days_min,
+      daysMax: o.days_max,
+      cutoff: o.cutoff_time?.slice(0, 5) ?? null,
+    })),
+    freeThreshold: settings?.free_delivery_threshold_ghs ?? null,
   };
 }
 
@@ -191,6 +210,7 @@ export async function getCategories(): Promise<Category[]> {
 export interface StoreInfo {
   returnWindowDays: number;
   reservationMinutes: number;
+  freeDeliveryThreshold?: number;
   supportPhone?: string;
   supportWhatsapp?: string;
   supportEmail?: string;
@@ -205,12 +225,13 @@ export async function getStoreInfo(): Promise<StoreInfo> {
 
   const { data: s, error } = await createSupabase()
     .from('store_settings')
-    .select('return_window_days, reservation_minutes, support_phone, support_whatsapp, support_email, support_hours')
+    .select('return_window_days, reservation_minutes, free_delivery_threshold_ghs, support_phone, support_whatsapp, support_email, support_hours')
     .single();
   if (error) throw new Error(`Supabase query failed: ${error.message}`);
   return {
     returnWindowDays: s.return_window_days,
     reservationMinutes: s.reservation_minutes,
+    freeDeliveryThreshold: s.free_delivery_threshold_ghs ?? undefined,
     supportPhone: s.support_phone ?? undefined,
     supportWhatsapp: s.support_whatsapp ?? undefined,
     supportEmail: s.support_email ?? undefined,

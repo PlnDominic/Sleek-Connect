@@ -83,6 +83,8 @@ export function AccountView() {
 
       <nav className={styles.links} aria-label="Account">
         <Link href="/account/orders">Your orders</Link>
+        <Link href="/account/addresses">Your addresses</Link>
+        <Link href="/saved">Saved items</Link>
         <Link href="/bag">Your bag</Link>
       </nav>
 
