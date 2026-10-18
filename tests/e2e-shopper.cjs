@@ -132,7 +132,7 @@ async function placeOrder(items, { area = 'Osu', pay = true } = {}) {
   const mainPhoto = shopper.locator('main img[src*="product-images"]').first();
   await mainPhoto.waitFor();
   assert(await mainPhoto.evaluate((img) => img.complete && img.naturalWidth > 0), 'product page shows the uploaded photo (optimised by Next.js)');
-  assert(await shopper.getByRole('button', { name: 'Serum bottle, front' }).count() === 1, 'gallery thumbnails use the descriptions');
+  assert(await until(async () => (await shopper.getByRole('button', { name: 'Serum bottle, front' }).count()) === 1), 'gallery thumbnails use the descriptions');
   await go(shopper, BASE + '/shop/beauty/skincare');
   assert(await main(shopper).locator('article img[src*="product-images"]').count() >= 1, 'listing cards show the main photo');
 

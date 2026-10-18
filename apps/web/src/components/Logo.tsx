@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import styles from './chrome.module.css';
 
-export function Logo({ size = 24, onDark = false }: { size?: number; onDark?: boolean }) {
+export function Logo({ size = 24, onDark = false, href = '/' }: { size?: number; onDark?: boolean; href?: string }) {
   // A custom property rather than font-size, so small screens can scale the wordmark down (chrome.module.css).
   const style = { '--logo-size': `${size}px` } as CSSProperties;
   const content = (
@@ -18,7 +18,7 @@ export function Logo({ size = 24, onDark = false }: { size?: number; onDark?: bo
     );
   }
   return (
-    <Link href="/" className={styles.logo} style={style}>
+    <Link href={href} className={styles.logo} style={style}>
       {content}
     </Link>
   );

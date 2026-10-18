@@ -12,13 +12,15 @@ export type StaffSession =
   | {
       state: 'ready';
       email: string | undefined;
+      name: string | undefined;
+      avatar: string | undefined;
       role: StaffRole;
       supabase: Awaited<ReturnType<typeof createUserSupabase>>;
     };
 
 /**
- * Who is using the admin console, once per request. Staff sign in with Google and must be on the staff list; the
- * database enforces the same rules on every query, so this only decides what to show.
+ * Who is using the admin console, once per request. Staff sign in with Google or an email and password and must be on
+ * the staff list; the database enforces the same rules on every query, so this only decides what to show.
  */
 export const getStaffSession = cache(async (): Promise<StaffSession> => {
   // Always per request: the session decides everything on the page (and the auth client reads the clock).
@@ -29,17 +31,14 @@ export const getStaffSession = cache(async (): Promise<StaffSession> => {
   } = await supabase.auth.getUser();
   if (!user) return { state: 'signed_out' };
 
+  // Google fills these in; accounts made with a password usually have neither.
+  const meta = user.user_metadata as { full_name?: string; name?: string; avatar_url?: string; picture?: string };
+  const name = meta.full_name ?? meta.name;
+  const avatar = meta.avatar_url ?? meta.picture;
+
   const { data: access } = await supabase.rpc('my_staff_access').maybeSingle();
-  if (!access) {
-    const meta = user.user_metadata as { full_name?: string; name?: string; avatar_url?: string; picture?: string };
-    return {
-      state: 'not_staff',
-      email: user.email,
-      name: meta.full_name ?? meta.name,
-      avatar: meta.avatar_url ?? meta.picture,
-    };
-  }
-  return { state: 'ready', email: user.email, role: access.role, supabase };
+  if (!access) return { state: 'not_staff', email: user.email, name, avatar };
+  return { state: 'ready', email: user.email, name, avatar, role: access.role, supabase };
 });
 
 /** The staff session for a page, or null (the layout then shows the sign-in screen instead). */

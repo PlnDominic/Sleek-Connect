@@ -140,16 +140,21 @@ The build reads the catalogue from Supabase, so the Supabase variables must be s
 
 ## Admin console
 
-Staff work at `/admin`. They sign in with the Google account their admin added to the staff list, and go straight in:
-there is no second step. The database itself refuses staff actions from anyone who isn't active staff with a confirmed
-email address.
+Staff work at `/admin`. They sign in with Google or with an email and password, and go straight in: there is no
+second step. Either way the account must be on the staff list that an admin keeps, and the database itself refuses staff
+actions from anyone who isn't active staff with a confirmed email address.
 
-Because Google is the only lock, keep the staff list short and ask everyone on it to turn on Google's own 2-Step
-Verification for that account. In Supabase (Authentication → Sign In / Providers), switch the **Email** provider off so
-Google is the only way to sign in; the store doesn't use email sign-in. (This replaces the authenticator-app step the
-PRD describes in FR-107.)
+Because there is no second step, keep the staff list short and ask everyone on it to turn on Google's own 2-Step
+Verification (or use a long, unique password). (This replaces the authenticator-app step the PRD describes in FR-107.)
+For email and password sign-in:
 
-Add the first admin once, in the SQL Editor, using the Google account they'll sign in with:
+- Leave the **Email** provider on in Supabase (Authentication → Sign In / Providers) and keep **Confirm email** on.
+- Create password accounts yourself: Authentication → Users → Add user, with **Auto Confirm User** ticked, then add
+  that email to the staff list. Staff who use Google need nothing here.
+- If a staff member gets a confirmation email they didn't ask for, they should delete it rather than click it.
+- There is no "forgot password" link yet; reset a password from the same Users page.
+
+Add the first admin once, in the SQL Editor, using the email address they'll sign in with:
 
 ```sql
 insert into public.staff_members (email, role) values ('owner@gmail.com', 'admin');

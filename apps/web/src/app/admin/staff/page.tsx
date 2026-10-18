@@ -41,8 +41,9 @@ export default async function StaffPage() {
         <div>
           <h1>Staff</h1>
           <p className={styles.muted}>
-            Staff sign in at /admin with the Google account for their email. Only add people you trust, and ask each of
-            them to turn on Google’s 2-Step Verification for that account. Changes are recorded in the audit log.
+            Staff sign in at /admin with Google or an email and password for the address you add here. Only add people
+            you trust, and ask each of them to turn on Google’s 2-Step Verification (or use a strong, unique password).
+            Changes are recorded in the audit log.
           </p>
         </div>
       </div>
@@ -51,7 +52,7 @@ export default async function StaffPage() {
         <ActionForm action={setStaff.bind(null, null)} resetOnSuccess>
           <div className={styles.row}>
             <label className={styles.field}>
-              <span>Google account email</span>
+              <span>Staff email</span>
               <input name="email" type="email" required />
             </label>
             <label className={styles.field}>

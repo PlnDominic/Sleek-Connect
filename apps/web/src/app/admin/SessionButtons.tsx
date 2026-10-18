@@ -1,8 +1,9 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useId, useState, type FormEvent } from 'react';
 import { useAuth } from '@/components/AuthProvider';
+import { createBrowserSupabase } from '@/lib/supabase/browser';
 import adminStyles from './admin.module.css';
 import styles from './signin.module.css';
 
@@ -30,7 +31,7 @@ function GoogleMark() {
   );
 }
 
-/** The sign-in button. Staff sign in with Google alone; there is no second step. */
+/** Sign in with Google. There is no second step after it. */
 export function SignInWithGoogle({
   label = 'Continue with Google',
   chooseAccount = false,
@@ -74,13 +75,112 @@ export function SignInWithGoogle({
   );
 }
 
+/** What to tell someone whose email and password were refused, without revealing which of the two was wrong. */
+function passwordError(error: { code?: string; status?: number }): string {
+  if (error.code === 'email_not_confirmed') {
+    return 'Please confirm your email first. Check your inbox for the link we sent.';
+  }
+  if (error.code === 'over_request_rate_limit' || error.status === 429) {
+    return 'Too many attempts. Please wait a minute and try again.';
+  }
+  return 'That email and password don’t match. Please check them and try again.';
+}
+
+/** Sign in with an email and password (the account must still be on the staff list). */
+export function PasswordSignIn() {
+  const router = useRouter();
+  const emailId = useId();
+  const passwordId = useId();
+  const errorId = useId();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [reveal, setReveal] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    const { error: failure } = await createBrowserSupabase().auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    if (failure) {
+      setBusy(false);
+      setError(passwordError(failure));
+      return;
+    }
+    // Stay busy: the refresh swaps this form for the console (or the "no staff access" screen).
+    router.refresh();
+  }
+
+  return (
+    <form className={styles.form} onSubmit={submit} aria-label="Sign in with email">
+      <div className={styles.field}>
+        <label htmlFor={emailId}>Email</label>
+        <input
+          id={emailId}
+          className={styles.input}
+          type="email"
+          name="email"
+          autoComplete="username"
+          placeholder="you@example.com"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
+        />
+      </div>
+      <div className={styles.field}>
+        <label htmlFor={passwordId}>Password</label>
+        <div className={styles.inputWrap}>
+          <input
+            id={passwordId}
+            className={styles.input}
+            type={reveal ? 'text' : 'password'}
+            name="password"
+            autoComplete="current-password"
+            placeholder="Your password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? errorId : undefined}
+          />
+          <button
+            type="button"
+            className={styles.reveal}
+            onClick={() => setReveal((shown) => !shown)}
+            aria-label={reveal ? 'Hide password' : 'Show password'}
+            aria-pressed={reveal}
+          >
+            {reveal ? 'Hide' : 'Show'}
+          </button>
+        </div>
+      </div>
+      {error && (
+        <p id={errorId} role="alert" className={styles.error}>
+          {error}
+        </p>
+      )}
+      <button type="submit" className={styles.submit} disabled={busy} aria-busy={busy}>
+        {busy && <span className={styles.spinner} aria-hidden="true" />}
+        <span>{busy ? 'Signing in…' : 'Sign in'}</span>
+      </button>
+    </form>
+  );
+}
+
 export function SignOutButton({ compact = false }: { compact?: boolean }) {
   const { signOut } = useAuth();
   const router = useRouter();
   return (
     <button
       type="button"
-      className={compact ? adminStyles.linkButton : styles.link}
+      className={compact ? adminStyles.signOut : styles.link}
       onClick={async () => {
         await signOut();
         router.refresh();

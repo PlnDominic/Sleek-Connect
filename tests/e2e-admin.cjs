@@ -36,7 +36,9 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   await go(anon, BASE + '/admin');
   assert(await anon.getByRole('heading', { name: 'Welcome back' }).isVisible() && await anon.getByRole('button', { name: 'Continue with Google' }).isVisible(), 'signed-out visitors see the staff sign-in with Google');
   assert((await anon.locator('nav[aria-label="Admin"]').count()) === 0, 'no admin navigation before sign-in');
-  assert((await anon.getByText(/two-step|authenticator|6-digit/i).count()) === 0 && (await anon.getByRole('textbox').count()) === 0, 'the sign-in asks for nothing but Google');
+  assert(await anon.getByLabel('Email', { exact: true }).isVisible() && await anon.getByLabel('Password', { exact: true }).isVisible() && await anon.getByRole('button', { name: 'Sign in', exact: true }).isVisible(), 'they can also sign in with an email and password');
+  assert((await anon.getByText(/two-step|authenticator|6-digit/i).count()) === 0, 'neither way asks for a second step');
+  assert((await anon.locator('aside').count()) === 0 && (await anon.getByText(/Run the store from/).count()) === 0, 'the sign-in is a single card, without the dark brand panel');
   await shot(anon, 'admin-signin');
   await anon.getByRole('button', { name: 'Continue with Google' }).click();
   await until(() => authorizeUrl);
@@ -47,6 +49,30 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   const failed = await ctx();
   await go(failed, BASE + '/auth/callback?code=bogus&next=/admin');
   assert(failed.url().endsWith('/admin?error=signin') && await failed.getByText('We couldn’t complete that sign-in').isVisible(), 'a failed Google sign-in returns to the staff sign-in with a message');
+  // Email and password: a wrong password is refused plainly, the right one goes straight in.
+  const pw = await ctx();
+  await go(pw, BASE + '/admin');
+  await pw.getByLabel('Email', { exact: true }).fill(`rookie+${stamp}@example.com`);
+  await pw.getByLabel('Password', { exact: true }).fill('not-the-password');
+  await pw.getByRole('button', { name: 'Sign in', exact: true }).click();
+  const refused = pw.getByRole('alert').filter({ hasText: 'don’t match' });
+  await refused.waitFor({ timeout: 10000 });
+  assert(await refused.isVisible() && await pw.getByRole('heading', { name: 'Welcome back' }).isVisible(), 'a wrong password is refused with a plain message, and nothing opens');
+  await pw.getByLabel('Password', { exact: true }).fill('correct-horse-battery');
+  assert((await pw.getByLabel('Password', { exact: true }).getAttribute('type')) === 'password', 'the password is hidden by default');
+  await pw.getByRole('button', { name: 'Show password' }).click();
+  assert((await pw.getByLabel('Password', { exact: true }).getAttribute('type')) === 'text' && await pw.getByRole('button', { name: 'Hide password' }).isVisible(), 'it can be revealed');
+  await pw.getByRole('button', { name: 'Hide password' }).click();
+  await pw.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await pw.getByRole('heading', { name: 'Dashboard' }).waitFor({ timeout: 15000 });
+  assert(await pw.getByRole('navigation', { name: 'Admin' }).isVisible(), 'staff can sign in with an email and password');
+  const pwStranger = await ctx();
+  await go(pwStranger, BASE + '/admin');
+  await pwStranger.getByLabel('Email', { exact: true }).fill(`stranger+${stamp}@example.com`);
+  await pwStranger.getByLabel('Password', { exact: true }).fill('correct-horse-battery');
+  await pwStranger.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await pwStranger.getByRole('heading', { name: 'No staff access' }).waitFor({ timeout: 15000 });
+  assert(true, 'a password account that isn’t on the staff list is turned away too');
   const stranger = await ctx((await staffSession(`stranger+${stamp}@example.com`)).cookies());
   await go(stranger, BASE + '/admin/orders');
   assert(await stranger.getByRole('heading', { name: 'No staff access' }).isVisible() && await stranger.getByText(`stranger+${stamp}@example.com`).isVisible(), 'non-staff accounts are turned away, showing which account it was');
@@ -64,6 +90,11 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   assert(await rookie.getByRole('navigation', { name: 'Admin' }).isVisible(), 'staff reach the console straight after signing in with Google');
   assert((await rookie.getByText(/two-step|authenticator|6-digit/i).count()) === 0, 'no second step anywhere');
   assert((await rookie.getByRole('link', { name: 'Staff' }).count()) === 0, 'Staff page hidden from non-admins');
+  const sidebar = rookie.locator('aside').first();
+  assert((await sidebar.evaluate((el) => getComputedStyle(el).backgroundColor)) === 'rgb(255, 255, 255)', 'the sidebar is white');
+  assert((await rookie.getByRole('link', { name: 'Dashboard' }).getAttribute('aria-current')) === 'page', 'the sidebar marks the page you are on');
+  assert(await sidebar.getByText(`rookie+${stamp}@example.com`).isVisible() && await sidebar.getByText('Operations', { exact: true }).isVisible() && await sidebar.getByRole('link', { name: 'View store' }).isVisible(), 'the sidebar shows who is signed in, their role and a way back to the store');
+  await shot(rookie, 'admin-dashboard');
   await rookie.getByRole('button', { name: 'Sign out' }).click();
   await rookie.getByRole('heading', { name: 'Welcome back' }).waitFor();
   assert(true, 'signing out returns to the sign-in');
@@ -214,7 +245,7 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   // --- Staff management -----------------------------------------------------------------------------------
   const bs = await ctx(boss.cookies());
   await go(bs, BASE + '/admin/staff');
-  await bs.getByLabel('Google account email').fill(`New.Hire+${stamp}@Example.com`);
+  await bs.getByLabel('Staff email').fill(`New.Hire+${stamp}@Example.com`);
   await bs.getByRole('button', { name: 'Add', exact: true }).click();
   await bs.getByText(/Added\. They can now sign in/).waitFor();
   assert(sql(`select role from public.staff_members where email = 'new.hire+${stamp}@example.com'`) === 'operations', 'admin adds staff');

@@ -79,6 +79,21 @@ export const icons = {
     shapes: [path('M8 3L3 7l3 3 2-1v12h8V9l2 1 3-3-5-4c-1 1.5-2.5 2-4 2S9 4.5 8 3z')],
   },
   toy: { shapes: [rect(4, 13, 7, 7, 1), rect(13, 13, 7, 7, 1), rect(8.5, 5, 7, 7, 1)] },
+  sliders: {
+    shapes: [path('M4 7h9M17 7h3'), circle(15, 7, 2), path('M4 17h3M11 17h9'), circle(9, 17, 2)],
+  },
+  users: {
+    shapes: [
+      circle(9, 8, 3.5),
+      path('M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5'),
+      circle(17.5, 9, 2.5),
+      path('M17 14.5c2.4.2 4 1.8 4.5 4.5'),
+    ],
+  },
+  clipboard: { shapes: [rect(5, 4, 14, 17, 2), path('M9 3h6v3H9z'), path('M9 11h6M9 15h4')] },
+  layers: { shapes: [path('M12 3l9 5-9 5-9-5z'), path('M3 13l9 5 9-5')] },
+  image: { shapes: [rect(3, 4, 18, 16, 2), circle(8.5, 9.5, 1.5), path('M21 16l-5-5-8 8')] },
+  store: { shapes: [path('M4 9l1.5-5h13L20 9'), path('M4 9v11h16V9'), path('M4 9a2.67 2.67 0 0 0 5.33 0 2.67 2.67 0 0 0 5.34 0A2.67 2.67 0 0 0 20 9'), path('M10 20v-5h4v5')] },
 } satisfies Record<string, IconDef>;
 
 export type IconName = keyof typeof icons;
