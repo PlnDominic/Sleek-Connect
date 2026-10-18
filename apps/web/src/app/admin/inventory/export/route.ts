@@ -5,7 +5,7 @@ import { UUID_PATTERN } from '@/lib/orders';
 /** CSV exports for staff: stock alerts (PRD FR-103 "alert list exportable") and the movement ledger. */
 export async function GET(request: Request) {
   const session = await getStaffSession();
-  if (session.state !== 'ready') return new Response('Staff sign-in with two-step verification required.', { status: 401 });
+  if (session.state !== 'ready') return new Response('Staff sign-in required.', { status: 401 });
   const db = session.supabase;
   const url = new URL(request.url);
   const type = url.searchParams.get('type');

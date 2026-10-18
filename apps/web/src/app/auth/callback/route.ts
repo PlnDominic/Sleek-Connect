@@ -20,5 +20,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.redirect(new URL('/account?error=signin', request.url));
+  // A failed staff sign-in goes back to the staff sign-in screen, not the shopper's account page.
+  const failed = next.startsWith('/admin') ? '/admin?error=signin' : '/account?error=signin';
+  return NextResponse.redirect(new URL(failed, request.url));
 }

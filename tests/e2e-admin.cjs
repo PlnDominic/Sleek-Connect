@@ -2,7 +2,7 @@ const path = require('path');
 const { chromium } = require('playwright');
 const { execSync } = require('child_process');
 const fs = require('fs');
-const { URL_, KEY, sql, totp, createUser, staffSession, createClient } = require('./lib.cjs');
+const { URL_, KEY, sql, createUser, staffSession, createClient } = require('./lib.cjs');
 const BASE = 'http://localhost:3000';
 const ROOT = path.resolve(__dirname, '..');
 const OUT = process.argv[2] ?? path.resolve(__dirname, '.output');
@@ -31,36 +31,42 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
 
   // --- Gate --------------------------------------------------------------------------------
   const anon = await ctx();
+  let authorizeUrl = null;
+  await anon.route('**/auth/v1/authorize**', (route) => { authorizeUrl = route.request().url(); route.fulfill({ status: 200, body: 'stub' }); });
   await go(anon, BASE + '/admin');
-  assert(await anon.getByRole('heading', { name: 'Staff sign-in' }).isVisible() && await anon.getByRole('button', { name: 'Continue with Google' }).isVisible(), 'signed-out visitors see staff sign-in');
+  assert(await anon.getByRole('heading', { name: 'Welcome back' }).isVisible() && await anon.getByRole('button', { name: 'Continue with Google' }).isVisible(), 'signed-out visitors see the staff sign-in with Google');
   assert((await anon.locator('nav[aria-label="Admin"]').count()) === 0, 'no admin navigation before sign-in');
-  const stranger = await ctx((await staffSession(`stranger+${stamp}@example.com`, { mfa: false })).cookies());
+  assert((await anon.getByText(/two-step|authenticator|6-digit/i).count()) === 0 && (await anon.getByRole('textbox').count()) === 0, 'the sign-in asks for nothing but Google');
+  await shot(anon, 'admin-signin');
+  await anon.getByRole('button', { name: 'Continue with Google' }).click();
+  await until(() => authorizeUrl);
+  const auth = authorizeUrl && new URL(authorizeUrl);
+  const redirectTo = auth && new URL(auth.searchParams.get('redirect_to'));
+  assert(auth?.searchParams.get('provider') === 'google' && redirectTo?.pathname === '/auth/callback' && redirectTo.searchParams.get('next') === '/admin', 'Google sign-in returns to the console');
+  assert(!redirectTo.searchParams.has('consent') && !auth.searchParams.has('prompt'), 'staff aren’t asked for shopper consent, and Google picks the signed-in account');
+  const failed = await ctx();
+  await go(failed, BASE + '/auth/callback?code=bogus&next=/admin');
+  assert(failed.url().endsWith('/admin?error=signin') && await failed.getByText('We couldn’t complete that sign-in').isVisible(), 'a failed Google sign-in returns to the staff sign-in with a message');
+  const stranger = await ctx((await staffSession(`stranger+${stamp}@example.com`)).cookies());
   await go(stranger, BASE + '/admin/orders');
-  assert(await stranger.getByRole('heading', { name: 'No staff access' }).isVisible(), 'non-staff accounts are turned away');
-  const rookieSession = await staffSession(`rookie+${stamp}@example.com`, { mfa: false });
-  const rookie = await ctx(rookieSession.cookies());
+  assert(await stranger.getByRole('heading', { name: 'No staff access' }).isVisible() && await stranger.getByText(`stranger+${stamp}@example.com`).isVisible(), 'non-staff accounts are turned away, showing which account it was');
+  assert(await stranger.getByRole('button', { name: 'Use a different Google account' }).isVisible() && await stranger.getByRole('button', { name: 'Sign out' }).isVisible(), 'they can switch account or sign out');
+  await shot(stranger, 'admin-nostaff');
+  let switchUrl = null;
+  await stranger.route('**/auth/v1/authorize**', (route) => { switchUrl = route.request().url(); route.fulfill({ status: 200, body: 'stub' }); });
+  await stranger.getByRole('button', { name: 'Use a different Google account' }).click();
+  await until(() => switchUrl);
+  assert(new URL(switchUrl).searchParams.get('prompt') === 'select_account', 'switching accounts makes Google show the account chooser');
+  // A staff member goes straight in: no code to enter, nothing to set up.
+  const rookie = await ctx((await staffSession(`rookie+${stamp}@example.com`)).cookies());
   await go(rookie, BASE + '/admin');
-  await rookie.getByRole('heading', { name: 'Set up two-step verification' }).waitFor();
-  const secret = (await rookie.getByTestId('totp-secret').textContent()).trim();
-  assert(/^[A-Z2-7]{16,}$/.test(secret) && await rookie.getByRole('img', { name: /QR code/ }).isVisible(), 'enrolment shows a QR code and key');
-  await shot(rookie, 'admin-mfa-enroll');
-  await rookie.getByLabel('6-digit code').fill('000000');
-  await rookie.getByRole('button', { name: 'Verify' }).click();
-  await rookie.getByRole('alert').filter({ hasText: 'didn’t work' }).waitFor();
-  assert(true, 'a wrong code is refused');
-  await rookie.getByLabel('6-digit code').fill(totp(secret));
-  await rookie.getByRole('button', { name: 'Verify' }).click();
   await rookie.getByRole('heading', { name: 'Dashboard' }).waitFor({ timeout: 10000 });
-  assert(await rookie.getByRole('navigation', { name: 'Admin' }).isVisible(), 'after verifying, the console opens');
-  // Next sign-in: only a code is asked for
-  const rookie2 = await ctx((await staffSession(`rookie+${stamp}@example.com`, { mfa: false })).cookies());
-  await go(rookie2, BASE + '/admin');
-  await rookie2.getByRole('heading', { name: 'Two-step verification' }).waitFor();
-  await rookie2.getByLabel('6-digit code').fill(totp(secret));
-  await rookie2.getByRole('button', { name: 'Verify' }).click();
-  await rookie2.getByRole('heading', { name: 'Dashboard' }).waitFor({ timeout: 10000 });
-  assert(true, 'returning staff verify with a code');
-  assert((await rookie2.getByRole('link', { name: 'Staff' }).count()) === 0, 'Staff page hidden from non-admins');
+  assert(await rookie.getByRole('navigation', { name: 'Admin' }).isVisible(), 'staff reach the console straight after signing in with Google');
+  assert((await rookie.getByText(/two-step|authenticator|6-digit/i).count()) === 0, 'no second step anywhere');
+  assert((await rookie.getByRole('link', { name: 'Staff' }).count()) === 0, 'Staff page hidden from non-admins');
+  await rookie.getByRole('button', { name: 'Sign out' }).click();
+  await rookie.getByRole('heading', { name: 'Welcome back' }).waitFor();
+  assert(true, 'signing out returns to the sign-in');
 
   // --- Customer places and pays --------------------------------------------------------------
   const shopper = await ctx();
@@ -216,7 +222,7 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   assert(await op.getByText('Only admins can manage staff.').isVisible(), 'non-admins cannot manage staff');
 
   // --- Shopper's order history ---------------------------------------------------------------------------
-  const buyerSession = await staffSession(`buyer+${stamp}@example.com`, { mfa: false });
+  const buyerSession = await staffSession(`buyer+${stamp}@example.com`);
   await buyerSession.client.rpc('place_order', { p_customer: { name: 'Buyer', phone: '0241234567', area: 'Osu' }, p_delivery_option: 'same_day', p_payment: { method: 'momo', network: 'mtn', wallet: '0241234567' }, p_items: [{ slug: 'argan-hair-oil', quantity: 2 }], p_is_gift: false });
   const buyer = await ctx(buyerSession.cookies());
   await go(buyer, BASE + '/account/orders');

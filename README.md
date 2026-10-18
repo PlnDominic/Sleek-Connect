@@ -129,8 +129,8 @@ The build reads the catalogue from Supabase, so the Supabase variables must be s
 | `wishlist_items` | Signed-in shoppers' saved products | The shopper |
 
 - Nothing is writable through the public API except via the functions the app calls. Staff change the catalogue,
-  stock and orders in the admin console, which goes through `admin_*` database functions that check the person's role
-  and two-step verification, and log what they did. Changes show on the store within a minute.
+  stock and orders in the admin console, which goes through `admin_*` database functions that check the person is
+  active staff and has the right role, and log what they did. Changes show on the store within a minute.
 - Checkout calls `place_order`, which checks the details, prices every line from the database, reserves the stock and
   creates an order with status `pending_payment`.
 - Schema changes go in new migrations: `npx supabase migration new <name>`, then `npm run db:reset` and
@@ -140,9 +140,14 @@ The build reads the catalogue from Supabase, so the Supabase variables must be s
 
 ## Admin console
 
-Staff work at `/admin`. They sign in with Google, then must use an authenticator app (Google Authenticator, Microsoft
-Authenticator, Authy…). The first visit shows a QR code to set it up. The database itself refuses staff actions from a
-session that hasn't passed this step (PRD FR-107).
+Staff work at `/admin`. They sign in with the Google account their admin added to the staff list, and go straight in:
+there is no second step. The database itself refuses staff actions from anyone who isn't active staff with a confirmed
+email address.
+
+Because Google is the only lock, keep the staff list short and ask everyone on it to turn on Google's own 2-Step
+Verification for that account. In Supabase (Authentication → Sign In / Providers), switch the **Email** provider off so
+Google is the only way to sign in; the store doesn't use email sign-in. (This replaces the authenticator-app step the
+PRD describes in FR-107.)
 
 Add the first admin once, in the SQL Editor, using the Google account they'll sign in with:
 

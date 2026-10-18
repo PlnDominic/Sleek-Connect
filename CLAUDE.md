@@ -26,9 +26,10 @@
   `apps/web/src/lib/notifications`, the payment webhook), which reads `SUPABASE_SECRET_KEY` through
   `lib/supabase/admin.ts` (`server-only`). Never use the secret key anywhere else, in client code, or in `NEXT_PUBLIC_*`
   variables.
-- Staff changes go only through `public.admin_*` functions, which call `public.require_staff(...)` (role plus two-step
-  verification) and log to `stock_movements` / `audit_log`. The admin console runs as the signed-in staff member;
-  never give it the secret key.
+- Staff changes go only through `public.admin_*` functions, which call `public.require_staff(...)` (active staff with a
+  confirmed email, plus the role) and log to `stock_movements` / `audit_log`. Staff sign in with Google alone; there is
+  no two-step verification step, by the owner's choice. The admin console runs as the signed-in staff member; never
+  give it the secret key.
 - Staff must never read `orders.delivery_code` or `orders.public_token` (the proof of delivery). Those columns have no
   select grant; when you add a column to `orders`, add it to the column grant in a migration, and list columns
   explicitly in staff queries (no `select *`).

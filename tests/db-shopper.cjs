@@ -39,8 +39,8 @@ const status = (number) => sql(`select status from public.orders where order_num
   }
   await createUser(`ama+${stamp}@example.com`);
   await createUser(`kofi+${stamp}@example.com`);
-  const ama = (await staffSession(`ama+${stamp}@example.com`, { mfa: false })).client;
-  const kofi = (await staffSession(`kofi+${stamp}@example.com`, { mfa: false })).client;
+  const ama = (await staffSession(`ama+${stamp}@example.com`)).client;
+  const kofi = (await staffSession(`kofi+${stamp}@example.com`)).client;
 
   // --- Saved addresses (FR-023) ----------------------------------------------------------------
   const addr = { recipient_name: 'Ama Owusu', phone: '024 123 4567', area: 'Osu', ghanapost_gps: 'ga-123-4567', directions: 'Blue gate', label: 'Home' };

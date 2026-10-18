@@ -2,59 +2,66 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Logo } from '@/components/Logo';
 import { getStaffSession, roleLabels } from '@/lib/admin/session';
-import { MfaEnroll, MfaVerify } from './Mfa';
+import { Icon } from '@/components/Icon';
 import { AdminNav } from './AdminNav';
 import { SignInWithGoogle, SignOutButton } from './SessionButtons';
+import { SignInShell } from './SignInShell';
 import styles from './admin.module.css';
+import signIn from './signin.module.css';
 
-/** Staff must be signed in, on the staff list and verified with their authenticator app (PRD FR-107). */
+/** Staff must be signed in with Google and be on the staff list (PRD FR-107). */
 export async function AdminGate({ children }: { children: ReactNode }) {
   const session = await getStaffSession();
 
-  if (session.state !== 'ready') {
+  if (session.state === 'signed_out') {
     return (
-      <div className={styles.gate}>
-        <div className={styles.gateCard}>
-          <Logo />
-          {session.state === 'signed_out' && (
-            <>
-              <h1>Staff sign-in</h1>
-              <p>Sign in with the Google account your admin added to the staff list.</p>
-              <SignInWithGoogle />
-            </>
-          )}
-          {session.state === 'not_staff' && (
-            <>
-              <h1>No staff access</h1>
-              <p>
-                {session.email ?? 'This account'} isn’t on the staff list. Ask an admin to add you, then sign in
-                again.
-              </p>
-              <SignOutButton />
-            </>
-          )}
-          {session.state === 'needs_mfa' &&
-            (session.enrolled ? (
-              <>
-                <h1>Two-step verification</h1>
-                <p>Enter the 6-digit code from your authenticator app.</p>
-                <MfaVerify />
-              </>
+      <SignInShell>
+        <span className={signIn.badge}>
+          <Icon name="lockKeyhole" size={24} strokeWidth={1.7} />
+        </span>
+        <h1>Welcome back</h1>
+        <p className={signIn.lead}>Sign in with the Google account your admin added to the staff list.</p>
+        <SignInWithGoogle />
+        <p className={signIn.divider}>Staff accounts only</p>
+        <p className={signIn.note}>
+          <Icon name="shieldCheck" size={18} strokeWidth={1.8} />
+          <span>
+            Access is limited to people on the staff list. Google handles your password, so we never see it.
+          </span>
+        </p>
+      </SignInShell>
+    );
+  }
+
+  if (session.state === 'not_staff') {
+    const initial = (session.name ?? session.email ?? '?').trim().charAt(0).toUpperCase();
+    return (
+      <SignInShell>
+        <span className={signIn.badge}>
+          <Icon name="lock" size={24} strokeWidth={1.7} />
+        </span>
+        <h1>No staff access</h1>
+        <div className={signIn.person}>
+          <span className={signIn.avatar} aria-hidden="true">
+            {session.avatar ? (
+              // eslint-disable-next-line @next/next/no-img-element -- the shopper's Google profile photo
+              <img src={session.avatar} alt="" referrerPolicy="no-referrer" />
             ) : (
-              <>
-                <h1>Set up two-step verification</h1>
-                <p>
-                  Staff accounts need an authenticator app (Google Authenticator, Microsoft Authenticator, Authy…).
-                  Scan the code, then enter the 6-digit code it shows.
-                </p>
-                <MfaEnroll />
-              </>
-            ))}
-          <Link href="/" className={styles.muted}>
-            Back to the store
-          </Link>
+              initial
+            )}
+          </span>
+          <span className={signIn.personText}>
+            {session.name && <strong>{session.name}</strong>}
+            <span>{session.email}</span>
+          </span>
         </div>
-      </div>
+        <p className={signIn.lead}>
+          This Google account isn’t on the staff list yet. Ask an admin to add it, then sign in again, or use a
+          different account.
+        </p>
+        <SignInWithGoogle label="Use a different Google account" chooseAccount />
+        <SignOutButton />
+      </SignInShell>
     );
   }
 

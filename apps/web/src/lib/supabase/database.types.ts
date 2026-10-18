@@ -910,7 +910,7 @@ isOneToOne: false
                            },
 "my_staff_access":
 { Args: Record<PropertyKey, never>; Returns: {
-              "mfa_verified": boolean,"role": Database["public"]['Enums']["staff_role"]
+              "role": Database["public"]['Enums']["staff_role"]
             }[]
                            },
 "place_order":

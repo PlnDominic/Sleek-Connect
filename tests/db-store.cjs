@@ -65,7 +65,7 @@ async function deliver(S, o, rider) {
   sql(`update public.products set warning_label = 'Choking hazard: small parts. Not for children under 3.' where id = '${blocksId}'`);
   sql(`update public.products set returnable = false where id = '${lipId}'`);
   await createUser(`shopper+${stamp}@example.com`);
-  const shopper = (await staffSession(`shopper+${stamp}@example.com`, { mfa: false })).client;
+  const shopper = (await staffSession(`shopper+${stamp}@example.com`)).client;
   await shopper.rpc('set_bag', { p_items: [{ slug: 'wooden-stacking-blocks', size: null, quantity: 1 }] });
   const { data: bag } = await shopper.rpc('get_bag');
   assert(bag?.[0]?.warning_label?.startsWith('Choking hazard'), 'saved bag carries the warning label');

@@ -1,6 +1,5 @@
 const path = require('path');
-// Shared helpers: TOTP, staff sessions, SQL.
-const crypto = require('crypto');
+// Shared helpers: staff sessions, SQL.
 const fs = require('fs');
 const { execSync } = require('child_process');
 const { createClient } = require('@supabase/supabase-js');
@@ -11,24 +10,6 @@ const env = Object.fromEntries(fs.readFileSync(path.resolve(__dirname, '../apps/
 const URL_ = env.NEXT_PUBLIC_SUPABASE_URL, KEY = env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, SECRET = env.SUPABASE_SECRET_KEY;
 const sql = (q) => execSync('docker exec -i supabase_db_Sleek-Connect psql -U postgres -At -v ON_ERROR_STOP=1', { input: q }).toString().trim();
 
-function base32Decode(s) {
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-  let bits = '';
-  for (const c of s.replace(/=+$/, '').toUpperCase()) bits += alphabet.indexOf(c).toString(2).padStart(5, '0');
-  const bytes = [];
-  for (let i = 0; i + 8 <= bits.length; i += 8) bytes.push(parseInt(bits.slice(i, i + 8), 2));
-  return Buffer.from(bytes);
-}
-function totp(secret, offset = 0) {
-  const counter = Math.floor(Date.now() / 1000 / 30) + offset;
-  const buf = Buffer.alloc(8);
-  buf.writeBigUInt64BE(BigInt(counter));
-  const h = crypto.createHmac('sha1', base32Decode(secret)).update(buf).digest();
-  const o = h[h.length - 1] & 0xf;
-  const code = ((h.readUInt32BE(o) & 0x7fffffff) % 1e6).toString().padStart(6, '0');
-  return code;
-}
-
 const admin = createClient(URL_, SECRET, { auth: { persistSession: false } });
 
 async function createUser(email, password = 'correct-horse-battery', meta = {}) {
@@ -37,8 +18,8 @@ async function createUser(email, password = 'correct-horse-battery', meta = {}) 
   return data.user;
 }
 
-/** Signs in with a cookie jar (like the web app). With mfa, enrolls TOTP and verifies so the session is aal2. */
-async function staffSession(email, { mfa = true, password = 'correct-horse-battery' } = {}) {
+/** Signs in with a password and a cookie jar, like the web app's session. Staff need nothing more than this. */
+async function staffSession(email, { password = 'correct-horse-battery' } = {}) {
   const jar = [];
   const client = createServerClient(URL_, KEY, {
     cookies: {
@@ -52,16 +33,8 @@ async function staffSession(email, { mfa = true, password = 'correct-horse-batte
   });
   const { error } = await client.auth.signInWithPassword({ email, password });
   if (error) throw error;
-  let secret = null;
-  if (mfa) {
-    const { data: enrolled, error: e1 } = await client.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'test' });
-    if (e1) throw e1;
-    secret = enrolled.totp.secret;
-    const { error: e2 } = await client.auth.mfa.challengeAndVerify({ factorId: enrolled.id, code: totp(secret) });
-    if (e2) throw e2;
-  }
   const cookies = () => jar.map((c) => ({ name: c.name, value: c.value, domain: 'localhost', path: '/', sameSite: 'Lax' }));
-  return { client, cookies, secret };
+  return { client, cookies };
 }
 
-module.exports = { env, URL_, KEY, SECRET, sql, totp, admin, createUser, staffSession, createClient };
+module.exports = { env, URL_, KEY, SECRET, sql, admin, createUser, staffSession, createClient };

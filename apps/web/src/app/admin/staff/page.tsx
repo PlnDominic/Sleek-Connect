@@ -41,8 +41,8 @@ export default async function StaffPage() {
         <div>
           <h1>Staff</h1>
           <p className={styles.muted}>
-            Staff sign in with the Google account for their email, and must set up an authenticator app. Changes are
-            recorded in the audit log.
+            Staff sign in at /admin with the Google account for their email. Only add people you trust, and ask each of
+            them to turn on Google’s 2-Step Verification for that account. Changes are recorded in the audit log.
           </p>
         </div>
       </div>

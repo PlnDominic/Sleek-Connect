@@ -301,9 +301,9 @@ max_enrolled_factors = 10
 
 # Control MFA via App Authenticator (TOTP)
 [auth.mfa.totp]
-# Staff must use an authenticator app to reach the admin console (PRD FR-107).
-enroll_enabled = true
-verify_enabled = true
+# Staff sign in with Google alone; the admin console doesn't ask for an authenticator app.
+enroll_enabled = false
+verify_enabled = false
 
 # Configure MFA via Phone Messaging
 [auth.mfa.phone]

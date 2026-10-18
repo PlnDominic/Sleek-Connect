@@ -27,22 +27,28 @@ const status = (id) => sql(`select status from public.orders where id = '${id}'`
 (async () => {
   sql("update public.delivery_options set fee_ghs = 30 where id = 'same_day'");
   const users = {};
-  for (const [k, role] of [['admin', 'admin'], ['ops', 'operations'], ['cat', 'catalogue'], ['ro', 'read_only'], ['nomfa', 'operations'], ['shopper', null]]) {
+  for (const [k, role] of [['admin', 'admin'], ['ops', 'operations'], ['cat', 'catalogue'], ['ro', 'read_only'], ['temp', 'operations'], ['shopper', null]]) {
     users[k] = await createUser(`${k}+${stamp}@example.com`, undefined, { full_name: k });
     if (role) sql(`insert into public.staff_members (email, role) values ('${k}+${stamp}@example.com', '${role}')`);
   }
   const S = {};
-  for (const k of ['admin', 'ops', 'cat', 'ro']) S[k] = (await staffSession(`${k}+${stamp}@example.com`)).client;
-  S.nomfa = (await staffSession(`nomfa+${stamp}@example.com`, { mfa: false })).client;
-  S.shopper = (await staffSession(`shopper+${stamp}@example.com`, { mfa: false })).client;
+  for (const k of ['admin', 'ops', 'cat', 'ro', 'temp']) S[k] = (await staffSession(`${k}+${stamp}@example.com`)).client;
+  S.shopper = (await staffSession(`shopper+${stamp}@example.com`)).client;
 
   // --- Access ------------------------------------------------------------------
-  const { data: acc } = await S.nomfa.rpc('my_staff_access').single();
-  assert(acc?.role === 'operations' && acc.mfa_verified === false, 'staff without two-step verification is recognised but not verified');
-  assert((await errOf(S.nomfa.rpc('admin_start_packing', { p_order_ids: [] })))?.code === '42501', 'staff without two-step verification is refused');
-  assert((await S.nomfa.from('stock_batches').select('id')).data.length === 0, 'unverified staff see no batches');
+  const { data: acc } = await S.ops.rpc('my_staff_access').single();
+  assert(acc?.role === 'operations', 'staff are recognised from their sign-in alone');
+  const { data: { session } } = await S.ops.auth.getSession();
+  assert(JSON.parse(Buffer.from(session.access_token.split('.')[1], 'base64url')).aal === 'aal1', 'staff sessions have no second step (assurance level aal1)');
+  assert(!(await errOf(S.ops.rpc('admin_start_packing', { p_order_ids: [] }))), 'staff can use admin functions without any second step');
+  assert((await errOf(S.shopper.rpc('admin_start_packing', { p_order_ids: [] })))?.code === '42501', 'accounts that are not on the staff list are refused');
+  assert((await anon.rpc('my_staff_access')).error !== null || (await anon.rpc('my_staff_access')).data?.length === 0, 'anonymous visitors get no staff access');
+  assert(!(await errOf(S.temp.rpc('admin_start_packing', { p_order_ids: [] }))), 'an active staff member is let in');
+  sql(`update public.staff_members set is_active = false where email = 'temp+${stamp}@example.com'`);
+  assert((await errOf(S.temp.rpc('admin_start_packing', { p_order_ids: [] })))?.code === '42501' && (await S.temp.from('stock_batches').select('id')).data.length === 0, 'deactivated staff are refused straight away');
+  assert((await S.temp.rpc('my_staff_access')).data.length === 0, 'deactivated staff are shown as having no access');
   assert((await S.shopper.from('stock_batches').select('id')).data.length === 0 && (await anon.from('stock_batches').select('id')).data.length === 0, 'shoppers and anon see no batches');
-  assert((await S.ops.from('stock_batches').select('id')).data.length === 11, 'verified staff see batches');
+  assert((await S.ops.from('stock_batches').select('id')).data.length === 11, 'staff see batches');
   assert((await errOf(anon.rpc('admin_stock_overview')))?.code !== undefined, 'anon cannot read the stock overview');
   const { data: ov } = await S.ro.rpc('admin_stock_overview');
   assert(ov?.length === 11 && ov.every((r) => r.available === 25), 'read-only staff can see stock levels');

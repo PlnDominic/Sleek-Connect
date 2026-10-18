@@ -148,7 +148,7 @@ async function placeOrder(items, { area = 'Osu', pay = true } = {}) {
   assert(await main(guest).getByRole('link', { name: /Argan Hair Oil/ }).first().isVisible(), 'saved page lists the product');
   // Signing in moves the device's list into the account.
   await createUser(`esi+${stamp}@example.com`);
-  const esi = await staffSession(`esi+${stamp}@example.com`, { mfa: false });
+  const esi = await staffSession(`esi+${stamp}@example.com`);
   await esi.client.rpc('record_signup_consent');
   const esiId = sql(`select id from auth.users where email = 'esi+${stamp}@example.com'`);
   await guest.context().addCookies(esi.cookies());

@@ -10,8 +10,11 @@ interface AuthValue {
   loading: boolean;
   /** Whether the signed-in shopper has confirmed they're 18+ and accepted the terms (PRD FR-003). */
   consented: boolean;
-  /** `consent`: the shopper ticked the 18+/terms box, so the callback records it. Staff sign-in passes false. */
-  signInWithGoogle: (next?: string, options?: { consent?: boolean }) => Promise<void>;
+  /**
+   * `consent`: the shopper ticked the 18+/terms box, so the callback records it. Staff sign-in passes false.
+   * `chooseAccount`: make Google ask which account to use, even if the browser is signed in to just one.
+   */
+  signInWithGoogle: (next?: string, options?: { consent?: boolean; chooseAccount?: boolean }) => Promise<void>;
   recordConsent: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -50,16 +53,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [userId]);
 
-  const signInWithGoogle = useCallback(async (next = '/account', { consent = true }: { consent?: boolean } = {}) => {
-    const callback = new URL('/auth/callback', window.location.origin);
-    callback.searchParams.set('next', next);
-    if (consent) callback.searchParams.set('consent', '1');
-    const { error } = await createBrowserSupabase().auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: callback.toString() },
-    });
-    if (error) throw error;
-  }, []);
+  const signInWithGoogle = useCallback(
+    async (next = '/account', { consent = true, chooseAccount = false }: { consent?: boolean; chooseAccount?: boolean } = {}) => {
+      const callback = new URL('/auth/callback', window.location.origin);
+      callback.searchParams.set('next', next);
+      if (consent) callback.searchParams.set('consent', '1');
+      const { error } = await createBrowserSupabase().auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: callback.toString(),
+          ...(chooseAccount && { queryParams: { prompt: 'select_account' } }),
+        },
+      });
+      if (error) throw error;
+    },
+    [],
+  );
 
   const recordConsent = useCallback(async () => {
     if (!userId) return;

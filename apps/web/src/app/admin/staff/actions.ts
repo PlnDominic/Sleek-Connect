@@ -14,5 +14,5 @@ export async function setStaff(email: string | null, _: ActionState, form: FormD
   });
   if (error) return failed(error);
   refresh();
-  return done(email ? 'Saved.' : 'Added. They can now sign in with that Google account and set up two-step verification.');
+  return done(email ? 'Saved.' : 'Added. They can now sign in at /admin with that Google account.');
 }

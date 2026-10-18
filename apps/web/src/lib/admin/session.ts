@@ -8,8 +8,7 @@ export type StaffRole = Database['public']['Enums']['staff_role'];
 
 export type StaffSession =
   | { state: 'signed_out' }
-  | { state: 'not_staff'; email: string | undefined }
-  | { state: 'needs_mfa'; email: string | undefined; role: StaffRole; enrolled: boolean }
+  | { state: 'not_staff'; email: string | undefined; name: string | undefined; avatar: string | undefined }
   | {
       state: 'ready';
       email: string | undefined;
@@ -18,8 +17,8 @@ export type StaffSession =
     };
 
 /**
- * Who is using the admin console, once per request. The database enforces the same rules on every query, so this
- * only decides what to show.
+ * Who is using the admin console, once per request. Staff sign in with Google and must be on the staff list; the
+ * database enforces the same rules on every query, so this only decides what to show.
  */
 export const getStaffSession = cache(async (): Promise<StaffSession> => {
   // Always per request: the session decides everything on the page (and the auth client reads the clock).
@@ -31,15 +30,19 @@ export const getStaffSession = cache(async (): Promise<StaffSession> => {
   if (!user) return { state: 'signed_out' };
 
   const { data: access } = await supabase.rpc('my_staff_access').maybeSingle();
-  if (!access) return { state: 'not_staff', email: user.email };
-  if (!access.mfa_verified) {
-    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-    return { state: 'needs_mfa', email: user.email, role: access.role, enrolled: aal?.nextLevel === 'aal2' };
+  if (!access) {
+    const meta = user.user_metadata as { full_name?: string; name?: string; avatar_url?: string; picture?: string };
+    return {
+      state: 'not_staff',
+      email: user.email,
+      name: meta.full_name ?? meta.name,
+      avatar: meta.avatar_url ?? meta.picture,
+    };
   }
   return { state: 'ready', email: user.email, role: access.role, supabase };
 });
 
-/** The verified staff session for a page, or null (the layout then shows sign-in or verification instead). */
+/** The staff session for a page, or null (the layout then shows the sign-in screen instead). */
 export async function requireStaffPage() {
   const session = await getStaffSession();
   return session.state === 'ready' ? session : null;
