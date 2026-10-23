@@ -27,6 +27,7 @@ const groups: NavGroup[] = [
     links: [
       { href: '/admin/orders', label: 'Orders', icon: 'bag' },
       { href: '/admin/returns', label: 'Returns', icon: 'refresh' },
+      { href: '/admin/finance', label: 'Finance', icon: 'clipboard' },
       { href: '/admin/support', label: 'Support', icon: 'headset' },
       { href: '/admin/reviews', label: 'Reviews', icon: 'star' },
     ],
