@@ -29,11 +29,8 @@ export async function AnnouncementBar() {
 const navLinks = [
   { label: 'Home', href: '/' },
   { label: 'Shop', href: '/shop' },
-  { label: 'New Arrivals', href: '/shop?sort=newest' },
-  { label: 'Best Sellers', href: '/#best-sellers' },
   { label: 'Categories', href: '/shop', menu: true },
   { label: 'Shop by Age', href: '/shop-by-age' },
-  { label: 'Gifts', href: '/search?q=gift' },
   { label: 'Contact', href: '/help#contact' },
 ];
 
