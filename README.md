@@ -399,6 +399,9 @@ The design shows values the business hasn't set yet (marked "To be set" in the B
   Staff approve or reject them in Admin → Reviews (catalogue, support and admin roles; a rejection needs a reason the
   customer sees). Published reviews, the average and the star breakdown show on the product page and in the search
   engine data (`aggregateRating`). Reviews show the first name and last initial only.
+- **Notification preferences:** signed-in shoppers can opt in or out of marketing SMS and email from Account. Transactional
+  order, payment, delivery, return and support messages are not affected. The choices are stored with the account profile
+  metadata and are ready for the future campaign sender to enforce.
 
 ## Not built yet
 

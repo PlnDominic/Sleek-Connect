@@ -184,6 +184,35 @@
   background: var(--c-line);
 }
 
+.preferenceForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+  border-top: 1px solid var(--c-line);
+}
+
+.preferenceForm h3 {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.preference {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.preference input {
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  flex: none;
+  accent-color: var(--c-accent);
+}
+
 .error {
   font-size: 14px;
   font-weight: 600;

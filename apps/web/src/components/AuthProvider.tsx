@@ -21,6 +21,7 @@ interface AuthValue {
   signOut: () => Promise<void>;
   signOutEverywhere: () => Promise<void>;
   updateProfile: (name: string) => Promise<void>;
+  updateNotificationPreferences: (preferences: { sms: boolean; email: boolean }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -104,13 +105,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
   }, []);
 
+  const updateNotificationPreferences = useCallback(async (preferences: { sms: boolean; email: boolean }) => {
+    const { error } = await createBrowserSupabase().auth.updateUser({
+      data: {
+        marketing_sms_opted_in: preferences.sms,
+        marketing_email_opted_in: preferences.email,
+        marketing_consent_at: new Date().toISOString(),
+      },
+    });
+    if (error) throw error;
+  }, []);
+
   const profileLoaded = !!userId && profile?.userId === userId;
   const loading = sessionLoading || (!!userId && !profileLoaded);
   const consented = profileLoaded && profile.consented;
 
   const value = useMemo(
-    () => ({ user, loading, consented, signInWithGoogle, sendPhoneOtp, verifyPhoneOtp, recordConsent, signOut, signOutEverywhere, updateProfile }),
-    [user, loading, consented, signInWithGoogle, sendPhoneOtp, verifyPhoneOtp, recordConsent, signOut, signOutEverywhere, updateProfile],
+    () => ({ user, loading, consented, signInWithGoogle, sendPhoneOtp, verifyPhoneOtp, recordConsent, signOut, signOutEverywhere, updateProfile, updateNotificationPreferences }),
+    [user, loading, consented, signInWithGoogle, sendPhoneOtp, verifyPhoneOtp, recordConsent, signOut, signOutEverywhere, updateProfile, updateNotificationPreferences],
   );
 
   return <AuthContext value={value}>{children}</AuthContext>;

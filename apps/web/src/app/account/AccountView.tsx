@@ -22,7 +22,7 @@ function normalizeGhanaPhone(value: string): string | null {
 export function AccountView() {
   const params = useSearchParams();
   const next = safeNext(params.get('next'));
-  const { user, loading, consented, signInWithGoogle, sendPhoneOtp, verifyPhoneOtp, recordConsent, signOut, signOutEverywhere, updateProfile } = useAuth();
+  const { user, loading, consented, signInWithGoogle, sendPhoneOtp, verifyPhoneOtp, recordConsent, signOut, signOutEverywhere, updateProfile, updateNotificationPreferences } = useAuth();
   const { count } = useBag();
   const [agreed, setAgreed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -201,6 +201,24 @@ export function AccountView() {
     }
   }
 
+  async function saveNotificationPreferences(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setProfileMessage(null);
+    const form = new FormData(event.currentTarget);
+    try {
+      await updateNotificationPreferences({
+        sms: form.get('marketing_sms') === 'on',
+        email: form.get('marketing_email') === 'on',
+      });
+      setProfileMessage('Notification preferences saved.');
+    } catch {
+      setProfileMessage("We couldn't save your notification preferences. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <section className={styles.panel} aria-labelledby="signed-in-title">
       <h2 id="signed-in-title">{name ? `Hello, ${name}` : 'Signed in'}</h2>
@@ -253,6 +271,20 @@ export function AccountView() {
         <p className={styles.muted}>Your name is used on your account and to prefill checkout details.</p>
         <button type="submit" className={styles.primary} disabled={busy}>Save profile</button>
         {profileMessage && <p role="status" className={styles.saved}>{profileMessage}</p>}
+      </form>
+
+      <form className={styles.preferenceForm} onSubmit={saveNotificationPreferences}>
+        <h3>Notifications</h3>
+        <p className={styles.muted}>Order, payment, delivery, return and support updates are always sent when needed. These choices control marketing messages only.</p>
+        <label className={styles.preference}>
+          <input type="checkbox" name="marketing_sms" defaultChecked={Boolean(user.user_metadata.marketing_sms_opted_in)} />
+          <span>Send me offers and new-arrival updates by SMS</span>
+        </label>
+        <label className={styles.preference}>
+          <input type="checkbox" name="marketing_email" defaultChecked={Boolean(user.user_metadata.marketing_email_opted_in)} />
+          <span>Send me offers and new-arrival updates by email</span>
+        </label>
+        <button type="submit" className={styles.primary} disabled={busy}>Save notification preferences</button>
       </form>
 
       <button
