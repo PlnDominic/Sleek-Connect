@@ -10,7 +10,7 @@ Sleek Connect sends customer notifications through the provider adapters in `app
 4. Do not use `console` in production. It is intentionally disabled when `VERCEL_ENV=production`.
 5. Set sender IDs, verified domains, reply-to addresses, unsubscribe handling, and delivery webhooks in the provider dashboards.
 6. Confirm the provider's timeout, retry, delivery-status, and rate-limit behavior.
-7. Set `CRON_SECRET`; Vercel Cron calls `/api/notifications/dispatch` every five minutes with the bearer token.
+7. Set `CRON_SECRET` on Vercel and add the same value, plus `SITE_URL`, as GitHub repository secrets; the `Notification dispatch` workflow calls `/api/notifications/dispatch` every five minutes with the bearer token.
 
 ## Required test matrix
 

@@ -307,7 +307,7 @@ doubles as the delivery log. Failed sends are retried up to five times.
 - `SMS_PROVIDER` and `EMAIL_PROVIDER` pick the senders. `console` writes messages to the server log for development
   and is ignored on Vercel production. With no provider set, messages are recorded as "not sent".
 - Messages are sent right after each status change. To retry failures on a schedule, call
-  `GET /api/notifications/dispatch` with `Authorization: Bearer <CRON_SECRET>`, for example from a Vercel Cron job.
+  `GET /api/notifications/dispatch` with `Authorization: Bearer <CRON_SECRET>`, scheduled by `.github/workflows/notification-dispatch.yml` (Vercel Hobby limits cron jobs to daily).
 - To add a real provider (e.g. an SMS gateway in Ghana), implement `MessageProvider` in
   `apps/web/src/lib/notifications/providers.ts`. The wording is in `templates.ts`.
 

@@ -62,7 +62,7 @@ This runbook covers the hosted Supabase project, Supabase Storage, and the Verce
 
 - For an application regression, use the last known-good Vercel deployment and promote it to production.
 - Confirm the deployment's environment variables point to the intended Supabase project.
-- Verify the cron declaration still exists at `apps/web/vercel.json` and that the notification dispatcher accepts Vercel's `Authorization: Bearer <CRON_SECRET>` header.
+- Verify the `Notification dispatch` GitHub Actions workflow (`.github/workflows/notification-dispatch.yml`) is enabled and its `SITE_URL` and `CRON_SECRET` secrets are set; the dispatcher accepts `Authorization: Bearer <CRON_SECRET>`.
 - Run `/api/health`, a product page, checkout initialization, payment webhook test, and the staff sign-in page after rollback.
 - If the rollback follows a schema change, keep the database migration backward-compatible until the application rollback is complete.
 
