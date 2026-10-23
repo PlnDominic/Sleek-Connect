@@ -3,6 +3,28 @@ import type { NextConfig } from 'next';
 // Product photos live in the public product-images bucket of the Supabase project.
 const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL) : null;
 const localSupabase = supabase !== null && ['127.0.0.1', 'localhost'].includes(supabase.hostname);
+const supabaseOrigin = supabase?.origin ?? '';
+const scriptSources = process.env.NODE_ENV === 'development' ? "'self' 'unsafe-inline' 'unsafe-eval'" : "'self' 'unsafe-inline'";
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  `script-src ${scriptSources}`,
+  "style-src 'self' 'unsafe-inline'",
+  `img-src 'self' data: blob: ${supabaseOrigin}`,
+  `connect-src 'self' ${supabaseOrigin}`,
+  "font-src 'self' data:",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  "object-src 'none'",
+].join('; ');
+const securityHeaders = [
+  { key: 'Content-Security-Policy', value: contentSecurityPolicy },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'Permissions-Policy', value: 'camera=(), geolocation=(), microphone=(), payment=(self)' },
+  ...(process.env.NODE_ENV === 'production' ? [{ key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' }] : []),
+];
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
@@ -16,9 +38,11 @@ const nextConfig: NextConfig = {
   // Private pages never belong in search results (robots.txt alone doesn't stop a linked page from being listed).
   async headers() {
     const noindex = [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }];
-    return ['/admin/:path*', '/account/:path*', '/bag', '/checkout', '/orders/:path*', '/saved', '/track', '/auth/:path*', '/api/:path*'].map(
-      (source) => ({ source, headers: noindex }),
-    );
+    const privateRoutes = ['/admin/:path*', '/account/:path*', '/bag', '/checkout', '/orders/:path*', '/saved', '/track', '/auth/:path*', '/api/:path*'];
+    return [
+      { source: '/:path*', headers: securityHeaders },
+      ...privateRoutes.map((source) => ({ source, headers: [...securityHeaders, ...noindex] })),
+    ];
   },
   async redirects() {
     return [

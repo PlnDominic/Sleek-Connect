@@ -49,6 +49,9 @@ jobs:
           CRON_SECRET=ci-cron-secret
           ENV
 
+      - name: Build the production web app
+        run: npm run build:web
+
       - name: Run all test suites (builds the web app)
         run: npm test
 
