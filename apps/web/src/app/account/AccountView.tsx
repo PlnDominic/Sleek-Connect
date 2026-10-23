@@ -12,13 +12,23 @@ function safeNext(value: string | null): string {
   return value && value.startsWith('/') && !value.startsWith('//') ? value : '/account';
 }
 
+function normalizeGhanaPhone(value: string): string | null {
+  const compact = value.replace(/[\s()-]/g, '');
+  if (/^0\d{9}$/.test(compact)) return `+233${compact.slice(1)}`;
+  if (/^\+233\d{9}$/.test(compact)) return compact;
+  return null;
+}
+
 export function AccountView() {
   const params = useSearchParams();
   const next = safeNext(params.get('next'));
-  const { user, loading, consented, signInWithGoogle, recordConsent, signOut, signOutEverywhere, updateProfile } = useAuth();
+  const { user, loading, consented, signInWithGoogle, sendPhoneOtp, verifyPhoneOtp, recordConsent, signOut, signOutEverywhere, updateProfile } = useAuth();
   const { count } = useBag();
   const [agreed, setAgreed] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  const [phoneStep, setPhoneStep] = useState<'phone' | 'otp'>('phone');
   const [profileMessage, setProfileMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(
     params.get('error') === 'signin' ? "We couldn't sign you in with Google. Please try again." : null,
@@ -35,6 +45,42 @@ export function AccountView() {
       return;
     }
     setBusy(false);
+  }
+
+  async function requestPhoneCode(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const normalized = normalizeGhanaPhone(phone);
+    if (!normalized) {
+      setError('Enter a valid Ghana number, for example 024 123 4567.');
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await sendPhoneOtp(normalized);
+      setPhone(normalized);
+      setPhoneStep('otp');
+    } catch {
+      setError("We couldn't send a code to that number. Check the number or try again later.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function confirmPhoneCode(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!/^\d{6}$/.test(otp)) {
+      setError('Enter the six-digit code from the text message.');
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await verifyPhoneOtp(phone, otp);
+    } catch {
+      setError('That code is invalid or expired. Request a new code and try again.');
+      setBusy(false);
+    }
   }
 
   if (loading) {
@@ -56,10 +102,66 @@ export function AccountView() {
       <section className={styles.panel} aria-labelledby="sign-in-title">
         <h2 id="sign-in-title">Sign in</h2>
         <p className={styles.muted}>
-          Sign in with your Google account to keep your bag on every device you shop from. You can still check out
+          Sign in with your phone or Google to keep your bag on every device you shop from. You can still check out
           without an account.
         </p>
         {consentBox}
+        {phoneStep === 'phone' ? (
+          <form className={styles.phoneForm} onSubmit={requestPhoneCode}>
+            <label className={styles.field}>
+              <span>Phone number</span>
+              <input
+                className={styles.input}
+                name="phone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                placeholder="024 123 4567"
+                required
+              />
+            </label>
+            <button type="submit" className={styles.primary} disabled={!agreed || busy}>
+              {busy ? 'Sending code…' : 'Continue with phone'}
+            </button>
+          </form>
+        ) : (
+          <form className={styles.phoneForm} onSubmit={confirmPhoneCode}>
+            <p className={styles.muted}>We sent a six-digit code to {phone}.</p>
+            <label className={styles.field}>
+              <span>Verification code</span>
+              <input
+                className={styles.input}
+                name="otp"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                value={otp}
+                onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="123456"
+                maxLength={6}
+                required
+              />
+            </label>
+            <button type="submit" className={styles.primary} disabled={busy || otp.length !== 6}>
+              {busy ? 'Checking code…' : 'Verify and sign in'}
+            </button>
+            <button
+              type="button"
+              className={styles.textButton}
+              disabled={busy}
+              onClick={() => {
+                setOtp('');
+                setPhoneStep('phone');
+                setError(null);
+              }}
+            >
+              Use a different number
+            </button>
+          </form>
+        )}
+        <div className={styles.divider} aria-hidden="true"><span>or</span></div>
         <button
           type="button"
           className={styles.google}

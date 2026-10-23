@@ -145,6 +145,45 @@
   outline-offset: 1px;
 }
 
+.phoneForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.textButton {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--c-accent-deep);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.textButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--c-text-muted);
+  font-size: 13px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  height: 1px;
+  flex: 1;
+  background: var(--c-line);
+}
+
 .error {
   font-size: 14px;
   font-weight: 600;

@@ -404,8 +404,8 @@ The design shows values the business hasn't set yet (marked "To be set" in the B
 
 - **Real payment, SMS and email providers:** the flows are in place (see [Payments](#payments) and
   [Customer messages](#customer-messages)), but no provider is connected yet. Card shows "coming soon".
-- **Accounts:** Google sign-in only; phone-number sign-in (PRD FR-002), editing the profile and signing out of all
-  devices aren't built. Addresses have no map pin.
+- **Accounts:** Phone OTP and Google sign-in, profile editing, and signing out of all devices are available. Addresses
+  have no map pin. To enable SMS delivery, turn on Phone in Supabase Authentication and configure an SMS provider.
 - **Admin:** no refunds through a payment provider, finance reports, or supplier and purchase-order records.
 - **Policy review:** the Terms of Service and Privacy Notice are written (see below) but are a starting draft. Have a
   Ghanaian lawyer review them, and fill in the bracketed business details, before launch.

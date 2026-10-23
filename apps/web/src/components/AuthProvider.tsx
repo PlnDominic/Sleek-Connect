@@ -15,6 +15,8 @@ interface AuthValue {
    * `chooseAccount`: make Google ask which account to use, even if the browser is signed in to just one.
    */
   signInWithGoogle: (next?: string, options?: { consent?: boolean; chooseAccount?: boolean }) => Promise<void>;
+  sendPhoneOtp: (phone: string) => Promise<void>;
+  verifyPhoneOtp: (phone: string, token: string) => Promise<void>;
   recordConsent: () => Promise<void>;
   signOut: () => Promise<void>;
   signOutEverywhere: () => Promise<void>;
@@ -72,6 +74,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const sendPhoneOtp = useCallback(async (phone: string) => {
+    const { error } = await createBrowserSupabase().auth.signInWithOtp({ phone });
+    if (error) throw error;
+  }, []);
+
+  const verifyPhoneOtp = useCallback(async (phone: string, token: string) => {
+    const { error } = await createBrowserSupabase().auth.verifyOtp({ phone, token, type: 'sms' });
+    if (error) throw error;
+  }, []);
+
   const recordConsent = useCallback(async () => {
     if (!userId) return;
     const { error } = await createBrowserSupabase().rpc('record_signup_consent');
@@ -97,8 +109,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const consented = profileLoaded && profile.consented;
 
   const value = useMemo(
-    () => ({ user, loading, consented, signInWithGoogle, recordConsent, signOut, signOutEverywhere, updateProfile }),
-    [user, loading, consented, signInWithGoogle, recordConsent, signOut, signOutEverywhere, updateProfile],
+    () => ({ user, loading, consented, signInWithGoogle, sendPhoneOtp, verifyPhoneOtp, recordConsent, signOut, signOutEverywhere, updateProfile }),
+    [user, loading, consented, signInWithGoogle, sendPhoneOtp, verifyPhoneOtp, recordConsent, signOut, signOutEverywhere, updateProfile],
   );
 
   return <AuthContext value={value}>{children}</AuthContext>;
