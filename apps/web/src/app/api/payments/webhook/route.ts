@@ -11,9 +11,12 @@ export async function POST(request: Request) {
   const id = requestId(request);
   const limit = rateLimit({ key: `payment-webhook:${clientAddress(request)}`, limit: 120, windowMs: 60_000 });
   if (!limit.allowed) return rateLimitResponse(limit.retryAfter, id);
+  const declaredLength = Number(request.headers.get('content-length') ?? 0);
+  if (declaredLength > 64 * 1024) return withRequestId(Response.json({ error: 'Webhook payload is too large.', requestId: id }, { status: 413 }), id);
   const provider = getPaymentProvider();
   if (!provider) return withRequestId(Response.json({ error: 'Online payment is switched off.', requestId: id }, { status: 503 }), id);
   const rawBody = await request.text();
+  if (rawBody.length > 64 * 1024) return withRequestId(Response.json({ error: 'Webhook payload is too large.', requestId: id }, { status: 413 }), id);
   let notified;
   try {
     notified = await provider.readWebhook(rawBody, request.headers);
@@ -26,7 +29,13 @@ export async function POST(request: Request) {
     return withRequestId(Response.json({ error: 'Unreadable notification.', requestId: id }, { status: 400 }), id);
   }
   if (!notified) return withRequestId(Response.json({ received: true }), id);
-  const verified = await provider.verify(notified);
+  let verified;
+  try {
+    verified = await provider.verify(notified);
+  } catch (error) {
+    logger.error('payment_provider_verification_failed', error, { requestId: id, provider: provider.name });
+    return withRequestId(Response.json({ error: 'Could not verify the payment notification.', requestId: id }, { status: 502 }), id);
+  }
   if (!verified) return withRequestId(Response.json({ error: 'The provider has no final outcome yet.', requestId: id }, { status: 409 }), id);
   const { data, error } = await createAdminSupabase().rpc('confirm_payment', {
     p_provider: provider.name,

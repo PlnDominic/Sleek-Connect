@@ -1,6 +1,23 @@
 import { NextResponse } from 'next/server';
 import { createSupabase, supabaseConfig } from '@/lib/supabase/server';
+import { emailProvider, smsProvider } from '@/lib/notifications/providers';
+import { getPaymentProvider } from '@/lib/payments';
 import { logger, requestId, withRequestId } from '@/lib/observability';
+
+function configured(name: string | undefined, provider: unknown) {
+  if (!name) return 'disabled';
+  return provider ? 'configured' : 'misconfigured';
+}
+
+function integrationStatus() {
+  const paymentName = process.env.PAYMENT_PROVIDER;
+  const smsName = process.env.SMS_PROVIDER;
+  const emailName = process.env.EMAIL_PROVIDER;
+  const payment = configured(paymentName, getPaymentProvider());
+  const sms = configured(smsName, smsProvider());
+  const email = configured(emailName, emailProvider());
+  return { payment, sms, email, issues: [payment, sms, email].filter((state) => state === 'misconfigured').length };
+}
 
 async function checkDatabase() {
   supabaseConfig();
@@ -13,7 +30,9 @@ export async function GET(request: Request) {
   const checkedAt = new Date().toISOString();
   try {
     await checkDatabase();
-    return withRequestId(NextResponse.json({ status: 'ok', service: 'sleek-connect-web', database: 'ok', checkedAt }), id);
+    const integrations = integrationStatus();
+    const status = integrations.issues === 0 ? 'ok' : 'degraded';
+    return withRequestId(NextResponse.json({ status, service: 'sleek-connect-web', database: 'ok', integrations, checkedAt }), id);
   } catch (error) {
     logger.error('health_check_failed', error, { requestId: id });
     return withRequestId(NextResponse.json({ status: 'degraded', service: 'sleek-connect-web', database: 'unavailable', checkedAt, requestId: id }, { status: 503, headers: { 'Cache-Control': 'no-store' } }), id);
@@ -25,6 +44,8 @@ export async function HEAD(request: Request) {
   const id = requestId(request);
   try {
     await checkDatabase();
+    const integrations = integrationStatus();
+    if (integrations.issues > 0) return withRequestId(new Response(null, { status: 503, headers: { 'Cache-Control': 'no-store' } }), id);
     return withRequestId(new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store' } }), id);
   } catch (error) {
     logger.error('readiness_check_failed', error, { requestId: id });
