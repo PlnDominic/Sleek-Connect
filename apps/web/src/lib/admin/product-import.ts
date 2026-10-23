@@ -1,3 +1,4 @@
+import { departmentIds, isDepartment } from '@sleek/shared';
 import type { ProductPayload, SizePayload } from './product-payload';
 import { kidsFilters, productKinds } from './product-payload';
 
@@ -46,7 +47,7 @@ export function readImport(grid: string[][]): { rows: ImportRow[]; error?: strin
     });
     const errors: string[] = [];
     if (!values.name) errors.push('name is required');
-    if (values.department !== 'beauty' && values.department !== 'kids') errors.push('department must be beauty or kids');
+    if (!isDepartment(values.department)) errors.push(`department must be one of ${departmentIds.join(', ')}`);
     if (!values.kind || !(productKinds as readonly string[]).includes(values.kind)) {
       errors.push(`kind must be one of ${productKinds.join(', ')}`);
     }

@@ -23,9 +23,13 @@ const parts = [
 ${migrations.map((m) => `--   ${m}`).join('\n')}
 --   seed.sql (starter catalogue)
 `,
-  ...migrations.map(
-    (m) => `-- ===========================================================================\n-- ${m}\n-- ===========================================================================\n\n${readFileSync(resolve(root, 'migrations', m), 'utf8').trim()}\n`,
-  ),
+  ...migrations.map((m) => {
+    const sql = readFileSync(resolve(root, 'migrations', m), 'utf8').trim();
+    // A new enum value can't be used until the transaction that added it has committed. Applied one file at a time each
+    // migration commits on its own; in this single script, end the transaction after a file that adds enum values.
+    const commit = /alter\s+type\s+\S+\s+add\s+value/i.test(sql) ? '\n-- (new enum values: commit before the next file uses them)\ncommit;\n' : '';
+    return `-- ===========================================================================\n-- ${m}\n-- ===========================================================================\n\n${sql}\n${commit}`;
+  }),
   `-- ===========================================================================\n-- seed.sql\n-- ===========================================================================\n\n${readFileSync(resolve(root, 'seed.sql'), 'utf8').trim()}\n`,
 ];
 

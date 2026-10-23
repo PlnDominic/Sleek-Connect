@@ -84,6 +84,15 @@ const status = (id) => sql(`select status from public.orders where id = '${id}'`
   assert((await errOf(S.cat.rpc('admin_save_product', { p: { ...full, id: undefined, name: 'Copy', slug: 'rosehip-face-oil' } })))?.message.includes('already uses'), 'duplicate web address refused');
   await S.cat.rpc('admin_save_product', { p: full });
 
+  // --- Home and fashion departments ---------------------------------------------------
+  assert(sql("select count(*) from public.categories where department in ('home', 'fashion')") === '5', 'starter categories exist for the home and fashion departments');
+  const blender = { name: 'Blender 1L', department: 'home', kind: 'gift', category_id: 'kitchen-appliances', kids_filter: 'bath', price_ghs: 320, publish: true, sizes: [], age_bands: [] };
+  const { data: bl, error: blErr } = await S.cat.rpc('admin_save_product', { p: blender });
+  assert(!blErr && sql(`select department || '/' || coalesce(kids_filter::text, 'none') from public.products where id = '${bl?.id}'`) === 'home/none', `a home product saves with the kids filter cleared (${blErr?.message})`);
+  assert(bl && !bl.problems.includes('FDA registration number') && !bl.problems.includes('age range'), `home products need neither an FDA number nor an age range (${bl?.problems})`);
+  assert((await anon.from('categories').select('id').eq('id', 'groceries')).data.length === 1, 'shoppers can read the new categories');
+  if (bl?.id) sql(`delete from public.products where id = '${bl.id}'`);
+
   // --- Receiving and batches --------------------------------------------------------
   const pid = saved.id;
   assert((await errOf(S.ops.rpc('admin_receive_stock', { p_product_id: pid, p_size_code: '30', p_batch_code: 'rh-1', p_expires_on: null, p_quantity: 10 })))?.message.includes('expiry date'), 'cosmetics need an expiry date');

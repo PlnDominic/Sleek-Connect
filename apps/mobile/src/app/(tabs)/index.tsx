@@ -11,7 +11,6 @@ import {
   city,
   radii,
   shadows,
-  type Department,
 } from '@sleek/shared';
 import { useBag } from '@sleek/shared/bag';
 import { AppText } from '@/components/AppText';
@@ -40,7 +39,7 @@ const heroes = {
 export default function HomeScreen() {
   const top = useScreenTop();
   const { count } = useBag();
-  const [dept, setDept] = useState<Department>('beauty');
+  const [dept, setDept] = useState<'beauty' | 'kids'>('beauty'); // the app has these two departments for now
   const hero = heroes[dept];
   const products = appNewArrivals[dept];
 

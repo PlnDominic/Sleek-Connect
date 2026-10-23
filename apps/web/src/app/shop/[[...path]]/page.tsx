@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
-import type { Category, Department } from '@sleek/shared';
+import { departmentBlurbs, departmentIds, departmentLabels, isDepartment, type Category, type Department } from '@sleek/shared';
 import { ListingView } from '@/components/listing/ListingView';
 import styles from '@/components/listing/listing.module.css';
 import { SiteFooter } from '@/components/SiteFooter';
@@ -11,10 +11,9 @@ import { getAgeBands, getCategories } from '@/lib/catalog';
 import { buildListing, getListingData, readFilters } from '@/lib/listing';
 import { defaultShareImage } from '@/lib/site';
 
-const departments: Record<Department, { name: string; blurb: string }> = {
-  beauty: { name: 'Beauty', blurb: 'Authentic skincare, makeup, hair care and fragrance.' },
-  kids: { name: 'Baby & Kids', blurb: 'Safe, age-appropriate essentials, toys and clothing for little ones.' },
-};
+const departments = Object.fromEntries(
+  departmentIds.map((d) => [d, { name: departmentLabels[d], blurb: departmentBlurbs[d] }]),
+) as Record<Department, { name: string; blurb: string }>;
 
 type Scope = { department?: Department; category?: Category };
 
@@ -23,7 +22,7 @@ async function resolveScope(path: string[] | undefined): Promise<Scope | null> {
   const [dept, cat, ...rest] = path ?? [];
   if (rest.length) return null;
   if (!dept) return {};
-  if (dept !== 'beauty' && dept !== 'kids') return null;
+  if (!isDepartment(dept)) return null;
   if (!cat) return { department: dept };
   const category = (await getCategories()).find((c) => c.id === cat && c.department === dept);
   return category ? { department: dept, category } : null;
@@ -33,8 +32,7 @@ export async function generateStaticParams() {
   const categories = await getCategories();
   return [
     { path: [] },
-    { path: ['beauty'] },
-    { path: ['kids'] },
+    ...departmentIds.map((d) => ({ path: [d] })),
     ...categories.map((c) => ({ path: [c.department, c.id] })),
   ];
 }
@@ -86,7 +84,7 @@ export default async function ShopPage({ params, searchParams }: PageProps<'/sho
                   ))}
                 </>
               ) : (
-                (Object.keys(departments) as Department[]).map((d) => (
+                departmentIds.map((d) => (
                   <Link key={d} href={`/shop/${d}`}>
                     {departments[d].name}
                   </Link>

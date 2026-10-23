@@ -23,6 +23,8 @@
 --   20261023140000_customer_feedback_discovery.sql
 --   20261023150000_checkout_promotions_gifts.sql
 --   20261023160000_remove_placeholder_promo.sql
+--   20261024090000_more_departments.sql
+--   20261024090100_home_fashion_categories.sql
 --   seed.sql (starter catalogue)
 
 -- ===========================================================================
@@ -1044,6 +1046,9 @@ grant execute on function public.set_bag(jsonb) to authenticated;
 alter type public.order_status add value if not exists 'packing' after 'paid';
 alter type public.order_status add value if not exists 'delivery_failed' after 'out_for_delivery';
 alter type public.order_status add value if not exists 'returned' after 'cancelled';
+
+-- (new enum values: commit before the next file uses them)
+commit;
 
 -- ===========================================================================
 -- 20261016110146_staff_and_audit.sql
@@ -6342,6 +6347,60 @@ on conflict (code) do nothing;
 delete from public.banners
 where placement = 'home_promo'
   and title = 'Up To [X]% Off';
+
+-- ===========================================================================
+-- 20261024090000_more_departments.sql
+-- ===========================================================================
+
+-- The store now sells more than beauty and kids' products. Two more departments:
+--   home    Home & Groceries       (groceries, kitchen and home appliances)
+--   fashion Fashion & Accessories  (jewellery, bags and more)
+-- New enum values can't be used until this migration has committed, so the categories that use them are added by the
+-- next migration.
+alter type public.department add value if not exists 'home';
+alter type public.department add value if not exists 'fashion';
+
+-- (new enum values: commit before the next file uses them)
+commit;
+
+-- ===========================================================================
+-- 20261024090100_home_fashion_categories.sql
+-- ===========================================================================
+
+-- Starter categories for the new departments, and two beauty categories for the kits and hair accessories the store
+-- will sell. Staff add the products themselves in Admin → Products.
+
+-- The "kids filter" (bath, toys, clothing, gifts) only means something for kids' products. Clear it for every other
+-- department, whichever way the product is saved.
+create function public.products_clear_kids_filter()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.department <> 'kids' then
+    new.kids_filter := null;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger products_clear_kids_filter
+  before insert or update of department, kids_filter on public.products
+  for each row execute function public.products_clear_kids_filter();
+
+update public.products set kids_filter = null where department <> 'kids' and kids_filter is not null;
+
+insert into public.categories (id, name, department, image_key, tint, kind, sort_order) values
+  ('beauty-kits',        'Beauty Kits',                  'beauty',  null, '#E8EEF5', 'gift', 10),
+  ('makeup-kits',        'Makeup Kits',                  'beauty',  null, '#E8EEF5', 'gift', 11),
+  ('hair-accessories',   'Hair Accessories',             'beauty',  null, '#F5F7FA', 'gift', 12),
+  ('groceries',          'Groceries',                    'home',    null, '#EDF5F2', 'jar',  20),
+  ('kitchen-appliances', 'Kitchen & Home Appliances',    'home',    null, '#E3F0EC', 'gift', 21),
+  ('jewellery',          'Jewellery',                    'fashion', null, '#E8EEF5', 'gift', 30),
+  ('bags',               'Bags',                         'fashion', null, '#F5F7FA', 'gift', 31),
+  ('more-accessories',   'More Accessories',             'fashion', null, '#EDF5F2', 'gift', 32)
+on conflict (id) do nothing;
 
 -- ===========================================================================
 -- seed.sql

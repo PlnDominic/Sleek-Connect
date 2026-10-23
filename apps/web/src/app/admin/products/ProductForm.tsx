@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState, useState, useTransition, type FormEvent, type ReactNode } from 'react';
+import { departmentIds, departmentLabels } from '@sleek/shared';
 import type { ActionState } from '@/lib/admin/action-state';
 import { kidsFilters, problemFields, productKinds, type ProductPayload, type SizePayload } from '@/lib/admin/product-payload';
 import { saveProduct } from './actions';
@@ -64,8 +65,9 @@ export function ProductForm({ product, categories, ageBands, imageKeys, problems
               'department',
               'Department',
               <select name="department" value={department} onChange={(e) => setDepartment(e.target.value)}>
-                <option value="beauty">Beauty</option>
-                <option value="kids">Kids</option>
+                {departmentIds.map((d) => (
+                  <option key={d} value={d}>{departmentLabels[d]}</option>
+                ))}
               </select>,
             )}
             {field(

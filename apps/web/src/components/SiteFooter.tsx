@@ -9,6 +9,8 @@ const columns = [
     links: [
       { label: 'Beauty', href: '/shop/beauty' },
       { label: 'Baby & Kids', href: '/shop/kids' },
+      { label: 'Home & Groceries', href: '/shop/home' },
+      { label: 'Fashion & Accessories', href: '/shop/fashion' },
       { label: 'Shop by Age', href: '/shop-by-age' },
       { label: 'Gifts', href: '/search?q=gift' },
     ],
@@ -41,7 +43,7 @@ export function SiteFooter() {
           <span className={styles.footerKicker}>The thoughtful way to shop</span>
           <Logo size={30} />
           <span className={styles.footerBlurb}>
-            Authentic beauty and safe, age-appropriate products for little ones, delivered across Accra.
+            Beauty, baby and kids, home and groceries, fashion and accessories, delivered across Accra.
           </span>
         </div>
         <div className={styles.footerLinks}>

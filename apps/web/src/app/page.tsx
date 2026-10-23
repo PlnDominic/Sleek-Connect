@@ -76,7 +76,7 @@ const defaultHero: Banner = {
   id: 'default',
   kicker: 'Trending now',
   title: 'Glow Products\nYou\'ll Love',
-  body: 'Authentic beauty and safe picks for little ones,\ncurated for modern families in Ghana.',
+  body: 'Beauty, home, fashion and everything for little ones,\ncurated for modern families in Ghana.',
   cta: { label: 'Shop Now', href: '/shop?sort=newest' },
   secondaryCta: { label: 'Shop Baby & Kids', href: '/shop/kids' },
   image: 'heroModel',

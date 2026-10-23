@@ -30,7 +30,13 @@ export function asImageKey(key: string | null | undefined): ImageKey | undefined
   return key && key in imageFiles ? (key as ImageKey) : undefined;
 }
 
-export type Department = 'beauty' | 'kids';
+/** The shop's departments, in the order they appear in menus. Each is also its web path, /shop/<department>. */
+export const departmentIds = ['beauty', 'kids', 'home', 'fashion'] as const;
+export type Department = (typeof departmentIds)[number];
+
+export function isDepartment(value: string | null | undefined): value is Department {
+  return (departmentIds as readonly string[]).includes(value ?? '');
+}
 
 /** Shape used for the tinted placeholder when a product has no photo yet. */
 export type ProductKind = 'bottle' | 'jar' | 'tube' | 'garment' | 'toy' | 'gift';
@@ -321,6 +327,16 @@ export function isAvailable(product: Product, sizeId?: string): boolean {
 export const departmentLabels: Record<Department, string> = {
   beauty: 'Beauty',
   kids: 'Baby & Kids',
+  home: 'Home & Groceries',
+  fashion: 'Fashion & Accessories',
+};
+
+/** One line under each department's name on its shop page and in search results. */
+export const departmentBlurbs: Record<Department, string> = {
+  beauty: 'Authentic skincare, beauty and makeup kits, hair care, hair accessories and fragrance.',
+  kids: 'Safe, age-appropriate essentials, toys and clothing for little ones.',
+  home: 'Groceries, kitchen and home appliances for everyday life.',
+  fashion: 'Jewellery, bags and accessories.',
 };
 
 function pick(slugs: string[]): Product[] {
@@ -363,6 +379,9 @@ export const appCategories: Record<Department, Category[]> = {
     { id: 'toys', name: 'Toys', department: 'kids', tint: colors.blush, kind: 'toy' },
     { id: 'gifts', name: 'Gifts', department: 'kids', image: 'giftCollection', tint: colors.surface, kind: 'gift' },
   ],
+  // The mobile app doesn't have these departments yet; the web store does.
+  home: [],
+  fashion: [],
 };
 
 export const newArrivals = pick([
@@ -379,6 +398,8 @@ export const bestSellers = pick(['shea-cocoa-body-butter', 'gentle-baby-wash-sha
 export const appNewArrivals: Record<Department, Product[]> = {
   beauty: pick(['vitamin-c-brightening-serum', 'whipped-shea-body-butter', 'velvet-matte-lip-colour', 'argan-hair-oil']),
   kids: pick(['gentle-baby-wash-shampoo', 'organic-cotton-bodysuits', 'wooden-stacking-blocks', 'wooden-number-puzzle']),
+  home: [],
+  fashion: [],
 };
 
 export const relatedProducts = pick([

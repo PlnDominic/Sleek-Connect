@@ -12,5 +12,5 @@ export const defaultShareImage = {
   url: '/opengraph-image',
   width: 1200,
   height: 630,
-  alt: 'Sleek Connect Store: authentic beauty and kids essentials in Accra',
+  alt: 'Sleek Connect Store: beauty, home, fashion and kids essentials in Accra',
 };

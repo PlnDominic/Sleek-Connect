@@ -17,11 +17,11 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: {
-    default: 'Sleek Connect Store: authentic beauty and kids essentials in Accra',
+    default: 'Sleek Connect Store: beauty, home, fashion and kids essentials in Accra',
     template: '%s | Sleek Connect Store',
   },
   description:
-    'Authentic beauty and safe, age-appropriate products for little ones, delivered across Accra. Pay with Mobile Money or card.',
+    'Beauty, baby and kids, home and groceries, fashion and accessories, delivered across Accra. Pay with Mobile Money or card.',
   applicationName: siteName,
   openGraph: { type: 'website', siteName, locale: 'en_GH' },
   twitter: { card: 'summary_large_image' },

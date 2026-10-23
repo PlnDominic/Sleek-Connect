@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { formatPrice, type Category } from '@sleek/shared';
+import { departmentIds, departmentLabels, formatPrice, type Category } from '@sleek/shared';
 import { getCategories, getStoreInfo } from '@/lib/catalog';
 import { BagButton } from './BagButton';
 import { Icon } from './Icon';
@@ -37,7 +37,6 @@ const navLinks = [
   { label: 'Contact', href: '/help#contact' },
 ];
 
-const departmentNames = { beauty: 'Beauty', kids: 'Baby & Kids' } as const;
 
 /** The Categories menu: every department and its categories. */
 function CategoriesMenu({ categories, current }: { categories: Category[]; current: boolean }) {
@@ -48,10 +47,10 @@ function CategoriesMenu({ categories, current }: { categories: Category[]; curre
         <Icon name="chevronDown" size={14} strokeWidth={2} />
       </Link>
       <div className={styles.menuPanel}>
-        {(['beauty', 'kids'] as const).map((d) => (
+        {departmentIds.map((d) => (
           <div key={d} className={styles.menuColumn}>
             <Link href={`/shop/${d}`} className={styles.menuHeading}>
-              {departmentNames[d]}
+              {departmentLabels[d]}
             </Link>
             {categories
               .filter((c) => c.department === d)

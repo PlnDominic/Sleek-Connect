@@ -1,6 +1,6 @@
 # Sleek Connect Store
 
-Storefront for authentic beauty products and safe, age-appropriate kids' products, delivered across Accra.
+Storefront for beauty, baby and kids', home and groceries, and fashion and accessories, delivered across Accra.
 Business and product requirements live in [`docs/`](docs/) (BRD and PRD, v0.1 drafts).
 
 Stack: **Node.js + Next.js** for the web store, **Supabase** for the database and API, and **React Native with
