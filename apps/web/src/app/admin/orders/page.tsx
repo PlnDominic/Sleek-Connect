@@ -92,11 +92,16 @@ export default async function OrdersPage({ searchParams }: PageProps<'/admin/ord
           <h1>Orders</h1>
           <p className={styles.muted}>Work queues for packing and delivery. Oldest first in the queues.</p>
         </div>
-        <form className={styles.search} role="search">
-          <input type="hidden" name="view" value={view} />
-          <input name="q" type="search" defaultValue={q} placeholder="Order number, name or phone" aria-label="Search orders" />
-          <button type="submit" className={styles.secondary}>Search</button>
-        </form>
+        <div className={styles.buttons}>
+          <form className={styles.search} role="search">
+            <input type="hidden" name="view" value={view} />
+            <input name="q" type="search" defaultValue={q} placeholder="Order number, name or phone" aria-label="Search orders" />
+            <button type="submit" className={styles.secondary}>Search</button>
+          </form>
+          <a className={styles.secondary} href={`/admin/orders/export?view=${view}${q ? `&q=${encodeURIComponent(q)}` : ''}`} download>
+            Export CSV
+          </a>
+        </div>
       </div>
       <nav className={styles.tabs} aria-label="Order queues">
         {(Object.keys(orderViews) as OrderView[]).map((key) => (
