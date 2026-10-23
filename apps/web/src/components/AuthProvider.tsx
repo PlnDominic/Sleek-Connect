@@ -17,6 +17,8 @@ interface AuthValue {
   signInWithGoogle: (next?: string, options?: { consent?: boolean; chooseAccount?: boolean }) => Promise<void>;
   recordConsent: () => Promise<void>;
   signOut: () => Promise<void>;
+  signOutEverywhere: () => Promise<void>;
+  updateProfile: (name: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -81,13 +83,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await createBrowserSupabase().auth.signOut();
   }, []);
 
+  const signOutEverywhere = useCallback(async () => {
+    await createBrowserSupabase().auth.signOut({ scope: 'global' });
+  }, []);
+
+  const updateProfile = useCallback(async (name: string) => {
+    const { error } = await createBrowserSupabase().auth.updateUser({ data: { full_name: name } });
+    if (error) throw error;
+  }, []);
+
   const profileLoaded = !!userId && profile?.userId === userId;
   const loading = sessionLoading || (!!userId && !profileLoaded);
   const consented = profileLoaded && profile.consented;
 
   const value = useMemo(
-    () => ({ user, loading, consented, signInWithGoogle, recordConsent, signOut }),
-    [user, loading, consented, signInWithGoogle, recordConsent, signOut],
+    () => ({ user, loading, consented, signInWithGoogle, recordConsent, signOut, signOutEverywhere, updateProfile }),
+    [user, loading, consented, signInWithGoogle, recordConsent, signOut, signOutEverywhere, updateProfile],
   );
 
   return <AuthContext value={value}>{children}</AuthContext>;

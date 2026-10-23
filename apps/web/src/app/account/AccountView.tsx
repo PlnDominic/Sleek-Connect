@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useBag } from '@sleek/shared/bag';
 import { useAuth } from '@/components/AuthProvider';
 import styles from './account.module.css';
@@ -15,10 +15,11 @@ function safeNext(value: string | null): string {
 export function AccountView() {
   const params = useSearchParams();
   const next = safeNext(params.get('next'));
-  const { user, loading, consented, signInWithGoogle, recordConsent, signOut } = useAuth();
+  const { user, loading, consented, signInWithGoogle, recordConsent, signOut, signOutEverywhere, updateProfile } = useAuth();
   const { count } = useBag();
   const [agreed, setAgreed] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [profileMessage, setProfileMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(
     params.get('error') === 'signin' ? "We couldn't sign you in with Google. Please try again." : null,
   );
@@ -79,6 +80,25 @@ export function AccountView() {
 
   const name = (user.user_metadata.full_name ?? user.user_metadata.name) as string | undefined;
 
+  async function saveProfile(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const name = String(new FormData(event.currentTarget).get('name') ?? '').trim();
+    if (!name || name.length > 120) {
+      setProfileMessage('Enter a name of up to 120 characters.');
+      return;
+    }
+    setBusy(true);
+    setProfileMessage(null);
+    try {
+      await updateProfile(name);
+      setProfileMessage('Your profile has been saved.');
+    } catch {
+      setProfileMessage("We couldn't save your profile. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <section className={styles.panel} aria-labelledby="signed-in-title">
       <h2 id="signed-in-title">{name ? `Hello, ${name}` : 'Signed in'}</h2>
@@ -115,6 +135,24 @@ export function AccountView() {
         </div>
       )}
 
+      <form className={styles.profileForm} onSubmit={saveProfile}>
+        <h3>Profile</h3>
+        <label className={styles.field}>
+          <span>Name</span>
+          <input
+            className={styles.input}
+            name="name"
+            maxLength={120}
+            defaultValue={name ?? ''}
+            placeholder="Your name"
+            autoComplete="name"
+          />
+        </label>
+        <p className={styles.muted}>Your name is used on your account and to prefill checkout details.</p>
+        <button type="submit" className={styles.primary} disabled={busy}>Save profile</button>
+        {profileMessage && <p role="status" className={styles.saved}>{profileMessage}</p>}
+      </form>
+
       <button
         type="button"
         className={styles.secondary}
@@ -124,6 +162,15 @@ export function AccountView() {
         Sign out
       </button>
       <p className={styles.muted}>Signing out empties the bag on this device. It stays saved in your account.</p>
+      <button
+        type="button"
+        className={styles.secondary}
+        disabled={busy}
+        onClick={() => run(signOutEverywhere, "We couldn't sign you out of your other sessions. Please try again.")}
+      >
+        Sign out everywhere
+      </button>
+      <p className={styles.muted}>Use this if you have left your account signed in on another device.</p>
       {error && (
         <p role="alert" className={styles.error}>
           {error}

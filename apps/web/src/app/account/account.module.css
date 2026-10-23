@@ -108,6 +108,43 @@
   font-size: 15px;
 }
 
+.profileForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+  border-top: 1px solid var(--c-line);
+}
+
+.profileForm h3 {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.input {
+  min-height: 46px;
+  padding: 0 13px;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-md);
+  background: var(--c-canvas);
+  color: var(--c-ink);
+  font: inherit;
+  font-weight: 400;
+}
+
+.input:focus-visible {
+  outline: 3px solid rgba(212, 60, 12, 0.28);
+  outline-offset: 1px;
+}
+
 .error {
   font-size: 14px;
   font-weight: 600;
