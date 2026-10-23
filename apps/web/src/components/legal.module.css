@@ -95,12 +95,6 @@
   color: var(--c-accent-deep);
 }
 
-.todo {
-  background: var(--c-blush);
-  border-radius: 4px;
-  padding: 0 4px;
-  white-space: nowrap;
-}
 
 @media (max-width: 860px) {
   .layout {

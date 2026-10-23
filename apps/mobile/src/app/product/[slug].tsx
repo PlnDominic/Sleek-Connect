@@ -7,7 +7,6 @@ import {
   formatPrice,
   getProduct,
   getSize,
-  pending,
   radii,
   unitPrice,
   type IconName,
@@ -88,22 +87,26 @@ export default function ProductScreen() {
 
           <View style={styles.facts}>
             <Fact icon="shieldCheck" iconColor={colors.teal} title="Verified authentic">
-              From an authorised distributor · FDA reg. {pending.fdaRegistration}
+              {product.compliance?.regulatoryReference
+                ? `From an authorised distributor · FDA reg. ${product.compliance.regulatoryReference}`
+                : 'From an authorised distributor'}
             </Fact>
-            <Fact icon="calendar" title={`${pending.batchNumber} · Expires ${pending.expiryDate}`}>
+            <Fact icon="calendar" title="Batch and expiry checked">
               Printed on your receipt for the unit we pack
             </Fact>
             <Fact icon="truck" title={`Delivery to ${defaultDeliveryArea}`} last>
-              {pending.deliveryDays} working days · tracked
+              Tracked from our shelf to your door
             </Fact>
           </View>
 
-          <Accordion title="Ingredients" initiallyOpen>
-            {pending.ingredientList}
-          </Accordion>
-          <Accordion title="Safety & warnings">{details?.warnings ?? '[Warnings as printed on the pack]'}</Accordion>
+          {product.compliance?.ingredients && (
+            <Accordion title="Ingredients" initiallyOpen>
+              {product.compliance.ingredients}
+            </Accordion>
+          )}
+          {details?.warnings && <Accordion title="Safety & warnings">{details.warnings}</Accordion>}
           <Accordion title="Returns" last>
-            Unopened within {pending.returnWindowDays} days.
+            Unopened items can be returned. Damaged or not genuine items are refunded in full.
           </Accordion>
         </View>
       </ScrollView>

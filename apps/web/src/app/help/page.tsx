@@ -214,7 +214,7 @@ export default async function HelpPage() {
 /** "GH₵ 20 (Outer Accra: GH₵ 45, not available in Far East)". */
 function DeliveryFees({ option, delivery }: { option: string; delivery: DeliveryConfig }) {
   const base = delivery.options.find((o) => o.id === option)?.fee ?? null;
-  const show = (fee: number | null) => (fee === null ? '[fee to be confirmed]' : fee === 0 ? 'free' : formatPrice(fee));
+  const show = (fee: number | null) => (fee === null ? 'to be confirmed' : fee === 0 ? 'free' : formatPrice(fee));
   const exceptions = delivery.zones.flatMap((z) => {
     const rate = delivery.rates.find((r) => r.zoneId === z.id && r.optionId === option);
     if (!rate) return [];
@@ -247,32 +247,30 @@ function Faq({ q, open, children }: { q: string; open?: boolean; children: React
 }
 
 function Contact({ store }: { store: StoreInfo }) {
-  const hours = store.supportHours ?? '[Support hours]';
   return (
     <section id="contact" className={styles.section} aria-labelledby="contact-title">
       <h2 id="contact-title">Contact us</h2>
-      <p className={styles.muted}>Open {hours}. Have your order number ready if your message is about an order.</p>
+      <p className={styles.muted}>
+        {store.supportHours ? `Open ${store.supportHours}. ` : ''}Have your order number ready if your message is about an order.
+      </p>
       <div className={styles.contactGrid}>
         <ContactCard
           icon="call"
           title="Call us"
           value={store.supportPhone}
           href={store.supportPhone && telHref(store.supportPhone)}
-          placeholder="[Support phone number]"
         />
         <ContactCard
           icon="chat"
           title="WhatsApp"
           value={store.supportWhatsapp}
           href={store.supportWhatsapp && whatsappHref(store.supportWhatsapp, 'Hello Sleek Connect Store, ')}
-          placeholder="[WhatsApp number]"
         />
         <ContactCard
           icon="mail"
           title="Email"
           value={store.supportEmail}
           href={store.supportEmail && `mailto:${store.supportEmail}`}
-          placeholder="[Support email]"
         />
         <Link href="/help/report" className={styles.contactCard}>
           <Icon name="headset" size={24} />
@@ -289,19 +287,18 @@ function ContactCard({
   title,
   value,
   href,
-  placeholder,
 }: {
   icon: 'call' | 'chat' | 'mail';
   title: string;
   value?: string;
   href?: string;
-  placeholder: string;
 }) {
+  if (!value) return null;
   const body = (
     <>
       <Icon name={icon} size={24} />
       <strong>{title}</strong>
-      <span>{value ?? placeholder}</span>
+      <span>{value}</span>
     </>
   );
   return href ? (

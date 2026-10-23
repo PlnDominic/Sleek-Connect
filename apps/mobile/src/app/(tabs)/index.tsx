@@ -9,7 +9,6 @@ import {
   colors,
   defaultDeliveryArea,
   city,
-  pending,
   radii,
   shadows,
   type Department,
@@ -27,7 +26,7 @@ const heroes = {
   beauty: {
     background: colors.ink,
     kicker: 'Weekend deal',
-    title: `Glow essentials, up to ${pending.saleMaxPercent}% off`,
+    title: 'Glow essentials for every routine',
     image: images.heroModel,
   },
   kids: {

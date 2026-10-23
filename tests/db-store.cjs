@@ -84,7 +84,8 @@ async function deliver(S, o, rider) {
 
   // --- Banners (FR-010) -------------------------------------------------------------------------
   const live = async () => (await anon.from('banners').select('title')).data.map((b) => b.title);
-  assert((await live()).length === 3, 'starter banners are live');
+  assert((await live()).length === 2, 'starter banners are live');
+  assert(!(await live()).some((t) => t.includes('[X]')), 'the placeholder promo banner is gone');
   const banner = { placement: 'home_promo', title: 'Weekend deal', cta_label: 'Shop', cta_href: '/shop?sale=1', theme: 'sale', is_active: true };
   assert((await errOf(S.ops.rpc('admin_save_banner', { p: banner })))?.code === '42501', 'operations cannot edit banners');
   assert((await errOf(S.cat.rpc('admin_save_banner', { p: { ...banner, cta_href: 'javascript:alert(1)' } })))?.message.includes('Links must start'), 'unsafe banner link refused');

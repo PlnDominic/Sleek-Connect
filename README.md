@@ -368,18 +368,23 @@ Setup:
 - Set `SITE_URL` to the live address (for example `https://sleekconnect.store`) so the sitemap, canonical links and
   previews use it. After launch, add the site in Google Search Console and submit `/sitemap.xml`.
 
-## Placeholders still to fill in
+## Values still to set
 
-The design shows values the business hasn't set yet (marked "To be set" in the BRD and PRD) as bracketed text such as
-`[X]` or `[Reg. number]`.
+The business hasn't decided some values yet (marked "To be set" in the BRD and PRD). The site never shows bracketed
+placeholders: a line or card appears only once its value is set, and prices that aren't known yet read "To be confirmed".
 
-- **Delivery fees, estimates, cut-offs and free delivery:** Admin → Delivery. Until a fee is set, checkout shows
-  `[fee]` and orders have no total yet.
-- **Support contacts and the return window:** Admin → Settings. The help centre shows placeholders until they're set.
-- **Display text:** the sale percentage and shopper count are in `pending` in `packages/shared/src/store.ts` (the mobile
-  app also reads its delivery days and return window from there). Banner text, including the
-  starter "Up To [X]% Off" card, is edited in Admin → Content. FDA number, ingredients, batch and expiry come from the
-  catalogue and stock. The placeholders show only for products that don't have them yet.
+- **Delivery fees, estimates, cut-offs and free delivery:** Admin → Delivery. The "Free delivery over …" line in the
+  announcement bar appears once a free-delivery threshold is set. Until a fee is set, checkout shows "To be confirmed"
+  and orders have no total yet.
+- **Support contacts, hours and the return window:** Admin → Settings. The help centre lists only the contacts and
+  hours that are set.
+- **Company details in the terms and privacy notice:** set `BUSINESS_NAME`, `BUSINESS_REGISTRATION_NUMBER`,
+  `BUSINESS_ADDRESS`, `DATA_PROTECTION_REGISTRATION_NUMBER` and `PAYMENT_PROVIDER_NAME` in the Vercel environment
+  variables (see `apps/web/.env.example`). Each sentence that needs one is left out until it is set.
+- **Banners and promo cards:** Admin → Content. The starter "Up To [X]% Off" card is removed by migration
+  `20261023150000_remove_placeholder_promo.sql` (unless staff already edited it).
+- **Product details:** ingredients, FDA number, warnings, directions, batch and expiry come from the catalogue and
+  stock. A product page shows only the tabs and facts the product has.
 
 ## Privacy, saved numbers and reviews
 

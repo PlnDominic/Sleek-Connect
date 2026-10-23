@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { LegalPage, Todo, type LegalSection } from '@/components/LegalPage';
+import { LegalPage, type LegalSection } from '@/components/LegalPage';
 import { getStoreInfo } from '@/lib/catalog';
-import { legalUpdated } from '@/lib/legal';
+import { businessDetails, legalUpdated } from '@/lib/legal';
 
 export const metadata: Metadata = {
   title: 'Terms of service',
@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 export default async function TermsPage() {
   const store = await getStoreInfo();
   const days = store.returnWindowDays;
+  const business = businessDetails();
   const sections: LegalSection[] = [
     {
       id: 'who',
@@ -21,8 +22,15 @@ export default async function TermsPage() {
         <>
           <p>
             Sleek Connect Store (“we”, “us”) sells beauty, baby and kids’ products to customers in Accra, Ghana, through
-            this website. We are <Todo>Registered business name</Todo>, registered in Ghana under number{' '}
-            <Todo>Registration number</Todo>, with our address at <Todo>Business address</Todo>.
+            this website.
+            {business.name && (
+              <>
+                {' '}
+                We are {business.name}
+                {business.registrationNumber ? `, registered in Ghana under number ${business.registrationNumber}` : ''}
+                {business.address ? `, with our address at ${business.address}` : ''}.
+              </>
+            )}
           </p>
           <p>By placing an order or creating an account you agree to these terms. If you don’t agree, please don’t use the store.</p>
         </>
@@ -100,7 +108,7 @@ export default async function TermsPage() {
           You can pay with Mobile Money (MTN MoMo, Telecel Cash or AirtelTigo Money). You approve the payment on your own phone
           with your own PIN; we never see or store your PIN. Card payments will be added later. If you save a Mobile Money
           number to your account we store only the network and the number, so you can choose it at checkout. Payments are
-          processed by our payment provider, <Todo>Payment provider name</Todo>.
+          processed by our payment provider{business.paymentProvider ? `, ${business.paymentProvider}` : ''}.
         </p>
       ),
     },
@@ -213,12 +221,6 @@ export default async function TermsPage() {
           Questions about these terms or an order? Visit the <Link href="/help#contact">help centre</Link>
           {store.supportEmail ? <>, email {store.supportEmail}</> : null}
           {store.supportPhone ? <>, or call {store.supportPhone}</> : null}.
-          {!store.supportEmail && !store.supportPhone && (
-            <>
-              {' '}
-              Email <Todo>Support email</Todo> or call <Todo>Support phone number</Todo>.
-            </>
-          )}
         </p>
       ),
     },

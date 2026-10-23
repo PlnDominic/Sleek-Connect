@@ -9,11 +9,6 @@ export interface LegalSection {
   body: ReactNode;
 }
 
-/** A detail the business still has to fill in, shown the same way as other bracketed placeholders. */
-export function Todo({ children }: { children: ReactNode }) {
-  return <span className={styles.todo}>[{children}]</span>;
-}
-
 /** Shared layout for the terms of service and privacy notice: a heading, a contents list and numbered sections. */
 export function LegalPage({ title, intro, updated, sections }: { title: string; intro: ReactNode; updated: string; sections: LegalSection[] }) {
   return (

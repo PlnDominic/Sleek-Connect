@@ -1,7 +1,7 @@
 'use client';
 
 import { useId, useState, type KeyboardEvent } from 'react';
-import { pending, type Product } from '@sleek/shared';
+import type { Product } from '@sleek/shared';
 import styles from './product.module.css';
 
 const tabs = [
@@ -14,25 +14,38 @@ const tabs = [
 type TabId = (typeof tabs)[number]['id'];
 
 export function ProductInfoTabs({ product }: { product: Product }) {
-  const [active, setActive] = useState<TabId>('ingredients');
+  const [selected, setSelected] = useState<TabId | null>(null);
   const baseId = useId();
   const details = product.details;
   const compliance = product.compliance;
   const batches = product.currentBatches ?? [];
 
+  // A tab appears only when the catalogue has something to show in it.
+  const hasContent: Record<TabId, boolean> = {
+    ingredients: Boolean(compliance?.ingredients || details?.freeFrom?.length),
+    safety: Boolean(
+      details?.recommendedAge || compliance?.regulatoryReference || compliance?.countryOfOrigin || details?.warnings,
+    ),
+    batch: batches.length > 0 || Boolean(compliance?.periodAfterOpening),
+    use: Boolean(details?.howToUse),
+  };
+  const visible = tabs.filter((t) => hasContent[t.id]);
+  if (visible.length === 0) return null;
+  const active = visible.some((t) => t.id === selected) ? selected! : visible[0].id;
+
   const onKeyDown = (event: KeyboardEvent) => {
-    const index = tabs.findIndex((t) => t.id === active);
+    const index = visible.findIndex((t) => t.id === active);
     const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
     if (!step) return;
-    const next = tabs[(index + step + tabs.length) % tabs.length];
-    setActive(next.id);
+    const next = visible[(index + step + visible.length) % visible.length];
+    setSelected(next.id);
     document.getElementById(`${baseId}-tab-${next.id}`)?.focus();
   };
 
   return (
     <>
       <div role="tablist" aria-label="Product information" className={styles.tablist} onKeyDown={onKeyDown}>
-        {tabs.map((tab) => (
+        {visible.map((tab) => (
           <button
             key={tab.id}
             id={`${baseId}-tab-${tab.id}`}
@@ -41,7 +54,7 @@ export function ProductInfoTabs({ product }: { product: Product }) {
             aria-selected={tab.id === active}
             aria-controls={`${baseId}-panel`}
             tabIndex={tab.id === active ? 0 : -1}
-            onClick={() => setActive(tab.id)}
+            onClick={() => setSelected(tab.id)}
             className={styles.tab}
           >
             {tab.label}
@@ -51,10 +64,14 @@ export function ProductInfoTabs({ product }: { product: Product }) {
       <div id={`${baseId}-panel`} role="tabpanel" aria-labelledby={`${baseId}-tab-${active}`} className={styles.tabPanel}>
         {active === 'ingredients' && (
           <div className={styles.prose}>
-            <p>
-              <strong>Full ingredient list (INCI)</strong>
-            </p>
-            <p className={styles.muted}>{compliance?.ingredients ?? pending.ingredientList}</p>
+            {compliance?.ingredients && (
+              <>
+                <p>
+                  <strong>Full ingredient list (INCI)</strong>
+                </p>
+                <p className={styles.muted}>{compliance.ingredients}</p>
+              </>
+            )}
             {details?.freeFrom && (
               <div className={styles.tagList}>
                 {details.freeFrom.map((item) => (
@@ -66,10 +83,10 @@ export function ProductInfoTabs({ product }: { product: Product }) {
         )}
         {active === 'safety' && (
           <div className={styles.factGrid}>
-            <Fact label="Recommended age" value={details?.recommendedAge ?? '[Recommended age]'} />
-            <Fact label="FDA Ghana registration" value={compliance?.regulatoryReference ?? pending.fdaRegistration} />
+            {details?.recommendedAge && <Fact label="Recommended age" value={details.recommendedAge} />}
+            {compliance?.regulatoryReference && <Fact label="FDA Ghana registration" value={compliance.regulatoryReference} />}
             {compliance?.countryOfOrigin && <Fact label="Made in" value={compliance.countryOfOrigin} />}
-            <Fact label="Warnings" value={details?.warnings ?? '[Warnings as printed on the pack]'} small />
+            {details?.warnings && <Fact label="Warnings" value={details.warnings} small />}
           </div>
         )}
         {active === 'batch' && (
@@ -78,12 +95,6 @@ export function ProductInfoTabs({ product }: { product: Product }) {
               The batch and expiry of the exact unit we pack for you are printed on your receipt and shown in your order.
             </p>
             <div className={styles.factGrid}>
-              {batches.length === 0 && (
-                <>
-                  <Fact label="Current stock batch" value={pending.batchNumber} />
-                  <Fact label="Earliest expiry in stock" value={pending.expiryDate} />
-                </>
-              )}
               {batches.map((b) => (
                 <Fact
                   key={b.sizeId ?? 'one-size'}
@@ -91,12 +102,12 @@ export function ProductInfoTabs({ product }: { product: Product }) {
                   value={`${b.batch}${b.expiresOn ? ` · expires ${b.expiresOn}` : ''}`}
                 />
               ))}
-              <Fact label="Period after opening" value={compliance?.periodAfterOpening ?? pending.periodAfterOpening} />
+              {compliance?.periodAfterOpening && <Fact label="Period after opening" value={compliance.periodAfterOpening} />}
             </div>
           </div>
         )}
-        {active === 'use' && (
-          <p className={`${styles.prose} ${styles.muted}`}>{details?.howToUse ?? '[Directions as printed on the pack]'}</p>
+        {active === 'use' && details?.howToUse && (
+          <p className={`${styles.prose} ${styles.muted}`}>{details.howToUse}</p>
         )}
       </div>
     </>

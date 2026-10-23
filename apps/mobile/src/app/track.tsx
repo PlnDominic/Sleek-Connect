@@ -25,7 +25,7 @@ export default function TrackOrderScreen() {
               Track order
             </AppText>
             <AppText size={12} color={colors.textMuted}>
-              #SC-{order.number} · Paid with {order.paidWith}
+              Paid with {order.paidWith}
             </AppText>
           </View>
         </View>

@@ -1,26 +1,6 @@
 /**
- * Store settings the business has not decided yet (BRD/PRD mark these "To be set").
- * The design shows them as bracketed placeholders, and so do the apps until a value
- * is filled in here.
- */
-export const pending = {
-  freeDeliveryThreshold: '[X]',
-  saleMaxPercent: '[X]',
-  shopperCount: '[X]',
-  deliveryDays: '[X]',
-  orderCutoffTime: '[cut-off time]',
-  sameDayCutoffTime: '[time]',
-  returnWindowDays: '[X]',
-  fdaRegistration: '[Reg. number]',
-  batchNumber: '[Batch no.]',
-  expiryDate: '[Expiry date]',
-  periodAfterOpening: '[12M]',
-  ingredientList: '[Full INCI list as printed on the pack, in order of concentration]',
-} as const;
-
-/**
  * Starting delivery fees in GHS, written to supabase/seed.sql. The live fees are in the `delivery_options` table.
- * `null` means the fee has not been set and is shown as a placeholder.
+ * `null` means the fee has not been set yet.
  */
 export const deliveryFees: { standard: number | null; sameDay: number | null } = {
   standard: null,
@@ -39,16 +19,15 @@ export const sampleCustomer = {
 
 export type OrderStepState = 'done' | 'current' | 'upcoming';
 
-/** Order shown on the tracking screen until orders come from the API. Bracketed values are placeholders. */
+/** Order shown on the tracking screen until orders come from the API. */
 export const sampleOrder = {
-  number: '[order no.]',
   paidWith: 'MTN MoMo',
-  eta: 'Arriving today, [time window]',
-  rider: { name: '[Rider name]', vehicle: 'Motorbike' },
+  eta: 'Arriving today',
+  rider: { name: 'Your rider', vehicle: 'Motorbike' },
   steps: [
-    { title: 'Order placed', detail: '[Date], [time]', state: 'done' },
-    { title: 'Payment confirmed', detail: 'MTN MoMo · GH₵ [total]', state: 'done' },
-    { title: 'Packed and batch-checked', detail: 'Batch [no.] · Expires [date]', state: 'done' },
+    { title: 'Order placed', detail: 'Your order is confirmed', state: 'done' },
+    { title: 'Payment confirmed', detail: 'Paid with MTN MoMo', state: 'done' },
+    { title: 'Packed and batch-checked', detail: 'Batch and expiry are printed on your receipt', state: 'done' },
     { title: 'Out for delivery', detail: 'Rider is on the way to East Legon', state: 'current' },
     { title: 'Delivered', detail: 'Show your order code to the rider', state: 'upcoming' },
   ] satisfies { title: string; detail: string; state: OrderStepState }[],
@@ -68,7 +47,7 @@ export function formatPrice(amount: number): string {
   return `GH₵ ${amount.toLocaleString('en-US')}`;
 }
 
-/** Formats an optional amount, falling back to the design's bracketed placeholder. */
-export function formatPriceOr(amount: number | null, placeholder: string): string {
-  return amount === null ? `GH₵ ${placeholder}` : formatPrice(amount);
+/** Formats an optional amount, or returns `fallback` (for example "To be confirmed") when it isn't known yet. */
+export function formatPriceOr(amount: number | null, fallback: string): string {
+  return amount === null ? fallback : formatPrice(amount);
 }

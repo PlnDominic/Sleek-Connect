@@ -72,7 +72,7 @@ async function OrderList() {
                 <span className={styles.status} data-status={order.status}>
                   {statusShort[order.status]}
                 </span>
-                <strong>{formatPriceOr(order.total_ghs as number | null, '[total]')}</strong>
+                <strong>{formatPriceOr(order.total_ghs as number | null, 'To be confirmed')}</strong>
               </span>
             </Link>
           </li>

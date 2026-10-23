@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { LegalPage, Todo, type LegalSection } from '@/components/LegalPage';
+import { LegalPage, type LegalSection } from '@/components/LegalPage';
 import { getStoreInfo } from '@/lib/catalog';
-import { legalUpdated } from '@/lib/legal';
+import { businessDetails, legalUpdated } from '@/lib/legal';
 
 export const metadata: Metadata = {
   title: 'Privacy notice',
@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 
 export default async function PrivacyPage() {
   const store = await getStoreInfo();
+  const business = businessDetails();
   const sections: LegalSection[] = [
     {
       id: 'who',
@@ -19,13 +20,19 @@ export default async function PrivacyPage() {
       body: (
         <>
           <p>
-            Sleek Connect Store (<Todo>Registered business name</Todo>, <Todo>Business address</Todo>) decides how and why your
-            personal data is used, which makes us the “data controller” under the Data Protection Act, 2012 (Act 843) of
-            Ghana. We are registered with the Data Protection Commission under number <Todo>DPC registration number</Todo>.
+            Sleek Connect Store
+            {business.name || business.address
+              ? ` (${[business.name, business.address].filter(Boolean).join(', ')})`
+              : ''}{' '}
+            decides how and why your personal data is used, which makes us the “data controller” under the Data Protection
+            Act, 2012 (Act 843) of Ghana.
+            {business.dataProtectionNumber
+              ? ` We are registered with the Data Protection Commission under number ${business.dataProtectionNumber}.`
+              : ''}
           </p>
           <p>
-            Contact us about your data at{' '}
-            {store.supportEmail ? store.supportEmail : <Todo>Support email</Todo>}.
+            Contact us about your data through the <Link href="/help#contact">help centre</Link>
+            {store.supportEmail ? <>, or at {store.supportEmail}</> : null}.
           </p>
         </>
       ),
@@ -76,7 +83,7 @@ export default async function PrivacyPage() {
         <>
           <p>We don’t sell your data. We share only what is needed, with:</p>
           <ul>
-            <li>Our <strong>payment provider</strong> (<Todo>Payment provider name</Todo>), to take your Mobile Money payment and confirm it.</li>
+            <li>Our <strong>payment provider</strong>{business.paymentProvider ? ` (${business.paymentProvider})` : ''}, to take your Mobile Money payment and confirm it.</li>
             <li>Our <strong>messaging providers</strong>, to send SMS and email about your order.</li>
             <li><strong>Our riders</strong>, who see your name, phone number, address and directions for the delivery only.</li>
             <li>Our <strong>hosting and database providers</strong> (Supabase and Vercel), who store and serve the data for us under contract.</li>

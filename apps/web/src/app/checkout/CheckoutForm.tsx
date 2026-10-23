@@ -305,7 +305,7 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
                           <strong>{option.label}</strong>
                           <span>
                             {q.available
-                              ? `${estimate(option, now)} · ${q.free ? 'Free' : formatPriceOr(q.fee, '[fee]')}`
+                              ? `${estimate(option, now)} · ${q.free ? 'Free' : formatPriceOr(q.fee, 'To be confirmed')}`
                               : `Not available in ${area}`}
                           </span>
                         </span>
@@ -455,7 +455,7 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
           </div>
           <div>
             <dt>Delivery</dt>
-            <dd>{shownFee === 0 ? 'Free' : formatPriceOr(shownFee, '[fee]')}</dd>
+            <dd>{shownFee === 0 ? 'Free' : formatPriceOr(shownFee, 'To be confirmed')}</dd>
           </div>
           {placed && placed.discount > 0 && (
             <div>
@@ -465,7 +465,7 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
           )}
           <div className={styles.totalRow}>
             <dt>Total</dt>
-            <dd>{formatPriceOr(total, '[total]')}</dd>
+            <dd>{formatPriceOr(total, 'To be confirmed')}</dd>
           </div>
         </dl>
 

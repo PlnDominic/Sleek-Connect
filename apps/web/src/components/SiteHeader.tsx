@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { formatPrice, pending, type Category } from '@sleek/shared';
+import { formatPrice, type Category } from '@sleek/shared';
 import { getCategories, getStoreInfo } from '@/lib/catalog';
 import { BagButton } from './BagButton';
 import { Icon } from './Icon';
@@ -12,17 +12,12 @@ export async function AnnouncementBar() {
   const { freeDeliveryThreshold } = await getStoreInfo();
   return (
     <div className={styles.announce}>
-      <span className={styles.announceItem}>
-        <Icon name="truck" size={15} strokeWidth={2} />
-        Free delivery in Accra on orders over{' '}
-        {freeDeliveryThreshold === undefined ? `GH₵ ${pending.freeDeliveryThreshold}` : formatPrice(freeDeliveryThreshold)}
-      </span>
-      <span className={styles.announceItem}>
-        <span className={styles.star}>
-          <Icon name="star" size={15} />
+      {freeDeliveryThreshold !== undefined && (
+        <span className={styles.announceItem}>
+          <Icon name="truck" size={15} strokeWidth={2} />
+          Free delivery in Accra on orders over {formatPrice(freeDeliveryThreshold)}
         </span>
-        Weekend Glow Sale: up to {pending.saleMaxPercent}% off skincare
-      </span>
+      )}
       <span className={styles.announceItem}>
         <Icon name="shieldCheck" size={15} strokeWidth={2} />
         100% authentic, batch-checked products

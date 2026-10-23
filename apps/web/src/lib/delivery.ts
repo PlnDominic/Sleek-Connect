@@ -1,4 +1,3 @@
-import { pending } from '@sleek/shared';
 
 /** A delivery window as staff set it in Admin → Delivery. */
 export interface DeliveryOption {
@@ -51,7 +50,7 @@ export function formatCutoff(cutoff: string): string {
  * account for the cut-off having passed; without it the text doesn't depend on the time of day.
  */
 export function estimate(option: DeliveryOption, now?: Date): string {
-  if (option.daysMin === null && option.daysMax === null) return `${pending.deliveryDays} working days`;
+  if (option.daysMin === null && option.daysMax === null) return 'Delivery time to be confirmed';
   const min = option.daysMin ?? option.daysMax!;
   const max = Math.max(option.daysMax ?? min, min);
   // Accra keeps GMT, so the UTC clock is local time.

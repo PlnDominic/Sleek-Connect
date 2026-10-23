@@ -160,11 +160,11 @@ async function OrderDetails({ params }: { params: PageProps<'/orders/[token]'>['
               </div>
               <div>
                 <dt>Delivery ({order.delivery_option})</dt>
-                <dd>{order.delivery_fee_ghs === 0 ? 'Free' : formatPriceOr(order.delivery_fee_ghs, '[fee]')}</dd>
+                <dd>{order.delivery_fee_ghs === 0 ? 'Free' : formatPriceOr(order.delivery_fee_ghs, 'To be confirmed')}</dd>
               </div>
               <div className={styles.totalRow}>
                 <dt>Total</dt>
-                <dd>{formatPriceOr(order.total_ghs, '[total]')}</dd>
+                <dd>{formatPriceOr(order.total_ghs, 'To be confirmed')}</dd>
               </div>
             </dl>
           </section>

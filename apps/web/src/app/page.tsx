@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { colors, formatPrice, pending, type Category, type IconName, type Product } from '@sleek/shared';
+import { colors, formatPrice, type Category, type IconName, type Product } from '@sleek/shared';
 import { AddToBagButton } from '@/components/AddToBagButton';
 import { Icon } from '@/components/Icon';
 import { JsonLd } from '@/components/JsonLd';
@@ -60,7 +60,6 @@ export default async function HomePage() {
       <SiteHeader current="Home" />
       <main>
         <Hero banner={hero ?? defaultHero} products={heroProducts} />
-        <FeatureStrip />
         <Categories categories={categories} />
         <NewArrivals products={newArrivals} />
         <BestSellers products={bestSellers} />
@@ -123,14 +122,6 @@ function Hero({ banner, products }: { banner: Banner; products: Product[] }) {
               </Link>
             )}
           </div>
-          <div className={styles.socialProof}>
-            <span className={styles.avatars} aria-hidden="true">
-              {colors.avatar.map((tone) => (
-                <span key={tone} style={{ background: tone }} />
-              ))}
-            </span>
-            <span>Loved by {pending.shopperCount}+ shoppers across Accra</span>
-          </div>
         </div>
 
         <div className={styles.heroVisual}>
@@ -168,31 +159,6 @@ function Hero({ banner, products }: { banner: Banner; products: Product[] }) {
             <span />
           </div>
         </div>
-      </div>
-    </section>
-  );
-}
-
-const features: { icon: IconName; title: string; sub: string }[] = [
-  { icon: 'truck', title: 'Tracked Delivery', sub: 'Across Accra, to your door' },
-  { icon: 'lockKeyhole', title: 'Secure Payments', sub: 'Mobile Money and card' },
-  { icon: 'shieldCheck', title: 'Authentic Guarantee', sub: 'Full refund if not genuine' },
-  { icon: 'headset', title: 'Real Support', sub: 'Always here to help' },
-];
-
-function FeatureStrip() {
-  return (
-    <section className="container">
-      <div className={styles.features}>
-        {features.map((f) => (
-          <div key={f.title} className={styles.feature}>
-            <Icon name={f.icon} size={30} strokeWidth={1.5} />
-            <span className={styles.featureText}>
-              <strong>{f.title}</strong>
-              <span>{f.sub}</span>
-            </span>
-          </div>
-        ))}
       </div>
     </section>
   );

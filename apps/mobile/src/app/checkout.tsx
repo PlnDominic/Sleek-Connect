@@ -8,7 +8,6 @@ import {
   formatPrice,
   formatPriceOr,
   momoNetworks,
-  pending,
   radii,
   sampleCustomer,
   type MomoNetwork,
@@ -52,7 +51,7 @@ export default function CheckoutScreen() {
             </AppText>
             <AppText size={13} color={colors.textMuted} style={styles.lh}>
               {sampleCustomer.area}, {city} · {sampleCustomer.ghanaPostGps}
-              {'\n'}Standard delivery, {pending.deliveryDays} working days
+              {'\n'}Standard delivery
             </AppText>
           </View>
           <Pressable accessibilityRole="button" accessibilityLabel="Edit delivery details" hitSlop={8}>
@@ -115,14 +114,14 @@ export default function CheckoutScreen() {
 
         <View style={[styles.card, styles.gap10]}>
           <Row label={`${count} ${count === 1 ? 'item' : 'items'}`} value={formatPrice(subtotal)} />
-          <Row label="Delivery" value={formatPriceOr(fee, '[fee]')} />
+          <Row label="Delivery" value={formatPriceOr(fee, 'To be confirmed')} />
           <Checkbox checked={gift} onChange={setGift} label="Send as a gift" />
           <View style={styles.totalRow}>
             <AppText weight="bold" size={17}>
               Total
             </AppText>
             <AppText weight="bold" size={17}>
-              {formatPriceOr(total, '[total]')}
+              {formatPriceOr(total, 'To be confirmed')}
             </AppText>
           </View>
         </View>
