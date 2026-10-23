@@ -33,25 +33,9 @@ const columns = [
   },
 ];
 
-const promises = [
-  { title: 'Authenticity checked', text: 'Every product is batch-checked before it ships.' },
-  { title: 'Reliable Accra delivery', text: 'Tracked from our shelf to your door.' },
-  { title: 'Friendly support', text: 'Real people, ready to help with any order.' },
-];
-
 export function SiteFooter() {
   return (
     <footer className={styles.footer}>
-      <div className={styles.footerPromises}>
-        <ul className={`container ${styles.footerPromiseList}`} aria-label="Store promises">
-          {promises.map((item) => (
-            <li key={item.title}>
-              <strong>{item.title}</strong>
-              <span>{item.text}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
       <div className={`container ${styles.footerMain}`}>
         <div className={styles.footerBrand}>
           <span className={styles.footerKicker}>The thoughtful way to shop</span>
