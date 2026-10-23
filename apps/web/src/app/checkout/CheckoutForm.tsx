@@ -521,7 +521,7 @@ function OrderProgress({ order, live, prompt, onRetry }: OrderProgressProps) {
       <div role="status" className={styles.statusPanel} data-tone="success">
         <strong>Order confirmed</strong>
         <span>Payment received for order {order.orderNumber}. We&apos;re getting it ready.</span>
-        <span>{order.items.reduce((sum, item) => sum + item.qty, 0)} items · {formatPriceOr(order.total, '[total]')} · Held until {clockTime.format(new Date(order.reservedUntil))}</span>
+        <span>{order.items.reduce((sum, item) => sum + item.qty, 0)} items · {formatPriceOr(order.total, 'To be confirmed')} · Held until {clockTime.format(new Date(order.reservedUntil))}</span>
         <Link href={`/orders/${order.orderToken}`} className={styles.retry}>
           View order, receipt and delivery updates
         </Link>

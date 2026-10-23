@@ -382,7 +382,7 @@ placeholders: a line or card appears only once its value is set, and prices that
   `BUSINESS_ADDRESS`, `DATA_PROTECTION_REGISTRATION_NUMBER` and `PAYMENT_PROVIDER_NAME` in the Vercel environment
   variables (see `apps/web/.env.example`). Each sentence that needs one is left out until it is set.
 - **Banners and promo cards:** Admin → Content. The starter "Up To [X]% Off" card is removed by migration
-  `20261023150000_remove_placeholder_promo.sql` (unless staff already edited it).
+  `20261023160000_remove_placeholder_promo.sql` (unless staff already edited it).
 - **Product details:** ingredients, FDA number, warnings, directions, batch and expiry come from the catalogue and
   stock. A product page shows only the tabs and facts the product has.
 

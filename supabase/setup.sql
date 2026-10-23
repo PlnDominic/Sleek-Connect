@@ -22,7 +22,7 @@
 --   20261023130000_catalogue_discovery_metrics.sql
 --   20261023140000_customer_feedback_discovery.sql
 --   20261023150000_checkout_promotions_gifts.sql
---   20261023150000_remove_placeholder_promo.sql
+--   20261023160000_remove_placeholder_promo.sql
 --   seed.sql (starter catalogue)
 
 -- ===========================================================================
@@ -6334,7 +6334,7 @@ values ('FREESHIP','Free delivery','free_delivery',0)
 on conflict (code) do nothing;
 
 -- ===========================================================================
--- 20261023150000_remove_placeholder_promo.sql
+-- 20261023160000_remove_placeholder_promo.sql
 -- ===========================================================================
 
 -- The starter "Flash Sale / Up To [X]% Off" promo card was seeded with a placeholder percentage.
