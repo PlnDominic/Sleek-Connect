@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { formatPriceOr } from '@sleek/shared';
-import { requireStaffPage } from '@/lib/admin/session';
+import { can, requireStaffPage } from '@/lib/admin/session';
 import { formatDateTime, type OrderStatus } from '@/lib/orders';
 import { StatusBadge } from './StatusBadge';
 import styles from './admin.module.css';
@@ -30,6 +30,7 @@ export default async function Dashboard() {
     db.from('orders').select('order_number, status, customer_name, total_ghs, created_at').order('created_at', { ascending: false }).limit(8),
   ]);
   const low = (stock.data ?? []).filter((l) => l.is_low);
+  const reviewsPending = can(staff.role, 'reviews.moderate') ? ((await db.rpc('admin_review_counts').maybeSingle()).data?.pending ?? 0) : null;
 
   const cards = [
     { label: 'To pack', value: toPack, href: '/admin/orders?view=to_pack' },
@@ -41,6 +42,7 @@ export default async function Dashboard() {
     { label: 'Returns to review', value: returnsToReview, href: '/admin/returns', alert: returnsToReview > 0 },
     { label: 'Return refunds due', value: returnRefunds, href: '/admin/returns?view=received', alert: returnRefunds > 0 },
     { label: 'Open support cases', value: openCases, href: '/admin/support', alert: openCases > 0 },
+    ...(reviewsPending === null ? [] : [{ label: 'Reviews to check', value: reviewsPending, href: '/admin/reviews', alert: reviewsPending > 0 }]),
     { label: 'Low stock', value: low.length, href: '/admin/inventory?show=low', alert: low.length > 0 },
     { label: 'Expiry alerts', value: (expiring.data ?? []).length, href: '/admin/inventory', alert: (expiring.data ?? []).length > 0 },
   ];

@@ -12,6 +12,8 @@ export interface PlaceOrderInput {
   isGift: boolean;
   /** Also save the delivery details to the signed-in shopper's addresses. */
   saveAddress?: boolean;
+  /** Also save the Mobile Money number to the signed-in shopper's saved numbers. */
+  saveWallet?: boolean;
 }
 
 export type PlaceOrderResult =
@@ -70,6 +72,14 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       },
     });
     if (saveError && saveError.code !== '22023') console.error('save_address failed', saveError);
+  }
+
+  if (input.saveWallet) {
+    // Best effort too. Only the network and number are kept, never a PIN.
+    const { error: saveError } = await supabase.rpc('save_payment_method', {
+      p: { network: input.payment.network, wallet_number: input.payment.wallet },
+    });
+    if (saveError && saveError.code !== '22023') console.error('save_payment_method failed', saveError);
   }
 
   // The generated types can't express that these are NULL until delivery fees are set.

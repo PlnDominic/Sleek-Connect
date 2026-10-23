@@ -56,12 +56,14 @@ if [ "$ONLY" != "db" ]; then
   fresh; start; suite "admin console and order pages" e2e-admin.cjs; server_errors
   fresh; start; suite "shop pages, search, content, returns, help" e2e-store.cjs; server_errors
   fresh; start; suite "delivery, photos, wishlist, addresses, cancel, buy again" e2e-shopper.cjs; server_errors
+  fresh; start; suite "terms, saved numbers, reviews, data export and deletion" e2e-privacy.cjs; server_errors
   stop
 fi
 
 npx supabase db reset >/dev/null 2>&1; suite "database: orders, staff, catalogue, stock" db-admin.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: storefront, returns, support" db-store.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: addresses, photos, delivery, cancel, wishlist" db-shopper.cjs
+npx supabase db reset >/dev/null 2>&1; suite "database: saved numbers, reviews, data export and deletion" db-privacy.cjs
 
 if [ "$FAILED" = "0" ]; then echo "== all suites passed"; else echo "== some suites FAILED"; fi
 exit "$FAILED"

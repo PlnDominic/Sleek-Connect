@@ -32,6 +32,16 @@ interface SavedAddress {
   is_default: boolean;
 }
 
+interface SavedMethod {
+  id: string;
+  network: MomoNetwork;
+  wallet_number: string;
+  label: string | null;
+  is_default: boolean;
+}
+
+const digitsOf = (n: string) => n.replace(/\D/g, '');
+
 const clockTime = new Intl.DateTimeFormat('en-GH', { hour: 'numeric', minute: '2-digit', timeZone: 'Africa/Accra' });
 
 const paidStatuses: OrderStatus['status'][] = ['paid', 'packed', 'out_for_delivery', 'delivered'];
@@ -50,6 +60,8 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
   const [method, setMethod] = useState<PaymentMethod>('momo');
   const [network, setNetwork] = useState<MomoNetwork>('mtn');
   const [wallet, setWallet] = useState('');
+  const [methods, setMethods] = useState<SavedMethod[]>([]);
+  const [saveWallet, setSaveWallet] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cardNotice, setCardNotice] = useState(false);
   const [placed, setPlaced] = useState<PlacedOrder | null>(null);
@@ -108,6 +120,32 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signedIn]);
 
+  // Signed-in shoppers can also pick a saved Mobile Money number; the default one fills the field.
+  useEffect(() => {
+    if (!signedIn) return;
+    let cancelled = false;
+    createBrowserSupabase()
+      .from('saved_payment_methods')
+      .select('id, network, wallet_number, label, is_default')
+      .order('is_default', { ascending: false })
+      .order('updated_at', { ascending: false })
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        setMethods(data);
+        const preferred = data.find((m) => m.is_default);
+        if (preferred) {
+          setNetwork((current) => (current === 'mtn' ? preferred.network : current));
+          setWallet((current) => current || preferred.wallet_number);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [signedIn]);
+
+  const matchesSaved = methods.some((m) => m.network === network && digitsOf(m.wallet_number) === digitsOf(wallet));
+  const canSaveWallet = signedIn && methods.length < 5 && digitsOf(wallet).length >= 9 && !matchesSaved;
+
   const networkLabel = momoNetworks.find((n) => n.id === network)!.label;
   const walletDisplay = wallet.trim() || 'your phone';
   // Prices follow the area's zone and free delivery (the database recalculates them when the order is placed).
@@ -149,6 +187,7 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
         items: orderedItems.map((i) => ({ slug: i.slug, size: i.sizeId, quantity: i.qty })),
         isGift: form.get('gift') === 'on',
         saveAddress: signedIn && saveAddress,
+        saveWallet: canSaveWallet && saveWallet,
       });
       if (!result.ok) {
         setError(result.error);
@@ -288,6 +327,29 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
                 </label>
                 {method === 'momo' && (
                   <>
+                    {methods.length > 0 && (
+                      <Field id="saved-momo" label="Saved numbers">
+                        <select
+                          id="saved-momo"
+                          value={methods.find((m) => m.network === network && digitsOf(m.wallet_number) === digitsOf(wallet))?.id ?? ''}
+                          onChange={(e) => {
+                            const chosen = methods.find((m) => m.id === e.target.value);
+                            if (!chosen) return;
+                            setNetwork(chosen.network);
+                            setWallet(chosen.wallet_number);
+                          }}
+                        >
+                          <option value="">Use a different number</option>
+                          {methods.map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {[m.label, momoNetworks.find((n) => n.id === m.network)?.label, `•••• ${digitsOf(m.wallet_number).slice(-4)}`]
+                                .filter(Boolean)
+                                .join(' · ')}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
+                    )}
                     <fieldset className={styles.fieldset}>
                       <legend className={styles.legend}>Network</legend>
                       <div className={styles.networks}>
@@ -313,6 +375,12 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
                         />
                       </Field>
                     </div>
+                    {canSaveWallet && (
+                      <label className={styles.saveWallet}>
+                        <input type="checkbox" checked={saveWallet} onChange={(e) => setSaveWallet(e.target.checked)} />
+                        Save this number for next time
+                      </label>
+                    )}
                   </>
                 )}
               </div>

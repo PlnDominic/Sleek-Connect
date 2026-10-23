@@ -431,6 +431,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"product_reviews": {
+                  Row: {
+                    "body": string,"created_at": string,"display_name": string,"id": string,"moderated_at": string | null,"moderated_by": string | null,"moderation_note": string | null,"order_id": string | null,"product_id": string,"rating": number,"status": Database["public"]['Enums']["review_status"],"title": string | null,"updated_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body": string,"created_at"?: string,"display_name": string,"id"?: string,"moderated_at"?: string | null,"moderated_by"?: string | null,"moderation_note"?: string | null,"order_id"?: string | null,"product_id": string,"rating": number,"status"?: Database["public"]['Enums']["review_status"],"title"?: string | null,"updated_at"?: string,"user_id"?: string
+                  }
+                  Update: {
+                    "body"?: string,"created_at"?: string,"display_name"?: string,"id"?: string,"moderated_at"?: string | null,"moderated_by"?: string | null,"moderation_note"?: string | null,"order_id"?: string | null,"product_id"?: string,"rating"?: number,"status"?: Database["public"]['Enums']["review_status"],"title"?: string | null,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "product_reviews_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "orders"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "product_reviews_product_id_fkey"
+      columns: ["product_id"]
+isOneToOne: false
+      referencedRelation: "products"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"product_sizes": {
                   Row: {
                     "code": string,"is_default": boolean,"label": string,"price_ghs": number,"product_id": string,"sort_order": number
@@ -541,6 +567,20 @@ isOneToOne: false
                   }
                   Update: {
                     "created_at"?: string,"id"?: string,"is_active"?: boolean,"name"?: string,"phone"?: string,"vehicle"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"saved_payment_methods": {
+                  Row: {
+                    "created_at": string,"id": string,"is_default": boolean,"label": string | null,"network": Database["public"]['Enums']["momo_network"],"updated_at": string,"user_id": string,"wallet_number": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"is_default"?: boolean,"label"?: string | null,"network": Database["public"]['Enums']["momo_network"],"updated_at"?: string,"user_id"?: string,"wallet_number": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"is_default"?: boolean,"label"?: string | null,"network"?: Database["public"]['Enums']["momo_network"],"updated_at"?: string,"user_id"?: string,"wallet_number"?: string
                   }
                   Relationships: [
                     
@@ -671,7 +711,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "admin_add_product_image":
+            "account_deletion_blocker":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"admin_add_product_image":
 { Args: { "p_alt"?: string,"p_path": string,"p_product_id": string }; Returns: string
                            },
 "admin_adjust_batch":
@@ -703,6 +746,11 @@ isOneToOne: false
 "admin_lift_recall":
 { Args: { "p_product_id": string }; Returns: undefined
                            },
+"admin_list_reviews":
+{ Args: { "p_status"?: Database["public"]['Enums']["review_status"] }; Returns: {
+              "body": string,"created_at": string,"display_name": string,"edited": boolean,"id": string,"moderated_by": string,"moderation_note": string,"product_name": string,"product_slug": string,"rating": number,"status": Database["public"]['Enums']["review_status"],"title": string
+            }[]
+                           },
 "admin_mark_delivered":
 { Args: { "p_code": string,"p_note"?: string,"p_order_id": string,"p_recipient": string }; Returns: string
                            },
@@ -711,6 +759,9 @@ isOneToOne: false
                            },
 "admin_mark_return_refunded":
 { Args: { "p_reference": string,"p_return_id": string }; Returns: undefined
+                           },
+"admin_moderate_review":
+{ Args: { "p_decision": string,"p_id": string,"p_note"?: string }; Returns: undefined
                            },
 "admin_pack_orders":
 { Args: { "p_order_ids": (string)[] }; Returns: {
@@ -747,6 +798,11 @@ isOneToOne: false
                            },
 "admin_return_to_stock":
 { Args: { "p_note"?: string,"p_order_id": string }; Returns: undefined
+                           },
+"admin_review_counts":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "pending": number,"published": number,"rejected": number
+            }[]
                            },
 "admin_save_banner":
 { Args: { "p": Json }; Returns: string
@@ -829,11 +885,23 @@ isOneToOne: false
 "delete_address":
 { Args: { "p_id": string }; Returns: undefined
                            },
+"delete_my_account":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"delete_my_review":
+{ Args: { "p_slug": string }; Returns: undefined
+                           },
+"delete_payment_method":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
 "expire_batches":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
 "expire_unpaid_orders":
 { Args: Record<PropertyKey, never>; Returns: number
+                           },
+"export_my_data":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "find_order":
 { Args: { "p_order_number": string,"p_phone": string }; Returns: string
@@ -852,6 +920,16 @@ isOneToOne: false
 "get_order_status":
 { Args: { "p_order_token": string }; Returns: {
               "order_number": string,"payment_status": Database["public"]['Enums']["payment_status"],"reserved_until": string,"status": Database["public"]['Enums']["order_status"],"total_ghs": number
+            }[]
+                           },
+"get_product_reviews":
+{ Args: { "p_limit"?: number,"p_slug": string }; Returns: {
+              "body": string,"created_at": string,"display_name": string,"id": string,"rating": number,"title": string
+            }[]
+                           },
+"get_review_summary":
+{ Args: { "p_slug": string }; Returns: {
+              "average": number,"review_count": number,"stars_1": number,"stars_2": number,"stars_3": number,"stars_4": number,"stars_5": number
             }[]
                            },
 "get_wishlist":
@@ -908,10 +986,21 @@ isOneToOne: false
               "created_at": string,"item_count": number,"order_number": string,"order_token": string,"status": Database["public"]['Enums']["order_status"],"total_ghs": number
             }[]
                            },
+"my_return_photo_paths":
+{ Args: Record<PropertyKey, never>; Returns: (string)[]
+                           },
+"my_review_status":
+{ Args: { "p_slug": string }; Returns: {
+              "body": string,"can_review": boolean,"moderation_note": string,"rating": number,"review_id": string,"status": Database["public"]['Enums']["review_status"],"title": string
+            }[]
+                           },
 "my_staff_access":
 { Args: Record<PropertyKey, never>; Returns: {
               "role": Database["public"]['Enums']["staff_role"]
             }[]
+                           },
+"owns_return_photo":
+{ Args: { "p_name": string }; Returns: boolean
                            },
 "place_order":
 { Args: { "p_customer": Json,"p_delivery_option": string,"p_is_gift"?: boolean,"p_items": Json,"p_payment": Json }; Returns: {
@@ -953,6 +1042,9 @@ isOneToOne: false
 "save_address":
 { Args: { "p": Json }; Returns: string
                            },
+"save_payment_method":
+{ Args: { "p": Json }; Returns: string
+                           },
 "search_products":
 { Args: { "p_limit"?: number,"p_query": string }; Returns: {
               "score": number,"slug": string
@@ -974,10 +1066,13 @@ isOneToOne: false
                            },
 "start_payment":
 { Args: { "p_order_token": string,"p_provider": string,"p_reference": string }; Returns: number
+                           },
+"submit_review":
+{ Args: { "p_body": string,"p_rating": number,"p_slug": string,"p_title": string }; Returns: Database["public"]['Enums']["review_status"]
                            }
           }
           Enums: {
-            "batch_status": "available"|"quarantined"|"recalled"|"expired","delivery_failure_reason": "customer_unreachable"|"customer_absent"|"wrong_address"|"refused"|"rider_issue"|"other","department": "beauty"|"kids","kids_filter": "bath"|"toys"|"clothing"|"gifts","momo_network": "mtn"|"telecel"|"at","notification_channel": "sms"|"email","notification_status": "queued"|"sending"|"sent"|"failed"|"not_sent","order_status": "pending_payment"|"paid"|"packing"|"packed"|"out_for_delivery"|"delivery_failed"|"delivered"|"cancelled"|"returned","payment_method": "momo"|"card","payment_status": "pending"|"succeeded"|"failed"|"expired","product_kind": "bottle"|"jar"|"tube"|"garment"|"toy"|"gift","return_outcome": "restock"|"quarantine"|"write_off","return_reason": "damaged"|"wrong_item"|"not_as_described"|"expired_or_near_expiry"|"changed_mind"|"other","return_status": "requested"|"approved"|"rejected"|"received"|"refunded","staff_role": "admin"|"catalogue"|"operations"|"support"|"finance"|"read_only","stock_movement_reason": "opening"|"received"|"sold"|"picked"|"returned"|"restocked"|"adjusted"|"damaged"|"lost"|"found"|"quarantined"|"released"|"recalled"|"expired"|"written_off","support_status": "open"|"answered"|"closed","support_topic": "delivery"|"damaged_or_wrong"|"payment"|"product_question"|"account"|"other"
+            "batch_status": "available"|"quarantined"|"recalled"|"expired","delivery_failure_reason": "customer_unreachable"|"customer_absent"|"wrong_address"|"refused"|"rider_issue"|"other","department": "beauty"|"kids","kids_filter": "bath"|"toys"|"clothing"|"gifts","momo_network": "mtn"|"telecel"|"at","notification_channel": "sms"|"email","notification_status": "queued"|"sending"|"sent"|"failed"|"not_sent","order_status": "pending_payment"|"paid"|"packing"|"packed"|"out_for_delivery"|"delivery_failed"|"delivered"|"cancelled"|"returned","payment_method": "momo"|"card","payment_status": "pending"|"succeeded"|"failed"|"expired","product_kind": "bottle"|"jar"|"tube"|"garment"|"toy"|"gift","return_outcome": "restock"|"quarantine"|"write_off","return_reason": "damaged"|"wrong_item"|"not_as_described"|"expired_or_near_expiry"|"changed_mind"|"other","return_status": "requested"|"approved"|"rejected"|"received"|"refunded","review_status": "pending"|"published"|"rejected","staff_role": "admin"|"catalogue"|"operations"|"support"|"finance"|"read_only","stock_movement_reason": "opening"|"received"|"sold"|"picked"|"returned"|"restocked"|"adjusted"|"damaged"|"lost"|"found"|"quarantined"|"released"|"recalled"|"expired"|"written_off","support_status": "open"|"answered"|"closed","support_topic": "delivery"|"damaged_or_wrong"|"payment"|"product_question"|"account"|"other"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1097,7 +1192,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "batch_status": ["available", "quarantined", "recalled", "expired"],"delivery_failure_reason": ["customer_unreachable", "customer_absent", "wrong_address", "refused", "rider_issue", "other"],"department": ["beauty", "kids"],"kids_filter": ["bath", "toys", "clothing", "gifts"],"momo_network": ["mtn", "telecel", "at"],"notification_channel": ["sms", "email"],"notification_status": ["queued", "sending", "sent", "failed", "not_sent"],"order_status": ["pending_payment", "paid", "packing", "packed", "out_for_delivery", "delivery_failed", "delivered", "cancelled", "returned"],"payment_method": ["momo", "card"],"payment_status": ["pending", "succeeded", "failed", "expired"],"product_kind": ["bottle", "jar", "tube", "garment", "toy", "gift"],"return_outcome": ["restock", "quarantine", "write_off"],"return_reason": ["damaged", "wrong_item", "not_as_described", "expired_or_near_expiry", "changed_mind", "other"],"return_status": ["requested", "approved", "rejected", "received", "refunded"],"staff_role": ["admin", "catalogue", "operations", "support", "finance", "read_only"],"stock_movement_reason": ["opening", "received", "sold", "picked", "returned", "restocked", "adjusted", "damaged", "lost", "found", "quarantined", "released", "recalled", "expired", "written_off"],"support_status": ["open", "answered", "closed"],"support_topic": ["delivery", "damaged_or_wrong", "payment", "product_question", "account", "other"]
+            "batch_status": ["available", "quarantined", "recalled", "expired"],"delivery_failure_reason": ["customer_unreachable", "customer_absent", "wrong_address", "refused", "rider_issue", "other"],"department": ["beauty", "kids"],"kids_filter": ["bath", "toys", "clothing", "gifts"],"momo_network": ["mtn", "telecel", "at"],"notification_channel": ["sms", "email"],"notification_status": ["queued", "sending", "sent", "failed", "not_sent"],"order_status": ["pending_payment", "paid", "packing", "packed", "out_for_delivery", "delivery_failed", "delivered", "cancelled", "returned"],"payment_method": ["momo", "card"],"payment_status": ["pending", "succeeded", "failed", "expired"],"product_kind": ["bottle", "jar", "tube", "garment", "toy", "gift"],"return_outcome": ["restock", "quarantine", "write_off"],"return_reason": ["damaged", "wrong_item", "not_as_described", "expired_or_near_expiry", "changed_mind", "other"],"return_status": ["requested", "approved", "rejected", "received", "refunded"],"review_status": ["pending", "published", "rejected"],"staff_role": ["admin", "catalogue", "operations", "support", "finance", "read_only"],"stock_movement_reason": ["opening", "received", "sold", "picked", "returned", "restocked", "adjusted", "damaged", "lost", "found", "quarantined", "released", "recalled", "expired", "written_off"],"support_status": ["open", "answered", "closed"],"support_topic": ["delivery", "damaged_or_wrong", "payment", "product_question", "account", "other"]
           }
         }
 } as const

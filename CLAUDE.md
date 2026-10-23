@@ -38,6 +38,11 @@
   notification. Stock is reserved by `place_order` and released by `release_order_reservation`.
 - The order token must not reach anything staff can read either. Return photos are stored under
   `public.return_photo_folder(token)` (a hash), not the token.
+- Shoppers can export and delete their own data only through `public.export_my_data` and `public.delete_my_account`
+  (orders are anonymised, not deleted). When you add a table or column holding shopper data, add it to both. Return photo
+  files are removed through the Storage API by the delete action, never by deleting `storage.objects` rows.
+- Product reviews reach the public only through `get_product_reviews` / `get_review_summary` (published ones, no account
+  ids). Anything that changes what reviews are visible must call `updateTag('catalog')`.
 - Anonymous functions that send customer messages or reveal orders (`create_support_case`, `find_order`) are rate
   limited in the database. Keep that in mind for any new public function that queues an SMS.
 

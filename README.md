@@ -381,15 +381,34 @@ The design shows values the business hasn't set yet (marked "To be set" in the B
   starter "Up To [X]% Off" card, is edited in Admin → Content. FDA number, ingredients, batch and expiry come from the
   catalogue and stock. The placeholders show only for products that don't have them yet.
 
+## Privacy, saved numbers and reviews
+
+- **Terms and privacy:** `/terms` and `/privacy` (linked from the footer and the sign-in consent). The text is in
+  `apps/web/src/app/terms` and `.../privacy`; bracketed items (business name, registration and Data Protection Commission
+  numbers, payment provider) are yours to fill in, and `lib/legal.ts` holds the "last updated" date to change whenever
+  you edit either page. The notice describes what the code does today (what is stored, who sees it, what deletion
+  removes), so update it when that changes.
+- **Your data (FR-057):** signed-in shoppers open Account → Privacy and your data to download everything we hold as a JSON
+  file, or delete their account. Deleting removes the sign-in, saved addresses, Mobile Money numbers, bag, saved items,
+  reviews and return photos; orders are kept for accounting but lose the name, phone, address, directions and wallet
+  number, and related support cases and queued messages are scrubbed. It is blocked while an order is still in
+  progress, and for staff accounts. Database side: `export_my_data`, `account_deletion_blocker`, `delete_my_account`.
+- **Saved Mobile Money numbers:** Account → Your Mobile Money numbers (up to 5). Checkout picks the default and offers to
+  save a new number. Only the network and number are stored, never a PIN or card details.
+- **Reviews:** customers who received a product can review it (one review each; new and edited reviews wait for approval).
+  Staff approve or reject them in Admin → Reviews (catalogue, support and admin roles; a rejection needs a reason the
+  customer sees). Published reviews, the average and the star breakdown show on the product page and in the search
+  engine data (`aggregateRating`). Reviews show the first name and last initial only.
+
 ## Not built yet
 
 - **Real payment, SMS and email providers:** the flows are in place (see [Payments](#payments) and
   [Customer messages](#customer-messages)), but no provider is connected yet. Card shows "coming soon".
-- **Accounts:** Google sign-in only; phone-number sign-in (PRD FR-002), editing the profile, signing out of all
-  devices, and data export or deletion (FR-057) aren't built. Addresses have no map pin.
+- **Accounts:** Google sign-in only; phone-number sign-in (PRD FR-002), editing the profile and signing out of all
+  devices aren't built. Addresses have no map pin.
 - **Admin:** no refunds through a payment provider, finance reports, or supplier and purchase-order records.
-- **Policy pages:** the Terms of Service and Privacy Notice (which the sign-in asks shoppers to accept) aren't written.
-  Their footer links are placeholders.
+- **Policy review:** the Terms of Service and Privacy Notice are written (see below) but are a starting draft. Have a
+  Ghanaian lawyer review them, and fill in the bracketed business details, before launch.
 - **Photos:** only the seven photos from the design handoff exist so far (`packages/shared/assets/images`, referenced by
   `image_key`). Upload real photos in the admin console.
 - **App icons:** still the framework defaults.

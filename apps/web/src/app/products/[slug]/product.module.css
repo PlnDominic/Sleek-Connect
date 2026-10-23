@@ -467,3 +467,17 @@
   font-weight: 700;
   color: var(--c-ink);
 }
+
+.ratingLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--c-text-muted);
+  text-decoration: none;
+}
+
+.ratingLink:hover {
+  color: var(--c-ink);
+}

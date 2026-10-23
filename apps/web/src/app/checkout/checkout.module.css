@@ -513,3 +513,17 @@
   line-height: 1.5;
   color: var(--c-accent-deep);
 }
+
+.saveWallet {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.saveWallet input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--c-accent);
+}

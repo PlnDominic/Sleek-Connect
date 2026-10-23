@@ -3,7 +3,6 @@ import { paymentMethodsLine } from '@sleek/shared';
 import { Logo } from './Logo';
 import styles from './chrome.module.css';
 
-// The privacy policy and terms of service aren't written yet, so they still link to '#'.
 const columns = [
   {
     title: 'Shop',
@@ -28,8 +27,8 @@ const columns = [
     links: [
       { label: 'Authenticity promise', href: '/help#authenticity' },
       { label: 'Product safety', href: '/help#safety' },
-      { label: 'Privacy policy', href: '#' },
-      { label: 'Terms of service', href: '#' },
+      { label: 'Privacy notice', href: '/privacy' },
+      { label: 'Terms of service', href: '/terms' },
     ],
   },
 ];

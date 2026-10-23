@@ -43,7 +43,10 @@ export function AccountView() {
   const consentBox = (
     <label className={styles.consent}>
       <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
-      <span>I&apos;m 18 or older and I accept the Terms of Service and Privacy Notice.</span>
+      <span>
+        I&apos;m 18 or older and I accept the <Link href="/terms" target="_blank">Terms of Service</Link> and{' '}
+        <Link href="/privacy" target="_blank">Privacy Notice</Link>.
+      </span>
     </label>
   );
 
@@ -84,6 +87,8 @@ export function AccountView() {
       <nav className={styles.links} aria-label="Account">
         <Link href="/account/orders">Your orders</Link>
         <Link href="/account/addresses">Your addresses</Link>
+        <Link href="/account/payment-methods">Your Mobile Money numbers</Link>
+        <Link href="/account/privacy">Privacy and your data</Link>
         <Link href="/saved">Saved items</Link>
         <Link href="/bag">Your bag</Link>
       </nav>

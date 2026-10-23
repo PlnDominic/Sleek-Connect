@@ -6,13 +6,16 @@ import { Icon } from '@/components/Icon';
 import { JsonLd } from '@/components/JsonLd';
 import { ProductImage } from '@/components/ProductImage';
 import { SaveButton } from '@/components/SaveButton';
+import { Stars } from '@/components/Stars';
 import { SiteFooter } from '@/components/SiteFooter';
 import { CompactHeader } from '@/components/SiteHeader';
 import { getDeliveryConfig, getProduct, getRelatedProducts, getStoreInfo, listProductSlugs } from '@/lib/catalog';
 import { estimate } from '@/lib/delivery';
+import { getProductReviews } from '@/lib/reviews';
 import { defaultShareImage, siteName, siteUrl } from '@/lib/site';
 import { ProductGallery } from './ProductGallery';
 import { ProductInfoTabs } from './ProductInfoTabs';
+import { ProductReviews } from './ProductReviews';
 import { PurchasePanel } from './PurchasePanel';
 import styles from './product.module.css';
 
@@ -38,11 +41,12 @@ export async function generateMetadata({ params }: PageProps<'/products/[slug]'>
 
 export default async function ProductPage({ params }: PageProps<'/products/[slug]'>) {
   const { slug } = await params;
-  const [product, related, store, delivery] = await Promise.all([
+  const [product, related, store, delivery, { summary, reviews }] = await Promise.all([
     getProduct(slug),
     getRelatedProducts(slug),
     getStoreInfo(),
     getDeliveryConfig(),
+    getProductReviews(slug),
   ]);
   if (!product) notFound();
 
@@ -69,6 +73,17 @@ export default async function ProductPage({ params }: PageProps<'/products/[slug
     url,
     ...(product.brand && { brand: { '@type': 'Brand', name: product.brand } }),
     ...(product.photos?.length && { image: product.photos.map((p) => p.url) }),
+    ...(summary.count > 0 && {
+      aggregateRating: { '@type': 'AggregateRating', ratingValue: summary.average.toFixed(1), reviewCount: summary.count, bestRating: 5, worstRating: 1 },
+      review: reviews.slice(0, 5).map((r) => ({
+        '@type': 'Review',
+        reviewRating: { '@type': 'Rating', ratingValue: r.rating, bestRating: 5, worstRating: 1 },
+        author: { '@type': 'Person', name: r.displayName },
+        datePublished: r.createdAt.slice(0, 10),
+        ...(r.title && { name: r.title }),
+        reviewBody: r.body,
+      })),
+    }),
     offers:
       new Set(prices).size > 1
         ? { '@type': 'AggregateOffer', ...offer, lowPrice: Math.min(...prices).toFixed(2), highPrice: Math.max(...prices).toFixed(2), offerCount: prices.length }
@@ -121,6 +136,11 @@ export default async function ProductPage({ params }: PageProps<'/products/[slug
               <SaveButton slug={product.slug} name={product.name} className={styles.save} withLabel />
             </div>
             <h1 className={styles.title}>{product.name}</h1>
+            {summary.count > 0 && (
+              <a href="#reviews" className={styles.ratingLink}>
+                <Stars rating={summary.average} /> {summary.average.toFixed(1)} ({summary.count} {summary.count === 1 ? 'review' : 'reviews'})
+              </a>
+            )}
             <p className={styles.description}>{details?.description ?? product.summary}</p>
           </div>
 
@@ -181,6 +201,8 @@ export default async function ProductPage({ params }: PageProps<'/products/[slug
       <section className={`container ${styles.tabsSection}`}>
         <ProductInfoTabs product={product} />
       </section>
+
+      <ProductReviews slug={product.slug} summary={summary} reviews={reviews} />
 
       <section className={`container ${styles.relatedSection}`}>
         <h2 className={styles.relatedTitle}>You may also like</h2>
