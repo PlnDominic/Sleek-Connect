@@ -958,6 +958,11 @@ isOneToOne: false
               "score": number,"slug": string
             }[]
                            },
+"search_suggestions":
+{ Args: { "p_limit"?: number,"p_min_score"?: number,"p_query": string }; Returns: {
+              "department": Database["public"]['Enums']["department"],"kind": string,"label": string,"score": number,"slug": string
+            }[]
+                           },
 "set_bag":
 { Args: { "p_items": Json }; Returns: undefined
                            },

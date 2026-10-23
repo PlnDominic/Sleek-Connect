@@ -8,6 +8,7 @@ import { SiteFooter } from '@/components/SiteFooter';
 import { SiteHeader } from '@/components/SiteHeader';
 import { getAgeBands } from '@/lib/catalog';
 import { buildListing, getListingData, readFilters, searchProducts } from '@/lib/listing';
+import { didYouMean } from '@/lib/search';
 
 export const metadata: Metadata = { title: 'Search', robots: { index: false, follow: true } };
 
@@ -37,6 +38,8 @@ async function SearchResults({ searchParams }: { searchParams: PageProps<'/searc
   const matches = products.filter((p) => rank.has(p.slug));
   const filters = readFilters(params, 'relevance');
   const listing = buildListing(matches, filters, { categories, ageBands, rank, showCategories: true });
+  // Only when nothing matched at all (not when filters hide the matches).
+  const corrections = q.length >= 2 && matches.length === 0 ? await didYouMean(q) : [];
 
   return (
     <>
@@ -73,6 +76,18 @@ async function SearchResults({ searchParams }: { searchParams: PageProps<'/searc
             empty={
               <>
                 <h3>No results for “{q}”</h3>
+                {corrections.length > 0 && (
+                  <p>
+                    Did you mean{' '}
+                    {corrections.map((c, i) => (
+                      <span key={c.href}>
+                        {i > 0 && ', '}
+                        <Link href={c.href}>{c.label}</Link>
+                      </span>
+                    ))}
+                    ?
+                  </p>
+                )}
                 <p>Check the spelling, try a shorter word, or browse a category:</p>
                 <div className={styles.chips}>
                   {categories.map((c) => (

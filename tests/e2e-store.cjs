@@ -123,6 +123,61 @@ const count = (page) => page.locator('#results-count:visible').first().textConte
   await recent.getByRole('button', { name: 'Clear recent searches' }).click();
   assert(await recent.count() === 0, 'recent searches can be cleared');
 
+  // --- Suggestions, synonyms and "did you mean" -------------------------------------------------------
+  await go(shopper, BASE + '/search');
+  const sbox = main(shopper).getByRole('searchbox');
+  await sbox.click();
+  await sbox.pressSequentially('serun', { delay: 40 });
+  const suggestions = shopper.getByRole('listbox', { name: 'Suggestions' });
+  await suggestions.waitFor();
+  assert(await suggestions.getByRole('option', { name: /Vitamin C Brightening Serum/ }).isVisible(), 'typing (with a typo) suggests the product as you go');
+  assert((await suggestions.getByRole('option').last().textContent()).includes('See all results for “serun”'), 'the last suggestion searches for what was typed');
+  await sbox.press('ArrowDown');
+  assert((await suggestions.getByRole('option').first().getAttribute('aria-selected')) === 'true' && Boolean(await sbox.getAttribute('aria-activedescendant')), 'arrow keys move through the suggestions');
+  await sbox.press('Enter');
+  await shopper.waitForURL(/\/products\/vitamin-c-brightening-serum/);
+  assert(true, 'choosing a suggestion with the keyboard opens that product');
+  await go(shopper, BASE + '/search');
+  await main(shopper).getByRole('searchbox').pressSequentially('shea', { delay: 40 });
+  await suggestions.waitFor();
+  await main(shopper).getByRole('searchbox').press('Escape');
+  assert((await suggestions.count()) === 0, 'Escape closes the suggestions');
+  await main(shopper).getByRole('searchbox').fill('');
+  await main(shopper).getByRole('searchbox').pressSequentially('little ne', { delay: 40 });
+  await suggestions.getByRole('option', { name: /Little Nest/ }).click();
+  await shopper.waitForURL(/\/shop\?brand=Little/);
+  assert(true, 'a brand suggestion opens that brand’s products');
+  await go(shopper, BASE + '/search?q=onesie');
+  assert(await main(shopper).getByRole('link', { name: /Organic Cotton Bodysuits/ }).first().isVisible(), 'synonyms: "onesie" finds the bodysuits');
+  await go(shopper, BASE + '/search?q=vitmnc');
+  assert((await main(shopper).textContent()).includes('No results for “vitmnc”') && await main(shopper).getByRole('link', { name: 'Vitamin C Brightening Serum' }).first().isVisible(), '"Did you mean" offers the closest product when nothing matched');
+
+  // --- Search engines: robots, sitemap, structured data, canonical links -----------------------------
+  const robots = await (await fetch(BASE + '/robots.txt')).text();
+  assert(/Disallow: \/admin/.test(robots) && /Disallow: \/checkout/.test(robots) && /Sitemap: \S+\/sitemap\.xml/.test(robots), 'robots.txt keeps crawlers out of private pages and points to the sitemap');
+  const sitemap = await (await fetch(BASE + '/sitemap.xml')).text();
+  assert(sitemap.includes('/products/vitamin-c-brightening-serum') && sitemap.includes('/shop/beauty/skincare') && sitemap.includes('/shop-by-age/1-2y'), 'the sitemap lists products, categories and age bands');
+  assert(!/\/(admin|checkout|bag|account|orders)/.test(sitemap), 'the sitemap leaves private pages out');
+  for (const path of ['/admin', '/bag', '/checkout', '/account', '/saved', '/track', '/api/search/suggest']) {
+    const res = await fetch(BASE + path, { redirect: 'manual' });
+    assert((res.headers.get('x-robots-tag') ?? '').includes('noindex'), `${path} is marked noindex`);
+  }
+  await go(shopper, BASE + '/products/vitamin-c-brightening-serum');
+  const ld = (await shopper.locator('script[type="application/ld+json"]').allTextContents()).map((t) => JSON.parse(t));
+  const productLd = ld.find((d) => d['@type'] === 'Product');
+  const offers = productLd?.offers;
+  assert(productLd?.name === 'Vitamin C Brightening Serum' && offers?.priceCurrency === 'GHS' && Number(offers.price ?? offers.lowPrice) > 0 && /schema\.org\/(InStock|OutOfStock)$/.test(offers.availability ?? 'schema.org/InStock'), 'product pages carry Product structured data with a price in cedis');
+  assert((ld.find((d) => d['@type'] === 'BreadcrumbList')?.itemListElement.length ?? 0) >= 3, 'and a breadcrumb trail');
+  assert((await shopper.locator('link[rel="canonical"]').getAttribute('href')).endsWith('/products/vitamin-c-brightening-serum'), 'the product has a canonical link');
+  assert(Boolean(await shopper.locator('meta[property="og:title"]').getAttribute('content')) && Boolean(await shopper.locator('meta[property="og:image"]').count()), 'and share previews (title and picture)');
+  await go(shopper, BASE + '/shop?brand=Little+Nest&sort=newest');
+  assert((await shopper.locator('link[rel="canonical"]').getAttribute('href')).endsWith('/shop'), 'filtered listings point search engines at the plain page');
+  await go(shopper, BASE + '/');
+  const homeLd = (await shopper.locator('script[type="application/ld+json"]').allTextContents()).map((t) => JSON.parse(t)).flatMap((d) => d['@graph'] ?? [d]);
+  assert(homeLd.some((d) => d['@type'] === 'WebSite' && d.potentialAction?.target?.urlTemplate?.includes('/search?q={search_term_string}')) && homeLd.some((d) => d['@type'] === 'Organization'), 'the home page describes the store and its search to search engines');
+  const ogImage = await fetch(BASE + '/opengraph-image');
+  assert(ogImage.ok && (ogImage.headers.get('content-type') ?? '').includes('image/png'), 'the store has a share picture');
+
   // --- Safety warnings (FR-017) ----------------------------------------------------------------------
   await go(shopper, BASE + '/products/wooden-stacking-blocks');
   const warning = shopper.locator('#safety-warning:visible');

@@ -9,6 +9,7 @@ import { SiteFooter } from '@/components/SiteFooter';
 import { SiteHeader } from '@/components/SiteHeader';
 import { getAgeBands, getCategories } from '@/lib/catalog';
 import { buildListing, getListingData, readFilters } from '@/lib/listing';
+import { defaultShareImage } from '@/lib/site';
 
 const departments: Record<Department, { name: string; blurb: string }> = {
   beauty: { name: 'Beauty', blurb: 'Authentic skincare, makeup, hair care and fragrance.' },
@@ -42,7 +43,10 @@ export async function generateMetadata({ params }: PageProps<'/shop/[[...path]]'
   const scope = await resolveScope((await params).path);
   if (!scope) return {};
   const title = scope.category?.name ?? (scope.department ? departments[scope.department].name : 'Shop all');
-  return { title, description: scope.department ? departments[scope.department].blurb : 'Every product at Sleek Connect Store.' };
+  const description = scope.department ? departments[scope.department].blurb : 'Every product at Sleek Connect Store.';
+  // Filtered and paged views of a listing all point at the plain page, so search engines see one copy.
+  const canonical = `/shop${scope.department ? `/${scope.department}` : ''}${scope.category ? `/${scope.category.id}` : ''}`;
+  return { title, description, alternates: { canonical }, openGraph: { title, description, url: canonical, images: [defaultShareImage] }, twitter: { card: 'summary_large_image', images: [defaultShareImage.url] } };
 }
 
 export default async function ShopPage({ params, searchParams }: PageProps<'/shop/[[...path]]'>) {

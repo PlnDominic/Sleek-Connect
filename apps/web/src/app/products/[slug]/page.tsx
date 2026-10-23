@@ -3,12 +3,14 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { city, defaultDeliveryArea, departmentLabels, formatPrice } from '@sleek/shared';
 import { Icon } from '@/components/Icon';
+import { JsonLd } from '@/components/JsonLd';
 import { ProductImage } from '@/components/ProductImage';
 import { SaveButton } from '@/components/SaveButton';
 import { SiteFooter } from '@/components/SiteFooter';
 import { CompactHeader } from '@/components/SiteHeader';
 import { getDeliveryConfig, getProduct, getRelatedProducts, getStoreInfo, listProductSlugs } from '@/lib/catalog';
 import { estimate } from '@/lib/delivery';
+import { defaultShareImage, siteName, siteUrl } from '@/lib/site';
 import { ProductGallery } from './ProductGallery';
 import { ProductInfoTabs } from './ProductInfoTabs';
 import { PurchasePanel } from './PurchasePanel';
@@ -21,7 +23,17 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps<'/products/[slug]'>): Promise<Metadata> {
   const { slug } = await params;
   const product = await getProduct(slug);
-  return product ? { title: product.name, description: product.details?.description ?? product.summary } : {};
+  if (!product) return {};
+  const description = product.details?.description ?? product.summary;
+  const photos = product.photos?.slice(0, 4).map((p) => ({ url: p.url, alt: p.alt ?? product.name }));
+  return {
+    title: product.name,
+    description,
+    alternates: { canonical: `/products/${product.slug}` },
+    // Without a photo of its own the page falls back to the store's share picture.
+    openGraph: { title: product.name, description, url: `/products/${product.slug}`, images: photos?.length ? photos : [defaultShareImage] },
+    twitter: { card: 'summary_large_image', title: product.name, description, images: photos?.length ? photos.map((p) => p.url) : [defaultShareImage.url] },
+  };
 }
 
 export default async function ProductPage({ params }: PageProps<'/products/[slug]'>) {
@@ -36,9 +48,50 @@ export default async function ProductPage({ params }: PageProps<'/products/[slug
 
   const details = product.details;
   const highlights = details?.highlights ?? [product.tag];
+  const base = siteUrl();
+  const url = `${base}/products/${product.slug}`;
+  const prices = (product.sizes?.length ? product.sizes.map((s) => s.price) : [product.price]).filter((n) => Number.isFinite(n));
+  const availability =
+    product.inStock === undefined ? undefined : `https://schema.org/${product.inStock ? 'InStock' : 'OutOfStock'}`;
+  const offer = {
+    priceCurrency: 'GHS',
+    ...(availability && { availability }),
+    itemCondition: 'https://schema.org/NewCondition',
+    url,
+    seller: { '@type': 'Organization', name: siteName },
+  };
+  const productData = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: details?.description ?? product.summary,
+    sku: product.slug,
+    url,
+    ...(product.brand && { brand: { '@type': 'Brand', name: product.brand } }),
+    ...(product.photos?.length && { image: product.photos.map((p) => p.url) }),
+    offers:
+      new Set(prices).size > 1
+        ? { '@type': 'AggregateOffer', ...offer, lowPrice: Math.min(...prices).toFixed(2), highPrice: Math.max(...prices).toFixed(2), offerCount: prices.length }
+        : { '@type': 'Offer', ...offer, price: (prices[0] ?? product.price).toFixed(2) },
+  };
+  const crumbs = [
+    { name: 'Home', path: '' },
+    { name: departmentLabels[product.department], path: `/shop/${product.department}` },
+    ...(product.collection
+      ? [{ name: product.collection, path: product.category ? `/shop/${product.department}/${product.category}` : `/shop/${product.department}` }]
+      : []),
+    { name: product.name, path: `/products/${product.slug}` },
+  ];
+  const breadcrumbData = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: crumbs.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.name, item: `${base}${c.path}` })),
+  };
 
   return (
     <>
+      <JsonLd data={productData} />
+      <JsonLd data={breadcrumbData} />
       <CompactHeader />
       <nav aria-label="Breadcrumb" className={`container ${styles.breadcrumb}`}>
         <Link href="/">Home</Link>

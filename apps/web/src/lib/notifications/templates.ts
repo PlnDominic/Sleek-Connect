@@ -1,5 +1,6 @@
 import { formatPrice } from '@sleek/shared';
 import { failureReasons, type DeliveryFailureReason } from '@/lib/orders';
+import { siteUrl } from '@/lib/site';
 
 /**
  * Values captured when the message was queued (see public.queue_order_notifications, and queue_return_message /
@@ -26,13 +27,6 @@ export interface NotificationPayload {
 export interface Message {
   subject: string;
   text: string;
-}
-
-/** The public address of the store, for links in messages. */
-export function siteUrl(): string {
-  if (process.env.SITE_URL) return process.env.SITE_URL.replace(/\/$/, '');
-  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
-  return 'http://localhost:3000';
 }
 
 const firstName = (name: string) => name.trim().split(/\s+/)[0] ?? name;

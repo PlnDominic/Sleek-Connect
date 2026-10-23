@@ -52,6 +52,18 @@ async function deliver(S, o, rider) {
   assert((await search('xyzzy')).length === 0, 'nonsense finds nothing');
   assert((await search('')).length === 0, 'empty search finds nothing');
 
+  // --- Suggestions: as-you-type completions and "did you mean" -------------------------------
+  const suggest = async (q) => (await anon.rpc('search_suggestions', { p_query: q })).data ?? [];
+  const s1 = await suggest('ser');
+  assert(s1[0]?.kind === 'product' && s1[0].slug === 'vitamin-c-brightening-serum' && s1[0].department === 'beauty', 'typing "ser" suggests the serum first, with its link details');
+  assert((await suggest('serun'))[0]?.label === 'Vitamin C Brightening Serum', 'a typo still suggests the right product');
+  assert((await suggest('little')).some((r) => r.kind === 'brand' && r.label === 'Little Nest'), 'brands are suggested');
+  assert((await suggest('skinc')).some((r) => r.kind === 'category' && r.slug === 'skincare'), 'categories are suggested, with a typo');
+  const wide = async (q) => (await anon.rpc('search_suggestions', { p_query: q, p_limit: 4, p_min_score: 0.3 })).data ?? [];
+  assert((await search('vitmnc')).length === 0 && (await wide('vitmnc')).some((r) => r.label === 'Vitamin C Brightening Serum'), 'a bigger typo finds nothing in search, but "did you mean" still points to the right product');
+  assert((await suggest('xyzzy')).length === 0 && (await suggest('a')).length === 0 && (await suggest('')).length === 0, 'nonsense, one letter and nothing suggest nothing');
+  assert((await suggest('100%_\\')).length === 0, 'wildcard characters are not treated as patterns');
+
   // --- Product fields: warnings, filters, returnable (FR-013, FR-017) -----------------------------
   const blocksId = sql("select id from public.products where slug = 'wooden-stacking-blocks'");
   const lipId = sql("select id from public.products where slug = 'velvet-matte-lip-colour'");

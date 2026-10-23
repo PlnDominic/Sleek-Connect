@@ -5,6 +5,7 @@ import { Icon } from '@/components/Icon';
 import { SiteFooter } from '@/components/SiteFooter';
 import { AnnouncementBar, SiteHeader } from '@/components/SiteHeader';
 import { getAgeBandProducts, getAgeBands } from '@/lib/catalog';
+import { defaultShareImage } from '@/lib/site';
 import { AgeBandProducts } from './AgeBandProducts';
 import styles from './shop-by-age.module.css';
 
@@ -15,7 +16,9 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps<'/shop-by-age/[band]'>): Promise<Metadata> {
   const { band } = await params;
   const current = (await getAgeBands()).find((b) => b.id === band);
-  return current ? { title: `Shop by age: ${current.label} (${current.stage})` } : {};
+  if (!current) return {};
+  const title = `Shop by age: ${current.label} (${current.stage})`;
+  return { title, alternates: { canonical: `/shop-by-age/${current.id}` }, openGraph: { title, url: `/shop-by-age/${current.id}`, images: [defaultShareImage] }, twitter: { card: 'summary_large_image', images: [defaultShareImage.url] } };
 }
 
 export default async function ShopByAgePage({ params }: PageProps<'/shop-by-age/[band]'>) {

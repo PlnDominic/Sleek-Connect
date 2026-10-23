@@ -132,7 +132,12 @@ async function placeOrder(items, { area = 'Osu', pay = true } = {}) {
   const mainPhoto = shopper.locator('main img[src*="product-images"]').first();
   await mainPhoto.waitFor();
   assert(await mainPhoto.evaluate((img) => img.complete && img.naturalWidth > 0), 'product page shows the uploaded photo (optimised by Next.js)');
-  assert(await until(async () => (await shopper.getByRole('button', { name: 'Serum bottle, front' }).count()) === 1), 'gallery thumbnails use the descriptions');
+  // The page may still be the one cached before the descriptions were saved; reload until the fresh one arrives.
+  assert(await until(async () => {
+    if ((await shopper.getByRole('button', { name: 'Serum bottle, front' }).count()) === 1) return true;
+    await go(shopper, BASE + '/products/vitamin-c-brightening-serum');
+    return false;
+  }, 15000), `gallery thumbnails use the descriptions (${await shopper.getByRole('button').evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')).filter(Boolean).join(' | '))})`);
   await go(shopper, BASE + '/shop/beauty/skincare');
   assert(await main(shopper).locator('article img[src*="product-images"]').count() >= 1, 'listing cards show the main photo');
 

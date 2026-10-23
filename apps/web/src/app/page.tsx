@@ -1,8 +1,10 @@
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { colors, formatPrice, pending, type Category, type IconName, type Product } from '@sleek/shared';
 import { AddToBagButton } from '@/components/AddToBagButton';
 import { Icon } from '@/components/Icon';
+import { JsonLd } from '@/components/JsonLd';
 import { NewArrivalsRail } from '@/components/NewArrivalsRail';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductImage } from '@/components/ProductImage';
@@ -12,7 +14,10 @@ import { Countdown } from '@/components/Countdown';
 import { getHomeCatalog } from '@/lib/catalog';
 import { getHomeContent, type Banner } from '@/lib/content';
 import { images } from '@/lib/images';
+import { siteName, siteUrl } from '@/lib/site';
 import styles from './home.module.css';
+
+export const metadata: Metadata = { alternates: { canonical: '/' } };
 
 export default async function HomePage() {
   const [{ categories, newArrivals, bestSellers }, { hero, promos, heroProducts }] = await Promise.all([
@@ -20,8 +25,37 @@ export default async function HomePage() {
     getHomeContent(),
   ]);
 
+  const base = siteUrl();
   return (
     <>
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@graph': [
+            {
+              '@type': 'Organization',
+              '@id': `${base}/#organization`,
+              name: siteName,
+              url: base,
+              address: { '@type': 'PostalAddress', addressLocality: 'Accra', addressCountry: 'GH' },
+              areaServed: 'Accra, Ghana',
+            },
+            {
+              '@type': 'WebSite',
+              '@id': `${base}/#website`,
+              url: base,
+              name: siteName,
+              publisher: { '@id': `${base}/#organization` },
+              // Lets search engines offer a search box for the store in their results.
+              potentialAction: {
+                '@type': 'SearchAction',
+                target: { '@type': 'EntryPoint', urlTemplate: `${base}/search?q={search_term_string}` },
+                'query-input': 'required name=search_term_string',
+              },
+            },
+          ],
+        }}
+      />
       <AnnouncementBar />
       <SiteHeader current="Home" />
       <main>

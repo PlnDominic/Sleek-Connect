@@ -81,3 +81,34 @@
   color: var(--c-text-muted);
   text-decoration: underline;
 }
+
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 8px;
+  border-radius: var(--r-md);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.optionActive {
+  background: var(--c-surface);
+}
+
+.optionKind {
+  flex: none;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+.optionAll {
+  margin-top: 4px;
+  border-top: 1px solid var(--c-line);
+  border-radius: 0 0 var(--r-md) var(--r-md);
+  font-weight: 600;
+}

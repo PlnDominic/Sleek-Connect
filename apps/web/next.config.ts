@@ -13,6 +13,13 @@ const nextConfig: NextConfig = {
     // path is allowed above, and hosted projects never take this branch.
     dangerouslyAllowLocalIP: localSupabase,
   },
+  // Private pages never belong in search results (robots.txt alone doesn't stop a linked page from being listed).
+  async headers() {
+    const noindex = [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }];
+    return ['/admin/:path*', '/account/:path*', '/bag', '/checkout', '/orders/:path*', '/saved', '/track', '/auth/:path*', '/api/:path*'].map(
+      (source) => ({ source, headers: noindex }),
+    );
+  },
   async redirects() {
     return [
       // Shop by age opens on toddlers, the band the design shows by default.

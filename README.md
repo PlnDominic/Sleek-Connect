@@ -355,6 +355,19 @@ Setup:
    `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET`, then restart with `npx supabase stop && npm run db:start`.
 3. Add the site's `/auth/callback` URL to the Supabase redirect URLs (see above).
 
+## Search and search engines
+
+- **Search box:** suggests products, brands and categories as you type (typos allowed, arrow keys and Enter work), and
+  remembers each device's recent searches. Searching for a word also searches its synonyms ("onesie" finds bodysuits);
+  the word lists are in `apps/web/src/lib/search-terms.ts`. A search with no results offers "Did you mean". The
+  database side is `public.search_products` and `public.search_suggestions`.
+- **SEO:** `/sitemap.xml` and `/robots.txt` are generated from the catalogue. Product pages carry Product and
+  breadcrumb structured data (prices in GHS, stock status, photos once uploaded), listings point to one canonical
+  address, and shared links show a preview picture (`app/opengraph-image.tsx`). The admin console, bag, checkout,
+  account, orders and the API are marked `noindex`.
+- Set `SITE_URL` to the live address (for example `https://sleekconnect.store`) so the sitemap, canonical links and
+  previews use it. After launch, add the site in Google Search Console and submit `/sitemap.xml`.
+
 ## Placeholders still to fill in
 
 The design shows values the business hasn't set yet (marked "To be set" in the BRD and PRD) as bracketed text such as

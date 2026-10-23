@@ -2,6 +2,7 @@ import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
 import type { Category, Product } from '@sleek/shared';
 import { allPublishedProducts, getCategories } from './catalog';
+import { expandQuery } from './search-terms';
 import { createSupabase } from './supabase/server';
 
 /** Products per listing page. */
@@ -181,15 +182,29 @@ export async function getListingData() {
   return { products, categories, featured };
 }
 
-/** Slugs matching a search query, best match first. */
+/** Slugs matching a search query (or a synonym of it, slightly lower), best match first. */
 export async function searchProducts(query: string): Promise<string[]> {
   'use cache';
   cacheLife('minutes');
   cacheTag('catalog');
 
-  const { data, error } = await createSupabase().rpc('search_products', { p_query: query, p_limit: 200 });
-  if (error) throw new Error(`Search failed: ${error.message}`);
-  return data.map((r) => r.slug);
+  const supabase = createSupabase();
+  const variants = expandQuery(query);
+  const results = await Promise.all(
+    variants.map(async (q) => {
+      const { data, error } = await supabase.rpc('search_products', { p_query: q, p_limit: 200 });
+      if (error) throw new Error(`Search failed: ${error.message}`);
+      return data;
+    }),
+  );
+  const best = new Map<string, number>();
+  results.forEach((rows, i) => {
+    for (const r of rows) {
+      const score = r.score * (i === 0 ? 1 : 0.95);
+      if (score > (best.get(r.slug) ?? -1)) best.set(r.slug, score);
+    }
+  });
+  return [...best].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([slug]) => slug);
 }
 
 /** Builds a listing URL from the current filters with some values changed. */
