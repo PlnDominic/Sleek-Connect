@@ -134,7 +134,20 @@ export async function getRelatedProducts(excludeSlug: string): Promise<Product[]
   cacheLife('minutes');
   cacheTag('catalog');
 
-  return (await slotProducts('product_related')).filter((p) => p.slug !== excludeSlug);
+  const [curated, target, all] = await Promise.all([slotProducts('product_related'), getProduct(excludeSlug), allPublishedProducts()]);
+  const selected = new Map<string, Product>();
+  curated.filter((p) => p.slug !== excludeSlug).forEach((p) => selected.set(p.slug, p));
+  if (target) {
+    const score = (p: Product) =>
+      (p.category === target.category ? 5 : 0) +
+      (p.brand && target.brand && p.brand === target.brand ? 4 : 0) +
+      (p.department === target.department ? 2 : 0) +
+      (p.ageBands?.some((a) => target.ageBands?.includes(a)) ? 2 : 0) +
+      (p.inStock === false ? -3 : 0) +
+      (p.popularity ?? 0) / 1000;
+    [...all].filter((p) => p.slug !== excludeSlug).sort((a, b) => score(b) - score(a) || a.name.localeCompare(b.name)).forEach((p) => selected.set(p.slug, p));
+  }
+  return [...selected.values()].slice(0, 6);
 }
 
 export async function listProductSlugs(): Promise<string[]> {

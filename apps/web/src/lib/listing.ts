@@ -4,6 +4,7 @@ import type { Category, Product } from '@sleek/shared';
 import { allPublishedProducts, getCategories } from './catalog';
 import { expandQuery } from './search-terms';
 import { createSupabase } from './supabase/server';
+interface DiscoveryMetric { slug: string; average_rating: number; review_count: number; popularity: number; }
 
 /** Products per listing page. */
 export const PAGE_SIZE = 24;
@@ -14,6 +15,8 @@ export const sortOptions = {
   newest: 'Newest',
   'price-asc': 'Price: low to high',
   'price-desc': 'Price: high to low',
+  rating: 'Top rated',
+  popular: 'Best selling',
 } as const;
 export type SortKey = keyof typeof sortOptions;
 
@@ -32,6 +35,7 @@ export interface Filters {
   age: string[];
   skin: string[];
   shade: string[];
+  rating: string[];
   sale: boolean;
   inStock: boolean;
   sort: SortKey;
@@ -51,6 +55,7 @@ export function readFilters(params: Params, defaultSort: SortKey): Filters {
     age: list(params.age),
     skin: list(params.skin),
     shade: list(params.shade),
+    rating: list(params.rating),
     sale: params.sale === '1',
     inStock: params.stock === '1',
     sort,
@@ -58,7 +63,7 @@ export function readFilters(params: Params, defaultSort: SortKey): Filters {
   };
 }
 
-type FacetKey = 'category' | 'brand' | 'price' | 'age' | 'skin' | 'shade';
+type FacetKey = 'category' | 'brand' | 'price' | 'age' | 'skin' | 'shade' | 'rating';
 
 const matches: Record<FacetKey, (p: Product, values: string[]) => boolean> = {
   category: (p, v) => v.includes(p.category),
@@ -67,6 +72,7 @@ const matches: Record<FacetKey, (p: Product, values: string[]) => boolean> = {
   age: (p, v) => Boolean(p.ageBands?.some((a) => v.includes(a))),
   skin: (p, v) => Boolean(p.skinTypes?.some((s) => v.includes(s))),
   shade: (p, v) => Boolean(p.shades?.some((s) => v.includes(s))),
+  rating: (p, v) => v.some((value) => (p.rating ?? 0) >= Number(value)),
 };
 
 function passes(p: Product, f: Filters, skip?: FacetKey): boolean {
@@ -135,8 +141,12 @@ export function buildListing(
         return b.price - a.price || byName(a, b);
       case 'newest':
         return (b.createdAt ?? '').localeCompare(a.createdAt ?? '') || byName(a, b);
+      case 'rating':
+        return (b.rating ?? 0) - (a.rating ?? 0) || (b.reviewCount ?? 0) - (a.reviewCount ?? 0) || byName(a, b);
+      case 'popular':
+        return (b.popularity ?? 0) - (a.popularity ?? 0) || byName(a, b);
       default:
-        return rank(a) - rank(b) || byName(a, b);
+        return (a.inStock === false ? 1 : 0) - (b.inStock === false ? 1 : 0) || rank(a) - rank(b) || (b.popularity ?? 0) - (a.popularity ?? 0) || byName(a, b);
     }
   });
 
@@ -151,6 +161,10 @@ export function buildListing(
     facet('age', 'Age', scope, f, context.ageBands.filter((a) => scope.some((p) => p.ageBands?.includes(a.id as never))).map((a) => ({ value: a.id, label: a.label }))),
     facet('skin', 'Skin type', scope, f, unique(scope.flatMap((p) => p.skinTypes ?? [])).map((v) => ({ value: v, label: v }))),
     facet('shade', 'Shade', scope, f, unique(scope.flatMap((p) => p.shades ?? [])).map((v) => ({ value: v, label: v }))),
+    facet('rating', 'Rating', scope, f, [
+      { value: '4', label: '4 stars & up' },
+      { value: '3', label: '3 stars & up' },
+    ]),
     facet('brand', 'Brand', scope, f, unique(scope.map((p) => p.brand)).map((v) => ({ value: v, label: v }))),
     facet('price', 'Price', scope, f, priceBands.map((b) => ({ value: b.id, label: b.label }))),
   ].filter((x): x is Facet => x !== null && x.options.some((o) => o.count > 0 || o.checked));
@@ -172,14 +186,20 @@ export async function getListingData() {
   cacheLife('minutes');
   cacheTag('catalog');
 
-  const [products, categories, bestSellers] = await Promise.all([
+  const [products, categories, bestSellers, metrics] = await Promise.all([
     allPublishedProducts(),
     getCategories(),
     createSupabase().from('merchandising_slots').select('position, products(slug)').eq('slot', 'home_best_sellers'),
+    createSupabase().rpc('get_product_discovery_metrics' as never),
   ]);
   // "Featured": best sellers first, in their order, then the rest.
   const featured: [string, number][] = (bestSellers.data ?? []).flatMap((r) => (r.products ? [[r.products.slug, r.position]] : []));
-  return { products, categories, featured };
+  const bySlug = new Map((metrics.data as unknown as DiscoveryMetric[] ?? []).map((m) => [m.slug, m]));
+  const enriched = products.map((p) => {
+    const m = bySlug.get(p.slug);
+    return m ? { ...p, rating: Number(m.average_rating), reviewCount: m.review_count, popularity: Number(m.popularity) } : p;
+  });
+  return { products: enriched, categories, featured };
 }
 
 /** Slugs matching a search query (or a synonym of it, slightly lower), best match first. */
@@ -217,6 +237,7 @@ export function listingHref(path: string, f: Filters, change: Partial<Record<str
     age: f.age,
     skin: f.skin,
     shade: f.shade,
+    rating: f.rating,
     sale: f.sale ? '1' : null,
     stock: f.inStock ? '1' : null,
     sort: f.sort,

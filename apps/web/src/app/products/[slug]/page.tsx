@@ -11,12 +11,15 @@ import { SiteFooter } from '@/components/SiteFooter';
 import { CompactHeader } from '@/components/SiteHeader';
 import { getDeliveryConfig, getProduct, getRelatedProducts, getStoreInfo, listProductSlugs } from '@/lib/catalog';
 import { estimate } from '@/lib/delivery';
-import { getProductReviews } from '@/lib/reviews';
+import { getProductQuestions, getProductReviews } from '@/lib/reviews';
 import { defaultShareImage, siteName, siteUrl } from '@/lib/site';
 import { ProductGallery } from './ProductGallery';
 import { ProductInfoTabs } from './ProductInfoTabs';
 import { ProductReviews } from './ProductReviews';
+import { ProductQuestions } from './ProductQuestions';
+import { RecentProducts } from './RecentProducts';
 import { PurchasePanel } from './PurchasePanel';
+import { RestockAlert } from './RestockAlert';
 import styles from './product.module.css';
 
 export async function generateStaticParams() {
@@ -39,14 +42,18 @@ export async function generateMetadata({ params }: PageProps<'/products/[slug]'>
   };
 }
 
-export default async function ProductPage({ params }: PageProps<'/products/[slug]'>) {
+export default async function ProductPage({ params, searchParams }: PageProps<'/products/[slug]'>) {
   const { slug } = await params;
-  const [product, related, store, delivery, { summary, reviews }] = await Promise.all([
+  const query = await searchParams;
+  const reviewPage = Math.max(1, Number(query.reviews) || 1);
+  const minRating = Math.min(5, Math.max(0, Number(query.rating) || 0));
+  const [product, related, store, delivery, { summary, reviews }, questions] = await Promise.all([
     getProduct(slug),
     getRelatedProducts(slug),
     getStoreInfo(),
     getDeliveryConfig(),
-    getProductReviews(slug),
+    getProductReviews(slug, reviewPage, minRating),
+    getProductQuestions(slug),
   ]);
   if (!product) notFound();
 
@@ -157,6 +164,7 @@ export default async function ProductPage({ params }: PageProps<'/products/[slug
           </div>
 
           <PurchasePanel product={product} />
+          {product.inStock === false && <RestockAlert slug={product.slug} />}
 
           <div className={styles.serviceBox}>
             <div className={styles.serviceRow}>
@@ -202,7 +210,8 @@ export default async function ProductPage({ params }: PageProps<'/products/[slug
         <ProductInfoTabs product={product} />
       </section>
 
-      <ProductReviews slug={product.slug} summary={summary} reviews={reviews} />
+      <ProductReviews slug={product.slug} summary={summary} reviews={reviews} page={reviewPage} minRating={minRating} />
+      <ProductQuestions slug={product.slug} questions={questions} />
 
       <section className={`container ${styles.relatedSection}`}>
         <h2 className={styles.relatedTitle}>You may also like</h2>
@@ -225,6 +234,7 @@ export default async function ProductPage({ params }: PageProps<'/products/[slug
           ))}
         </div>
       </section>
+      <RecentProducts current={product} />
       <SiteFooter />
     </>
   );

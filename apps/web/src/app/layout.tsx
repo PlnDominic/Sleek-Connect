@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import { AuthProvider } from '@/components/AuthProvider';
+import { CompareProvider } from '@/components/CompareProvider';
 import { WebBagProvider } from '@/components/WebBagProvider';
 import { WishlistProvider } from '@/components/WishlistProvider';
 import { siteName, siteUrl } from '@/lib/site';
@@ -32,7 +33,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
       <body>
         <AuthProvider>
           <WebBagProvider>
-            <WishlistProvider>{children}</WishlistProvider>
+            <WishlistProvider><CompareProvider>{children}</CompareProvider></WishlistProvider>
           </WebBagProvider>
         </AuthProvider>
       </body>

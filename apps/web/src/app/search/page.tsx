@@ -72,7 +72,7 @@ async function SearchResults({ searchParams }: { searchParams: PageProps<'/searc
             listing={listing}
             filters={filters}
             keep={{ q }}
-            sorts={['relevance', 'newest', 'price-asc', 'price-desc']}
+            sorts={['relevance', 'newest', 'rating', 'popular', 'price-asc', 'price-desc']}
             empty={
               <>
                 <h3>No results for “{q}”</h3>

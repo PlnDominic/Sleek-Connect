@@ -19,7 +19,7 @@ interface ListingViewProps {
 export function ListingView({ path, listing, filters, sorts, keep = {}, empty }: ListingViewProps) {
   const active =
     filters.category.length + filters.brand.length + filters.price.length + filters.age.length + filters.skin.length +
-    filters.shade.length + (filters.sale ? 1 : 0) + (filters.inStock ? 1 : 0);
+    filters.shade.length + filters.rating.length + (filters.sale ? 1 : 0) + (filters.inStock ? 1 : 0);
   const from = (listing.page - 1) * 24 + 1;
   const to = from + listing.products.length - 1;
 
@@ -55,7 +55,7 @@ export function ListingView({ path, listing, filters, sorts, keep = {}, empty }:
           </label>
         </fieldset>
         {active > 0 && (
-          <Link href={listingHref(path, filters, { category: null, brand: null, price: null, age: null, skin: null, shade: null, sale: null, stock: null, page: null }, keep)} className={styles.clear} scroll={false}>
+          <Link href={listingHref(path, filters, { category: null, brand: null, price: null, age: null, skin: null, shade: null, rating: null, sale: null, stock: null, page: null }, keep)} className={styles.clear} scroll={false}>
             Clear all filters
           </Link>
         )}

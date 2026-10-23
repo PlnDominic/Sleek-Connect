@@ -4,6 +4,7 @@ import { AddToBagButton } from './AddToBagButton';
 import { Icon } from './Icon';
 import { ProductImage } from './ProductImage';
 import { SaveButton } from './SaveButton';
+import { CompareButton } from './CompareButton';
 import styles from './ProductCard.module.css';
 
 /** Product tile used in the home page rails and listing grids. */
@@ -33,6 +34,7 @@ export function ProductCard({ product }: { product: Product }) {
       <Link href={`/products/${product.slug}`} className={styles.productCardName}>
         {product.name}
       </Link>
+      {product.reviewCount ? <span style={{ color: 'var(--c-accent)', fontSize: 12 }}>★ {product.rating?.toFixed(1)} ({product.reviewCount})</span> : null}
       <span className={styles.priceRow}>
         <strong>{formatPrice(product.price)}</strong>
         {product.was && <s>{formatPrice(product.was)}</s>}
@@ -48,6 +50,7 @@ export function ProductCard({ product }: { product: Product }) {
           <Icon name="bag" size={15} strokeWidth={2} />
         </AddToBagButton>
       </div>
+      <CompareButton product={product} />
     </article>
   );
 }

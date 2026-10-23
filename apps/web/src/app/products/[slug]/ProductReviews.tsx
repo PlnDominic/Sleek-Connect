@@ -1,12 +1,14 @@
+import Link from 'next/link';
 import { Stars } from '@/components/Stars';
 import type { Review, ReviewSummary } from '@/lib/reviews';
 import { ReviewForm } from './ReviewForm';
+import { ReviewReport } from './ReviewReport';
 import styles from './reviews.module.css';
 
 const date = new Intl.DateTimeFormat('en-GH', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Africa/Accra' });
 
 /** Customer reviews: the summary, each published review, and the form for people who received the product. */
-export function ProductReviews({ slug, summary, reviews }: { slug: string; summary: ReviewSummary; reviews: Review[] }) {
+export function ProductReviews({ slug, summary, reviews, page = 1, minRating = 0 }: { slug: string; summary: ReviewSummary; reviews: Review[]; page?: number; minRating?: number }) {
   return (
     <section id="reviews" className={`container ${styles.section}`} aria-labelledby="reviews-title">
       <h2 id="reviews-title" className={styles.title}>
@@ -39,6 +41,12 @@ export function ProductReviews({ slug, summary, reviews }: { slug: string; summa
             <p className={styles.muted}>No reviews yet.</p>
           )}
           <ReviewForm slug={slug} />
+          <div className={styles.actions} aria-label="Filter reviews by rating">
+            <span className={styles.muted}>Filter:</span>
+            <Link href="#reviews">All</Link>
+            <Link href="?rating=5#reviews">5 stars</Link>
+            <Link href="?rating=4#reviews">4+ stars</Link>
+          </div>
         </div>
         <ul className={styles.list}>
           {reviews.map((r) => (
@@ -49,11 +57,16 @@ export function ProductReviews({ slug, summary, reviews }: { slug: string; summa
               </div>
               <p className={styles.body}>{r.body}</p>
               <span className={styles.muted}>
-                {r.displayName} · Verified purchase · {date.format(new Date(r.createdAt))}
+                {r.displayName} · Verified purchase · {date.format(new Date(r.createdAt))} · <ReviewReport reviewId={r.id} />
               </span>
             </li>
           ))}
         </ul>
+        <nav aria-label="Review pages" className={styles.actions}>
+          {page > 1 && <Link href={`?reviews=${page - 1}${minRating ? `&rating=${minRating}` : ''}#reviews`}>← Newer reviews</Link>}
+          {page * 10 < summary.count && <Link href={`?reviews=${page + 1}${minRating ? `&rating=${minRating}` : ''}#reviews`}>Older reviews →</Link>}
+          <span className={styles.muted}>Showing {minRating ? `${minRating}+ star ` : ''}reviews</span>
+        </nav>
       </div>
     </section>
   );

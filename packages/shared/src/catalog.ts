@@ -106,6 +106,10 @@ export interface Product {
   shades?: string[];
   /** When the product was added, for "newest" sorting. */
   createdAt?: string;
+  /** Public discovery metrics; never includes customer data. */
+  rating?: number;
+  reviewCount?: number;
+  popularity?: number;
 }
 
 export interface ProductCompliance {
