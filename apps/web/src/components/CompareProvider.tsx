@@ -7,12 +7,24 @@ const KEY = 'sleek-connect:compare:v1';
 const MAX = 4;
 interface CompareValue { products: Product[]; has: (slug: string) => boolean; toggle: (product: Product) => void; clear: () => void; }
 const CompareContext = createContext<CompareValue | null>(null);
-function read(): Product[] { try { const value = JSON.parse(localStorage.getItem(KEY) ?? '[]'); return Array.isArray(value) ? value.slice(0, MAX) : []; } catch { return []; } }
+// The list lives in localStorage; it is read as the raw string so each call returns the same value until it changes.
+const EMPTY = '[]';
+const listeners = new Set<() => void>();
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  const onStorage = (e: StorageEvent) => { if (e.key === KEY) listener(); };
+  window.addEventListener('storage', onStorage);
+  return () => { listeners.delete(listener); window.removeEventListener('storage', onStorage); };
+}
+function snapshot(): string { try { return localStorage.getItem(KEY) ?? EMPTY; } catch { return EMPTY; } }
+const serverSnapshot = () => EMPTY;
+function parse(raw: string): Product[] { try { const value: unknown = JSON.parse(raw); return Array.isArray(value) ? (value as Product[]).slice(0, MAX) : []; } catch { return []; } }
 export function CompareProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
-  const stored = useSyncExternalStore(() => () => undefined, read, () => []);
+  const raw = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
+  const stored = useMemo(() => parse(raw), [raw]);
   const current = products.length ? products : stored;
-  const save = (next: Product[]) => { setProducts(next); try { localStorage.setItem(KEY, JSON.stringify(next)); } catch {} };
+  const save = (next: Product[]) => { setProducts(next); try { localStorage.setItem(KEY, JSON.stringify(next)); } catch {} listeners.forEach((l) => l()); };
   const value = useMemo<CompareValue>(() => ({
     products: current,
     has: (slug) => current.some((p) => p.slug === slug),
