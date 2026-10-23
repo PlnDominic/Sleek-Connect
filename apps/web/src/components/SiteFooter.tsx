@@ -33,25 +33,31 @@ const columns = [
   },
 ];
 
+const promises = [
+  { title: 'Authenticity checked', text: 'Every product is batch-checked before it ships.' },
+  { title: 'Reliable Accra delivery', text: 'Tracked from our shelf to your door.' },
+  { title: 'Friendly support', text: 'Real people, ready to help with any order.' },
+];
+
 export function SiteFooter() {
   return (
     <footer className={styles.footer}>
-      <div className={styles.footerAccent} aria-hidden="true" />
-      <div className={`container ${styles.footerTop}`}>
+      <div className={styles.footerPromises}>
+        <ul className={`container ${styles.footerPromiseList}`} aria-label="Store promises">
+          {promises.map((item) => (
+            <li key={item.title}>
+              <strong>{item.title}</strong>
+              <span>{item.text}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className={`container ${styles.footerMain}`}>
         <div className={styles.footerBrand}>
           <span className={styles.footerKicker}>The thoughtful way to shop</span>
-          <Logo size={28} />
+          <Logo size={30} />
           <span className={styles.footerBlurb}>
             Authentic beauty and safe, age-appropriate products for little ones, delivered across Accra.
-          </span>
-          <div className={styles.footerTrust} aria-label="Store promises">
-            <span>Authenticity checked</span>
-            <span>Reliable Accra delivery</span>
-            <span>Friendly support</span>
-          </div>
-          <span className={styles.footerPayments}>
-            <strong>Pay securely</strong>
-            <span>{paymentMethodsLine}</span>
           </span>
         </div>
         <div className={styles.footerLinks}>
@@ -66,6 +72,10 @@ export function SiteFooter() {
             </nav>
           ))}
         </div>
+        <span className={styles.footerPayments}>
+          <strong>Pay securely</strong>
+          <span>{paymentMethodsLine}</span>
+        </span>
       </div>
       <div className={styles.footerBottom}>
         <div className={`container ${styles.footerBottomInner}`}>
