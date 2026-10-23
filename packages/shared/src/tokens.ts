@@ -3,15 +3,15 @@
  * Web exposes these as CSS custom properties; mobile reads them directly.
  */
 export const colors = {
-  ink: '#111111',
+  ink: '#0B1F3A',
   canvas: '#FFFFFF',
 
-  // Brand accent (beauty, primary actions, active states)
-  accent: '#D43C0C',
-  accentDeep: '#B33209',
-  accentWarm: '#E2552C',
-  accentBlob: '#D9472A',
-  accentBlobLight: '#F07A5E',
+  // Brand accent: teal (primary actions, highlights, active states). Midnight navy is `ink`; white is `canvas`.
+  accent: '#0F766E',
+  accentDeep: '#0B5D57',
+  accentWarm: '#2BB3A6',
+  accentBlob: '#14857C',
+  accentBlobLight: '#5FC2B8',
 
   // Kids & safety accent
   teal: '#0F766E',
@@ -21,29 +21,29 @@ export const colors = {
   tealMuted: '#9CC9C1',
 
   gold: '#F2B53A',
-  blush: '#F4E3D7',
+  blush: '#E8EEF5',
 
   // Neutrals
-  surface: '#F5F5F5',
-  surfaceHero: '#F4F4F4',
-  surfaceSunken: '#EAEAEA',
-  surfaceMap: '#EFEFEF',
-  line: '#EBEBEB',
-  lineSoft: '#EFEFEF',
-  lineStrong: '#DDDDDD',
-  lineInactive: '#CCCCCC',
-  lineTrack: '#E0E0E0',
-  textBody: '#444444',
-  textSubtle: '#555555',
-  textMuted: '#666666',
-  textFaint: '#777777',
-  textDisabled: '#888888',
-  textPlaceholder: '#999999',
+  surface: '#F5F7FA',
+  surfaceHero: '#F3F6F9',
+  surfaceSunken: '#E7ECF2',
+  surfaceMap: '#EDF1F5',
+  line: '#E4E9F0',
+  lineSoft: '#ECF0F5',
+  lineStrong: '#D5DCE6',
+  lineInactive: '#C3CCD9',
+  lineTrack: '#DCE2EB',
+  textBody: '#2F3E57',
+  textSubtle: '#41506A',
+  textMuted: '#55617A',
+  textFaint: '#66728A',
+  textDisabled: '#8791A3',
+  textPlaceholder: '#98A1B1',
 
   // On dark surfaces
-  onDark: '#CFCFCF',
-  onDarkMuted: '#D6D6D6',
-  darkLine: '#2A2A2A',
+  onDark: '#CBD5E4',
+  onDarkMuted: '#D5DDEA',
+  darkLine: '#23395A',
 
   // Decorative skin-tone swatches used for the social-proof avatars
   avatar: ['#C9A38A', '#7E5A45', '#A9785B', '#5C3F30'],

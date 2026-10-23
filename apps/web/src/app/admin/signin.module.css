@@ -111,7 +111,7 @@
 .google:focus-visible,
 .link:focus-visible,
 .back:focus-visible {
-  outline: 3px solid rgba(212, 60, 12, 0.45);
+  outline: 3px solid rgba(15, 118, 110, 0.45);
   outline-offset: 3px;
 }
 
@@ -204,7 +204,7 @@
 .input:focus-visible {
   outline: none;
   border-color: var(--c-accent);
-  box-shadow: 0 0 0 4px rgba(212, 60, 12, 0.16);
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.16);
 }
 
 .input[aria-invalid='true'] {
@@ -236,7 +236,7 @@
 }
 
 .reveal:focus-visible {
-  outline: 3px solid rgba(212, 60, 12, 0.45);
+  outline: 3px solid rgba(15, 118, 110, 0.45);
   outline-offset: 1px;
 }
 
@@ -258,7 +258,7 @@
   cursor: pointer;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.25),
-    0 10px 24px -6px rgba(212, 60, 12, 0.5);
+    0 10px 24px -6px rgba(15, 118, 110, 0.5);
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
@@ -270,7 +270,7 @@
   filter: saturate(1.08);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.25),
-    0 14px 30px -6px rgba(212, 60, 12, 0.55);
+    0 14px 30px -6px rgba(15, 118, 110, 0.55);
 }
 
 .submit:active:not(:disabled) {
@@ -278,7 +278,7 @@
 }
 
 .submit:focus-visible {
-  outline: 3px solid rgba(212, 60, 12, 0.45);
+  outline: 3px solid rgba(15, 118, 110, 0.45);
   outline-offset: 3px;
 }
 
