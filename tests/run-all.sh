@@ -51,7 +51,7 @@ if [ "$ONLY" != "db" ]; then
   q "update public.inventory_levels i set on_hand = 0 from public.products p where p.id = i.product_id and p.slug = 'gentle-baby-wash-shampoo' and i.size_code = '400'"
   stop
   npm run build:web > "$OUT/build.log" 2>&1 || { echo "BUILD FAILED"; tail -30 "$OUT/build.log"; exit 1; }
-  start; suite "shop, bag, stock, payments" e2e-shop.cjs
+  start; suite "read-only production smoke" smoke-production.cjs; suite "shop, bag, stock, payments" e2e-shop.cjs
   fresh; start; suite "accounts and bag sync" e2e-account.cjs
   fresh; start; suite "admin console and order pages" e2e-admin.cjs; server_errors
   fresh; start; suite "shop pages, search, content, returns, help" e2e-store.cjs; server_errors

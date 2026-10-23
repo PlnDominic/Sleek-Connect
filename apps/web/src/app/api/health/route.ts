@@ -16,7 +16,10 @@ function integrationStatus() {
   const payment = configured(paymentName, getPaymentProvider());
   const sms = configured(smsName, smsProvider());
   const email = configured(emailName, emailProvider());
-  return { payment, sms, email, issues: [payment, sms, email].filter((state) => state === 'misconfigured').length };
+  const production = process.env.VERCEL_ENV === 'production';
+  const site = process.env.SITE_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  const auth = site && !site.includes('localhost') ? 'configured' : production ? 'misconfigured' : 'development';
+  return { payment, sms, email, auth, issues: [payment, sms, email, auth].filter((state) => state === 'misconfigured').length };
 }
 
 async function checkDatabase() {
