@@ -65,6 +65,10 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [cardNotice, setCardNotice] = useState(false);
   const [placed, setPlaced] = useState<PlacedOrder | null>(null);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoMessage, setPromoMessage] = useState<string | null>(null);
+  const [isGift, setIsGift] = useState(false);
+  const [giftMessage, setGiftMessage] = useState('');
   const [placing, startPlacing] = useTransition();
   const live = useOrderStatus(placed?.orderToken ?? null);
   const isPaid = !!live && paidStatuses.includes(live.status);
@@ -185,7 +189,9 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
         deliveryOption: deliveryId,
         payment: { method: 'momo', network, wallet },
         items: orderedItems.map((i) => ({ slug: i.slug, size: i.sizeId, quantity: i.qty })),
-        isGift: form.get('gift') === 'on',
+        isGift,
+        promoCode: promoCode.trim() || undefined,
+        giftMessage: giftMessage.trim() || undefined,
         saveAddress: signedIn && saveAddress,
         saveWallet: canSaveWallet && saveWallet,
       });
@@ -200,6 +206,8 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
         subtotal: result.subtotal,
         deliveryFee: result.deliveryFee,
         total: result.total,
+        discount: result.discount,
+        promoCode: result.promoCode,
         payment: result.payment,
         items: orderedItems,
       });
@@ -216,6 +224,7 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
       <form id="checkout-form" ref={formRef} className={styles.forms} onSubmit={onSubmit}>
         <fieldset disabled={!!placed} className={styles.fieldset}>
           <div className={styles.forms}>
+            {!signedIn && <p className={styles.note}>Checking out as a guest? No account is required. You can create one after your order is placed.</p>}
             <section className={styles.panel}>
               <h2 className={styles.panelTitle}>1. Delivery details</h2>
               {addresses.length > 0 && (
@@ -428,13 +437,15 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
               <label htmlFor="promo" className="visually-hidden">
                 Promo code
               </label>
-              <input id="promo" type="text" placeholder="Promo code" />
-              <button type="button">Apply</button>
+              <input id="promo" type="text" placeholder="Promo code" value={promoCode} onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoMessage(null); }} />
+              <button type="button" onClick={() => setPromoMessage(promoCode.trim() ? 'We’ll validate this code when your order is placed.' : 'Enter a promo code first.')}>Apply</button>
             </div>
+            {promoMessage && <p className={styles.note} role="status">{promoMessage}</p>}
             <label className={styles.giftCheck}>
-              <input type="checkbox" name="gift" form="checkout-form" />
+              <input type="checkbox" name="gift" form="checkout-form" checked={isGift} onChange={(e) => setIsGift(e.target.checked)} />
               This is a gift (wrap it and hide prices)
             </label>
+            {isGift && <label className={styles.field} htmlFor="gift-message"><span>Gift message <span className={styles.optional}>(optional)</span></span><textarea id="gift-message" name="gift_message" form="checkout-form" rows={3} maxLength={500} value={giftMessage} onChange={(e) => setGiftMessage(e.target.value)} placeholder="A little note for the recipient" /></label>}
           </>
         )}
         <dl className={styles.totals}>
@@ -446,6 +457,12 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
             <dt>Delivery</dt>
             <dd>{shownFee === 0 ? 'Free' : formatPriceOr(shownFee, '[fee]')}</dd>
           </div>
+          {placed && placed.discount > 0 && (
+            <div>
+              <dt>Discount {placed.promoCode && <span className={styles.muted}>({placed.promoCode})</span>}</dt>
+              <dd>−{formatPrice(placed.discount)}</dd>
+            </div>
+          )}
           <div className={styles.totalRow}>
             <dt>Total</dt>
             <dd>{formatPriceOr(total, '[total]')}</dd>
@@ -502,10 +519,14 @@ function OrderProgress({ order, live, prompt, onRetry }: OrderProgressProps) {
   if (paidStatuses.includes(status)) {
     return (
       <div role="status" className={styles.statusPanel} data-tone="success">
-        <strong>Payment received</strong>
-        <span>Thank you. Order {order.orderNumber} is confirmed and we&apos;re getting it ready.</span>
+        <strong>Order confirmed</strong>
+        <span>Payment received for order {order.orderNumber}. We&apos;re getting it ready.</span>
+        <span>{order.items.reduce((sum, item) => sum + item.qty, 0)} items · {formatPriceOr(order.total, '[total]')} · Held until {clockTime.format(new Date(order.reservedUntil))}</span>
         <Link href={`/orders/${order.orderToken}`} className={styles.retry}>
-          View order and receipt
+          View order, receipt and delivery updates
+        </Link>
+        <Link href={`/account?next=${encodeURIComponent(`/orders/${order.orderToken}`)}`} className={styles.statusLink}>
+          Create an account to keep this order with your history
         </Link>
       </div>
     );

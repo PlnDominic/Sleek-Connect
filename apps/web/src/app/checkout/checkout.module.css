@@ -142,7 +142,8 @@
 }
 
 .field input,
-.field select {
+.field select,
+.field textarea {
   height: 50px;
   border: 1px solid var(--c-line-strong);
   border-radius: var(--r-xxl);
@@ -150,6 +151,11 @@
   font-size: 15px;
   background: var(--c-canvas);
   width: 100%;
+}
+.field textarea {
+  min-height: 88px;
+  padding: 12px 14px;
+  resize: vertical;
 }
 
 .field select {
@@ -463,6 +469,10 @@
 
 .statusPanel[data-tone='success'] span {
   color: var(--c-canvas);
+}
+
+.statusPanel[data-tone='success'] strong {
+  font-size: 18px;
 }
 
 .statusPanel[data-tone='problem'] {

@@ -14,11 +14,24 @@ export default async function SlipPage({ params }: PageProps<'/admin/orders/[num
   if (!staff) return null;
   const { number } = await params;
   const db = staff.supabase;
-  const { data: order } = await db
+  const { data: rawOrder } = await db
     .from('orders')
-    .select('id, order_number, created_at, customer_name, phone, area, ghanapost_gps, rider_directions, is_gift, delivery_options(label)')
+    .select('id, order_number, created_at, customer_name, phone, area, ghanapost_gps, rider_directions, is_gift, gift_message, delivery_options(label)')
     .eq('order_number', number)
     .maybeSingle();
+  const order = rawOrder as unknown as {
+    id: string;
+    order_number: string;
+    created_at: string;
+    customer_name: string;
+    phone: string;
+    area: string;
+    ghanapost_gps: string | null;
+    rider_directions: string | null;
+    is_gift: boolean;
+    gift_message: string | null;
+    delivery_options: { label: string } | null;
+  } | null;
   if (!order) notFound();
   const [{ data: items }, { data: pick }] = await Promise.all([
     db.from('order_items').select('id, product_name, size_label, quantity, unit_price_ghs, line_total_ghs').eq('order_id', order.id).order('product_name'),
@@ -112,6 +125,7 @@ export default async function SlipPage({ params }: PageProps<'/admin/orders/[num
           <div className={styles.gift}>
             <strong>A gift for you</strong>
             <span>Prices are left out because this order is a gift. With love, from Sleek Connect Store.</span>
+            {order.gift_message && <span>Gift message: “{order.gift_message}”</span>}
           </div>
         )}
         <p className={styles.small}>Authentic, batch-checked products. Questions? Reply to your order SMS.</p>

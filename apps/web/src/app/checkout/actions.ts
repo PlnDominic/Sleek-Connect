@@ -10,6 +10,8 @@ export interface PlaceOrderInput {
   payment: { method: 'momo'; network: MomoNetwork; wallet: string };
   items: { slug: string; size?: string; quantity: number }[];
   isGift: boolean;
+  promoCode?: string;
+  giftMessage?: string;
   /** Also save the delivery details to the signed-in shopper's addresses. */
   saveAddress?: boolean;
   /** Also save the Mobile Money number to the signed-in shopper's saved numbers. */
@@ -27,6 +29,8 @@ export type PlaceOrderResult =
       subtotal: number;
       deliveryFee: number | null;
       total: number | null;
+      discount: number;
+      promoCode: string | null;
       payment: Exclude<PaymentStart, { kind: 'failed' }>;
     }
   | { ok: false; error: string };
@@ -84,7 +88,27 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
 
   // The generated types can't express that these are NULL until delivery fees are set.
   const deliveryFee = (data.delivery_fee_ghs as number | null) ?? null;
-  const total = (data.total_ghs as number | null) ?? null;
+  let total = (data.total_ghs as number | null) ?? null;
+  let discount = 0;
+  let appliedPromoCode: string | null = null;
+  if (input.promoCode?.trim()) {
+    const { data: promotion, error: promotionError } = await supabase.rpc('apply_order_promotion' as never, {
+      p_order_token: data.order_token,
+      p_code: input.promoCode.trim(),
+    } as never);
+    const promotionRow = promotion?.[0] as unknown as { discount_ghs: number; total_ghs: number; promo_code: string } | undefined;
+    if (promotionError || !promotionRow) return { ok: false, error: promotionError?.message ?? 'That promo code could not be applied.' };
+    discount = Number(promotionRow.discount_ghs ?? 0);
+    total = Number(promotionRow.total_ghs ?? total);
+    appliedPromoCode = promotionRow.promo_code ?? input.promoCode.trim().toUpperCase();
+  }
+  if (input.isGift && input.giftMessage?.trim()) {
+    const { error: giftError } = await supabase.rpc('set_order_gift_details' as never, {
+      p_order_token: data.order_token,
+      p_message: input.giftMessage.trim(),
+    } as never);
+    if (giftError) return { ok: false, error: giftError.message };
+  }
 
   const payment = await startOrderPayment(
     { token: data.order_token, number: data.order_number, total },
@@ -100,6 +124,8 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     subtotal: data.subtotal_ghs,
     deliveryFee,
     total,
+    discount,
+    promoCode: appliedPromoCode,
     payment,
   };
 }
