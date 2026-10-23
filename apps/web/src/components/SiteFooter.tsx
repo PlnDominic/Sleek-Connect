@@ -40,7 +40,7 @@ export function SiteFooter() {
       <div className={`container ${styles.footerTop}`}>
         <div className={styles.footerBrand}>
           <span className={styles.footerKicker}>The thoughtful way to shop</span>
-          <Logo size={28} onDark />
+          <Logo size={28} />
           <span className={styles.footerBlurb}>
             Authentic beauty and safe, age-appropriate products for little ones, delivered across Accra.
           </span>

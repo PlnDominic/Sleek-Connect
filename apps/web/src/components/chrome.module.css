@@ -291,12 +291,13 @@
 .footer {
   position: relative;
   overflow: hidden;
-  background: var(--c-ink);
-  color: var(--c-on-dark);
+  background: var(--c-canvas);
+  color: var(--c-text-body);
+  border-top: 1px solid var(--c-line);
 }
 
 .footerAccent {
-  height: 5px;
+  height: 3px;
   background: linear-gradient(90deg, var(--c-accent) 0%, var(--c-accent-warm) 48%, var(--c-teal) 100%);
 }
 
@@ -316,7 +317,7 @@
 }
 
 .footerKicker {
-  color: var(--c-accent-warm);
+  color: var(--c-accent);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -325,7 +326,7 @@
 
 .footerBlurb {
   max-width: 390px;
-  color: color-mix(in srgb, var(--c-on-dark) 88%, white);
+  color: var(--c-text-muted);
   font-size: 15px;
   line-height: 1.7;
 }
@@ -338,10 +339,11 @@
 }
 
 .footerTrust span {
-  padding: 7px 11px;
-  border: 1px solid var(--c-dark-line);
+  padding: 7px 12px;
+  border: 1px solid var(--c-line);
   border-radius: var(--r-pill);
-  color: var(--c-canvas);
+  background: var(--c-surface);
+  color: var(--c-ink);
   font-size: 11px;
   font-weight: 600;
 }
@@ -350,12 +352,12 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  color: var(--c-text-placeholder);
+  color: var(--c-text-faint);
   font-size: 12px;
 }
 
 .footerPayments strong {
-  color: var(--c-canvas);
+  color: var(--c-ink);
   font-size: 12px;
 }
 
@@ -376,7 +378,7 @@
 .footerCol strong {
   position: relative;
   padding-bottom: 10px;
-  color: var(--c-canvas);
+  color: var(--c-ink);
   font-size: 13px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -389,23 +391,24 @@
   width: 22px;
   height: 2px;
   border-radius: 2px;
-  background: var(--c-accent-warm);
+  background: var(--c-accent);
   content: '';
 }
 
 .footerCol a {
-  color: var(--c-on-dark);
+  color: var(--c-text-muted);
   text-decoration: none;
   transition: color 160ms ease, transform 160ms ease;
 }
 
 .footerCol a:hover {
-  color: var(--c-accent-warm);
+  color: var(--c-accent);
   transform: translateX(3px);
 }
 
 .footerBottom {
-  border-top: 1px solid var(--c-dark-line);
+  border-top: 1px solid var(--c-line);
+  background: var(--c-surface);
 }
 
 .footerBottomInner {
@@ -415,12 +418,12 @@
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 10px;
-  color: var(--c-text-placeholder);
+  color: var(--c-text-faint);
   font-size: 12px;
 }
 
 .footerBottom a {
-  color: var(--c-accent-warm);
+  color: var(--c-accent);
   font-weight: 600;
   text-decoration: underline;
 }
