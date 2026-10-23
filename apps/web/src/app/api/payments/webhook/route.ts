@@ -2,48 +2,45 @@ import { after } from 'next/server';
 import { dispatchNotifications } from '@/lib/notifications/dispatch';
 import { getPaymentProvider, WebhookSignatureError } from '@/lib/payments';
 import { createAdminSupabase } from '@/lib/supabase/admin';
+import { clientAddress, rateLimit, rateLimitResponse } from '@/lib/rate-limit';
+import { logger, requestId, withRequestId } from '@/lib/observability';
 import type { Json } from '@/lib/supabase/database.types';
 
-/**
- * Payment provider notifications. An order is marked paid only after the notification's signature checks out and the
- * provider confirms the outcome; `confirm_payment` then checks the amount and is safe to call repeatedly.
- */
+/** Payment provider notifications. Signature checks and confirm_payment make retries idempotent. */
 export async function POST(request: Request) {
+  const id = requestId(request);
+  const limit = rateLimit({ key: `payment-webhook:${clientAddress(request)}`, limit: 120, windowMs: 60_000 });
+  if (!limit.allowed) return rateLimitResponse(limit.retryAfter, id);
   const provider = getPaymentProvider();
-  if (!provider) return Response.json({ error: 'Online payment is switched off.' }, { status: 503 });
-
+  if (!provider) return withRequestId(Response.json({ error: 'Online payment is switched off.', requestId: id }, { status: 503 }), id);
   const rawBody = await request.text();
   let notified;
   try {
     notified = await provider.readWebhook(rawBody, request.headers);
   } catch (error) {
-    if (error instanceof WebhookSignatureError) return Response.json({ error: error.message }, { status: 401 });
-    return Response.json({ error: 'Unreadable notification.' }, { status: 400 });
+    if (error instanceof WebhookSignatureError) {
+      logger.warn('payment_webhook_signature_rejected', { requestId: id, provider: provider.name });
+      return withRequestId(Response.json({ error: error.message, requestId: id }, { status: 401 }), id);
+    }
+    logger.warn('payment_webhook_unreadable', { requestId: id, provider: provider.name });
+    return withRequestId(Response.json({ error: 'Unreadable notification.', requestId: id }, { status: 400 }), id);
   }
-  // Not a final outcome (for example "prompt delivered"): acknowledge so the provider stops retrying.
-  if (!notified) return Response.json({ received: true });
-
+  if (!notified) return withRequestId(Response.json({ received: true }), id);
   const verified = await provider.verify(notified);
-  if (!verified) return Response.json({ error: 'The provider has no final outcome yet.' }, { status: 409 });
-
-  const { data, error } = await createAdminSupabase()
-    .rpc('confirm_payment', {
-      p_provider: provider.name,
-      p_reference: verified.reference,
-      p_status: verified.status,
-      p_amount_ghs: verified.amountGhs,
-      p_event: verified.event as Json,
-    })
-    .single();
-
+  if (!verified) return withRequestId(Response.json({ error: 'The provider has no final outcome yet.', requestId: id }, { status: 409 }), id);
+  const { data, error } = await createAdminSupabase().rpc('confirm_payment', {
+    p_provider: provider.name,
+    p_reference: verified.reference,
+    p_status: verified.status,
+    p_amount_ghs: verified.amountGhs,
+    p_event: verified.event as Json,
+  }).single();
   if (error) {
-    // 22023: a payment we never started. Retrying won't help, so don't ask the provider to.
-    if (error.code === '22023') return Response.json({ error: error.message }, { status: 422 });
-    console.error('confirm_payment failed', error);
-    return Response.json({ error: 'Could not record the payment.' }, { status: 500 });
+    if (error.code === '22023') return withRequestId(Response.json({ error: error.message, requestId: id }, { status: 422 }), id);
+    logger.error('confirm_payment_failed', error, { requestId: id, provider: provider.name });
+    return withRequestId(Response.json({ error: 'Could not record the payment.', requestId: id }, { status: 500 }), id);
   }
-
-  // A paid order queues its confirmation message; send it once the provider has its answer.
   after(() => dispatchNotifications());
-  return Response.json({ received: true, orderStatus: data.order_status, paymentStatus: data.payment_status });
+  logger.info('payment_webhook_recorded', { requestId: id, provider: provider.name, orderStatus: data.order_status, paymentStatus: data.payment_status });
+  return withRequestId(Response.json({ received: true, orderStatus: data.order_status, paymentStatus: data.payment_status }), id);
 }
