@@ -66,6 +66,10 @@ This runbook covers the hosted Supabase project, Supabase Storage, and the Verce
 - Run `/api/health`, a product page, checkout initialization, payment webhook test, and the staff sign-in page after rollback.
 - If the rollback follows a schema change, keep the database migration backward-compatible until the application rollback is complete.
 
+## Applying a migration before a deploy
+
+Apply new migrations to the production Supabase project before the Vercel build runs: `next build` prerenders product pages and calls database functions such as `public.get_product_reviews`. If a build fails with "Could not find the function ... in the schema cache", confirm the function exists in the project that `NEXT_PUBLIC_SUPABASE_URL` points at, then run `notify pgrst, 'reload schema';` and push a fresh commit (a deployment that failed cannot be redeployed).
+
 ## Evidence to record
 
 For every backup or restore, record the timestamp, operator, source backup/PITR time, target project, migration version, validation results, customer impact, and follow-up actions. Store the record outside the production database so it remains available during an outage.
