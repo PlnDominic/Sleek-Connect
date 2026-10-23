@@ -4,6 +4,27 @@
   min-height: 50vh;
 }
 
+/* The sign-in / account page: title and card centred horizontally and vertically between the header and footer.
+   `main.centered` outranks the global .container padding, which would otherwise reset the vertical spacing. */
+main.centered {
+  min-height: 70vh;
+  padding-top: 48px;
+  padding-bottom: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+main.centered h1 {
+  text-align: center;
+}
+
+main.centered .panel {
+  width: 100%;
+  max-width: 480px;
+}
+
 .main h1 {
   font-weight: 700;
   font-size: 32px;

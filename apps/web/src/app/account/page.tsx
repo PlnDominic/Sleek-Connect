@@ -13,7 +13,7 @@ export default function AccountPage() {
   return (
     <>
       <SiteHeader />
-      <main className={`container ${styles.main}`}>
+      <main className={`container ${styles.main} ${styles.centered}`}>
         <h1>Your account</h1>
         <Suspense fallback={<p className={styles.muted}>Loading…</p>}>
           <AccountView />
