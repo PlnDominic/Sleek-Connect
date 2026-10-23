@@ -81,7 +81,7 @@ async function sessionCookies(email, password) {
   await pa.getByRole('button', { name: 'Add to bag' }).click();
   await go(pa, BASE + '/account');
   await pa.getByRole('heading', { name: 'Hello, Esi Mensah' }).waitFor();
-  assert(await pa.getByText(`Signed in with Google as ${email}`).isVisible(), 'account shows the signed-in email');
+  assert(await pa.getByText(email, { exact: true }).isVisible(), 'account shows the signed-in email');
   const confirm = pa.getByRole('button', { name: 'Confirm' });
   assert(await confirm.isDisabled(), 'confirm disabled until consent ticked');
   assert(savedBag(userId) === '', 'nothing saved to the account before consent');

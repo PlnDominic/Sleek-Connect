@@ -41,7 +41,7 @@ const count = (page) => page.locator('#results-count:visible').first().textConte
 
   // --- Content: banners and featured products (FR-010) ------------------------------------------
   await go(staff, BASE + '/admin/content');
-  const hero = staff.locator('details', { hasText: 'Home page hero' }).first();
+  const hero = staff.locator('details', { has: staff.locator('summary', { hasText: 'Home page hero' }) }).first();
   await hero.locator('summary').click();
   await hero.getByLabel('Title').fill('Fresh Picks\nFor You');
   await hero.getByRole('button', { name: 'Save banner' }).click();
@@ -61,7 +61,9 @@ const count = (page) => page.locator('#results-count:visible').first().textConte
   await add.getByRole('button', { name: 'Add banner' }).click();
   await staff.getByRole('status').filter({ hasText: 'Banner added.' }).waitFor();
   assert(true, 'staff add a promo banner');
-  const best = staff.locator('div:has(> h3:text-is("Best Sellers"))');
+  await go(staff, BASE + '/admin/content?tab=products');
+  const best = staff.locator('article', { has: staff.locator('h2:text-is("Best Sellers")') });
+  await best.locator('summary', { hasText: 'Edit list' }).click();
   await best.getByLabel('Products').fill('argan-hair-oil\n/products/vitamin-c-brightening-serum');
   await best.getByRole('button', { name: 'Save Best Sellers' }).click();
   await best.getByRole('status').filter({ hasText: 'Saved 2 products.' }).waitFor();

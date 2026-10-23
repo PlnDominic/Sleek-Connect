@@ -212,8 +212,9 @@ async function placeOrder(items, { area = 'Osu', pay = true } = {}) {
   await admin.rpc('cancel_my_order', { p_order_token: other.order_token });
   sql("update public.products set is_published = false where slug = 'wooden-stacking-blocks'");
   // Any admin save refreshes the store's cached catalogue.
-  await go(staff, BASE + '/admin/content');
-  const best = staff.locator('div:has(> h3:text-is("Best Sellers"))');
+  await go(staff, BASE + '/admin/content?tab=products');
+  const best = staff.locator('article', { has: staff.locator('h2:text-is("Best Sellers")') });
+  await best.locator('summary', { hasText: 'Edit list' }).click();
   await best.getByRole('button', { name: 'Save Best Sellers' }).click();
   await best.getByRole('status').waitFor();
   const v2 = await ctx();

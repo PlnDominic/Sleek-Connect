@@ -219,29 +219,29 @@ export function AccountView() {
     }
   }
 
+  const initial = (name ?? user.email ?? '?').trim().charAt(0).toUpperCase();
+  const tiles = [
+    { href: '/account/orders', title: 'Your orders', text: 'Track and review past orders' },
+    { href: '/account/addresses', title: 'Your addresses', text: 'Delivery addresses you have saved' },
+    { href: '/account/payment-methods', title: 'Mobile Money numbers', text: 'The numbers you pay with' },
+    { href: '/saved', title: 'Saved items', text: 'Products you want to come back to' },
+    { href: '/bag', title: 'Your bag', text: count > 0 ? `${count} ${count === 1 ? 'item' : 'items'} waiting` : 'Nothing in your bag yet' },
+    { href: '/account/privacy', title: 'Privacy and your data', text: 'Download or delete your data' },
+  ];
+
   return (
-    <section className={styles.panel} aria-labelledby="signed-in-title">
-      <h2 id="signed-in-title">{name ? `Hello, ${name}` : 'Signed in'}</h2>
-      {user.email && <p className={styles.muted}>Signed in with Google as {user.email}</p>}
+    <div className={styles.dash} role="region" aria-labelledby="signed-in-title">
+      <header className={styles.dashHead}>
+        <span className={styles.avatar} aria-hidden="true">{initial}</span>
+        <div className={styles.dashWho}>
+          <h2 id="signed-in-title">{name ? `Hello, ${name}` : 'Signed in'}</h2>
+          {user.email && <p className={styles.muted}>{user.email}</p>}
+        </div>
+      </header>
 
-      <nav className={styles.links} aria-label="Account">
-        <Link href="/account/orders">Your orders</Link>
-        <Link href="/account/addresses">Your addresses</Link>
-        <Link href="/account/payment-methods">Your Mobile Money numbers</Link>
-        <Link href="/account/privacy">Privacy and your data</Link>
-        <Link href="/saved">Saved items</Link>
-        <Link href="/bag">Your bag</Link>
-      </nav>
-
-      {consented ? (
-        <p className={styles.saved}>
-          Your bag is saved to this account, so it follows you to any device.{' '}
-          <Link href="/bag">
-            View bag{count > 0 ? ` (${count} ${count === 1 ? 'item' : 'items'})` : ''}
-          </Link>
-        </p>
-      ) : (
+      {!consented && (
         <div className={styles.confirm}>
+          <strong>One more step</strong>
           <p>Please confirm the following before we save your bag to your account.</p>
           {consentBox}
           <button
@@ -255,62 +255,93 @@ export function AccountView() {
         </div>
       )}
 
-      <form className={styles.profileForm} onSubmit={saveProfile}>
-        <h3>Profile</h3>
-        <label className={styles.field}>
-          <span>Name</span>
-          <input
-            className={styles.input}
-            name="name"
-            maxLength={120}
-            defaultValue={name ?? ''}
-            placeholder="Your name"
-            autoComplete="name"
-          />
-        </label>
-        <p className={styles.muted}>Your name is used on your account and to prefill checkout details.</p>
-        <button type="submit" className={styles.primary} disabled={busy}>Save profile</button>
-        {profileMessage && <p role="status" className={styles.saved}>{profileMessage}</p>}
-      </form>
+      <nav className={styles.tiles} aria-label="Account">
+        {tiles.map((tile) => (
+          <Link key={tile.href} href={tile.href} className={styles.tile}>
+            <strong>{tile.title}</strong>
+            <span>{tile.text}</span>
+          </Link>
+        ))}
+      </nav>
 
-      <form className={styles.preferenceForm} onSubmit={saveNotificationPreferences}>
-        <h3>Notifications</h3>
-        <p className={styles.muted}>Order, payment, delivery, return and support updates are always sent when needed. These choices control marketing messages only.</p>
-        <label className={styles.preference}>
-          <input type="checkbox" name="marketing_sms" defaultChecked={Boolean(user.user_metadata.marketing_sms_opted_in)} />
-          <span>Send me offers and new-arrival updates by SMS</span>
-        </label>
-        <label className={styles.preference}>
-          <input type="checkbox" name="marketing_email" defaultChecked={Boolean(user.user_metadata.marketing_email_opted_in)} />
-          <span>Send me offers and new-arrival updates by email</span>
-        </label>
-        <button type="submit" className={styles.primary} disabled={busy}>Save notification preferences</button>
-      </form>
+      {consented && (
+        <p className={styles.saved}>Your bag is saved to this account, so it follows you to any device.</p>
+      )}
 
-      <button
-        type="button"
-        className={styles.secondary}
-        disabled={busy}
-        onClick={() => run(signOut, "We couldn't sign you out. Please try again.")}
-      >
-        Sign out
-      </button>
-      <p className={styles.muted}>Signing out empties the bag on this device. It stays saved in your account.</p>
-      <button
-        type="button"
-        className={styles.secondary}
-        disabled={busy}
-        onClick={() => run(signOutEverywhere, "We couldn't sign you out of your other sessions. Please try again.")}
-      >
-        Sign out everywhere
-      </button>
-      <p className={styles.muted}>Use this if you have left your account signed in on another device.</p>
+      <div className={styles.dashGrid}>
+        <form className={styles.card} onSubmit={saveProfile}>
+          <h3>Profile</h3>
+          <label className={styles.field}>
+            <span>Name</span>
+            <input
+              className={styles.input}
+              name="name"
+              maxLength={120}
+              defaultValue={name ?? ''}
+              placeholder="Your name"
+              autoComplete="name"
+            />
+          </label>
+          <p className={styles.muted}>Your name is used on your account and to prefill checkout details.</p>
+          <button type="submit" className={styles.primary} disabled={busy}>Save profile</button>
+        </form>
+
+        <form className={styles.card} onSubmit={saveNotificationPreferences}>
+          <h3>Notifications</h3>
+          <p className={styles.muted}>
+            Order, payment, delivery, return and support updates are always sent when needed. These choices control
+            marketing messages only.
+          </p>
+          <label className={styles.preference}>
+            <input type="checkbox" name="marketing_sms" defaultChecked={Boolean(user.user_metadata.marketing_sms_opted_in)} />
+            <span>Offers and new-arrival updates by SMS</span>
+          </label>
+          <label className={styles.preference}>
+            <input type="checkbox" name="marketing_email" defaultChecked={Boolean(user.user_metadata.marketing_email_opted_in)} />
+            <span>Offers and new-arrival updates by email</span>
+          </label>
+          <button type="submit" className={styles.primary} disabled={busy}>Save preferences</button>
+        </form>
+      </div>
+
+      {profileMessage && (
+        <p role="status" className={styles.saved}>
+          {profileMessage}
+        </p>
+      )}
+
+      <section className={styles.card} aria-labelledby="sessions-title">
+        <h3 id="sessions-title">Sign out</h3>
+        <div className={styles.sessionRow}>
+          <p className={styles.muted}>Signing out empties the bag on this device. It stays saved in your account.</p>
+          <button
+            type="button"
+            className={styles.secondary}
+            disabled={busy}
+            onClick={() => run(signOut, "We couldn't sign you out. Please try again.")}
+          >
+            Sign out
+          </button>
+        </div>
+        <div className={styles.sessionRow}>
+          <p className={styles.muted}>Use this if you have left your account signed in on another device.</p>
+          <button
+            type="button"
+            className={styles.secondary}
+            disabled={busy}
+            onClick={() => run(signOutEverywhere, "We couldn't sign you out of your other sessions. Please try again.")}
+          >
+            Sign out everywhere
+          </button>
+        </div>
+      </section>
+
       {error && (
         <p role="alert" className={styles.error}>
           {error}
         </p>
       )}
-    </section>
+    </div>
   );
 }
 
