@@ -1,24 +1,26 @@
 import Link from 'next/link';
-import { departmentIds, departmentLabels, formatPrice, type Category } from '@sleek/shared';
+import { departmentIds, departmentLabels, formatPrice, type Category, type Department } from '@sleek/shared';
 import { getCategories, getStoreInfo } from '@/lib/catalog';
 import { BagButton } from './BagButton';
 import { Icon } from './Icon';
 import { Logo } from './Logo';
+import { MobileMenu } from './MobileMenu';
 import { SavedLink } from './SavedLink';
 import { SearchBox } from './SearchBox';
-import styles from './chrome.module.css';
+import chrome from './chrome.module.css';
+import styles from './header.module.css';
 
 export async function AnnouncementBar() {
   const { freeDeliveryThreshold } = await getStoreInfo();
   return (
-    <div className={styles.announce}>
+    <div className={chrome.announce}>
       {freeDeliveryThreshold !== undefined && (
-        <span className={styles.announceItem}>
+        <span className={chrome.announceItem}>
           <Icon name="truck" size={15} strokeWidth={2} />
           Free delivery in Accra on orders over {formatPrice(freeDeliveryThreshold)}
         </span>
       )}
-      <span className={styles.announceItem}>
+      <span className={chrome.announceItem}>
         <Icon name="shieldCheck" size={15} strokeWidth={2} />
         100% authentic, batch-checked products
       </span>
@@ -26,71 +28,96 @@ export async function AnnouncementBar() {
   );
 }
 
-const navLinks = [
-  { label: 'Home', href: '/' },
-  { label: 'Shop', href: '/shop' },
-  { label: 'Categories', href: '/shop', menu: true },
+/** Links after the departments, on the right of the category bar and in the phone menu. */
+const extraLinks = [
   { label: 'Shop by Age', href: '/shop-by-age' },
   { label: 'Contact', href: '/help#contact' },
 ];
 
-
-/** The Categories menu: every department and its categories. */
-function CategoriesMenu({ categories, current }: { categories: Category[]; current: boolean }) {
+/** One department in the category bar, with its categories in a dropdown. */
+function DepartmentMenu({ id, categories, current }: { id: Department; categories: Category[]; current: boolean }) {
+  const label = departmentLabels[id];
   return (
-    <div className={styles.menu}>
-      <Link href="/shop" aria-current={current ? 'page' : undefined} aria-haspopup="true">
-        Categories
+    <div className={styles.deptItem}>
+      <Link href={`/shop/${id}`} className={styles.navLink} aria-current={current ? 'page' : undefined} aria-haspopup="true">
+        {label}
         <Icon name="chevronDown" size={14} strokeWidth={2} />
       </Link>
-      <div className={styles.menuPanel}>
-        {departmentIds.map((d) => (
-          <div key={d} className={styles.menuColumn}>
-            <Link href={`/shop/${d}`} className={styles.menuHeading}>
-              {departmentLabels[d]}
-            </Link>
-            {categories
-              .filter((c) => c.department === d)
-              .map((c) => (
-                <Link key={c.id} href={`/shop/${d}/${c.id}`}>
-                  {c.name}
-                </Link>
-              ))}
+      <div className={styles.panel}>
+        <Link href={`/shop/${id}`} className={styles.panelAll}>
+          Shop all {label}
+          <Icon name="arrowRight" size={15} strokeWidth={2} />
+        </Link>
+        {categories.length > 0 && (
+          <div className={styles.panelLinks} data-wide={categories.length > 5 ? 'true' : undefined}>
+            {categories.map((c) => (
+              <Link key={c.id} href={`/shop/${id}/${c.id}`}>
+                {c.name}
+              </Link>
+            ))}
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
 }
 
-/** Full header with the main navigation, used on the home page. */
+/**
+ * The site header. Desktop: the logo, a search bar and the account, saved and bag links on top, with a category bar
+ * underneath. Phones: one row with a menu button that opens a drawer. Stays at the top of the page as you scroll.
+ */
 export async function SiteHeader({ current }: { current?: string }) {
   const categories = await getCategories();
+  const byDepartment = (d: Department) => categories.filter((c) => c.department === d);
   return (
     <header className={styles.header}>
-      <div className={`container ${styles.headerInner}`}>
-        <Logo />
-        <nav aria-label="Main" className={styles.nav}>
-          {navLinks.map((link) =>
-            link.menu ? (
-              <CategoriesMenu key={link.label} categories={categories} current={link.label === current} />
-            ) : (
-              <Link key={link.label} href={link.href} aria-current={link.label === current ? 'page' : undefined}>
-                {link.label}
-              </Link>
-            ),
-          )}
-        </nav>
+      <div className={`container ${styles.top}`}>
+        <MobileMenu
+          departments={departmentIds.map((d) => ({
+            id: d,
+            label: departmentLabels[d],
+            categories: byDepartment(d).map((c) => ({ id: c.id, name: c.name })),
+          }))}
+          links={extraLinks}
+        />
+        <Logo size={26} />
+        <div className={styles.search}>
+          <SearchBox compact />
+        </div>
         <div className={styles.actions}>
-          <Link href="/search" aria-label="Search" className={styles.iconButton}>
+          <Link href="/search" aria-label="Search" className={`${chrome.iconButton} ${styles.searchIcon}`}>
             <Icon name="search" size={21} />
           </Link>
-          <SavedLink className={styles.wishlist} />
-          <Link href="/account" aria-label="Account" className={styles.iconButton}>
+          <SavedLink className={styles.saved} />
+          <Link href="/account" aria-label="Account" className={styles.account}>
             <Icon name="user" size={21} />
+            <span className={styles.accountLabel}>Account</span>
           </Link>
-          <BagButton variant="icon" />
+          <BagButton variant="pill" />
         </div>
+      </div>
+      <div className={styles.navBar}>
+        <nav aria-label="Main" className={`container ${styles.nav}`}>
+          <Link href="/shop" className={styles.navLink} aria-current={current === 'Shop' ? 'page' : undefined}>
+            Shop All
+          </Link>
+          {departmentIds.map((d) => (
+            <DepartmentMenu key={d} id={d} categories={byDepartment(d)} current={current === departmentLabels[d]} />
+          ))}
+          <span className={styles.navEnd}>
+            {extraLinks.map((link) => (
+              <Link
+                key={link.label}
+                href={link.href}
+                className={styles.navLink}
+                data-quiet="true"
+                aria-current={link.label === current ? 'page' : undefined}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </span>
+        </nav>
       </div>
     </header>
   );
@@ -99,8 +126,8 @@ export async function SiteHeader({ current }: { current?: string }) {
 /** Search-first header used on product pages. */
 export function CompactHeader() {
   return (
-    <header className={styles.compact}>
-      <div className={`container ${styles.compactInner}`}>
+    <header className={chrome.compact}>
+      <div className={`container ${chrome.compactInner}`}>
         <Logo />
         <SearchBox compact />
         <BagButton variant="pill" />

@@ -13,7 +13,7 @@ export function BagButton({ variant }: { variant: 'icon' | 'pill' }) {
     return (
       <Link href="/bag" aria-label={label} className={styles.bagPill}>
         <Icon name="bag" />
-        Bag <span className={styles.bagPillCount}>{count}</span>
+        <span className={styles.bagPillLabel}>Bag</span> <span className={styles.bagPillCount}>{count}</span>
       </Link>
     );
   }

@@ -12,6 +12,18 @@
   color: var(--c-ink);
 }
 
+@media (max-width: 720px) {
+  .logo {
+    font-size: calc(var(--logo-size, 24px) * 0.72);
+  }
+}
+
+@media (max-width: 400px) {
+  .logo {
+    font-size: calc(var(--logo-size, 24px) * 0.62);
+  }
+}
+
 .logoOnDark {
   color: var(--c-canvas);
 }
@@ -47,106 +59,32 @@
   color: var(--c-gold);
 }
 
-/* Full site header */
-.header {
-  background: var(--c-canvas);
-  border-bottom: 1px solid var(--c-line-soft);
-}
-
-.headerInner {
-  min-height: 80px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px 32px;
-}
-
-.nav {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 34px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.nav a {
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.nav a[aria-current='page'] {
-  color: var(--c-accent);
-  font-weight: 600;
-  padding: 28px 0 26px;
-  border-bottom: 2px solid var(--c-accent);
-}
-
-.menu {
-  position: relative;
-}
-
-.menuPanel {
-  display: none;
-  position: absolute;
-  z-index: 30;
-  top: 100%;
-  left: -20px;
-  padding: 18px 20px;
-  gap: 32px;
-  grid-template-columns: repeat(2, max-content);
-  background: var(--c-canvas);
-  border: 1px solid var(--c-line);
-  border-radius: var(--r-xl);
-  box-shadow: 0 16px 40px rgb(0 0 0 / 0.12);
-}
-
-.menu:hover .menuPanel,
-.menu:focus-within .menuPanel {
-  display: grid;
-}
-
-.menuColumn {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.menuColumn a {
-  white-space: nowrap;
-}
-
-.menuColumn .menuHeading {
-  font-weight: 700;
-}
-
-.actions {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
+/* Header icon buttons (also used by the saved-items and bag links) */
 .iconButton {
   position: relative;
   width: 44px;
   height: 44px;
   border: 0;
   background: transparent;
+  border-radius: var(--r-pill);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--c-ink);
+  text-decoration: none;
+}
+
+.iconButton:hover {
+  background: var(--c-surface);
 }
 
 .badge {
   position: absolute;
-  right: 5px;
-  top: 6px;
-  min-width: 16px;
-  height: 16px;
+  right: 3px;
+  top: 4px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
   border-radius: var(--r-pill);
   background: var(--c-accent);
   color: var(--c-canvas);
@@ -155,76 +93,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-/* Keep the logo, menu and icons on one line down to laptop widths. */
-@media (max-width: 1279px) {
-  .headerInner {
-    column-gap: 24px;
-  }
-
-  .nav {
-    column-gap: 22px;
-  }
-}
-
-/* Narrower: logo and icons on the first row, the menu on its own row below. */
-@media (max-width: 1199px) {
-  .headerInner {
-    padding-top: 12px;
-    padding-bottom: 4px;
-    row-gap: 4px;
-  }
-
-  .nav {
-    order: 3;
-    width: 100%;
-  }
-
-  .nav a[aria-current='page'] {
-    padding: 8px 0 6px;
-  }
-}
-
-@media (max-width: 720px) {
-  .logo {
-    font-size: calc(var(--logo-size, 24px) * 0.72);
-  }
-
-  .headerInner {
-    column-gap: 12px;
-  }
-
-  .nav {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
-    padding-bottom: 4px;
-  }
-
-  .nav a {
-    white-space: nowrap;
-  }
-
-  /* No hover on small screens: Categories goes straight to /shop. */
-  .menuPanel {
-    display: none !important;
-  }
-
-  .nav a[aria-current='page'] {
-    padding: 6px 0;
-  }
-}
-
-/* Small phones: the saved-items icon makes way for the full logo (saved items stay a tap away on product cards). */
-@media (max-width: 480px) {
-  .wishlist {
-    display: none;
-  }
-
-  .iconButton {
-    width: 40px;
-  }
 }
 
 /* Compact header (product page) */
@@ -277,6 +145,16 @@
   gap: 8px;
   font-weight: 600;
   text-decoration: none;
+}
+
+@media (max-width: 640px) {
+  .bagPillLabel {
+    display: none;
+  }
+
+  .bagPill {
+    padding: 0 12px;
+  }
 }
 
 .bagPillCount {
