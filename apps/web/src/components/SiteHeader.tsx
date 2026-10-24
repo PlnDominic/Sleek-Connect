@@ -93,7 +93,7 @@ export async function SiteHeader({ current }: { current?: string }) {
             <Icon name="user" size={21} />
             <span className={styles.accountLabel}>Account</span>
           </Link>
-          <BagButton variant="pill" />
+          <BagButton />
         </div>
       </div>
       <div className={styles.navBar}>
@@ -130,7 +130,7 @@ export function CompactHeader() {
       <div className={`container ${chrome.compactInner}`}>
         <Logo />
         <SearchBox compact />
-        <BagButton variant="pill" />
+        <BagButton />
       </div>
     </header>
   );

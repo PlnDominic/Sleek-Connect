@@ -134,37 +134,6 @@
   outline: none;
 }
 
-.bagPill {
-  height: 44px;
-  padding: 0 14px;
-  border: 0;
-  background: var(--c-surface);
-  border-radius: var(--r-xxl);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-@media (max-width: 640px) {
-  .bagPillLabel {
-    display: none;
-  }
-
-  .bagPill {
-    padding: 0 12px;
-  }
-}
-
-.bagPillCount {
-  background: var(--c-accent);
-  color: var(--c-canvas);
-  border-radius: var(--r-pill);
-  font-size: 12px;
-  padding: 2px 8px;
-}
-
 /* Footer */
 .footer {
   background: var(--c-canvas);

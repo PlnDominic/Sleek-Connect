@@ -5,18 +5,10 @@ import { useBag } from '@sleek/shared/bag';
 import { Icon } from './Icon';
 import styles from './chrome.module.css';
 
-export function BagButton({ variant }: { variant: 'icon' | 'pill' }) {
+/** The bag icon in the header, with how many items are in it. */
+export function BagButton() {
   const { count } = useBag();
   const label = `Bag, ${count} ${count === 1 ? 'item' : 'items'}`;
-
-  if (variant === 'pill') {
-    return (
-      <Link href="/bag" aria-label={label} className={styles.bagPill}>
-        <Icon name="bag" />
-        <span className={styles.bagPillLabel}>Bag</span> <span className={styles.bagPillCount}>{count}</span>
-      </Link>
-    );
-  }
 
   return (
     <Link href="/bag" aria-label={label} className={styles.iconButton}>

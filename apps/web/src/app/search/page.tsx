@@ -47,7 +47,7 @@ async function SearchResults({ searchParams }: { searchParams: PageProps<'/searc
         <div className="container">
           <h1>{q ? <>Results for “{q}”</> : 'Search'}</h1>
           <div style={{ marginTop: 16, maxWidth: 560 }}>
-            <SearchBox defaultValue={q} autoFocus={!q} />
+            <SearchBox defaultValue={q} autoFocus={!q} live />
           </div>
         </div>
       </section>

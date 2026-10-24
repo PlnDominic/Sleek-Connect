@@ -130,7 +130,7 @@ const count = (page) => page.locator('#results-count:visible').first().textConte
   const sbox = main(shopper).getByRole('searchbox');
   await sbox.click();
   await sbox.pressSequentially('serun', { delay: 40 });
-  const suggestions = shopper.getByRole('listbox', { name: 'Suggestions' });
+  const suggestions = shopper.getByRole('listbox', { name: 'Search results' });
   await suggestions.waitFor();
   assert(await suggestions.getByRole('option', { name: /Vitamin C Brightening Serum/ }).isVisible(), 'typing (with a typo) suggests the product as you go');
   assert((await suggestions.getByRole('option').last().textContent()).includes('See all results for “serun”'), 'the last suggestion searches for what was typed');
@@ -146,7 +146,7 @@ const count = (page) => page.locator('#results-count:visible').first().textConte
   assert((await suggestions.count()) === 0, 'Escape closes the suggestions');
   await main(shopper).getByRole('searchbox').fill('');
   await main(shopper).getByRole('searchbox').pressSequentially('little ne', { delay: 40 });
-  await suggestions.getByRole('option', { name: /Little Nest/ }).click();
+  await suggestions.getByRole('option', { name: /^Little Nest/ }).click();
   await shopper.waitForURL(/\/shop\?brand=Little/);
   assert(true, 'a brand suggestion opens that brand’s products');
   await go(shopper, BASE + '/search?q=onesie');
@@ -160,7 +160,7 @@ const count = (page) => page.locator('#results-count:visible').first().textConte
   const sitemap = await (await fetch(BASE + '/sitemap.xml')).text();
   assert(sitemap.includes('/products/vitamin-c-brightening-serum') && sitemap.includes('/shop/beauty/skincare') && sitemap.includes('/shop-by-age/1-2y'), 'the sitemap lists products, categories and age bands');
   assert(!/\/(admin|checkout|bag|account|orders)/.test(sitemap), 'the sitemap leaves private pages out');
-  for (const path of ['/admin', '/bag', '/checkout', '/account', '/saved', '/track', '/api/search/suggest']) {
+  for (const path of ['/admin', '/bag', '/checkout', '/account', '/saved', '/track', '/api/search/live']) {
     const res = await fetch(BASE + path, { redirect: 'manual' });
     assert((res.headers.get('x-robots-tag') ?? '').includes('noindex'), `${path} is marked noindex`);
   }
