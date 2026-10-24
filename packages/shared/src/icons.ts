@@ -37,6 +37,7 @@ export const icons = {
   chevronRight: { shapes: [path('M9 6l6 6-6 6')] },
   search: { shapes: [circle(11, 11, 7), path('M20 20l-4-4')] },
   heart: { shapes: [path('M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z')] },
+  heartFilled: { filled: true, shapes: [path('M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z')] },
   user: { shapes: [circle(12, 8, 4), path('M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6')] },
   bag: { shapes: [path('M5 8h14l-1 12H6z'), path('M9 8V6a3 3 0 0 1 6 0v2')] },
   arrowRight: { shapes: [path('M5 12h14M13 6l6 6-6 6')] },
@@ -63,6 +64,9 @@ export const icons = {
   pin: { shapes: [path('M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z'), circle(12, 10, 2.5)] },
   calendar: { shapes: [rect(4, 5, 16, 16, 2), path('M4 10h16M9 3v4M15 3v4')] },
   plus: { shapes: [path('M12 5v14M5 12h14')] },
+  alert: { shapes: [path('M12 3.5 2.5 20h19z'), path('M12 10v4.5'), circle(12, 17.25, 0.9, true)] },
+  chat: { shapes: [path('M4 5h16v11H9l-5 4z'), path('M8 9.5h8M8 12.5h5')] },
+  mail: { shapes: [rect(3, 5, 18, 14, 2), path('M3.5 6.5 12 13l8.5-6.5')] },
   call: {
     shapes: [path('M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2')],
   },
@@ -75,6 +79,21 @@ export const icons = {
     shapes: [path('M8 3L3 7l3 3 2-1v12h8V9l2 1 3-3-5-4c-1 1.5-2.5 2-4 2S9 4.5 8 3z')],
   },
   toy: { shapes: [rect(4, 13, 7, 7, 1), rect(13, 13, 7, 7, 1), rect(8.5, 5, 7, 7, 1)] },
+  sliders: {
+    shapes: [path('M4 7h9M17 7h3'), circle(15, 7, 2), path('M4 17h3M11 17h9'), circle(9, 17, 2)],
+  },
+  users: {
+    shapes: [
+      circle(9, 8, 3.5),
+      path('M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5'),
+      circle(17.5, 9, 2.5),
+      path('M17 14.5c2.4.2 4 1.8 4.5 4.5'),
+    ],
+  },
+  clipboard: { shapes: [rect(5, 4, 14, 17, 2), path('M9 3h6v3H9z'), path('M9 11h6M9 15h4')] },
+  layers: { shapes: [path('M12 3l9 5-9 5-9-5z'), path('M3 13l9 5 9-5')] },
+  image: { shapes: [rect(3, 4, 18, 16, 2), circle(8.5, 9.5, 1.5), path('M21 16l-5-5-8 8')] },
+  store: { shapes: [path('M4 9l1.5-5h13L20 9'), path('M4 9v11h16V9'), path('M4 9a2.67 2.67 0 0 0 5.33 0 2.67 2.67 0 0 0 5.34 0A2.67 2.67 0 0 0 20 9'), path('M10 20v-5h4v5')] },
 } satisfies Record<string, IconDef>;
 
 export type IconName = keyof typeof icons;

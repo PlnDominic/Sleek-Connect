@@ -4,38 +4,68 @@ import { Logo } from './Logo';
 import styles from './chrome.module.css';
 
 const columns = [
-  { title: 'Shop', links: ['Beauty', 'Baby & Kids', 'Shop by Age', 'Gifts'] },
-  { title: 'Help', links: ['Track an order', 'Returns and refunds', 'Delivery areas', 'Contact support'] },
-  { title: 'Trust', links: ['Authenticity promise', 'Product safety', 'Privacy policy', 'Terms of service'] },
+  {
+    title: 'Shop',
+    links: [
+      { label: 'Beauty', href: '/shop/beauty' },
+      { label: 'Baby & Kids', href: '/shop/kids' },
+      { label: 'Home & Groceries', href: '/shop/home' },
+      { label: 'Fashion & Accessories', href: '/shop/fashion' },
+      { label: 'Shop by Age', href: '/shop-by-age' },
+    ],
+  },
+  {
+    title: 'Help',
+    links: [
+      { label: 'Track an order', href: '/track' },
+      { label: 'Returns and refunds', href: '/help#returns' },
+      { label: 'Delivery areas', href: '/help#delivery' },
+      { label: 'Contact support', href: '/help#contact' },
+    ],
+  },
+  {
+    title: 'Trust',
+    links: [
+      { label: 'Authenticity promise', href: '/help#authenticity' },
+      { label: 'Product safety', href: '/help#safety' },
+      { label: 'Privacy notice', href: '/privacy' },
+      { label: 'Terms of service', href: '/terms' },
+    ],
+  },
 ];
 
 export function SiteFooter() {
   return (
     <footer className={styles.footer}>
-      <div className={`container ${styles.footerTop}`}>
+      <div className={`container ${styles.footerMain}`}>
         <div className={styles.footerBrand}>
-          <Logo size={22} onDark />
+          <span className={styles.footerKicker}>The thoughtful way to shop</span>
+          <Logo size={30} />
           <span className={styles.footerBlurb}>
-            Authentic beauty and safe, age-appropriate products for little ones, delivered across Accra.
+            Beauty, baby and kids, home and groceries, fashion and accessories, delivered across Accra.
           </span>
-          <span className={styles.footerPayments}>{paymentMethodsLine}</span>
         </div>
-        {columns.map((col) => (
-          <nav key={col.title} aria-label={col.title} className={styles.footerCol}>
-            <strong>{col.title}</strong>
-            {col.links.map((label) => (
-              // Help, policy and listing pages are not designed yet.
-              <Link key={label} href="#">
-                {label}
-              </Link>
-            ))}
-          </nav>
-        ))}
+        <div className={styles.footerLinks}>
+          {columns.map((col) => (
+            <nav key={col.title} aria-label={col.title} className={styles.footerCol}>
+              <strong>{col.title}</strong>
+              {col.links.map((link) => (
+                <Link key={link.label} href={link.href}>
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          ))}
+        </div>
+        <span className={styles.footerPayments}>
+          <strong>Pay securely</strong>
+          <span>{paymentMethodsLine}</span>
+        </span>
       </div>
       <div className={styles.footerBottom}>
         <div className={`container ${styles.footerBottomInner}`}>
-          <span>© 2026 Sleek Connect. All rights reserved.</span>
-          <span>
+          <span className={styles.footerCopyright}>© 2026 Sleek Connect Store. All rights reserved.</span>
+          <span className={styles.footerCredit}>
             Developed by:{' '}
             <a href="https://www.ecstasytechnologies.com" target="_blank" rel="noopener">
               Ecstasy Technologies

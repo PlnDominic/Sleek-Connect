@@ -11,10 +11,24 @@
     "dev:mobile": "npm run start --workspace @sleek/mobile",
     "build:web": "npm run build --workspace @sleek/web",
     "lint": "npm run lint --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:start": "supabase start -x studio,imgproxy,mailpit,logflare,vector,edge-runtime,supavisor,realtime,postgres-meta",
+    "db:reset": "supabase db reset",
+    "db:seed:generate": "tsx scripts/generate-seed.ts",
+    "db:setup:generate": "tsx scripts/bundle-setup.ts",
+    "db:types": "supabase gen types typescript --local > apps/web/src/lib/supabase/database.types.ts",
+    "payments:simulate": "tsx scripts/simulate-payment.ts",
+    "smoke:production": "node tests/smoke-production.cjs",
+    "test": "bash tests/run-all.sh"
   },
   "overrides": {
     "react": "19.2.3",
     "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.117.3",
+    "playwright": "1.56.1",
+    "supabase": "^2.121.0",
+    "tsx": "^4.23.15"
   }
 }

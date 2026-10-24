@@ -1,0 +1,54 @@
+.download {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.danger {
+  border-color: #f0c8bb;
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.confirm input {
+  height: 46px;
+  max-width: 260px;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-xxl);
+  padding: 0 14px;
+  font: inherit;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.delete {
+  align-self: flex-start;
+  height: 46px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: var(--r-lg);
+  background: var(--c-accent-deep);
+  color: var(--c-canvas);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.delete:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.blocked {
+  padding: 12px 14px;
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+  font-size: 14px;
+  line-height: 1.5;
+}

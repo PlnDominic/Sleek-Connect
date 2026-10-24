@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck and lint
+        run: |
+          npm run typecheck
+          npm run lint
+
+      - name: Install the test browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Start local Supabase
+        run: npm run db:start
+
+      - name: Point the web app at it
+        run: |
+          eval "$(npx supabase status -o env)"
+          cat > apps/web/.env.local <<ENV
+          NEXT_PUBLIC_SUPABASE_URL=$API_URL
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$PUBLISHABLE_KEY
+          SUPABASE_SECRET_KEY=$SECRET_KEY
+          PAYMENT_PROVIDER=test
+          PAYMENT_WEBHOOK_SECRET=ci-webhook-secret-not-used-anywhere-else
+          SMS_PROVIDER=console
+          EMAIL_PROVIDER=console
+          CRON_SECRET=ci-cron-secret
+          ENV
+
+      - name: Build the production web app
+        run: npm run build:web
+
+      - name: Run all test suites (builds the web app)
+        run: npm test
+
+      - name: Keep screenshots and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-output
+          path: tests/.output
+          retention-days: 7

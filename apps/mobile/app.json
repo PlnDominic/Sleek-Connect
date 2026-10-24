@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Sleek Connect",
+    "name": "Sleek Connect Store",
     "slug": "sleek-connect",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -28,7 +28,8 @@
       "expo-status-bar",
       "expo-font",
       "expo-splash-screen",
-      "expo-image"
+      "expo-image",
+      "expo-sqlite"
     ],
     "scheme": "sleekconnect",
     "experiments": {
