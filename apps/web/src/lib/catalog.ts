@@ -1,6 +1,6 @@
 import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
-import { asImageKey, type AgeBand, type AgeBandId, type Category, type Product, type ProductDetails } from '@sleek/shared';
+import { categoryFromRow, productFromRow, productSelect, type AgeBand, type AgeBandId, type Category, type Product } from '@sleek/shared';
 import type { DeliveryConfig } from './delivery';
 import { photoUrl } from './photos';
 import { createSupabase } from './supabase/server';
@@ -14,8 +14,7 @@ type ProductRow = Tables['products']['Row'] & {
   product_images: Pick<Tables['product_images']['Row'], 'path' | 'alt' | 'sort_order'>[];
 };
 
-const productColumns =
-  '*, product_sizes(code, label, price_ghs, is_default, sort_order), product_age_bands(age_band_id), inventory_levels(size_code, in_stock), product_images(path, alt, sort_order)';
+const productColumns = productSelect;
 
 function unwrap<T>({ data, error }: { data: T | null; error: { message: string } | null }): T {
   if (error) throw new Error(`Supabase query failed: ${error.message}`);
@@ -23,48 +22,7 @@ function unwrap<T>({ data, error }: { data: T | null; error: { message: string }
 }
 
 function toProduct(row: ProductRow): Product {
-  const sizes = [...row.product_sizes].sort((a, b) => a.sort_order - b.sort_order);
-  // A sellable unit with no stock row can't be bought (see place_order).
-  const inStock = (code: string) => row.inventory_levels.some((i) => i.size_code === code && i.in_stock);
-  return {
-    slug: row.slug,
-    name: row.name,
-    brand: row.brand ?? undefined,
-    department: row.department,
-    category: row.category_id ?? '',
-    kidsFilter: row.kids_filter ?? undefined,
-    collection: row.collection ?? undefined,
-    price: row.price_ghs,
-    was: row.was_price_ghs ?? undefined,
-    badge: row.badge ?? undefined,
-    tag: row.tag,
-    summary: row.summary,
-    image: asImageKey(row.image_key),
-    photos: row.product_images.length
-      ? [...row.product_images].sort((a, b) => a.sort_order - b.sort_order).map((i) => ({ url: photoUrl(i.path), alt: i.alt ?? undefined }))
-      : undefined,
-    tint: row.tint,
-    kind: row.kind,
-    sizes: sizes.length
-      ? sizes.map((s) => ({ id: s.code, label: s.label, price: s.price_ghs, inStock: inStock(s.code) }))
-      : undefined,
-    defaultSize: sizes.find((s) => s.is_default)?.code,
-    ageBands: row.product_age_bands.map((b) => b.age_band_id as AgeBandId),
-    inStock: sizes.length ? sizes.some((s) => inStock(s.code)) : inStock(''),
-    details: (row.details as ProductDetails | null) ?? undefined,
-    warningLabel: row.warning_label ?? undefined,
-    returnable: row.returnable,
-    returnNote: row.return_note ?? undefined,
-    skinTypes: row.skin_types.length ? row.skin_types : undefined,
-    shades: row.shades.length ? row.shades : undefined,
-    createdAt: row.created_at,
-    compliance: {
-      ingredients: row.ingredients ?? undefined,
-      countryOfOrigin: row.country_of_origin ?? undefined,
-      regulatoryReference: row.regulatory_reference ?? undefined,
-      periodAfterOpening: row.period_after_opening ?? undefined,
-    },
-  };
+  return productFromRow(row, photoUrl);
 }
 
 /** Products in a merchandising slot (e.g. `home_new_arrivals`), in position order. */
@@ -90,14 +48,7 @@ export async function getHomeCatalog() {
     slotProducts('home_best_sellers'),
   ]);
 
-  const categories: Category[] = categoryRows.map((c) => ({
-    id: c.id,
-    name: c.name,
-    department: c.department,
-    image: asImageKey(c.image_key),
-    tint: c.tint,
-    kind: c.kind,
-  }));
+  const categories: Category[] = categoryRows.map(categoryFromRow);
 
   return { categories, newArrivals, bestSellers };
 }
@@ -210,14 +161,7 @@ export async function getCategories(): Promise<Category[]> {
   cacheTag('catalog');
 
   const rows = unwrap(await createSupabase().from('categories').select('*').order('sort_order'));
-  return rows.map((c) => ({
-    id: c.id,
-    name: c.name,
-    department: c.department,
-    image: asImageKey(c.image_key),
-    tint: c.tint,
-    kind: c.kind,
-  }));
+  return rows.map(categoryFromRow);
 }
 
 export interface StoreInfo {

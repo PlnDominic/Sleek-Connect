@@ -10,8 +10,10 @@
 - **Supabase** is the backend: Postgres with row level security, migrations in `supabase/migrations`.
 - **Mobile later.** `apps/mobile` is React Native with Expo (Expo Router), targeting the App Store and Google Play.
   It is tested in **Expo Go**, so only use libraries bundled in Expo Go (install them with `npx expo install`) and keep
-  the Expo SDK on the version Expo Go supports. The mobile app still reads the bundled catalogue in
-  `packages/shared`; move it to Supabase when mobile work starts.
+  the Expo SDK on the version Expo Go supports. The mobile app reads the catalogue from Supabase with the
+  publishable key (`EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `apps/mobile/.env.local`; see
+  `.env.example`), mapping rows with the same `productFromRow` as the web store. It can't place orders yet: checkout hands
+  the bag to the website (`/bag/continue`) until the app has its own sign-in, checkout and order tracking.
 - `packages/shared` holds tokens, icons, types, the starter catalogue and the bag provider used by both apps.
 
 ## Database rules

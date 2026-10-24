@@ -87,11 +87,13 @@ export function SectionHeader({ title, onSeeAll }: { title: string; onSeeAll?: (
       <AppText weight="semibold" size={18} accessibilityRole="header">
         {title}
       </AppText>
-      <Pressable accessibilityRole="link" onPress={onSeeAll} hitSlop={8}>
-        <AppText weight="semibold" size={13} style={styles.underline}>
-          See all
-        </AppText>
-      </Pressable>
+      {onSeeAll && (
+        <Pressable accessibilityRole="link" onPress={onSeeAll} hitSlop={10}>
+          <AppText weight="semibold" size={13} style={styles.underline}>
+            See all
+          </AppText>
+        </Pressable>
+      )}
     </View>
   );
 }

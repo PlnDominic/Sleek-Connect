@@ -3,17 +3,12 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { colors, getProduct, sampleBag } from '@sleek/shared';
-import { BagProvider, bagItemFrom } from '@sleek/shared/bag';
+import { colors } from '@sleek/shared';
+import { BagProvider } from '@sleek/shared/bag';
+import { getDeviceStorage } from '@/lib/storage';
 import { fontFiles } from '@/theme/fonts';
 
 SplashScreen.preventAutoHideAsync();
-
-// The app still reads the bundled catalogue; it moves to Supabase once mobile work starts.
-const initialBag = sampleBag.flatMap((line) => {
-  const product = getProduct(line.slug);
-  return product ? [bagItemFrom(product, line.sizeId, line.qty)] : [];
-});
 
 export default function RootLayout() {
   const [loaded, error] = useFonts(fontFiles);
@@ -24,8 +19,9 @@ export default function RootLayout() {
 
   if (!loaded && !error) return null;
 
+  // The bag is kept on the phone between visits.
   return (
-    <BagProvider initialItems={initialBag}>
+    <BagProvider storage={getDeviceStorage}>
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }} />
     </BagProvider>

@@ -365,25 +365,6 @@ export const categories: Category[] = [
   { id: 'kids-toys', name: 'Kids & Toys', department: 'kids', tint: colors.tealPale, kind: 'toy' },
 ];
 
-/** Category shortcuts on the mobile home screen, per department. */
-export const appCategories: Record<Department, Category[]> = {
-  beauty: [
-    categories[0],
-    categories[1],
-    { ...categories[2], name: 'Hair' },
-    categories[3],
-  ],
-  kids: [
-    { id: 'bath', name: 'Bath', department: 'kids', image: 'babyWash', tint: colors.tealSoft, kind: 'bottle' },
-    { id: 'clothing', name: 'Clothing', department: 'kids', tint: colors.tealPale, kind: 'garment' },
-    { id: 'toys', name: 'Toys', department: 'kids', tint: colors.blush, kind: 'toy' },
-    { id: 'gifts', name: 'Gifts', department: 'kids', image: 'giftCollection', tint: colors.surface, kind: 'gift' },
-  ],
-  // The mobile app doesn't have these departments yet; the web store does.
-  home: [],
-  fashion: [],
-};
-
 export const newArrivals = pick([
   'gentle-baby-wash-shampoo',
   'vitamin-c-brightening-serum',
@@ -408,12 +389,6 @@ export const relatedProducts = pick([
   'wooden-number-puzzle',
   'newborn-gift-hamper',
 ]);
-
-export function productsForAgeBand(band: AgeBandId, filter?: KidsFilter): Product[] {
-  return products.filter(
-    (p) => p.ageBands?.includes(band) && (filter === undefined || p.kidsFilter === filter),
-  );
-}
 
 export const deliveryAreas = ['East Legon', 'Osu', 'Airport Residential', 'Spintex', 'Dansoman'];
 

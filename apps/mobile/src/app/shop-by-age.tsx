@@ -1,20 +1,15 @@
 import { Link, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import {
-  ageBands,
-  colors,
-  formatPrice,
-  productsForAgeBand,
-  radii,
-  type AgeBandId,
-  type KidsFilter,
-} from '@sleek/shared';
+import { colors, formatPrice, radii, type AgeBandId, type KidsFilter } from '@sleek/shared';
 import { useBag } from '@sleek/shared/bag';
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
 import { ProductImage } from '@/components/ProductImage';
+import { ErrorState, ProductGridSkeleton } from '@/components/States';
 import { BackButton, TrustChip, useScreenTop } from '@/components/ui';
+import { getAgeBands, getAllProducts } from '@/lib/catalog';
+import { useQuery } from '@/lib/query';
 
 const filters: { id: KidsFilter | 'all'; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -27,12 +22,18 @@ export default function ShopByAgeScreen() {
   const top = useScreenTop();
   const { add } = useBag();
   const params = useLocalSearchParams<{ band?: string }>();
-  const initial = ageBands.find((b) => b.id === params.band)?.id ?? '1-2y';
-  const [band, setBand] = useState<AgeBandId>(initial);
+  const bands = useQuery('age-bands', getAgeBands);
+  const all = useQuery('products:all', getAllProducts);
+  const ageBands = bands.data ?? [];
+  const [chosen, setChosen] = useState<AgeBandId | undefined>(params.band as AgeBandId | undefined);
   const [filter, setFilter] = useState<KidsFilter | 'all'>('all');
 
-  const current = ageBands.find((b) => b.id === band)!;
-  const items = productsForAgeBand(band, filter === 'all' ? undefined : filter);
+  // The band from the link, else 1-2 years, else the first one.
+  const band = ageBands.find((b) => b.id === chosen)?.id ?? ageBands.find((b) => b.id === '1-2y')?.id ?? ageBands[0]?.id;
+  const current = ageBands.find((b) => b.id === band);
+  const items = (all.data ?? []).filter(
+    (p) => p.department === 'kids' && band !== undefined && p.ageBands?.includes(band) && (filter === 'all' || p.kidsFilter === filter),
+  );
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
@@ -52,7 +53,7 @@ export default function ShopByAgeScreen() {
                 key={b.id}
                 accessibilityRole="radio"
                 accessibilityState={{ checked: on }}
-                onPress={() => setBand(b.id)}
+                onPress={() => setChosen(b.id)}
                 style={[styles.band, on && styles.bandOn]}
               >
                 <AppText weight="bold" size={17} color={color}>
@@ -93,13 +94,18 @@ export default function ShopByAgeScreen() {
           })}
         </ScrollView>
         <AppText size={13} color={colors.textMuted}>
-          {items.length} {items.length === 1 ? 'product' : 'products'} for {current.label}
+          {all.loading || bands.loading ? 'Loading…' : `${items.length} ${items.length === 1 ? 'product' : 'products'}${current ? ` for ${current.label}` : ''}`}
         </AppText>
+        {(all.error && !all.data) || (bands.error && !bands.data) ? (
+          <ErrorState onRetry={() => { void all.refetch(); void bands.refetch(); }} />
+        ) : all.loading || bands.loading ? (
+          <ProductGridSkeleton count={4} />
+        ) : null}
         {items.map((p) => (
           <View key={p.slug} style={styles.item}>
             <Link href={{ pathname: '/product/[slug]', params: { slug: p.slug } }} asChild>
               <Pressable accessibilityRole="link" style={styles.itemLink}>
-                <ProductImage image={p.image} tint={p.tint} kind={p.kind} style={styles.itemImage} />
+                <ProductImage image={p.image} photo={p.photos?.[0]?.url} tint={p.tint} kind={p.kind} style={styles.itemImage} />
                 <View style={styles.itemText}>
                   <AppText weight="bold" size={15} style={styles.itemName}>
                     {p.name}
@@ -115,13 +121,15 @@ export default function ShopByAgeScreen() {
               accessibilityRole="button"
               accessibilityLabel={`Add ${p.name} to bag`}
               onPress={() => add(p)}
-              style={styles.add}
+              disabled={p.inStock === false}
+              accessibilityState={{ disabled: p.inStock === false }}
+              style={[styles.add, p.inStock === false && { opacity: 0.35 }]}
             >
               <Icon name="plus" size={18} color={colors.canvas} strokeWidth={2} />
             </Pressable>
           </View>
         ))}
-        {items.length === 0 && (
+        {items.length === 0 && !all.loading && !bands.loading && !all.error && (
           <AppText size={14} color={colors.textMuted}>
             Nothing here yet for this age and filter.
           </AppText>

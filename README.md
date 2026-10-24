@@ -11,7 +11,7 @@ Expo** for the mobile app (App Store and Google Play, tested in Expo Go). The we
 | [`apps/web`](apps/web) | Next.js 16 storefront (Home, Shop and category pages with filters, Search, Shop by age, Product, Bag, Checkout, Account with addresses and saved items, order tracking, receipts, cancellation, returns and the help centre) and the staff admin console at `/admin` | Active. Runs on Supabase |
 | [`tests`](tests) | Database and browser test suites (`npm test`), also run by GitHub Actions | Active |
 | [`supabase`](supabase) | Database schema (migrations), access rules and starter data | Active |
-| [`apps/mobile`](apps/mobile) | Expo SDK 57 app: Home, Shop by age, Product, Mobile Money checkout, Order tracking | On hold until the web store is done; still uses the bundled catalogue |
+| [`apps/mobile`](apps/mobile) | Expo SDK 57 app: Home, Shop (live search and filters), Product, Bag, Saved, Shop by age | Reads the live catalogue from Supabase; checkout continues on the website until sign-in and native checkout are built |
 | [`packages/shared`](packages/shared) | Design tokens, icons, types, starter catalogue and bag state used by both apps | Active |
 
 ## Run it locally
@@ -408,6 +408,29 @@ placeholders: a line or card appears only once its value is set, and prices that
   order, payment, delivery, return and support messages are not affected. The choices are stored with the account profile
   metadata and are ready for the future campaign sender to enforce.
 
+## The mobile app
+
+`apps/mobile` is an Expo (React Native) app for the App Store and Google Play, tested in Expo Go. It shows the same live
+catalogue as the website.
+
+- **Set up:** copy `apps/mobile/.env.example` to `apps/mobile/.env.local` and fill in `EXPO_PUBLIC_SUPABASE_URL` and
+  `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (the same values as the website's public ones), and `EXPO_PUBLIC_SITE_URL` (the
+  live website). Never put the secret key here. Then `npm run start -w @sleek/mobile` and open it in Expo Go. For a quick
+  look in a browser, `cd apps/mobile && npx expo start --web`.
+- **What works:** Home (banners from Admin → Content, the four departments, categories, new arrivals, shop by age), Shop
+  (live search that forgives typos, department and category filters, sorting), Product (photo gallery, sizes, stock,
+  Add to bag), Bag (quantities, subtotal), Saved items, and links to help and legal pages. The bag and saved items are kept
+  on the phone.
+- **Checkout:** the app can't place orders itself yet. "Continue to secure checkout" opens the website's
+  `/bag/continue?items=slug:size:qty,…`, which checks every item against the catalogue (prices come from the database,
+  never from the link), fills the web bag and goes straight to checkout, where delivery details and Mobile Money payment
+  happen as usual.
+- **Not built in the app yet:** sign-in (phone OTP, Google), saved addresses, order history and live tracking, placing and
+  paying for an order inside the app, push notifications, and real app icons. These need server endpoints the app can call
+  (order placement and payment start use the secret key, which must stay on the server).
+- **Speed:** product photos are cached on the phone, lists are virtualised, data is cached between screens and refreshed in
+  the background, and searching waits for a short pause in typing.
+
 ## Not built yet
 
 - **Real payment, SMS and email providers:** the flows are in place (see [Payments](#payments) and
@@ -416,7 +439,7 @@ placeholders: a line or card appears only once its value is set, and prices that
   have no map pin. To enable SMS delivery, turn on Phone in Supabase Authentication and configure an SMS provider.
 - **Admin:** no refunds through a payment provider, finance reports, or supplier and purchase-order records.
 - **Policy review:** the Terms of Service and Privacy Notice are written (see below) but are a starting draft. Have a
-  Ghanaian lawyer review them, and fill in the bracketed business details, before launch.
+  Ghanaian lawyer review them, and set the company details (the `BUSINESS_*` variables, see [Values still to set](#values-still-to-set)), before launch.
 - **Photos:** only the seven photos from the design handoff exist so far (`packages/shared/assets/images`, referenced by
   `image_key`). Upload real photos in the admin console.
 - **App icons:** still the framework defaults.

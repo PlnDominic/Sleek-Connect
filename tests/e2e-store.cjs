@@ -294,6 +294,23 @@ const count = (page) => page.locator('#results-count:visible').first().textConte
   await go(visitor, BASE + `/orders/${order.order_token}`);
   assert((await visitor.getByRole('region', { name: 'Returns' }).textContent()).includes('Refunded'), 'customer sees the refund');
 
+  // --- Bag hand-off from the mobile app -------------------------------------------------------------------
+  {
+    const app = await ctx();
+    const items = encodeURIComponent('vitamin-c-brightening-serum::2,not-a-product::1,../../etc::1');
+    await app.goto(`${BASE}/bag/continue?items=${items}`);
+    await app.waitForURL(/\/checkout$/, { timeout: 15000 });
+    await app.waitForTimeout(800);
+    const bagLines = () => app.evaluate(() => JSON.parse(localStorage.getItem('sleek-connect:bag:v1') ?? '[]').map((i) => `${i.slug}|${i.qty}`));
+    assert(JSON.stringify(await bagLines()) === JSON.stringify(['vitamin-c-brightening-serum|2']), 'the app\'s bag arrives in the web bag; unknown products and junk are dropped');
+    await app.goto(`${BASE}/bag/continue?items=${items}`);
+    await app.waitForURL(/\/checkout$/, { timeout: 15000 });
+    await app.waitForTimeout(800);
+    assert(JSON.stringify(await bagLines()) === JSON.stringify(['vitamin-c-brightening-serum|2']), 'opening the hand-off link again does not double the quantities');
+    await app.goto(`${BASE}/bag/continue?items=nope`);
+    assert((await main(app).textContent()).includes('couldn’t carry your bag over'), 'a link with nothing valid explains itself');
+  }
+
   // --- Report a problem → support case (FR-055) ------------------------------------------------------------
   await visitor.getByRole('link', { name: 'Report a problem' }).click();
   await visitor.getByRole('heading', { name: 'Report a problem' }).waitFor();

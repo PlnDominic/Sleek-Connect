@@ -1,50 +1,97 @@
-import { Redirect, router, useLocalSearchParams } from 'expo-router';
-import { useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import {
-  colors,
-  defaultDeliveryArea,
-  formatPrice,
-  getProduct,
-  getSize,
-  radii,
-  unitPrice,
-  type IconName,
-} from '@sleek/shared';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState, type ReactNode } from 'react';
+import { FlatList, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import { colors, formatPrice, getSize, isAvailable, radii, unitPrice, type IconName, type Product } from '@sleek/shared';
 import { useBag } from '@sleek/shared/bag';
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
 import { ProductImage } from '@/components/ProductImage';
+import { EmptyState, ErrorState, Skeleton } from '@/components/States';
 import { BackButton, BottomBar, IconButton, TrustChip, useScreenTop } from '@/components/ui';
+import { getProduct } from '@/lib/catalog';
+import { useQuery } from '@/lib/query';
+import { useSaved } from '@/lib/saved';
 
 export default function ProductScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
-  const product = getProduct(slug);
   const top = useScreenTop();
-  const { add } = useBag();
-  const [sizeId, setSizeId] = useState(product?.defaultSize);
+  const { data: product, error, loading, refetch } = useQuery(slug ? `product:${slug}` : null, () => getProduct(slug));
 
-  if (!product) return <Redirect href="/" />;
+  if (loading) {
+    return (
+      <View style={styles.screen}>
+        <Skeleton style={styles.media} />
+        <View style={[styles.mediaActions, { top }]}>
+          <BackButton fallback="/" />
+        </View>
+        <View style={styles.body}>
+          <Skeleton style={{ height: 14, width: '30%' }} />
+          <Skeleton style={{ height: 26, width: '80%' }} />
+          <Skeleton style={{ height: 44, width: '60%' }} />
+        </View>
+      </View>
+    );
+  }
+  if (!product) {
+    return (
+      <View style={[styles.screen, { paddingTop: top, paddingHorizontal: 20 }]}>
+        <BackButton fallback="/" />
+        {error ? (
+          <ErrorState onRetry={() => void refetch()} />
+        ) : (
+          <EmptyState
+            icon="box"
+            title="This product isn't available"
+            message="It may have been removed. Browse the shop to find something similar."
+            action={{ label: 'Go to the shop', onPress: () => router.replace('/shop') }}
+          />
+        )}
+      </View>
+    );
+  }
+  return <ProductView product={product} />;
+}
+
+function ProductView({ product }: { product: Product }) {
+  const top = useScreenTop();
+  const { add, count } = useBag();
+  const { slugs, toggle } = useSaved();
+  const saved = slugs.includes(product.slug);
+  // Start on the default size, or the first one that can be bought.
+  const [sizeId, setSizeId] = useState(() => {
+    const preferred = product.defaultSize;
+    if (preferred && isAvailable(product, preferred)) return preferred;
+    return product.sizes?.find((s) => s.inStock !== false)?.id ?? preferred;
+  });
+  const [added, setAdded] = useState(false);
+
+  useEffect(() => {
+    if (!added) return;
+    const timer = setTimeout(() => setAdded(false), 2500);
+    return () => clearTimeout(timer);
+  }, [added]);
 
   const details = product.details;
   const highlights = details?.highlights ?? [product.tag];
   const sizeLabel = getSize(product, sizeId)?.label;
+  const available = isAvailable(product, sizeId);
+  const price = unitPrice(product, sizeId);
+  const compliance = product.compliance;
+  const batches = product.currentBatches ?? [];
 
   return (
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={[styles.media, { backgroundColor: product.tint }]}>
-          <ProductImage image={product.image} tint={product.tint} kind={product.kind} style={StyleSheet.absoluteFill} iconSize={64} />
-          <View style={[styles.mediaActions, { top }]}>
-            <BackButton fallback="/" />
-            <IconButton icon="heart" label="Save item" background={colors.canvas} />
-          </View>
-          <View style={styles.dots} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-            <View style={[styles.dot, styles.dotActive]} />
-            <View style={styles.dot} />
-            <View style={styles.dot} />
-            <View style={styles.dot} />
-          </View>
+        <Gallery product={product} />
+        <View style={[styles.mediaActions, { top }]}>
+          <BackButton fallback="/" />
+          <IconButton
+            icon={saved ? 'heartFilled' : 'heart'}
+            label={saved ? 'Remove from saved items' : 'Save item'}
+            background={colors.canvas}
+            color={saved ? colors.accent : colors.ink}
+            onPress={() => toggle(product.slug)}
+          />
         </View>
 
         <View style={styles.body}>
@@ -64,19 +111,31 @@ export default function ProductScreen() {
             </View>
           </View>
 
+          {product.warningLabel && (
+            <View style={styles.warning} accessibilityRole="alert">
+              <Icon name="alert" size={18} color={colors.accentDeep} strokeWidth={2} />
+              <AppText weight="semibold" size={13} color={colors.accentDeep} style={styles.flex}>
+                {product.warningLabel}
+              </AppText>
+            </View>
+          )}
+
           {product.sizes && product.sizes.length > 1 && (
             <View style={styles.sizes} accessibilityRole="radiogroup" accessibilityLabel="Size">
               {product.sizes.map((s) => {
                 const on = s.id === sizeId;
+                const out = s.inStock === false;
                 return (
                   <Pressable
                     key={s.id}
                     accessibilityRole="radio"
-                    accessibilityState={{ checked: on }}
+                    accessibilityState={{ checked: on, disabled: out }}
+                    accessibilityLabel={out ? `${s.label}, sold out` : s.label}
+                    disabled={out}
                     onPress={() => setSizeId(s.id)}
-                    style={[styles.size, on && styles.sizeOn]}
+                    style={[styles.size, on && styles.sizeOn, out && styles.sizeOut]}
                   >
-                    <AppText weight="semibold" size={14} color={on ? colors.canvas : colors.ink}>
+                    <AppText weight="semibold" size={14} color={on ? colors.canvas : out ? colors.textDisabled : colors.ink}>
                       {s.label}
                     </AppText>
                   </Pressable>
@@ -87,26 +146,41 @@ export default function ProductScreen() {
 
           <View style={styles.facts}>
             <Fact icon="shieldCheck" iconColor={colors.teal} title="Verified authentic">
-              {product.compliance?.regulatoryReference
-                ? `From an authorised distributor · FDA reg. ${product.compliance.regulatoryReference}`
+              {compliance?.regulatoryReference
+                ? `From an authorised distributor · FDA reg. ${compliance.regulatoryReference}`
                 : 'From an authorised distributor'}
             </Fact>
             <Fact icon="calendar" title="Batch and expiry checked">
               Printed on your receipt for the unit we pack
             </Fact>
-            <Fact icon="truck" title={`Delivery to ${defaultDeliveryArea}`} last>
+            <Fact icon="truck" title="Delivery across Accra" last>
               Tracked from our shelf to your door
             </Fact>
           </View>
 
-          {product.compliance?.ingredients && (
-            <Accordion title="Ingredients" initiallyOpen>
-              {product.compliance.ingredients}
+          {(details?.description || product.summary) && (
+            <Accordion title="About this product" initiallyOpen>
+              {details?.description ?? product.summary}
             </Accordion>
           )}
+          {compliance?.ingredients && <Accordion title="Ingredients">{compliance.ingredients}</Accordion>}
+          {details?.howToUse && <Accordion title="How to use">{details.howToUse}</Accordion>}
           {details?.warnings && <Accordion title="Safety & warnings">{details.warnings}</Accordion>}
+          {(batches.length > 0 || compliance?.periodAfterOpening || compliance?.countryOfOrigin) && (
+            <Accordion title="Batch, origin & expiry">
+              {[
+                ...batches.map((b) => `Batch ${b.batch}${b.expiresOn ? `, expires ${b.expiresOn}` : ''}`),
+                compliance?.periodAfterOpening ? `Period after opening: ${compliance.periodAfterOpening}` : null,
+                compliance?.countryOfOrigin ? `Made in ${compliance.countryOfOrigin}` : null,
+              ]
+                .filter(Boolean)
+                .join('\n')}
+            </Accordion>
+          )}
           <Accordion title="Returns" last>
-            Unopened items can be returned. Damaged or not genuine items are refunded in full.
+            {product.returnable === false
+              ? `Can't be returned once delivered, unless it arrives damaged, wrong or expired.${product.returnNote ? ` ${product.returnNote}` : ''}`
+              : `Unopened and sealed items can be returned. Damaged or not genuine items are refunded in full.${product.returnNote ? ` ${product.returnNote}` : ''}`}
           </Accordion>
         </View>
       </ScrollView>
@@ -118,24 +192,81 @@ export default function ProductScreen() {
               {sizeLabel}
             </AppText>
           )}
-          <AppText weight="bold" size={22}>
-            {formatPrice(unitPrice(product, sizeId))}
-          </AppText>
+          <View style={styles.priceRow}>
+            <AppText weight="bold" size={22}>
+              {formatPrice(price)}
+            </AppText>
+            {product.was !== undefined && !product.sizes?.length && (
+              <AppText size={13} color={colors.textFaint} style={styles.was}>
+                {formatPrice(product.was)}
+              </AppText>
+            )}
+          </View>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => {
-            add(product, sizeId);
-            router.push('/checkout');
-          }}
-          style={({ pressed }) => [styles.cta, pressed && { opacity: 0.85 }]}
-        >
-          <Icon name="bag" size={18} color={colors.canvas} strokeWidth={2} />
-          <AppText weight="bold" size={16} color={colors.canvas}>
-            Add to bag
-          </AppText>
-        </Pressable>
+        {added ? (
+          <Pressable accessibilityRole="button" onPress={() => router.push('/bag')} style={({ pressed }) => [styles.cta, styles.ctaAdded, pressed && { opacity: 0.85 }]}>
+            <Icon name="bag" size={18} color={colors.canvas} strokeWidth={2} />
+            <AppText weight="bold" size={16} color={colors.canvas} accessibilityLiveRegion="polite">
+              Added · View bag ({count})
+            </AppText>
+          </Pressable>
+        ) : (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled: !available }}
+            disabled={!available}
+            onPress={() => {
+              add(product, sizeId);
+              setAdded(true);
+            }}
+            style={({ pressed }) => [styles.cta, !available && styles.ctaOff, pressed && { opacity: 0.85 }]}
+          >
+            <Icon name="bag" size={18} color={available ? colors.canvas : colors.textMuted} strokeWidth={2} />
+            <AppText weight="bold" size={16} color={available ? colors.canvas : colors.textMuted}>
+              {available ? 'Add to bag' : 'Sold out'}
+            </AppText>
+          </Pressable>
+        )}
       </BottomBar>
+    </View>
+  );
+}
+
+/** The product's photos, swiped sideways; a single picture when there is only one. */
+function Gallery({ product }: { product: Product }) {
+  const { width } = useWindowDimensions();
+  const [index, setIndex] = useState(0);
+  const photos = product.photos?.map((p) => p.url) ?? [];
+  const slides = photos.length ? photos : [undefined];
+  const onEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => setIndex(Math.round(e.nativeEvent.contentOffset.x / width));
+  return (
+    <View style={[styles.media, { backgroundColor: product.tint }]}>
+      <FlatList
+        data={slides}
+        keyExtractor={(item, i) => item ?? `slide-${i}`}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={onEnd}
+        renderItem={({ item }) => (
+          <ProductImage
+            image={product.image}
+            photo={item}
+            tint={product.tint}
+            kind={product.kind}
+            iconSize={64}
+            style={{ width, height: styles.media.height }}
+            label={product.name}
+          />
+        )}
+      />
+      {slides.length > 1 && (
+        <View style={styles.dots} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+          {slides.map((_, i) => (
+            <View key={i} style={[styles.dot, i === index && styles.dotActive]} />
+          ))}
+        </View>
+      )}
     </View>
   );
 }
@@ -198,7 +329,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.canvas,
   },
   scroll: {
-    paddingBottom: 120,
+    paddingBottom: 130,
   },
   flex: {
     flex: 1,
@@ -251,8 +382,17 @@ const styles = StyleSheet.create({
     gap: 6,
     marginTop: 4,
   },
+  warning: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 12,
+    borderRadius: radii.lg,
+    backgroundColor: '#FDF0D6',
+  },
   sizes: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
   size: {
@@ -260,13 +400,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: radii.xxl,
     borderWidth: 1,
-    borderColor: colors.line,
+    borderColor: colors.lineStrong,
     backgroundColor: colors.canvas,
     justifyContent: 'center',
   },
   sizeOn: {
     backgroundColor: colors.ink,
     borderColor: colors.ink,
+  },
+  sizeOut: {
+    backgroundColor: colors.surface,
+    borderStyle: 'dashed',
   },
   facts: {
     backgroundColor: colors.surface,
@@ -292,7 +436,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
+    minHeight: 44,
   },
   accordionBody: {
     marginTop: 6,
@@ -303,6 +447,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 14,
   },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8,
+  },
+  was: {
+    textDecorationLine: 'line-through',
+  },
   cta: {
     flex: 1,
     height: 54,
@@ -312,5 +464,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+  },
+  ctaAdded: {
+    backgroundColor: colors.ink,
+  },
+  ctaOff: {
+    backgroundColor: colors.surfaceSunken,
   },
 });
