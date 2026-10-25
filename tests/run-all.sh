@@ -65,6 +65,7 @@ npx supabase db reset >/dev/null 2>&1; suite "database: storefront, returns, sup
 npx supabase db reset >/dev/null 2>&1; suite "database: addresses, photos, delivery, cancel, wishlist" db-shopper.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: saved numbers, reviews, data export and deletion" db-privacy.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: launch security, checkout and delivery hardening" db-launch.cjs
+npx supabase db reset >/dev/null 2>&1; suite "database: vendors, subscriptions, review and markup" db-marketplace.cjs
 
 if [ "$FAILED" = "0" ]; then echo "== all suites passed"; else echo "== some suites FAILED"; fi
 exit "$FAILED"
