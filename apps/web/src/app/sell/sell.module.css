@@ -1,0 +1,133 @@
+/* The page that invites vendors: what it costs, how it works, the terms. */
+
+.hero {
+  background: var(--c-surface);
+  padding: 48px 0 40px;
+}
+
+.hero h1 {
+  max-width: 18ch;
+  font-size: clamp(30px, 5vw, 46px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.hero p {
+  margin-top: 14px;
+  max-width: 54ch;
+  color: var(--c-text-subtle);
+  font-size: 17px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 24px;
+  border-radius: var(--r-pill);
+  border: 1px solid transparent;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.primary {
+  background: var(--c-accent);
+  color: var(--c-canvas);
+}
+
+.secondary {
+  background: var(--c-canvas);
+  border-color: var(--c-line-strong);
+  color: var(--c-ink);
+}
+
+.section {
+  padding-block: 40px;
+}
+
+.section h2 {
+  margin-bottom: 18px;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.steps li {
+  position: relative;
+  padding: 20px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-xl);
+  counter-increment: step;
+}
+
+.steps li::before {
+  content: counter(step);
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 12px;
+  border-radius: 50%;
+  background: var(--c-accent);
+  color: var(--c-canvas);
+  font-weight: 700;
+}
+
+.steps strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.steps span {
+  color: var(--c-text-muted);
+  font-size: 14px;
+}
+
+.price {
+  display: inline-block;
+  padding: 18px 24px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-xl);
+  background: var(--c-canvas);
+}
+
+.price strong {
+  display: block;
+  font-size: 34px;
+  letter-spacing: -0.02em;
+}
+
+.price span {
+  color: var(--c-text-muted);
+  font-size: 14px;
+}
+
+.terms {
+  max-width: 70ch;
+  padding-left: 20px;
+  color: var(--c-text-subtle);
+}
+
+.terms li + li {
+  margin-top: 10px;
+}

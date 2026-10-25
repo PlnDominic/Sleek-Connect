@@ -2,7 +2,7 @@ import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
 import { categoryFromRow, productFromRow, productSelect, type AgeBand, type AgeBandId, type Category, type Product } from '@sleek/shared';
 import type { DeliveryConfig } from './delivery';
-import { photoUrl } from './photos';
+import { photoUrl, vendorAssetUrl } from './photos';
 import { createSupabase } from './supabase/server';
 import type { Database } from './supabase/database.types';
 
@@ -12,6 +12,7 @@ type ProductRow = Tables['products']['Row'] & {
   product_age_bands: Pick<Tables['product_age_bands']['Row'], 'age_band_id'>[];
   inventory_levels: { size_code: string; in_stock: boolean | null }[];
   product_images: Pick<Tables['product_images']['Row'], 'path' | 'alt' | 'sort_order'>[];
+  vendors: Pick<Tables['vendors']['Row'], 'slug' | 'name' | 'is_house'> | null;
 };
 
 const productColumns = productSelect;
@@ -219,4 +220,64 @@ export async function getAgeBandProducts(band: string): Promise<Product[]> {
       .order('name'),
   );
   return rows.map((r) => toProduct(r as unknown as ProductRow));
+}
+
+export interface Storefront {
+  name: string;
+  slug: string;
+  tagline?: string;
+  description?: string;
+  logo?: string;
+  banner?: string;
+  isHouse: boolean;
+  products: Product[];
+}
+
+/** A vendor's public store with the products on sale, or null when the store doesn't exist or isn't open. */
+export async function getStorefront(slug: string): Promise<Storefront | null> {
+  'use cache';
+  cacheLife('minutes');
+  cacheTag('catalog');
+
+  const supabase = createSupabase();
+  // Row level security only returns stores that are approved and paid up.
+  const { data: vendor, error } = await supabase
+    .from('vendors')
+    .select('id, slug, name, tagline, description, logo_path, banner_path, is_house')
+    .eq('slug', slug)
+    .maybeSingle();
+  if (error) throw new Error(`Supabase query failed: ${error.message}`);
+  if (!vendor) return null;
+  const rows = unwrap(
+    await supabase.from('products').select(productColumns).eq('vendor_id', vendor.id).order('created_at', { ascending: false }),
+  );
+  return {
+    name: vendor.name,
+    slug: vendor.slug,
+    tagline: vendor.tagline ?? undefined,
+    description: vendor.description ?? undefined,
+    logo: vendorAssetUrl(vendor.logo_path),
+    banner: vendorAssetUrl(vendor.banner_path),
+    isHouse: vendor.is_house,
+    products: (rows as ProductRow[]).map(toProduct),
+  };
+}
+
+/** Slugs of the open stores, ours included, for the sitemap and pre-built store pages. */
+export async function getStoreSlugs(): Promise<string[]> {
+  'use cache';
+  cacheLife('minutes');
+  cacheTag('catalog');
+  const rows = unwrap(await createSupabase().from('vendors').select('slug'));
+  return rows.map((r) => r.slug);
+}
+
+/** What a prospective vendor needs to know before applying. */
+export async function getVendorTerms(): Promise<{ annualFee: number; graceDays: number }> {
+  'use cache';
+  cacheLife('minutes');
+  cacheTag('catalog');
+  const { data, error } = await createSupabase().from('store_settings').select('vendor_annual_fee_ghs, vendor_grace_days').single();
+  if (error) throw new Error(`Supabase query failed: ${error.message}`);
+  return { annualFee: data.vendor_annual_fee_ghs, graceDays: data.vendor_grace_days };
 }

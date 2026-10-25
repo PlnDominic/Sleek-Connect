@@ -36,6 +36,12 @@
   select grant; when you add a column to `orders`, add it to the column grant in a migration, and list columns
   explicitly in staff queries (no `select *`).
 - After adding a migration or changing the seed, run `npm run db:setup:generate` to refresh `supabase/setup.sql`.
+- Marketplace (see `docs/MARKETPLACE.md`): vendors own `products.vendor_id` (the built-in house vendor owns the shop's
+  own range). A vendor product's `price_ghs` and `is_published` are computed by the `products_marketplace_rules` trigger
+  from the vendor's price, the owner's markup, the owner's approval and a live (approved + paid) store, so never set them
+  for vendor products. Vendors change things only through `public.vendor_*` functions, the owner through `admin_*`
+  (admin role). Never expose `vendors.owner_id`, `vendor_private`, `vendor_price_ghs` or `markup_percent` to the public,
+  and keep ordering from vendor stores behind `store_settings.marketplace_orders_open` until fulfilment and payouts exist.
 - Orders become paid only through `public.confirm_payment`, after the webhook has verified the provider's
   notification. Stock is reserved by `place_order` and released by `release_order_reservation`.
 - The order token must not reach anything staff can read either. Return photos are stored under

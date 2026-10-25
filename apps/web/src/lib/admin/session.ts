@@ -63,6 +63,7 @@ const permissions = {
   'support.reply': ['support', 'operations'],
   'reviews.moderate': ['catalogue', 'support'],
   'staff.manage': [],
+  'vendors.manage': [],
   'settings.edit': [],
 } satisfies Record<string, StaffRole[]>;
 

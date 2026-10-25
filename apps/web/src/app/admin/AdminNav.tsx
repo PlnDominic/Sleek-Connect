@@ -52,6 +52,7 @@ const groups: NavGroup[] = [
     heading: 'Manage',
     adminOnly: true,
     links: [
+      { href: '/admin/vendors', label: 'Vendors', icon: 'users' },
       { href: '/admin/staff', label: 'Staff', icon: 'users' },
       { href: '/admin/audit', label: 'Audit log', icon: 'clipboard' },
       { href: '/admin/settings', label: 'Settings', icon: 'sliders' },

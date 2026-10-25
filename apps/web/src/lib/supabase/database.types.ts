@@ -317,6 +317,13 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "products"
       referencedColumns: ["id"]
+    },
+                    {
+      foreignKeyName: "order_items_vendor_id_fkey"
+      columns: ["vendor_id"]
+isOneToOne: false
+      referencedRelation: "vendors"
+      referencedColumns: ["id"]
     }
                   ]
                 },"order_lookup_failures": {
@@ -494,6 +501,13 @@ isOneToOne: false
       columns: ["category_id"]
 isOneToOne: false
       referencedRelation: "categories"
+      referencedColumns: ["id"]
+    },
+                    {
+      foreignKeyName: "products_vendor_id_fkey"
+      columns: ["vendor_id"]
+isOneToOne: false
+      referencedRelation: "vendors"
       referencedColumns: ["id"]
     }
                   ]
@@ -711,7 +725,13 @@ isOneToOne: false
                     "email"?: string | null,"phone"?: string | null,"review_note"?: string | null,"terms_accepted_at"?: string | null,"vendor_id"?: string
                   }
                   Relationships: [
-                    
+                    {
+      foreignKeyName: "vendor_private_vendor_id_fkey"
+      columns: ["vendor_id"]
+isOneToOne: false
+      referencedRelation: "vendors"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"vendor_subscriptions": {
                   Row: {
@@ -725,7 +745,13 @@ isOneToOne: false
                     "amount_ghs"?: number,"created_at"?: string,"ends_on"?: string,"id"?: string,"method"?: string,"note"?: string | null,"recorded_by"?: string | null,"reference"?: string | null,"starts_on"?: string,"vendor_id"?: string
                   }
                   Relationships: [
-                    
+                    {
+      foreignKeyName: "vendor_subscriptions_vendor_id_fkey"
+      columns: ["vendor_id"]
+isOneToOne: false
+      referencedRelation: "vendors"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"wishlist_items": {
                   Row: {

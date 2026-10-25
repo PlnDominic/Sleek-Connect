@@ -138,6 +138,13 @@ The build reads the catalogue from Supabase, so the Supabase variables must be s
 - To change the starter catalogue, edit `packages/shared/src/catalog.ts` and run `npm run db:seed:generate`.
 - After adding a migration or regenerating the seed, run `npm run db:setup:generate` to refresh `supabase/setup.sql`.
 
+## Marketplace
+
+Vendors can open their own storefronts (`/sell`, `/vendor`, `/store/<slug>`) after the owner approves them and records a
+yearly subscription payment. Vendors list their own products; the owner reviews each one and sets a markup
+(**Admin → Vendors**), and shoppers pay the vendor's price plus the markup. Ordering from vendor stores stays off until
+fulfilment and payouts are built. See [docs/MARKETPLACE.md](docs/MARKETPLACE.md).
+
 ## Admin console
 
 Staff work at `/admin`. They sign in with Google or with an email and password, and go straight in: there is no

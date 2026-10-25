@@ -24,6 +24,13 @@ const columns = [
     ],
   },
   {
+    title: 'Sell',
+    links: [
+      { label: 'Sell on Sleek Connect', href: '/sell' },
+      { label: 'Vendor sign in', href: '/vendor' },
+    ],
+  },
+  {
     title: 'Trust',
     links: [
       { label: 'Authenticity promise', href: '/help#authenticity' },

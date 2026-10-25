@@ -107,6 +107,8 @@ export interface Product {
   returnable?: boolean;
   /** Extra return terms shown on the product page. */
   returnNote?: string;
+  /** The store that sells it: Sleek Connect itself (`isHouse`) or a vendor's storefront at /store/<slug>. */
+  vendor?: { slug: string; name: string; isHouse: boolean };
   /** Category-specific filter values (PRD FR-013). */
   skinTypes?: string[];
   shades?: string[];

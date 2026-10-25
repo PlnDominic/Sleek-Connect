@@ -57,6 +57,7 @@ if [ "$ONLY" != "db" ]; then
   fresh; start; suite "shop pages, search, content, returns, help" e2e-store.cjs; server_errors
   fresh; start; suite "delivery, photos, wishlist, addresses, cancel, buy again" e2e-shopper.cjs; server_errors
   fresh; start; suite "terms, saved numbers, reviews, data export and deletion" e2e-privacy.cjs; server_errors
+  fresh; start; suite "vendors: apply, approve, pay, review, storefront" e2e-marketplace.cjs; server_errors
   stop
 fi
 

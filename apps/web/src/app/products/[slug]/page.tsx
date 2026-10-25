@@ -69,7 +69,7 @@ export default async function ProductPage({ params, searchParams }: PageProps<'/
     ...(availability && { availability }),
     itemCondition: 'https://schema.org/NewCondition',
     url,
-    seller: { '@type': 'Organization', name: siteName },
+    seller: { '@type': 'Organization', name: product.vendor && !product.vendor.isHouse ? product.vendor.name : siteName },
   };
   const productData = {
     '@context': 'https://schema.org',
@@ -148,14 +148,21 @@ export default async function ProductPage({ params, searchParams }: PageProps<'/
                 <Stars rating={summary.average} /> {summary.average.toFixed(1)} ({summary.count} {summary.count === 1 ? 'review' : 'reviews'})
               </a>
             )}
+            {product.vendor && !product.vendor.isHouse && (
+              <p className={styles.soldBy}>
+                Sold by <Link href={`/store/${product.vendor.slug}`}>{product.vendor.name}</Link>
+              </p>
+            )}
             <p className={styles.description}>{details?.description ?? product.summary}</p>
           </div>
 
           <div className={styles.chips}>
-            <span className={styles.chip}>
-              <Icon name="shieldCheck" size={14} strokeWidth={2.2} />
-              Verified authentic
-            </span>
+            {(!product.vendor || product.vendor.isHouse) && (
+              <span className={styles.chip}>
+                <Icon name="shieldCheck" size={14} strokeWidth={2.2} />
+                Verified authentic
+              </span>
+            )}
             {highlights.map((h) => (
               <span key={h} className={styles.chip}>
                 {h}

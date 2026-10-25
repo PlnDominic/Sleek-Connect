@@ -15,7 +15,7 @@ import {
 
 /** The columns to select for a product, with the tables it needs to be shown (sizes, age bands, stock, photos). */
 export const productSelect =
-  '*, product_sizes(code, label, price_ghs, is_default, sort_order), product_age_bands(age_band_id), inventory_levels(size_code, in_stock), product_images(path, alt, sort_order)';
+  '*, product_sizes(code, label, price_ghs, is_default, sort_order), product_age_bands(age_band_id), inventory_levels(size_code, in_stock), product_images(path, alt, sort_order), vendors(slug, name, is_house)';
 
 /** A `products` row as `productSelect` returns it. */
 export interface ProductRowLike {
@@ -49,6 +49,8 @@ export interface ProductRowLike {
   product_age_bands: { age_band_id: string }[];
   inventory_levels: { size_code: string; in_stock: boolean | null }[];
   product_images: { path: string; alt: string | null; sort_order: number }[];
+  /** Who sells it; missing when the query didn't ask for it. */
+  vendors?: { slug: string; name: string; is_house: boolean } | null;
 }
 
 /** `photoUrl` turns an uploaded photo's storage path into its public address. */
@@ -88,6 +90,7 @@ export function productFromRow(row: ProductRowLike, photoUrl: (path: string) => 
     skinTypes: row.skin_types.length ? row.skin_types : undefined,
     shades: row.shades.length ? row.shades : undefined,
     createdAt: row.created_at,
+    vendor: row.vendors ? { slug: row.vendors.slug, name: row.vendors.name, isHouse: row.vendors.is_house } : undefined,
     compliance: {
       ingredients: row.ingredients ?? undefined,
       countryOfOrigin: row.country_of_origin ?? undefined,

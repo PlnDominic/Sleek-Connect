@@ -481,3 +481,14 @@
 .ratingLink:hover {
   color: var(--c-ink);
 }
+
+.soldBy {
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--c-text-muted);
+}
+
+.soldBy a {
+  color: var(--c-accent);
+  font-weight: 600;
+}

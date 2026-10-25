@@ -7353,12 +7353,18 @@ begin
   return coalesce((
     select jsonb_agg(jsonb_build_object(
       'id', p.id, 'slug', p.slug, 'name', p.name, 'brand', p.brand, 'department', p.department, 'kind', p.kind,
-      'category_id', p.category_id, 'summary', p.summary, 'details', p.details,
+      'category_id', p.category_id, 'summary', p.summary, 'details', p.details, 'kids_filter', p.kids_filter,
+      'ingredients', p.ingredients, 'country_of_origin', p.country_of_origin,
+      'regulatory_reference', p.regulatory_reference, 'period_after_opening', p.period_after_opening,
+      'returnable', p.returnable, 'return_note', p.return_note,
+      'age_bands', coalesce((select jsonb_agg(b.age_band_id) from public.product_age_bands b where b.product_id = p.id), '[]'::jsonb),
       'review_status', p.review_status, 'review_note', p.review_note, 'publish_requested', p.publish_requested,
       'is_published', p.is_published, 'vendor_price_ghs', p.vendor_price_ghs, 'vendor_was_price_ghs', p.vendor_was_price_ghs,
       'markup_percent', case when p.review_status = 'approved' then p.markup_percent end,
       'shopper_price_ghs', case when p.review_status = 'approved' then p.price_ghs end,
       'problems', to_jsonb(public.product_publish_problems(p.id)),
+      -- Stock of a product sold in one size only (no size rows).
+      'one_size_stock', (select il.on_hand - il.reserved from public.inventory_levels il where il.product_id = p.id and il.size_code = ''),
       'sizes', coalesce((
         select jsonb_agg(jsonb_build_object('code', s.code, 'label', s.label, 'vendor_price_ghs', s.vendor_price_ghs,
                  'is_default', s.is_default, 'stock', coalesce(i.in_stock_qty, 0)) order by s.sort_order)
