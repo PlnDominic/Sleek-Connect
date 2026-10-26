@@ -446,3 +446,12 @@ main.centered .panel {
     align-self: stretch;
   }
 }
+
+.orderRow {
+  flex-wrap: wrap;
+}
+
+.orderTrack {
+  flex: 1 0 100%;
+  max-width: 360px;
+}

@@ -247,6 +247,11 @@ const count = (page) => page.locator('#results-count:visible').first().textConte
   await visitor.waitForURL(new RegExp(`/orders/${order.order_token}`));
   await visitor.getByRole('heading', { name: `Order ${order.order_number}` }).waitFor();
   assert(true, 'order number + phone opens the order page');
+  assert(await visitor.getByRole('button', { name: 'Share tracking link' }).isVisible(), 'the order page offers a tracking link to share');
+  await go(visitor, BASE + '/track');
+  await visitor.getByRole('heading', { name: 'Your recent orders' }).waitFor();
+  assert(await visitor.getByRole('link', { name: new RegExp(`Order ${order.order_number}`) }).isVisible(), '/track lists orders opened on this device');
+  await go(visitor, BASE + `/orders/${order.order_token}`);
 
   // --- Return request with a photo (FR-053) --------------------------------------------------------------
   await visitor.getByRole('link', { name: 'Request a return' }).click();

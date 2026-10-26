@@ -123,7 +123,9 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   const code = sql(`select delivery_code from public.orders where order_number = '${orderNumber}'`);
   assert((await shopper.getByText(code, { exact: true }).count()) === 1, 'order page shows the delivery code');
   assert(await shopper.getByRole('heading', { name: `Order ${orderNumber}` }).isVisible(), 'confirmation shows the order number');
-  const steps = await shopper.locator('ol li').allTextContents();
+  const steps = await shopper.locator('section', { has: shopper.getByRole('heading', { name: 'Order progress' }) }).locator('ol li').allTextContents();
+  const bar = shopper.getByRole('list', { name: 'Delivery progress' });
+  assert(await bar.isVisible() && (await bar.locator('li[aria-current="step"]').textContent()).includes('Packed'), 'the tracking bar shows the order is being packed next');
   assert(steps[0].startsWith('✓Order placed') && steps[1].includes('Payment confirmed') && steps.some((s) => s.includes('Delivered')), `timeline shows progress (${steps.map((s) => s.slice(0, 22)).join(' | ')})`);
   await shot(shopper, 'order-confirmed');
   assert(await until(() => sql(`select count(*) from public.notifications where order_id = (select id from public.orders where order_number = '${orderNumber}') and status = 'sent'`) === '1'), 'confirmation SMS sent through the console provider');

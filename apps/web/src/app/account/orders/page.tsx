@@ -7,6 +7,7 @@ import { SiteFooter } from '@/components/SiteFooter';
 import { SiteHeader } from '@/components/SiteHeader';
 import { formatDate, statusShort } from '@/lib/orders';
 import { createUserSupabase } from '@/lib/supabase/server';
+import { TrackingBar } from '@/components/TrackingBar';
 import styles from '../account.module.css';
 
 export const metadata: Metadata = {
@@ -73,6 +74,9 @@ async function OrderList() {
                   {statusShort[order.status]}
                 </span>
                 <strong>{formatPriceOr(order.total_ghs as number | null, 'To be confirmed')}</strong>
+              </span>
+              <span className={styles.orderTrack}>
+                <TrackingBar status={order.status} compact />
               </span>
             </Link>
           </li>

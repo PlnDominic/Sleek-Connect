@@ -17,10 +17,14 @@ import {
   returnStatusLabels,
   statusShort,
 } from '@/lib/orders';
-import { getProductsBySlugs } from '@/lib/catalog';
+import { getDeliveryConfig, getProductsBySlugs, getStoreInfo } from '@/lib/catalog';
+import { telHref } from '@/lib/contact';
+import { expectedDelivery } from '@/lib/tracking';
+import { TrackingBar } from '@/components/TrackingBar';
 import { photoUrl } from '@/lib/photos';
 import { AutoRefresh } from './AutoRefresh';
 import { BuyAgain, CancelOrder } from './OrderActions';
+import { TrackingTools } from './TrackingTools';
 import { getCustomerOrder } from './data';
 import styles from './order.module.css';
 
@@ -54,7 +58,14 @@ async function OrderDetails({ params }: { params: PageProps<'/orders/[token]'>['
   const canReturn = order.return_open && order.items.some((i) => i.quantity > i.return_requested);
   const reorderable = ['delivered', 'cancelled', 'returned'].includes(order.status);
   const slugs = order.items.flatMap((i) => (i.slug ? [i.slug] : []));
-  const products = reorderable && slugs.length ? await getProductsBySlugs(slugs) : [];
+  const [products, delivery, store] = await Promise.all([
+    reorderable && slugs.length ? getProductsBySlugs(slugs) : Promise.resolve([]),
+    getDeliveryConfig(),
+    getStoreInfo(),
+  ]);
+  const option = delivery.options.find((o) => o.label === order.delivery_option);
+  const expected =
+    order.paid_at && ['paid', 'packing', 'packed', 'out_for_delivery'].includes(order.status) ? expectedDelivery(option, order.paid_at) : null;
 
   return (
     <>
@@ -68,6 +79,32 @@ async function OrderDetails({ params }: { params: PageProps<'/orders/[token]'>['
           {statusShort[order.status]}
         </span>
       </div>
+
+      <section className={styles.trackCard} aria-label="Tracking">
+        <TrackingBar status={order.status} />
+        <div className={styles.trackMeta}>
+          {expected && (
+            <p className={styles.expected}>
+              <span>Expected delivery</span>
+              <strong>{expected}</strong>
+            </p>
+          )}
+          {order.delivered_at && (
+            <p className={styles.expected}>
+              <span>Delivered</span>
+              <strong>{formatDateTime(order.delivered_at)}</strong>
+            </p>
+          )}
+          <div className={styles.trackActions}>
+            <TrackingTools token={token} orderNumber={order.order_number} />
+            {store.supportPhone && (
+              <a href={telHref(store.supportPhone)} className={styles.secondary}>
+                Call us
+              </a>
+            )}
+          </div>
+        </div>
+      </section>
 
       <section className={styles.hero} data-status={order.status} aria-labelledby="order-headline">
         <div>
