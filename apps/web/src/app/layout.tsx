@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Plus_Jakarta_Sans } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import { AuthProvider } from '@/components/AuthProvider';
 import { CompareProvider } from '@/components/CompareProvider';
 import { WebBagProvider } from '@/components/WebBagProvider';
@@ -8,10 +8,11 @@ import { siteName, siteUrl } from '@/lib/site';
 import { themeVars } from '@/lib/theme';
 import './globals.css';
 
-const jakarta = Plus_Jakarta_Sans({
+// Inter, the same typeface as the admin console, so the store and the admin feel like one product.
+const inter = Inter({
   variable: '--font-sans',
   subsets: ['latin', 'latin-ext'],
-  weight: ['400', '500', '600', '700', '800'],
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -29,7 +30,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="en-GH" className={jakarta.variable} style={themeVars}>
+    <html lang="en-GH" className={inter.variable} style={themeVars}>
       <body>
         <AuthProvider>
           <WebBagProvider>
