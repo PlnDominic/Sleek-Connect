@@ -1,8 +1,13 @@
 /* Shared by the help centre, "Track an order", problem reports and return requests. */
 
+.page {
+  background: var(--c-surface);
+  padding-bottom: 72px;
+}
+
 .hero {
   background: var(--c-surface);
-  padding: 32px 0 28px;
+  padding: 56px 0 28px;
 }
 
 .breadcrumb {
@@ -73,8 +78,10 @@
 }
 
 .panel {
-  border: 1px solid var(--c-line);
-  border-radius: var(--r-xl);
+  border: 1px solid color-mix(in srgb, var(--c-line) 70%, transparent);
+  border-radius: 20px;
+  background: var(--c-canvas);
+  box-shadow: 0 1px 2px rgb(11 31 58 / 0.04), 0 8px 24px -18px rgb(11 31 58 / 0.18);
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -126,7 +133,8 @@
 
 .contactCard {
   border: 1px solid var(--c-line);
-  border-radius: var(--r-xl);
+  border-radius: 16px;
+  background: var(--c-canvas);
   padding: 18px;
   display: flex;
   flex-direction: column;
@@ -366,5 +374,173 @@ a.contactCard:hover {
 
   .panel {
     padding: 18px;
+  }
+}
+
+/* Help centre: a short heading, three action cards, a sticky topic list and one card per topic. */
+.kicker {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+
+.hero h1 {
+  font-weight: 800;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  max-width: 980px;
+  padding-bottom: 32px;
+}
+
+.action {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px 22px;
+  border: 1px solid color-mix(in srgb, var(--c-line) 70%, transparent);
+  border-radius: 20px;
+  background: var(--c-canvas);
+  box-shadow: 0 1px 2px rgb(11 31 58 / 0.04), 0 8px 24px -18px rgb(11 31 58 / 0.18);
+  color: var(--c-ink);
+  text-decoration: none;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.action:hover {
+  border-color: var(--c-line-strong);
+  transform: translateY(-1px);
+  color: var(--c-ink);
+}
+
+.action svg {
+  margin-bottom: 8px;
+  color: var(--c-accent);
+}
+
+.action strong {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.action span {
+  font-size: 13.5px;
+  color: var(--c-text-subtle);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 24px;
+  max-width: 980px;
+  align-items: start;
+}
+
+.topics {
+  position: sticky;
+  top: 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 16px 10px;
+  border: 1px solid color-mix(in srgb, var(--c-line) 70%, transparent);
+  border-radius: 20px;
+  background: var(--c-canvas);
+  box-shadow: 0 1px 2px rgb(11 31 58 / 0.04), 0 8px 24px -18px rgb(11 31 58 / 0.18);
+}
+
+.topics strong {
+  padding: 0 12px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+.topics a {
+  padding: 9px 12px;
+  border-radius: 10px;
+  color: var(--c-text-subtle);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.topics a:hover {
+  background: var(--c-surface);
+  color: var(--c-ink);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+/* Each topic is one rounded card. */
+.content > .section {
+  gap: 4px;
+  padding: 24px 26px 12px;
+  border: 1px solid color-mix(in srgb, var(--c-line) 70%, transparent);
+  border-radius: 20px;
+  background: var(--c-canvas);
+  box-shadow: 0 1px 2px rgb(11 31 58 / 0.04), 0 8px 24px -18px rgb(11 31 58 / 0.18);
+}
+
+.content > .section h2 {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.faq:last-child {
+  border-bottom: 0;
+}
+
+.faq summary {
+  font-size: 15px;
+}
+
+.content #contact {
+  padding-bottom: 24px;
+}
+
+@media (max-width: 860px) {
+  .actions {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .topics {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 12px;
+  }
+
+  .topics strong {
+    display: none;
+  }
+
+  .topics a {
+    border: 1px solid var(--c-line);
+    border-radius: var(--r-pill);
+    padding: 7px 14px;
+  }
+
+  .content > .section {
+    padding: 20px 18px 8px;
   }
 }
