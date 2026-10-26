@@ -43,24 +43,6 @@ export default async function HelpPage() {
           </div>
         </div>
 
-        <div className={`container ${styles.actions}`}>
-          <Link href="/track" className={styles.action}>
-            <Icon name="truck" size={22} />
-            <strong>Track an order</strong>
-            <span>See where it is</span>
-          </Link>
-          <Link href="/help/report" className={styles.action}>
-            <Icon name="headset" size={22} />
-            <strong>Report a problem</strong>
-            <span>Get a case number</span>
-          </Link>
-          <Link href="#contact" className={styles.action}>
-            <Icon name="call" size={22} />
-            <strong>Contact us</strong>
-            <span>Call, WhatsApp or email</span>
-          </Link>
-        </div>
-
         <div className={`container ${styles.layout}`}>
           <nav aria-label="Help topics" className={styles.topics}>
             <strong>Topics</strong>

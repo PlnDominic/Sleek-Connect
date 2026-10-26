@@ -7,7 +7,7 @@
 
 .hero {
   background: var(--c-surface);
-  padding: 56px 0 28px;
+  padding: 56px 0 32px;
 }
 
 .breadcrumb {
@@ -390,49 +390,6 @@ a.contactCard:hover {
   font-weight: 800;
 }
 
-.actions {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  max-width: 980px;
-  padding-bottom: 32px;
-}
-
-.action {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 20px 22px;
-  border: 1px solid color-mix(in srgb, var(--c-line) 70%, transparent);
-  border-radius: 20px;
-  background: var(--c-canvas);
-  box-shadow: 0 1px 2px rgb(11 31 58 / 0.04), 0 8px 24px -18px rgb(11 31 58 / 0.18);
-  color: var(--c-ink);
-  text-decoration: none;
-  transition: border-color 0.15s ease, transform 0.15s ease;
-}
-
-.action:hover {
-  border-color: var(--c-line-strong);
-  transform: translateY(-1px);
-  color: var(--c-ink);
-}
-
-.action svg {
-  margin-bottom: 8px;
-  color: var(--c-accent);
-}
-
-.action strong {
-  font-size: 16px;
-  font-weight: 700;
-}
-
-.action span {
-  font-size: 13.5px;
-  color: var(--c-text-subtle);
-}
-
 .layout {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
@@ -513,11 +470,6 @@ a.contactCard:hover {
 }
 
 @media (max-width: 860px) {
-  .actions {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
-  }
-
   .layout {
     grid-template-columns: minmax(0, 1fr);
   }
