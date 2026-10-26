@@ -466,3 +466,106 @@
   font-weight: 700;
   letter-spacing: -0.01em;
 }
+
+/* Single centred cards for sign-in, applying and waiting states. */
+.statusCard {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  padding: 36px 32px;
+  border: 1px solid color-mix(in srgb, var(--c-line) 70%, transparent);
+  border-radius: 24px;
+  background: var(--c-canvas);
+  box-shadow: 0 1px 2px rgb(11 31 58 / 0.04), 0 16px 40px -24px rgb(11 31 58 / 0.25);
+  text-align: center;
+}
+
+.statusCard > .muted,
+.statusCard > .statusFee {
+  text-align: center;
+}
+
+.statusCard .field,
+.statusCard .check {
+  text-align: left;
+}
+
+.statusMark {
+  align-self: center;
+  display: grid;
+  place-items: center;
+  min-width: 56px;
+  height: 56px;
+  padding: 0 14px;
+  border-radius: 18px;
+  background: var(--c-teal-soft);
+  color: var(--c-accent);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.statusTitle {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.statusFee {
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.quiet {
+  align-self: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-text-subtle);
+}
+
+.statusCard .primary {
+  width: 100%;
+}
+
+/* Products as cards. */
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.productCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid var(--c-line);
+  border-radius: 16px;
+  background: var(--c-canvas);
+}
+
+.productCard .productHead {
+  align-items: flex-start;
+}
+
+.productCard .price {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.productCard .price span {
+  font-weight: 400;
+  color: var(--c-text-subtle);
+}
+
+.productCard .warn {
+  margin: 0;
+  padding: 6px 10px;
+  font-size: 12.5px;
+}

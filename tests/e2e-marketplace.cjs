@@ -48,12 +48,12 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   await go(ama, BASE + '/vendor');
   assert(await ama.getByRole('heading', { name: 'Open your store' }).isVisible(), 'a signed-in shopper sees the application form');
   await ama.getByLabel('Store name').fill("Ama's Beauty Hub");
-  await ama.getByLabel('Phone number we can reach you on').fill('024 123 4567');
+  await ama.getByLabel('Phone number').fill('024 123 4567');
   await ama.getByLabel(/I agree to the/).check();
   await ama.getByRole('button', { name: 'Send application' }).click();
   await ama.getByText(/Application sent/).waitFor({ timeout: 8000 });
   await go(ama, BASE + '/vendor');
-  assert(await ama.getByText(/reviewing your application/).isVisible(), 'the vendor then sees that the application is being reviewed');
+  assert(await ama.getByRole('heading', { name: 'Application received' }).isVisible(), 'the vendor then sees that the application is being reviewed');
   await shot(ama, 'vendor-pending');
 
   // --- The owner approves and records the payment ------------------------------------------------

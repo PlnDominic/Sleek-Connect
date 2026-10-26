@@ -14,101 +14,96 @@ const reviewLabels = {
   rejected: ['Not approved', 'bad'],
 } as const;
 
+/** A single centred card: used for sign-in, applying and every waiting state. */
+function StatusCard({ title, children, mark }: { title: string; children: React.ReactNode; mark: string }) {
+  return (
+    <section className={styles.statusCard}>
+      <span className={styles.statusMark} aria-hidden="true">
+        {mark}
+      </span>
+      <h1 className={styles.statusTitle}>{title}</h1>
+      {children}
+    </section>
+  );
+}
+
 export default async function VendorHome() {
   const session = await getVendorSession();
 
   if (session.state === 'signed_out') {
     return (
-      <>
-        <h1 className={styles.title}>Sell on Sleek Connect</h1>
-        <p className={styles.lead}>Sign in with the account you want to run your store from.</p>
+      <StatusCard title="Sell on Sleek Connect" mark="→">
+        <p className={styles.muted}>Sign in to open your store.</p>
         <Link href="/account?next=/vendor" className={styles.primary}>
           Sign in to continue
         </Link>
-        <p className={styles.muted}>
-          New here? <Link href="/sell">See how selling works</Link>.
-        </p>
-      </>
+        <Link href="/sell" className={styles.quiet}>
+          How selling works
+        </Link>
+      </StatusCard>
     );
   }
 
   const { vendor } = session;
   if (!vendor) {
     return (
-      <>
-        <h1 className={styles.title}>Open your store</h1>
-        <p className={styles.lead}>Tell us about your business. We review every application, then you pay the yearly fee and your storefront opens.</p>
+      <StatusCard title="Open your store" mark="+">
         <VendorForm action={applyForStore}>
           <label className={styles.field}>
             <span>Store name</span>
             <input name="name" required minLength={2} maxLength={60} autoComplete="organization" />
           </label>
           <label className={styles.field}>
-            <span>Phone number we can reach you on</span>
+            <span>Phone number</span>
             <input name="phone" type="tel" required autoComplete="tel" placeholder="024 123 4567" />
-          </label>
-          <label className={styles.field}>
-            <span>One line about what you sell (optional)</span>
-            <input name="tagline" maxLength={120} placeholder="e.g. Natural shea products made in Tamale" />
           </label>
           <label className={styles.check}>
             <input type="checkbox" name="terms" required />
             <span>
-              I agree to the <Link href="/sell#terms">vendor terms</Link>.
+              I agree to the <Link href="/sell#terms">vendor terms</Link>
             </span>
           </label>
-          <div className={styles.buttons}>
-            <button type="submit" className={styles.primary}>
-              Send application
-            </button>
-          </div>
+          <button type="submit" className={styles.primary}>
+            Send application
+          </button>
         </VendorForm>
-      </>
+      </StatusCard>
     );
   }
 
   if (vendor.status === 'pending') {
     return (
-      <>
-        <h1 className={styles.title}>{vendor.name}</h1>
-        <p className={styles.lead}>Thanks for applying. We are reviewing your application and will call or email you soon.</p>
-      </>
+      <StatusCard title="Application received" mark="✓">
+        <p className={styles.muted}>We’ll review {vendor.name} and call you soon.</p>
+      </StatusCard>
     );
   }
 
   if (vendor.status === 'rejected' || vendor.status === 'suspended') {
     return (
-      <>
-        <h1 className={styles.title}>{vendor.name}</h1>
-        <p className={styles.lead}>
-          {vendor.status === 'rejected' ? 'We could not approve this application.' : 'This store is paused.'}
-          {vendor.review_note ? ` ${vendor.review_note}` : ''}
-        </p>
-        <p className={styles.muted}>If you think this is a mistake, contact us from the Help page.</p>
-      </>
+      <StatusCard title={vendor.status === 'rejected' ? 'Not approved' : 'Store paused'} mark="!">
+        {vendor.review_note && <p className={styles.muted}>{vendor.review_note}</p>}
+        <Link href="/help#contact" className={styles.quiet}>
+          Contact us
+        </Link>
+      </StatusCard>
     );
   }
 
   if (!vendor.live) {
     const renewing = Boolean(vendor.paid_until);
     return (
-      <>
-        <h1 className={styles.title}>{vendor.name}</h1>
-        <section className={styles.panel}>
-          <h2>{renewing ? 'Renew your subscription' : 'One step left: pay for your first year'}</h2>
-          <p>
-            {renewing ? `Your subscription ended on ${dateText(vendor.paid_until!)}. ` : 'You are approved. '}
-            The yearly fee is <strong>{formatPrice(vendor.annual_fee_ghs)}</strong>. Once we record your payment, your storefront opens
-            and you can add products.
-          </p>
-          {vendor.payment_instructions ? (
-            <p className={styles.instructions}>{vendor.payment_instructions}</p>
-          ) : (
-            <p className={styles.muted}>Contact us from the Help page to arrange payment.</p>
-          )}
-          <p className={styles.muted}>Payments are recorded by hand, usually within a working day.</p>
-        </section>
-      </>
+      <StatusCard title={renewing ? 'Renew your subscription' : 'Pay to open your store'} mark="GH₵">
+        <p className={styles.statusFee}>{formatPrice(vendor.annual_fee_ghs)}</p>
+        <p className={styles.muted}>per year{renewing ? ` · ended ${dateText(vendor.paid_until!)}` : ''}</p>
+        {vendor.payment_instructions ? (
+          <p className={styles.instructions}>{vendor.payment_instructions}</p>
+        ) : (
+          <Link href="/help#contact" className={styles.quiet}>
+            Contact us to pay
+          </Link>
+        )}
+      </StatusCard>
     );
   }
 
@@ -152,13 +147,13 @@ export default async function VendorHome() {
           </Link>
         </div>
         {items.length === 0 ? (
-          <p className={styles.muted}>No products yet. Add your first product; Sleek Connect reviews it and sets the price shoppers see.</p>
+          <p className={styles.muted}>No products yet. Add your first one.</p>
         ) : (
-          <ul className={styles.products}>
+          <ul className={styles.productGrid}>
             {items.map((p) => {
               const [label, tone] = reviewLabels[p.review_status];
               return (
-                <li key={p.id} className={styles.product}>
+                <li key={p.id} className={styles.productCard}>
                   <div className={styles.productHead}>
                     <Link href={`/vendor/products/${p.id}`} className={styles.productName}>
                       {p.name}
@@ -167,14 +162,13 @@ export default async function VendorHome() {
                       {p.is_published ? 'On sale' : label}
                     </span>
                   </div>
-                  <p className={styles.muted}>
-                    Your price {formatPrice(p.vendor_price_ghs)}
-                    {p.shopper_price_ghs !== null ? ` · shoppers pay ${formatPrice(p.shopper_price_ghs)}` : ''}
-                    {p.review_note ? ` · Note from us: ${p.review_note}` : ''}
+                  <p className={styles.price}>
+                    {formatPrice(p.vendor_price_ghs)}
+                    {p.shopper_price_ghs !== null && <span> · shoppers pay {formatPrice(p.shopper_price_ghs)}</span>}
                   </p>
-                  {p.problems.length > 0 && <p className={styles.warn}>Still needed: {p.problems.join(', ')}.</p>}
+                  {p.problems.length > 0 && <p className={styles.warn}>Still needed: {p.problems.join(', ')}</p>}
                   <div className={styles.stocks}>
-                    {(p.sizes.length ? p.sizes : [{ code: '', label: 'In stock', stock: p.one_size_stock ?? 0 }]).map((s) => (
+                    {(p.sizes.length ? p.sizes : [{ code: '', label: 'Stock', stock: p.one_size_stock ?? 0 }]).map((s) => (
                       <VendorForm key={s.code} action={setStock.bind(null, p.id, s.code)} className={styles.stock}>
                         <label>
                           <span>{s.label}</span>
