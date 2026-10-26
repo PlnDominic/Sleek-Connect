@@ -70,7 +70,7 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   assert(await boss.getByRole('link', { name: 'Skip to content' }).count() === 1, 'there is a skip link for keyboard users');
 
   await go(ama, BASE + '/vendor');
-  assert(await ama.getByRole('link', { name: 'Add a product' }).isVisible(), 'once paid, the vendor can add products');
+  assert(await ama.getByRole('link', { name: 'Add a product' }).first().isVisible(), 'once paid, the vendor can add products');
   await shot(ama, 'vendor-dashboard');
 
   // --- A product: reviewed, marked up, on sale ---------------------------------------------------

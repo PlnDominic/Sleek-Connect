@@ -385,3 +385,84 @@
   border: 1px solid var(--c-line);
   object-fit: cover;
 }
+
+/* Dashboard look: rounded white cards on the soft grey page, Inter, bold titles. */
+.panel {
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid color-mix(in srgb, var(--c-line) 70%, transparent);
+  border-radius: 20px;
+  background: var(--c-canvas);
+  box-shadow: 0 1px 2px rgb(11 31 58 / 0.04), 0 8px 24px -18px rgb(11 31 58 / 0.18);
+}
+
+.panel,
+.stats {
+  margin-top: 0;
+}
+
+.panelHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 20px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 22px 24px;
+  border: 1px solid color-mix(in srgb, var(--c-line) 70%, transparent);
+  border-radius: 20px;
+  background: var(--c-canvas);
+  box-shadow: 0 1px 2px rgb(11 31 58 / 0.04), 0 8px 24px -18px rgb(11 31 58 / 0.18);
+}
+
+.stat h2 {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-text-subtle);
+}
+
+.stat strong {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.stat span {
+  font-size: 12.5px;
+  color: var(--c-text-subtle);
+}
+
+.back {
+  align-self: flex-start;
+  font-weight: 500;
+}
+
+/* Page titles inside the vendor area. */
+.title {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.lead {
+  max-width: 60ch;
+  margin: 0;
+}
+
+.panel h2 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}

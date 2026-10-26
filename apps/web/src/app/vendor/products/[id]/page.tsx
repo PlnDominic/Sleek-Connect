@@ -27,7 +27,7 @@ export default async function EditProductPage({ params, searchParams }: PageProp
       <Link href="/vendor" className={styles.back}>
         ← Back to your store
       </Link>
-      <h1>{product.name}</h1>
+      <h1 className={styles.title}>{product.name}</h1>
       {created && <p className={styles.success}>Product added. Add photos below and set your stock on the store page, then wait for our approval.</p>}
       {product.review_status === 'pending' && <p className={styles.notice}>Waiting for approval. We will set the shopper price and put it on sale.</p>}
       {product.review_status === 'rejected' && <p className={styles.warn}>Not approved{product.review_note ? `: ${product.review_note}` : '.'} Fix it and save to ask again.</p>}

@@ -1,9 +1,7 @@
 import Link from 'next/link';
 import { formatPrice } from '@sleek/shared';
-import { vendorAssetUrl } from '@/lib/photos';
 import { getVendorSession, type VendorProduct } from '@/lib/vendor';
-import { applyForStore, saveStore, setStock } from './actions';
-import { ImageUploader } from './ImageUploader';
+import { applyForStore, setStock } from './actions';
 import { VendorForm } from './VendorForm';
 import styles from './vendor.module.css';
 
@@ -22,7 +20,7 @@ export default async function VendorHome() {
   if (session.state === 'signed_out') {
     return (
       <>
-        <h1>Sell on Sleek Connect</h1>
+        <h1 className={styles.title}>Sell on Sleek Connect</h1>
         <p className={styles.lead}>Sign in with the account you want to run your store from.</p>
         <Link href="/account?next=/vendor" className={styles.primary}>
           Sign in to continue
@@ -38,7 +36,7 @@ export default async function VendorHome() {
   if (!vendor) {
     return (
       <>
-        <h1>Open your store</h1>
+        <h1 className={styles.title}>Open your store</h1>
         <p className={styles.lead}>Tell us about your business. We review every application, then you pay the yearly fee and your storefront opens.</p>
         <VendorForm action={applyForStore}>
           <label className={styles.field}>
@@ -72,7 +70,7 @@ export default async function VendorHome() {
   if (vendor.status === 'pending') {
     return (
       <>
-        <h1>{vendor.name}</h1>
+        <h1 className={styles.title}>{vendor.name}</h1>
         <p className={styles.lead}>Thanks for applying. We are reviewing your application and will call or email you soon.</p>
       </>
     );
@@ -81,7 +79,7 @@ export default async function VendorHome() {
   if (vendor.status === 'rejected' || vendor.status === 'suspended') {
     return (
       <>
-        <h1>{vendor.name}</h1>
+        <h1 className={styles.title}>{vendor.name}</h1>
         <p className={styles.lead}>
           {vendor.status === 'rejected' ? 'We could not approve this application.' : 'This store is paused.'}
           {vendor.review_note ? ` ${vendor.review_note}` : ''}
@@ -95,7 +93,7 @@ export default async function VendorHome() {
     const renewing = Boolean(vendor.paid_until);
     return (
       <>
-        <h1>{vendor.name}</h1>
+        <h1 className={styles.title}>{vendor.name}</h1>
         <section className={styles.panel}>
           <h2>{renewing ? 'Renew your subscription' : 'One step left: pay for your first year'}</h2>
           <p>
@@ -121,18 +119,6 @@ export default async function VendorHome() {
 
   return (
     <>
-      <div className={styles.head}>
-        <div>
-          <h1>{vendor.name}</h1>
-          <p className={styles.muted}>
-            Your storefront: <Link href={`/store/${vendor.slug}`}>/store/{vendor.slug}</Link>
-            {vendor.paid_until ? ` · Subscription paid until ${dateText(vendor.paid_until)}` : ''}
-          </p>
-        </div>
-        <Link href="/vendor/products/new" className={styles.primary}>
-          Add a product
-        </Link>
-      </div>
       {closesSoon !== null && closesSoon <= 30 && (
         <p className={styles.notice}>
           Your subscription {closesSoon < 0 ? 'has ended' : `ends in ${closesSoon} day${closesSoon === 1 ? '' : 's'}`}. Pay the yearly fee of{' '}
@@ -140,8 +126,31 @@ export default async function VendorHome() {
         </p>
       )}
 
+      <div className={styles.stats}>
+        <section className={styles.stat}>
+          <h2>Products</h2>
+          <strong>{items.length}</strong>
+          <span>{items.filter((p) => p.is_published).length} on sale</span>
+        </section>
+        <section className={styles.stat}>
+          <h2>Waiting for approval</h2>
+          <strong>{items.filter((p) => p.review_status === 'pending').length}</strong>
+          <span>We set the shopper price when we approve</span>
+        </section>
+        <section className={styles.stat}>
+          <h2>Subscription</h2>
+          <strong>{vendor.paid_until ? dateText(vendor.paid_until) : '–'}</strong>
+          <span>{closesSoon !== null ? (closesSoon < 0 ? 'Ended' : `${closesSoon} day${closesSoon === 1 ? '' : 's'} left`) : 'Paid until'}</span>
+        </section>
+      </div>
+
       <section className={styles.panel}>
-        <h2>Products</h2>
+        <div className={styles.panelHead}>
+          <h2>Your products</h2>
+          <Link href="/vendor/products/new" className={styles.primary}>
+            Add a product
+          </Link>
+        </div>
         {items.length === 0 ? (
           <p className={styles.muted}>No products yet. Add your first product; Sleek Connect reviews it and sets the price shoppers see.</p>
         ) : (
@@ -184,42 +193,6 @@ export default async function VendorHome() {
         )}
       </section>
 
-      <section className={styles.panel}>
-        <h2>Store page</h2>
-        <div className={styles.row}>
-          <div>
-            <h3>Logo</h3>
-            <ImageUploader vendorId={vendor.id} kind="logo" url={vendorAssetUrl(vendor.logo_path)} />
-          </div>
-          <div>
-            <h3>Banner</h3>
-            <ImageUploader vendorId={vendor.id} kind="banner" url={vendorAssetUrl(vendor.banner_path)} />
-          </div>
-        </div>
-        <VendorForm action={saveStore}>
-          <label className={styles.field}>
-            <span>Store name</span>
-            <input name="name" required minLength={2} maxLength={60} defaultValue={vendor.name} />
-          </label>
-          <label className={styles.field}>
-            <span>One line about your store</span>
-            <input name="tagline" maxLength={120} defaultValue={vendor.tagline ?? ''} />
-          </label>
-          <label className={styles.field}>
-            <span>About your store</span>
-            <textarea name="description" rows={4} maxLength={2000} defaultValue={vendor.description ?? ''} />
-          </label>
-          <label className={styles.field}>
-            <span>Phone number (private, for Sleek Connect only)</span>
-            <input name="phone" type="tel" defaultValue={vendor.phone ?? ''} />
-          </label>
-          <div className={styles.buttons}>
-            <button type="submit" className={styles.primary}>
-              Save store details
-            </button>
-          </div>
-        </VendorForm>
-      </section>
     </>
   );
 }

@@ -1,30 +1,47 @@
-/* The page that invites vendors: what it costs, how it works, the terms. */
+/* The vendor invitation page, in the same rounded-card style as the dashboards. */
+
+.page {
+  background: var(--c-surface);
+  padding-bottom: 72px;
+}
 
 .hero {
-  background: var(--c-surface);
-  padding: 48px 0 40px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 48px;
+  align-items: center;
+  padding-block: 64px 48px;
+}
+
+.kicker {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-accent);
 }
 
 .hero h1 {
-  max-width: 18ch;
-  font-size: clamp(30px, 5vw, 46px);
-  font-weight: 700;
+  margin-top: 12px;
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: 800;
   letter-spacing: -0.03em;
-  line-height: 1.1;
+  line-height: 1.08;
 }
 
-.hero p {
-  margin-top: 14px;
-  max-width: 54ch;
-  color: var(--c-text-subtle);
+.lead {
+  margin-top: 18px;
+  max-width: 52ch;
   font-size: 17px;
+  line-height: 1.6;
+  color: var(--c-text-subtle);
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 24px;
+  margin-top: 28px;
 }
 
 .primary,
@@ -32,16 +49,23 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   min-height: 48px;
   padding: 0 24px;
-  border-radius: var(--r-pill);
+  border-radius: 12px;
   border: 1px solid transparent;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 600;
   text-decoration: none;
 }
 
 .primary {
   background: var(--c-accent);
+  color: var(--c-canvas);
+}
+
+.primary:hover {
+  background: var(--c-accent-deep);
   color: var(--c-canvas);
 }
 
@@ -51,32 +75,122 @@
   color: var(--c-ink);
 }
 
-.section {
-  padding-block: 40px;
+/* A small picture of the dashboard vendors get. */
+.preview {
+  border: 1px solid color-mix(in srgb, var(--c-line) 70%, transparent);
+  border-radius: 24px;
+  background: var(--c-canvas);
+  box-shadow: 0 24px 60px -30px rgb(11 31 58 / 0.35);
+  overflow: hidden;
 }
 
-.section h2 {
-  margin-bottom: 18px;
-  font-size: 24px;
+.previewBar {
+  display: flex;
+  gap: 6px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--c-line);
+}
+
+.previewBar span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--c-line-strong);
+}
+
+.previewBody {
+  padding: 22px;
+}
+
+.previewTitle {
+  font-size: 15px;
   font-weight: 700;
+}
+
+.previewStats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.previewStats div {
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--c-surface);
+}
+
+.previewStats small {
+  display: block;
+  font-size: 12px;
+  color: var(--c-text-subtle);
+}
+
+.previewStats strong {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.previewList {
+  display: flex;
+  flex-direction: column;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.previewList li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 0;
+  border-top: 1px solid var(--c-line);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.previewList b {
+  font-size: 12px;
+  color: var(--c-teal-ink);
+}
+
+.previewList em {
+  font-size: 12px;
+  font-style: normal;
+  color: #7a5200;
+}
+
+.section {
+  padding-block: 40px 8px;
+}
+
+.section h2,
+.card h2 {
+  font-size: 22px;
+  font-weight: 800;
   letter-spacing: -0.02em;
 }
 
 .steps {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
-  gap: 16px;
-  margin: 0;
+  gap: 20px;
+  margin: 20px 0 0;
   padding: 0;
   list-style: none;
   counter-reset: step;
 }
 
 .steps li {
-  position: relative;
-  padding: 20px;
-  border: 1px solid var(--c-line);
-  border-radius: var(--r-xl);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 24px;
+  border: 1px solid color-mix(in srgb, var(--c-line) 70%, transparent);
+  border-radius: 20px;
+  background: var(--c-canvas);
+  box-shadow: 0 1px 2px rgb(11 31 58 / 0.04), 0 8px 24px -18px rgb(11 31 58 / 0.18);
   counter-increment: step;
 }
 
@@ -86,48 +200,102 @@
   place-items: center;
   width: 32px;
   height: 32px;
-  margin-bottom: 12px;
-  border-radius: 50%;
-  background: var(--c-accent);
-  color: var(--c-canvas);
-  font-weight: 700;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  background: var(--c-teal-soft);
+  color: var(--c-accent);
+  font-size: 14px;
+  font-weight: 800;
 }
 
 .steps strong {
-  display: block;
-  margin-bottom: 4px;
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .steps span {
-  color: var(--c-text-muted);
   font-size: 14px;
+  line-height: 1.55;
+  color: var(--c-text-subtle);
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 20px;
+  padding-top: 32px;
+  align-items: start;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 28px;
+  border: 1px solid color-mix(in srgb, var(--c-line) 70%, transparent);
+  border-radius: 20px;
+  background: var(--c-canvas);
+  box-shadow: 0 1px 2px rgb(11 31 58 / 0.04), 0 8px 24px -18px rgb(11 31 58 / 0.18);
+  scroll-margin-top: 90px;
 }
 
 .price {
-  display: inline-block;
-  padding: 18px 24px;
-  border: 1px solid var(--c-line);
-  border-radius: var(--r-xl);
-  background: var(--c-canvas);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
 }
 
 .price strong {
-  display: block;
-  font-size: 34px;
-  letter-spacing: -0.02em;
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 
 .price span {
-  color: var(--c-text-muted);
-  font-size: 14px;
+  color: var(--c-text-subtle);
+}
+
+.ticks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14.5px;
+}
+
+.ticks li {
+  display: flex;
+  gap: 10px;
+}
+
+.ticks li::before {
+  content: '✓';
+  color: var(--c-accent);
+  font-weight: 800;
 }
 
 .terms {
-  max-width: 70ch;
+  margin: 0;
   padding-left: 20px;
+  font-size: 14.5px;
+  line-height: 1.6;
   color: var(--c-text-subtle);
 }
 
 .terms li + li {
   margin-top: 10px;
+}
+
+@media (max-width: 900px) {
+  .hero,
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hero {
+    gap: 32px;
+    padding-block: 40px 24px;
+  }
 }
