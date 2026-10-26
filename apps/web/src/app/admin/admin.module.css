@@ -849,3 +849,15 @@ label.secondary {
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+/* Links in tables, lists and navigation are plain text; colour shows they are links. Running text keeps its underline. */
+.root a {
+  text-decoration: none;
+}
+
+.root p a,
+.root dd a,
+.root small a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
