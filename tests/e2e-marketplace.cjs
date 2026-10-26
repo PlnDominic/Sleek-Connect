@@ -48,7 +48,11 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   await go(ama, BASE + '/vendor');
   assert(await ama.getByRole('heading', { name: 'Open your store' }).isVisible(), 'a signed-in shopper sees the application form');
   await ama.getByLabel('Store name').fill("Ama's Beauty Hub");
+  await ama.getByLabel('Your full name').fill('Ama Owusu');
   await ama.getByLabel('Phone number').fill('024 123 4567');
+  await ama.getByLabel('ID type').selectOption('ghana_card');
+  await ama.getByLabel('ID number').fill('GHA-123456789-0');
+  await ama.getByLabel('Photo or scan of your ID').setInputFiles({ name: 'id.png', mimeType: 'image/png', buffer: Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360000002000154a24f5d0000000049454e44ae426082', 'hex') });
   await ama.getByLabel(/I agree to the/).check();
   await ama.getByRole('button', { name: 'Send application' }).click();
   await ama.getByText(/Application sent/).waitFor({ timeout: 8000 });
@@ -60,6 +64,7 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   const boss = await ctx(bossSession.cookies());
   await go(boss, BASE + '/admin/vendors');
   assert(await boss.getByRole('heading', { name: "Ama's Beauty Hub" }).isVisible(), 'the owner sees the application');
+  assert(await boss.getByText('Ama Owusu').isVisible() && await boss.getByRole('link', { name: 'View ID document' }).isVisible(), 'with the owner\'s name and a link to the ID document');
   await boss.getByRole('button', { name: 'Approve', exact: true }).click();
   await boss.getByText('Vendor approved.').waitFor({ timeout: 8000 });
   await boss.getByRole('button', { name: /Record payment/ }).click();

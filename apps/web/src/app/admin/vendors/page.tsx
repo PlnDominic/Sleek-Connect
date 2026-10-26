@@ -20,6 +20,10 @@ interface VendorRow {
   phone: string | null;
   email: string | null;
   review_note: string | null;
+  owner_name: string | null;
+  id_type: string | null;
+  id_number: string | null;
+  id_document_path: string | null;
   paid_until: string | null;
   products: number;
   pending_products: number;
@@ -52,6 +56,7 @@ type Tab = (typeof tabs)[number]['id'];
 
 const BULK_FORM = 'bulk-review';
 const statusLabels = { pending: 'Waiting for approval', active: 'Approved', suspended: 'Suspended', rejected: 'Rejected' } as const;
+const idLabels: Record<string, string> = { ghana_card: 'Ghana Card', passport: 'Passport', voters_id: 'Voter’s ID', drivers_license: 'Driver’s licence' };
 const dateText = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 
 export default async function VendorsPage({ searchParams }: PageProps<'/admin/vendors'>) {
@@ -94,6 +99,16 @@ async function VendorsTab({ staff }: { staff: Staff }) {
   ]);
   if (error) throw error;
   const vendors = data as unknown as VendorRow[];
+  // Short-lived links to each applicant's ID file (a private bucket only admins can open).
+  const idLinks = new Map<string, string>();
+  await Promise.all(
+    vendors
+      .filter((v) => v.id_document_path)
+      .map(async (v) => {
+        const { data: signed } = await staff.supabase.storage.from('vendor-ids').createSignedUrl(v.id_document_path!, 300);
+        if (signed?.signedUrl) idLinks.set(v.id, signed.signedUrl);
+      }),
+  );
   if (vendors.length === 0) {
     return <p className={styles.empty}>No vendors have applied yet. Share the /sell page to invite them.</p>;
   }
@@ -124,6 +139,27 @@ async function VendorsTab({ staff }: { staff: Staff }) {
             {v.pending_products > 0 ? ` (${v.pending_products} waiting for review)` : ''} ·{' '}
             {v.paid_until ? `Paid until ${dateText(v.paid_until)}${v.paid_until < today ? ' (ended)' : ''}` : 'No payment recorded'}
           </p>
+
+          {v.owner_name && (
+            <dl className={styles.facts}>
+              <dt>Owner</dt>
+              <dd>
+                <strong>{v.owner_name}</strong>
+              </dd>
+              <dt>ID</dt>
+              <dd>
+                {idLabels[v.id_type ?? ''] ?? '–'} · {v.id_number ?? '–'}
+                {idLinks.get(v.id) && (
+                  <>
+                    {' · '}
+                    <a href={idLinks.get(v.id)} target="_blank" rel="noopener noreferrer">
+                      View ID document
+                    </a>
+                  </>
+                )}
+              </dd>
+            </dl>
+          )}
 
           <ActionForm action={reviewVendor.bind(null, v.id)}>
             <label className={styles.field}>

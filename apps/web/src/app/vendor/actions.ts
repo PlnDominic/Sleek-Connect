@@ -10,8 +10,12 @@ export async function applyForStore(_: ActionState, form: FormData): Promise<Act
   const supabase = await createUserSupabase();
   const { error } = await supabase.rpc('vendor_apply', {
     p_name: text(form, 'name'),
+    p_owner_name: text(form, 'owner_name'),
+    p_email: text(form, 'email'),
     p_phone: text(form, 'phone'),
-    p_tagline: text(form, 'tagline') || undefined,
+    p_id_type: text(form, 'id_type'),
+    p_id_number: text(form, 'id_number'),
+    p_id_path: text(form, 'id_path'),
     p_accept_terms: form.get('terms') === 'on',
   });
   if (error) return failed(error);

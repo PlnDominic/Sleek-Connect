@@ -27,6 +27,21 @@ export async function deleteAccount(_: DeleteState, form: FormData): Promise<Del
     }
   }
 
+  // A vendor applicant's ID file is removed through the Storage API too.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) {
+    const { data: idFiles } = await supabase.storage.from('vendor-ids').list(user.id);
+    if (idFiles?.length) {
+      const { error: idError } = await supabase.storage.from('vendor-ids').remove(idFiles.map((f) => `${user.id}/${f.name}`));
+      if (idError) {
+        console.error('Removing the vendor ID failed', idError);
+        return { message: 'We couldn’t remove your ID file, so nothing was deleted. Please try again.' };
+      }
+    }
+  }
+
   const { error } = await supabase.rpc('delete_my_account');
   if (error) {
     if (error.code === '22023') return { message: error.message };

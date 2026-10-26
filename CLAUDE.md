@@ -40,7 +40,7 @@
   own range). A vendor product's `price_ghs` and `is_published` are computed by the `products_marketplace_rules` trigger
   from the vendor's price, the owner's markup, the owner's approval and a live (approved + paid) store, so never set them
   for vendor products. Vendors change things only through `public.vendor_*` functions, the owner through `admin_*`
-  (admin role). Never expose `vendors.owner_id`, `vendor_private`, `vendor_price_ghs` or `markup_percent` to the public,
+  (admin role). Never expose `vendors.owner_id`, `vendor_private` (it holds applicants' IDs; the `vendor-ids` bucket is private), `vendor_price_ghs` or `markup_percent` to the public,
   and keep ordering from vendor stores behind `store_settings.marketplace_orders_open` until fulfilment and payouts exist.
 - Orders become paid only through `public.confirm_payment`, after the webhook has verified the provider's
   notification. Stock is reserved by `place_order` and released by `release_order_reservation`.

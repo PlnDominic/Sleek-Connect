@@ -715,14 +715,14 @@ isOneToOne: false
                   ]
                 },"vendor_private": {
                   Row: {
-                    "email": string | null,"phone": string | null,"review_note": string | null,"terms_accepted_at": string | null,"vendor_id": string
+                    "email": string | null,"id_document_path": string | null,"id_number": string | null,"id_type": string | null,"owner_name": string | null,"phone": string | null,"review_note": string | null,"terms_accepted_at": string | null,"vendor_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "email"?: string | null,"phone"?: string | null,"review_note"?: string | null,"terms_accepted_at"?: string | null,"vendor_id": string
+                    "email"?: string | null,"id_document_path"?: string | null,"id_number"?: string | null,"id_type"?: string | null,"owner_name"?: string | null,"phone"?: string | null,"review_note"?: string | null,"terms_accepted_at"?: string | null,"vendor_id": string
                   }
                   Update: {
-                    "email"?: string | null,"phone"?: string | null,"review_note"?: string | null,"terms_accepted_at"?: string | null,"vendor_id"?: string
+                    "email"?: string | null,"id_document_path"?: string | null,"id_number"?: string | null,"id_type"?: string | null,"owner_name"?: string | null,"phone"?: string | null,"review_note"?: string | null,"terms_accepted_at"?: string | null,"vendor_id"?: string
                   }
                   Relationships: [
                     {
@@ -810,7 +810,7 @@ isOneToOne: false
 { Args: { "p_alt"?: string,"p_path": string,"p_product_id": string }; Returns: string
                            },
 "vendor_apply":
-{ Args: { "p_accept_terms"?: boolean,"p_name": string,"p_phone": string,"p_tagline"?: string }; Returns: string
+{ Args: { "p_accept_terms"?: boolean,"p_email": string,"p_id_number": string,"p_id_path": string,"p_id_type": string,"p_name": string,"p_owner_name": string,"p_phone": string,"p_tagline"?: string }; Returns: string
                            },
 "vendor_delete_product":
 { Args: { "p_product_id": string }; Returns: undefined

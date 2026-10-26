@@ -21,6 +21,8 @@ export interface VendorMe {
   phone: string | null;
   email: string | null;
   review_note: string | null;
+  owner_name: string | null;
+  id_type: string | null;
 }
 
 export interface VendorProduct {

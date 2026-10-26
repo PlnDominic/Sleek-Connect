@@ -5,7 +5,8 @@ markup and collects every payment.
 
 ## How it works
 
-1. **Apply.** A signed-in shopper opens `/sell`, then `/vendor`, and applies (store name, phone, vendor terms).
+1. **Apply.** A signed-in shopper opens `/sell`, then `/vendor`, and applies with the store name, their full name, email,
+   phone, an ID (type, number and a photo or scan, uploaded to the private `vendor-ids` bucket) and the vendor terms.
    Staff accounts can't open a store.
 2. **Approve.** The owner approves or rejects the application in **Admin → Vendors**.
 3. **Subscribe.** An approved vendor sees the yearly fee and the owner's payment instructions on `/vendor`. When the
@@ -29,7 +30,7 @@ All of this lives in `supabase/migrations/20261025090000_marketplace_vendors.sql
 
 | Thing | Where |
 | --- | --- |
-| Stores | `vendors` (public columns only; `owner_id` has no select grant), `vendor_private` (phone, email, owner's note), `vendor_subscriptions` (paid years) |
+| Stores | `vendors` (public columns only; `owner_id` has no select grant), `vendor_private` (owner's name, phone, email, ID type, number and file path, owner's note), `vendor_subscriptions` (paid years) |
 | The shop's own range | A built-in **house** vendor (`is_house`). Existing products belong to it and behave exactly as before. |
 | Live store | `vendor_is_live(id)`: status `active` and a paid period covering today (plus `store_settings.vendor_grace_days`). The house vendor is always live. |
 | Visibility | `products.is_published` is still the only flag the site reads. For vendor products the trigger `products_marketplace_rules` sets it to *vendor asked to publish* AND *owner approved* AND *store live*, and sets `price_ghs` from `vendor_price_ghs` and `markup_percent`. |
@@ -71,3 +72,7 @@ refuses them with "Ordering from vendor stores opens soon." Before turning it on
   so an expiry can take a few minutes longer to show on the site.
 - Vendors can only be approved or suspended by an admin; there is no vendor-facing notification yet, so the owner
   should phone or email the vendor after approving or recording a payment.
+
+- Vendor IDs live in the private `vendor-ids` bucket under `<user id>/`. Applicants can write and read only their own folder; admins
+  open them through short-lived signed links in Admin → Vendors. The vendor never sees their ID number again, and the file
+  is removed through the Storage API when the account is deleted.

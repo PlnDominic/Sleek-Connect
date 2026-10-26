@@ -7,6 +7,12 @@ const errOf = async (p) => { const r = await p; return r.error; };
 const anon = createClient(URL_, KEY, { auth: { persistSession: false } });
 const stamp = Date.now();
 
+const png = Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360000002000154a24f5d0000000049454e44ae426082', 'hex');
+const application = (path, extra = {}) => ({
+  p_name: "Ama's Beauty Hub", p_owner_name: 'Ama Owusu', p_email: 'ama@example.com', p_phone: '0241234567',
+  p_id_type: 'ghana_card', p_id_number: 'GHA-123456789-0', p_id_path: path, p_tagline: 'Glow every day', p_accept_terms: true, ...extra,
+});
+
 const product = (extra = {}) => ({
   name: 'Shea Body Butter', brand: 'Ama Naturals', department: 'beauty', kind: 'jar', category_id: 'beauty-kits',
   price_ghs: 100, publish: true,
@@ -30,16 +36,28 @@ const product = (extra = {}) => ({
   const { ama, kofi } = people;
 
   // --- Applying ----------------------------------------------------------------------------------
-  assert((await errOf(anon.rpc('vendor_apply', { p_name: 'Ama Beauty', p_phone: '0241234567', p_accept_terms: true })))?.code !== undefined, 'guests cannot apply');
-  assert((await errOf(ama.rpc('vendor_apply', { p_name: 'A', p_phone: '0241234567', p_accept_terms: true })))?.message.includes('store name'), 'a store needs a real name');
-  assert((await errOf(ama.rpc('vendor_apply', { p_name: 'Ama Beauty', p_phone: '12', p_accept_terms: true })))?.message.includes('phone'), 'a store needs a phone number');
-  assert((await errOf(ama.rpc('vendor_apply', { p_name: 'Ama Beauty', p_phone: '0241234567', p_accept_terms: false })))?.message.includes('terms'), 'the vendor terms must be accepted');
-  assert((await errOf(boss.rpc('vendor_apply', { p_name: 'Boss Store', p_phone: '0241234567', p_accept_terms: true })))?.message.includes('Staff'), 'staff accounts cannot open a store');
-  const { data: vendorId, error: applyError } = await ama.rpc('vendor_apply', { p_name: "Ama's Beauty Hub", p_phone: '0241234567', p_tagline: 'Glow every day', p_accept_terms: true });
-  assert(!applyError && vendorId, 'a signed-in shopper can apply');
-  assert((await errOf(ama.rpc('vendor_apply', { p_name: 'Second', p_phone: '0241234567', p_accept_terms: true })))?.message.includes('already'), 'one store per account');
+  const amaId = (await ama.auth.getUser()).data.user.id;
+  const idPath = `${amaId}/id-${stamp}.png`;
+  const idUpload = await ama.storage.from('vendor-ids').upload(idPath, png, { contentType: 'image/png' });
+  assert(!idUpload.error, 'an applicant can upload their ID to the private bucket');
+  assert((await kofi.storage.from('vendor-ids').upload(`${amaId}/stolen.png`, png, { contentType: 'image/png' })).error !== null, 'nobody can upload into someone else\'s ID folder');
+  assert((await anon.rpc('vendor_apply', application(idPath))).error?.code !== undefined, 'guests cannot apply');
+  assert((await errOf(ama.rpc('vendor_apply', application(idPath, { p_name: 'A' }))))?.message.includes('store name'), 'a store needs a real name');
+  assert((await errOf(ama.rpc('vendor_apply', application(idPath, { p_owner_name: 'A' }))))?.message.includes('full name'), 'the owner\'s full name is required');
+  assert((await errOf(ama.rpc('vendor_apply', application(idPath, { p_email: 'not-an-email' }))))?.message.includes('email'), 'a valid email is required');
+  assert((await errOf(ama.rpc('vendor_apply', application(idPath, { p_phone: '12' }))))?.message.includes('phone'), 'a store needs a phone number');
+  assert((await errOf(ama.rpc('vendor_apply', application(idPath, { p_id_type: 'library_card' }))))?.message.includes('type of ID'), 'the ID type must be one of the list');
+  assert((await errOf(ama.rpc('vendor_apply', application(idPath, { p_id_number: '12' }))))?.message.includes('ID number'), 'an ID number is required');
+  assert((await errOf(ama.rpc('vendor_apply', application(`${amaId}/missing.png`))))?.message.includes('ID'), 'the ID file must really be uploaded');
+  assert((await errOf(kofi.rpc('vendor_apply', application(idPath))))?.message.includes('ID'), 'someone else\'s ID file can\'t be used');
+  assert((await errOf(ama.rpc('vendor_apply', application(idPath, { p_accept_terms: false }))))?.message.includes('terms'), 'the vendor terms must be accepted');
+  assert((await errOf(boss.rpc('vendor_apply', application(idPath))))?.message !== undefined, 'staff accounts cannot open a store');
+  const { data: vendorId, error: applyError } = await ama.rpc('vendor_apply', application(idPath));
+  assert(!applyError && vendorId, 'a signed-in shopper can apply with their name, email and ID');
+  assert((await errOf(ama.rpc('vendor_apply', application(idPath, { p_name: 'Second' }))))?.message.includes('already'), 'one store per account');
   let me = (await ama.rpc('vendor_me')).data;
   assert(me.status === 'pending' && me.slug === 'amas-beauty-hub' && me.live === false, 'the application starts pending, with a web address made from the name');
+  assert(me.owner_name === 'Ama Owusu' && me.id_type === 'ghana_card' && !('id_number' in me), 'the vendor sees their name and ID type, never the number back');
   assert((await kofi.rpc('vendor_me')).data === null, 'someone who has not applied has no store');
 
   // --- Nothing works before approval and payment -------------------------------------------------
@@ -48,6 +66,9 @@ const product = (extra = {}) => ({
   assert((await errOf(support.rpc('admin_review_vendor', { p_vendor_id: vendorId, p_decision: 'active' })))?.code === '42501', 'only an admin approves vendors');
   const { data: queue } = await boss.rpc('admin_vendors');
   assert(queue.length === 1 && queue[0].status === 'pending' && queue[0].phone === '0241234567', 'the owner sees the application with contact details');
+  assert(queue[0].owner_name === 'Ama Owusu' && queue[0].id_number === 'GHA-123456789-0' && queue[0].id_document_path === idPath, 'and the owner\'s name and ID details');
+  assert((await boss.storage.from('vendor-ids').createSignedUrl(idPath, 60)).data?.signedUrl, 'the owner can open the ID document');
+  assert((await kofi.storage.from('vendor-ids').createSignedUrl(idPath, 60)).error !== null, 'other shoppers cannot open it');
   await boss.rpc('admin_review_vendor', { p_vendor_id: vendorId, p_decision: 'active', p_note: 'Welcome' });
   me = (await ama.rpc('vendor_me')).data;
   assert(me.status === 'active' && me.live === false && me.annual_fee_ghs > 0, 'approved but unpaid: not live, with the yearly fee shown');

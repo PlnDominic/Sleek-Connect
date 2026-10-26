@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { formatPrice } from '@sleek/shared';
 import { getVendorSession, type VendorProduct } from '@/lib/vendor';
-import { applyForStore, setStock } from './actions';
+import { setStock } from './actions';
+import { ApplyForm } from './ApplyForm';
 import { VendorForm } from './VendorForm';
 import styles from './vendor.module.css';
 
@@ -48,25 +49,7 @@ export default async function VendorHome() {
   if (!vendor) {
     return (
       <StatusCard title="Open your store" mark="+">
-        <VendorForm action={applyForStore}>
-          <label className={styles.field}>
-            <span>Store name</span>
-            <input name="name" required minLength={2} maxLength={60} autoComplete="organization" />
-          </label>
-          <label className={styles.field}>
-            <span>Phone number</span>
-            <input name="phone" type="tel" required autoComplete="tel" placeholder="024 123 4567" />
-          </label>
-          <label className={styles.check}>
-            <input type="checkbox" name="terms" required />
-            <span>
-              I agree to the <Link href="/sell#terms">vendor terms</Link>
-            </span>
-          </label>
-          <button type="submit" className={styles.primary}>
-            Send application
-          </button>
-        </VendorForm>
+        <ApplyForm email={session.email ?? ''} />
       </StatusCard>
     );
   }
