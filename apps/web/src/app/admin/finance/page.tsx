@@ -76,27 +76,24 @@ export default async function FinancePage({ searchParams }: PageProps<'/admin/fi
       <div className={styles.pageHead}>
         <div>
           <h1>Finance</h1>
-          <p className={styles.muted}>Payment activity, reconciliation and refunds for the selected period.</p>
+          <p className={styles.muted}>Payments, reconciliation and refunds.</p>
         </div>
         <a className={styles.secondary} href={`/admin/finance/export?from=${from}&to=${to}`} download>
           Export CSV
         </a>
       </div>
 
-      <section className={styles.panel} aria-labelledby="period-title">
-        <h2 id="period-title">Reporting period</h2>
-        <form className={styles.row} method="get">
-          <label className={styles.field}>
-            <span>From</span>
-            <input type="date" name="from" defaultValue={from} />
-          </label>
-          <label className={styles.field}>
-            <span>To</span>
-            <input type="date" name="to" defaultValue={to} />
-          </label>
-          <button className={styles.primary} type="submit">Apply</button>
-        </form>
-      </section>
+      <form className={styles.periodBar} method="get" aria-label="Reporting period">
+        <label className={styles.field}>
+          <span>From</span>
+          <input type="date" name="from" defaultValue={from} />
+        </label>
+        <label className={styles.field}>
+          <span>To</span>
+          <input type="date" name="to" defaultValue={to} />
+        </label>
+        <button className={styles.secondary} type="submit">Show</button>
+      </form>
 
       <section className={styles.cards} aria-label="Finance summary">
         <Summary label="Successful payments" value={formatPriceOr(sum(succeeded.map((p) => p.amount_ghs)), '–')} detail={`${succeeded.length} attempts`} />
@@ -109,21 +106,24 @@ export default async function FinancePage({ searchParams }: PageProps<'/admin/fi
         <div className={styles.panelHead}>
           <div>
             <h2 id="payments-title">Payment attempts</h2>
-            <p className={styles.muted}>Compare provider references and amounts with the provider settlement report.</p>
           </div>
           <span className={styles.muted}>{payments.length} attempts</span>
         </div>
         <div className={styles.tableWrap}>
           <table className={styles.table}>
-            <thead><tr><th>Created</th><th>Order</th><th>Provider</th><th>Reference</th><th className={styles.num}>Amount</th><th>Status</th></tr></thead>
+            <thead><tr><th>Order</th><th>Reference</th><th className={styles.num}>Amount</th><th>Status</th></tr></thead>
             <tbody>
               {payments.map((payment) => (
                 <tr key={payment.id}>
-                  <td>{formatDateTime(payment.created_at)}</td>
-                  <td>{payment.orders ? <Link href={`/admin/orders/${payment.orders.order_number}`}>{payment.orders.order_number}</Link> : '–'}</td>
-                  <td>{payment.provider}</td>
-                  <td><code>{payment.provider_reference}</code></td>
-                  <td className={styles.num}>{formatPriceOr(payment.amount_ghs, '–')}</td>
+                  <td>
+                    {payment.orders ? <Link href={`/admin/orders/${payment.orders.order_number}`}>{payment.orders.order_number}</Link> : '–'}
+                    <div className={styles.muted}>{formatDateTime(payment.created_at)}</div>
+                  </td>
+                  <td>
+                    <code>{payment.provider_reference}</code>
+                    <div className={styles.muted}>{payment.provider}</div>
+                  </td>
+                  <td className={styles.num}><strong>{formatPriceOr(payment.amount_ghs, '–')}</strong></td>
                   <td><span className={styles.badge} data-tone={payment.status === 'succeeded' ? 'good' : payment.status === 'failed' ? 'bad' : 'warn'}>{payment.status}</span></td>
                 </tr>
               ))}
@@ -137,22 +137,26 @@ export default async function FinancePage({ searchParams }: PageProps<'/admin/fi
         <div className={styles.panelHead}>
           <div>
             <h2 id="refunds-title">Return refunds</h2>
-            <p className={styles.muted}>Received returns still need payment outside the system; use the return record to capture the reference.</p>
+            <p className={styles.muted}>Pay these outside the system, then record the reference on the return.</p>
           </div>
           <span className={styles.muted}>{refundedReturns.length} completed</span>
         </div>
         <div className={styles.tableWrap}>
           <table className={styles.table}>
-            <thead><tr><th>Return</th><th>Order</th><th>Customer</th><th className={styles.num}>Amount</th><th>Status</th><th>Refunded</th></tr></thead>
+            <thead><tr><th>Return</th><th>Customer</th><th className={styles.num}>Amount</th><th>Status</th></tr></thead>
             <tbody>
               {returns.map((item) => (
                 <tr key={item.case_number}>
-                  <td><Link href={`/admin/returns/${item.case_number}`}>{item.case_number}</Link></td>
-                  <td>{item.orders?.order_number ?? '–'}</td>
+                  <td>
+                    <Link href={`/admin/returns/${item.case_number}`}>{item.case_number}</Link>
+                    <div className={styles.muted}>{item.orders?.order_number ?? '–'}</div>
+                  </td>
                   <td>{item.orders?.customer_name ?? '–'}</td>
-                  <td className={styles.num}>{formatPriceOr(item.refund_amount_ghs, '–')}</td>
-                  <td><span className={styles.badge} data-tone={item.status === 'refunded' ? 'good' : item.status === 'received' ? 'warn' : undefined}>{item.status}</span></td>
-                  <td>{item.refunded_at ? formatDateTime(item.refunded_at) : '–'}</td>
+                  <td className={styles.num}><strong>{formatPriceOr(item.refund_amount_ghs, '–')}</strong></td>
+                  <td>
+                    <span className={styles.badge} data-tone={item.status === 'refunded' ? 'good' : item.status === 'received' ? 'warn' : undefined}>{item.status}</span>
+                    {item.refunded_at && <div className={styles.muted}>{formatDateTime(item.refunded_at)}</div>}
+                  </td>
                 </tr>
               ))}
             </tbody>

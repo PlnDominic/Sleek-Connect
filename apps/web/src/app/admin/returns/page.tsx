@@ -38,7 +38,7 @@ export default async function ReturnsPage({ searchParams }: PageProps<'/admin/re
       <div className={styles.pageHead}>
         <div>
           <h1>Returns</h1>
-          <p className={styles.muted}>Review requests, receive the goods and record refunds. Oldest first.</p>
+          <p className={styles.muted}>Oldest first.</p>
         </div>
       </div>
       <div className={styles.panelHead}>
@@ -59,11 +59,8 @@ export default async function ReturnsPage({ searchParams }: PageProps<'/admin/re
               <thead>
                 <tr>
                   <th scope="col">Return</th>
-                  <th scope="col">Requested</th>
-                  <th scope="col">Order</th>
                   <th scope="col">Customer</th>
                   <th scope="col">Reason</th>
-                  <th scope="col" className={styles.num}>Items</th>
                   <th scope="col" className={styles.num}>Refund</th>
                   <th scope="col">Status</th>
                 </tr>
@@ -75,18 +72,30 @@ export default async function ReturnsPage({ searchParams }: PageProps<'/admin/re
                     <tr key={r.id}>
                       <td>
                         <Link href={`/admin/returns/${r.case_number}`}>{r.case_number}</Link>
-                        {r.photo_paths.length > 0 && <span className={styles.muted}> · {r.photo_paths.length} photo{r.photo_paths.length === 1 ? '' : 's'}</span>}
+                        <div className={styles.muted}>
+                          {formatDateTime(r.created_at)}
+                          {r.orders && (
+                            <>
+                              {' · '}
+                              <Link href={`/admin/orders/${r.orders.order_number}`}>{r.orders.order_number}</Link>
+                            </>
+                          )}
+                        </div>
                       </td>
-                      <td>{formatDateTime(r.created_at)}</td>
-                      <td>{r.orders && <Link href={`/admin/orders/${r.orders.order_number}`}>{r.orders.order_number}</Link>}</td>
                       <td>
-                        {r.orders?.customer_name}
-                        <br />
-                        <span className={styles.muted}>{r.orders?.phone}</span>
+                        <strong>{r.orders?.customer_name}</strong>
+                        <div className={styles.muted}>{r.orders?.phone}</div>
                       </td>
-                      <td>{returnReasons[r.reason as ReturnReason]}</td>
-                      <td className={styles.num}>{r.return_items.reduce((n, i) => n + i.quantity, 0)}</td>
-                      <td className={styles.num}>{r.refund_amount_ghs === null ? '—' : formatPriceOr(r.refund_amount_ghs, '—')}</td>
+                      <td>
+                        {returnReasons[r.reason as ReturnReason]}
+                        <div className={styles.muted}>
+                          {r.return_items.reduce((n, i) => n + i.quantity, 0)} item{r.return_items.reduce((n, i) => n + i.quantity, 0) === 1 ? '' : 's'}
+                          {r.photo_paths.length > 0 && ` · ${r.photo_paths.length} photo${r.photo_paths.length === 1 ? '' : 's'}`}
+                        </div>
+                      </td>
+                      <td className={styles.num}>
+                        <strong>{r.refund_amount_ghs === null ? '—' : formatPriceOr(r.refund_amount_ghs, '—')}</strong>
+                      </td>
                       <td>
                         <span className={styles.badge} data-tone={returnTones[status]}>
                           {returnStatusShort[status]}

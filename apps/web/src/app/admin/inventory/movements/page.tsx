@@ -24,11 +24,8 @@ export default async function MovementsPage({ searchParams }: PageProps<'/admin/
     <>
       <div className={styles.pageHead}>
         <div>
-          <p className={styles.muted}>
-            <Link href="/admin/inventory">Inventory</Link> /
-          </p>
           <h1>Stock movements</h1>
-          <p className={styles.muted}>Every change to stock, newest first (latest 300). Entries can’t be edited.</p>
+          <p className={styles.muted}>Every stock change, newest first.</p>
         </div>
         <a href="/admin/inventory/export?type=movements" className={styles.secondary} download>Export all (CSV)</a>
       </div>

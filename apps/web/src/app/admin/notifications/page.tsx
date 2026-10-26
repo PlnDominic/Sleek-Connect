@@ -32,7 +32,7 @@ export default async function NotificationsPage({ searchParams }: PageProps<'/ad
       <div className={styles.pageHead}>
         <div>
           <h1>Notifications</h1>
-          <p className={styles.muted}>Monitor transactional SMS and email delivery. Failed messages are retried by the worker up to five times.</p>
+          <p className={styles.muted}>SMS and email delivery. Failed messages retry up to five times.</p>
         </div>
         <a className={styles.secondary} href={`/admin/notifications/export?status=${status}`} download>Export CSV</a>
       </div>

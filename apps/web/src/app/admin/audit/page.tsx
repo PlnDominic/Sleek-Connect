@@ -57,9 +57,7 @@ export default async function AuditPage({ searchParams }: PageProps<'/admin/audi
       <div className={styles.pageHead}>
         <div>
           <h1>Audit log</h1>
-          <p className={styles.muted}>
-            Every sensitive change, who made it and when (PRD FR-109). Entries can’t be edited or deleted, even by admins.
-          </p>
+          <p className={styles.muted}>Every sensitive change. Entries can’t be edited.</p>
         </div>
       </div>
       <div className={styles.panelHead}>

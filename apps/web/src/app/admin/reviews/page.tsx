@@ -41,10 +41,7 @@ export default async function ReviewsPage({ searchParams }: PageProps<'/admin/re
       <div className={styles.pageHead}>
         <div>
           <h1>Reviews</h1>
-          <p className={styles.muted}>
-            Only customers who received a product can review it. Check each review before it appears on the product page: reject
-            anything abusive, off topic, false, or that shares personal details.
-          </p>
+          <p className={styles.muted}>Check each review before it goes live. Reject anything abusive, false or personal.</p>
         </div>
       </div>
       <Flash message={params.done} />

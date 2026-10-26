@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { can, requireStaffPage } from '@/lib/admin/session';
 import { productFormOptions } from '../data';
 import { ProductForm } from '../ProductForm';
@@ -15,9 +14,6 @@ export default async function NewProductPage() {
     <>
       <div className={styles.pageHead}>
         <div>
-          <p className={styles.muted}>
-            <Link href="/admin/products">Products</Link> /
-          </p>
           <h1>Add product</h1>
           <p className={styles.muted}>New products start as drafts. Add stock on the Inventory page once it’s saved.</p>
         </div>

@@ -43,7 +43,7 @@ export default async function AdminSearchPage({ searchParams }: PageProps<'/admi
       <div className={styles.pageHead}>
         <div>
           <h1>Search</h1>
-          <p className={styles.muted}>Find an order by number, customer name or phone, a product by name or brand, or a vendor.</p>
+          <p className={styles.muted}>Orders, products and vendors.</p>
         </div>
       </div>
       <form className={styles.search} role="search">

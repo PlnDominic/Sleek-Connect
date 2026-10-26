@@ -42,11 +42,8 @@ export default async function OrdersPage({ searchParams }: PageProps<'/admin/ord
           <tr>
             {bulk && <th scope="col"><span className="visually-hidden">Select</span></th>}
             <th scope="col">Order</th>
-            <th scope="col">Placed</th>
             <th scope="col">Customer</th>
-            <th scope="col">Area</th>
-            <th scope="col">Window</th>
-            <th scope="col" className={styles.num}>Items</th>
+            <th scope="col">Delivery</th>
             <th scope="col" className={styles.num}>Total</th>
             <th scope="col">Status</th>
           </tr>
@@ -61,17 +58,25 @@ export default async function OrdersPage({ searchParams }: PageProps<'/admin/ord
               )}
               <td>
                 <Link href={`/admin/orders/${o.order_number}`}>{o.order_number}</Link>
-                {o.is_gift && <span className={styles.muted}> · gift</span>}
+                <div className={styles.muted}>
+                  {formatDateTime(o.created_at)}
+                  {o.is_gift && ' · gift'}
+                </div>
               </td>
-              <td>{formatDateTime(o.created_at)}</td>
               <td>
-                {o.customer_name}
+                <strong>{o.customer_name}</strong>
                 <div className={styles.muted}>{o.phone}</div>
               </td>
-              <td>{o.area}</td>
-              <td>{o.delivery_option_id === 'same_day' ? 'Same day' : 'Standard'}</td>
-              <td className={styles.num}>{o.order_items.reduce((n, i) => n + i.quantity, 0)}</td>
-              <td className={styles.num}>{formatPriceOr(o.total_ghs as number | null, '–')}</td>
+              <td>
+                {o.area}
+                <div className={styles.muted}>
+                  {o.delivery_option_id === 'same_day' ? 'Same day' : 'Standard'} · {o.order_items.reduce((n, i) => n + i.quantity, 0)} item
+                  {o.order_items.reduce((n, i) => n + i.quantity, 0) === 1 ? '' : 's'}
+                </div>
+              </td>
+              <td className={styles.num}>
+                <strong>{formatPriceOr(o.total_ghs as number | null, '–')}</strong>
+              </td>
               <td>
                 <StatusBadge status={o.status as OrderStatus} />
                 {o.needs_review && <span className={styles.badge} data-tone="bad"> Review</span>}
@@ -90,7 +95,7 @@ export default async function OrdersPage({ searchParams }: PageProps<'/admin/ord
       <div className={styles.pageHead}>
         <div>
           <h1>Orders</h1>
-          <p className={styles.muted}>Work queues for packing and delivery. Oldest first in the queues.</p>
+          <p className={styles.muted}>Oldest first in each queue.</p>
         </div>
         <div className={styles.buttons}>
           <form className={styles.search} role="search">

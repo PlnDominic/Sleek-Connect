@@ -41,9 +41,6 @@ export default async function ProductStockPage({ params, searchParams }: PagePro
     <>
       <div className={styles.pageHead}>
         <div>
-          <p className={styles.muted}>
-            <Link href="/admin/inventory">Inventory</Link> /
-          </p>
           <h1>{product.name}</h1>
         </div>
         <Link href={`/admin/products/${product.id}`} className={styles.secondary}>
@@ -86,12 +83,10 @@ export default async function ProductStockPage({ params, searchParams }: PagePro
             <thead>
               <tr>
                 <th scope="col">Batch</th>
-                <th scope="col">Size</th>
                 <th scope="col">Expires</th>
                 <th scope="col" className={styles.num}>Units</th>
                 <th scope="col">Status</th>
-                <th scope="col">Received</th>
-                <th scope="col">Actions</th>
+                <th scope="col"><span className="visually-hidden">Actions</span></th>
               </tr>
             </thead>
             <tbody>
@@ -99,20 +94,23 @@ export default async function ProductStockPage({ params, searchParams }: PagePro
                 <tr key={b.id}>
                   <td>
                     <strong>{b.batch_code}</strong>
-                    {b.note && <div className={styles.muted}>{b.note}</div>}
+                    <div className={styles.muted}>
+                      {sizeLabel(b.size_code)} · received {formatDateTime(b.received_at)}
+                      {b.note && ` · ${b.note}`}
+                    </div>
                   </td>
-                  <td>{sizeLabel(b.size_code)}</td>
                   <td>
                     {b.expires_on ?? <span className={styles.muted}>not recorded</span>}
                     {b.expires_on && b.expires_on < today && b.status === 'available' && (
                       <span className={styles.badge} data-tone="bad"> past date</span>
                     )}
                   </td>
-                  <td className={styles.num}>{b.quantity}</td>
+                  <td className={styles.num}>
+                    <strong>{b.quantity}</strong>
+                  </td>
                   <td>
                     <span className={styles.badge} data-tone={statusTone[b.status]}>{b.status}</span>
                   </td>
-                  <td>{formatDateTime(b.received_at)}</td>
                   <td>
                     {(editStock || recall) && b.quantity > 0 && (
                       <details>
@@ -194,30 +192,37 @@ export default async function ProductStockPage({ params, searchParams }: PagePro
           <table className={styles.table}>
             <thead>
               <tr>
-                <th scope="col">When</th>
                 <th scope="col">What</th>
-                <th scope="col">Size</th>
-                <th scope="col">Batch</th>
                 <th scope="col" className={styles.num}>Units</th>
-                <th scope="col" className={styles.num}>For sale</th>
                 <th scope="col">Who</th>
-                <th scope="col">Note</th>
               </tr>
             </thead>
             <tbody>
               {(movements ?? []).map((m) => (
                 <tr key={m.id}>
-                  <td>{formatDateTime(m.at)}</td>
                   <td>
-                    {movementLabels[m.reason]}
-                    {m.orders && <div className={styles.muted}>Order {m.orders.order_number}</div>}
+                    <strong>{movementLabels[m.reason]}</strong>
+                    <div className={styles.muted}>
+                      {[
+                        formatDateTime(m.at),
+                        sizeLabel(m.size_code),
+                        m.batch_id ? `batch ${batchCode.get(m.batch_id)}` : null,
+                        m.orders ? `order ${m.orders.order_number}` : null,
+                        m.note,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </div>
                   </td>
-                  <td>{sizeLabel(m.size_code)}</td>
-                  <td>{m.batch_id ? batchCode.get(m.batch_id) : '–'}</td>
-                  <td className={styles.num}>{m.quantity ? (m.quantity > 0 ? `+${m.quantity}` : m.quantity) : '–'}</td>
-                  <td className={styles.num}>{m.sellable_change ? (m.sellable_change > 0 ? `+${m.sellable_change}` : m.sellable_change) : '–'}</td>
-                  <td>{m.actor_email ?? 'system'}</td>
-                  <td>{m.note ?? ''}</td>
+                  <td className={styles.num}>
+                    <strong>{m.quantity ? (m.quantity > 0 ? `+${m.quantity}` : m.quantity) : '–'}</strong>
+                    {m.sellable_change !== m.quantity && (
+                      <div className={styles.muted}>
+                        {m.sellable_change ? `${m.sellable_change > 0 ? '+' : ''}${m.sellable_change} for sale` : 'not for sale'}
+                      </div>
+                    )}
+                  </td>
+                  <td className={styles.muted}>{m.actor_email ?? 'system'}</td>
                 </tr>
               ))}
             </tbody>

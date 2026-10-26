@@ -18,7 +18,7 @@ export default async function RidersPage() {
       <div className={styles.pageHead}>
         <div>
           <h1>Riders</h1>
-          <p className={styles.muted}>Riders you can hand orders to. Customers see the rider’s name and vehicle.</p>
+          <p className={styles.muted}>Customers see the rider’s name and vehicle.</p>
         </div>
       </div>
       {edit && (

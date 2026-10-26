@@ -35,9 +35,6 @@ export default async function EditProductPage({ params, searchParams }: PageProp
     <>
       <div className={styles.pageHead}>
         <div>
-          <p className={styles.muted}>
-            <Link href="/admin/products">Products</Link> /
-          </p>
           <h1>{product.name}</h1>
           <p className={styles.muted}>
             {product.is_published ? (

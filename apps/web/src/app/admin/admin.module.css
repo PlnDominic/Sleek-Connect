@@ -1187,3 +1187,63 @@ label.secondary {
   font-size: 12.5px;
   color: var(--c-text-subtle);
 }
+
+/* A slim date filter that sits above the figures. */
+.periodBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+/* Emphasis: the thing a row is about, page and section titles, labels and money stand out. */
+.pageHead h1 {
+  font-weight: 700;
+}
+
+.panel h2,
+.itemTitle {
+  font-weight: 700;
+}
+
+.table td:first-child > a,
+.table td:first-child .productCell a {
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.table td:first-child > a:hover,
+.table td:first-child .productCell a:hover {
+  color: var(--c-accent);
+}
+
+.table td strong {
+  font-weight: 600;
+}
+
+.table tfoot td {
+  font-weight: 600;
+}
+
+.field > span {
+  font-weight: 600;
+}
+
+.facts dt {
+  font-size: 13px;
+}
+
+.facts dd {
+  font-weight: 500;
+}
+
+.primary,
+.secondary,
+.danger {
+  font-weight: 600;
+}
+
+details.inline > summary,
+details.panel > summary {
+  font-weight: 600;
+}

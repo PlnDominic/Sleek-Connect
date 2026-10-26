@@ -31,7 +31,7 @@ export default async function SupportPage({ searchParams }: PageProps<'/admin/su
       <div className={styles.pageHead}>
         <div>
           <h1>Support</h1>
-          <p className={styles.muted}>Messages from the help centre. Replies go to the customer by text message and email.</p>
+          <p className={styles.muted}>Replies go to the customer by text and email.</p>
         </div>
       </div>
       <div className={styles.panelHead}>
@@ -52,8 +52,6 @@ export default async function SupportPage({ searchParams }: PageProps<'/admin/su
               <thead>
                 <tr>
                   <th scope="col">Case</th>
-                  <th scope="col">Received</th>
-                  <th scope="col">Topic</th>
                   <th scope="col">Customer</th>
                   <th scope="col">Order</th>
                   <th scope="col">Status</th>
@@ -64,13 +62,13 @@ export default async function SupportPage({ searchParams }: PageProps<'/admin/su
                   <tr key={c.id}>
                     <td>
                       <Link href={`/admin/support/${c.case_number}`}>{c.case_number}</Link>
+                      <div className={styles.muted}>
+                        {topics[c.topic as Topic]} · {formatDateTime(c.created_at)}
+                      </div>
                     </td>
-                    <td>{formatDateTime(c.created_at)}</td>
-                    <td>{topics[c.topic as Topic]}</td>
                     <td>
-                      {c.name}
-                      <br />
-                      <span className={styles.muted}>{c.phone}</span>
+                      <strong>{c.name}</strong>
+                      <div className={styles.muted}>{c.phone}</div>
                     </td>
                     <td>
                       {c.orders ? (

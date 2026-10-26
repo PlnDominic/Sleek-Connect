@@ -90,9 +90,6 @@ export default async function AdminOrderPage({ params, searchParams }: PageProps
     <>
       <div className={styles.pageHead}>
         <div>
-          <p className={styles.muted}>
-            <Link href="/admin/orders">Orders</Link> /
-          </p>
           <h1>
             Order {order.order_number} <StatusBadge status={status} />
           </h1>
@@ -254,19 +251,35 @@ export default async function AdminOrderPage({ params, searchParams }: PageProps
           <h2 id="customer-title">Customer and delivery</h2>
           <dl className={styles.facts}>
             <dt>Name</dt>
-            <dd>{order.customer_name}</dd>
+            <dd>
+              <strong>{order.customer_name}</strong>
+            </dd>
             <dt>Phone</dt>
-            <dd>{order.phone}</dd>
+            <dd>
+              <strong>{order.phone}</strong>
+            </dd>
             <dt>Area</dt>
             <dd>{order.area}</dd>
-            <dt>GhanaPost GPS</dt>
-            <dd>{order.ghanapost_gps ?? '–'}</dd>
-            <dt>Directions</dt>
-            <dd>{order.rider_directions ?? '–'}</dd>
+            {order.ghanapost_gps && (
+              <>
+                <dt>GhanaPost GPS</dt>
+                <dd>{order.ghanapost_gps}</dd>
+              </>
+            )}
+            {order.rider_directions && (
+              <>
+                <dt>Directions</dt>
+                <dd>{order.rider_directions}</dd>
+              </>
+            )}
             <dt>Window</dt>
             <dd>{order.delivery_options?.label}</dd>
-            <dt>Gift</dt>
-            <dd>{order.is_gift ? 'Yes: no prices in the parcel' : 'No'}</dd>
+            {order.is_gift && (
+              <>
+                <dt>Gift</dt>
+                <dd>No prices in the parcel</dd>
+              </>
+            )}
             <dt>Rider</dt>
             <dd>
               {order.riders ? `${order.riders.name} (${order.riders.phone})` : order.courier_reference ? `Courier ${order.courier_reference}` : '–'}
@@ -381,19 +394,21 @@ export default async function AdminOrderPage({ params, searchParams }: PageProps
               );
             })}
           </ol>
-          <h2>Messages to the customer</h2>
-          {(notes.data ?? []).length === 0 ? (
-            <p className={styles.muted}>None yet.</p>
-          ) : (
-            <ul className={styles.muted}>
-              {(notes.data ?? []).map((n) => (
-                <li key={n.id}>
-                  {n.template.replaceAll('_', ' ')} by {n.channel} to {n.recipient}: {n.status.replace('_', ' ')}
-                  {n.last_error && ` (${n.last_error})`}
-                </li>
-              ))}
-            </ul>
-          )}
+          <details className={styles.inline}>
+            <summary>Messages to the customer ({(notes.data ?? []).length})</summary>
+            {(notes.data ?? []).length === 0 ? (
+              <p className={styles.muted}>None yet.</p>
+            ) : (
+              <ul className={styles.muted}>
+                {(notes.data ?? []).map((n) => (
+                  <li key={n.id}>
+                    {n.template.replaceAll('_', ' ')} by {n.channel} to {n.recipient}: {n.status.replace('_', ' ')}
+                    {n.last_error && ` (${n.last_error})`}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </details>
         </section>
       </div>
     </>

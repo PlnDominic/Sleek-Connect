@@ -40,11 +40,7 @@ export default async function StaffPage() {
       <div className={styles.pageHead}>
         <div>
           <h1>Staff</h1>
-          <p className={styles.muted}>
-            Staff sign in at /admin with Google or an email and password for the address you add here. Only add people
-            you trust, and ask each of them to turn on Google’s 2-Step Verification (or use a strong, unique password).
-            Changes are recorded in the audit log.
-          </p>
+          <p className={styles.muted}>They sign in at /admin with the email you add. Only add people you trust.</p>
         </div>
       </div>
       <section className={styles.panel}>

@@ -20,7 +20,7 @@ export default async function SettingsPage() {
       <div className={styles.pageHead}>
         <div>
           <h1>Settings</h1>
-          <p className={styles.muted}>Store-wide rules. Every change is recorded in the audit log.</p>
+          <p className={styles.muted}>Store-wide rules.</p>
         </div>
       </div>
       <ActionForm action={saveSettings}>

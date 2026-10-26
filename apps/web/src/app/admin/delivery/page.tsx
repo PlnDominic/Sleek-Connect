@@ -28,20 +28,13 @@ export default async function DeliveryPage() {
       <div className={styles.pageHead}>
         <div>
           <h1>Delivery</h1>
-          <p className={styles.muted}>
-            Areas you deliver to, what each option costs, free delivery and delivery estimates. Shoppers see changes at
-            checkout straight away; orders already placed keep their fee. Every change is in the audit log.
-          </p>
+          <p className={styles.muted}>Delivery areas, fees and estimates. Changes show at checkout straight away.</p>
         </div>
       </div>
 
       <section className={styles.panel} aria-labelledby="options-title">
         <h2 id="options-title">Delivery options</h2>
-        <p className={styles.muted}>
-          The standard fee applies everywhere except zones with their own fee. Estimates are working days after dispatch;
-          orders paid before the cut-off (Accra time) are dispatched the same day. Leave a field empty while it isn’t
-          decided; shoppers then see a placeholder.
-        </p>
+        <p className={styles.muted}>Estimates are working days after dispatch. Empty fields show a placeholder to shoppers.</p>
         {options.data!.map((o) => (
           <ActionForm key={o.id} action={saveOption.bind(null, o.id)}>
             <div className={styles.row}>
@@ -91,10 +84,7 @@ export default async function DeliveryPage() {
 
       <section className={styles.panel} aria-labelledby="zones-title">
         <h2 id="zones-title">Zones</h2>
-        <p className={styles.muted}>
-          Group areas that cost more (or less) to reach. In each zone, leave a fee empty to use the standard fee, or untick
-          an option the zone doesn’t get (for example, same-day delivery to far areas).
-        </p>
+        <p className={styles.muted}>Areas that cost more or less to reach. An empty fee uses the standard fee.</p>
         {zones.data!.length === 0 && <p className={styles.empty}>No zones: every area uses the standard fees.</p>}
         {zones.data!.map((z) => (
           <details key={z.id} className={styles.form}>
@@ -163,35 +153,7 @@ export default async function DeliveryPage() {
 
       <section className={styles.panel} aria-labelledby="areas-title">
         <h2 id="areas-title">Areas</h2>
-        <p className={styles.muted}>Shoppers pick one of the active areas at checkout. Renaming an area updates saved addresses too.</p>
-        {areas.data!.map((a) => (
-          <ActionForm key={a.name} action={saveArea.bind(null, a.name)}>
-            <div className={styles.row}>
-              <label className={styles.field}>
-                <span>Area</span>
-                <input name="name" required maxLength={60} defaultValue={a.name} />
-              </label>
-              <label className={styles.field}>
-                <span>Zone</span>
-                <select name="zone" defaultValue={a.zone_id ?? ''}>
-                  <option value="">Standard fees</option>
-                  {zones.data!.map((z) => (
-                    <option key={z.id} value={z.id}>{z.name}</option>
-                  ))}
-                </select>
-              </label>
-              <label className={styles.field}>
-                <span>Order</span>
-                <input name="sort_order" type="number" defaultValue={a.sort_order} />
-              </label>
-              <label className={styles.check}>
-                <input type="checkbox" name="active" defaultChecked={a.is_active} />
-                Delivering here
-              </label>
-              <button type="submit" className={styles.secondary}>Save</button>
-            </div>
-          </ActionForm>
-        ))}
+        <p className={styles.muted}>Active areas are offered at checkout.</p>
         <ActionForm action={saveArea.bind(null, null)} resetOnSuccess>
           <div className={styles.row}>
             <label className={styles.field}>
@@ -210,6 +172,37 @@ export default async function DeliveryPage() {
             <button type="submit" className={styles.secondary}>Add area</button>
           </div>
         </ActionForm>
+        <details className={styles.inline}>
+          <summary>Edit areas ({areas.data!.length})</summary>
+          {areas.data!.map((a) => (
+            <ActionForm key={a.name} action={saveArea.bind(null, a.name)}>
+              <div className={styles.row}>
+                <label className={styles.field}>
+                  <span>Area</span>
+                  <input name="name" required maxLength={60} defaultValue={a.name} />
+                </label>
+                <label className={styles.field}>
+                  <span>Zone</span>
+                  <select name="zone" defaultValue={a.zone_id ?? ''}>
+                    <option value="">Standard fees</option>
+                    {zones.data!.map((z) => (
+                      <option key={z.id} value={z.id}>{z.name}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className={styles.field}>
+                  <span>Order</span>
+                  <input name="sort_order" type="number" defaultValue={a.sort_order} />
+                </label>
+                <label className={styles.check}>
+                  <input type="checkbox" name="active" defaultChecked={a.is_active} />
+                  Delivering here
+                </label>
+                <button type="submit" className={styles.secondary}>Save</button>
+              </div>
+            </ActionForm>
+          ))}
+        </details>
       </section>
     </>
   );

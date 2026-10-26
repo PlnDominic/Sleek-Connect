@@ -67,7 +67,7 @@ export default async function VendorsPage({ searchParams }: PageProps<'/admin/ve
       <div className={styles.pageHead}>
         <div>
           <h1>Vendors</h1>
-          <p className={styles.muted}>Approve stores, record yearly subscription payments and set the markup on each vendor product.</p>
+          <p className={styles.muted}>Approve stores, record payments and set markups.</p>
         </div>
       </div>
       <Flash message={params.done} />
@@ -200,14 +200,11 @@ async function ReviewTab({ staff }: { staff: Staff }) {
   if (items.length === 0) return <p className={styles.empty}>No vendor products are waiting for review.</p>;
   const defaultMarkup = settings?.default_markup_percent ?? 10;
 
-  const ready = items.filter((p) => p.problems.length === 0).length;
   return (
     <>
       <section className={styles.panel} aria-label="Review several at once">
         <h2>Review several at once</h2>
-        <p className={styles.muted}>
-          Tick products below ({ready} of {items.length} are complete and can be approved), then approve or reject them together.
-        </p>
+        <p className={styles.muted}>Tick products below, then approve or reject them together.</p>
         <ActionForm action={bulkReviewProducts} id={BULK_FORM} className={styles.form}>
           <div className={styles.row}>
             <label className={styles.field}>
@@ -322,9 +319,7 @@ async function SettingsTab({ staff }: { staff: Staff }) {
           <input type="checkbox" name="marketplace_orders_open" defaultChecked={s.marketplace_orders_open} />
           Shoppers can order vendor products
         </label>
-        <p className={styles.muted}>
-          Keep this off until vendors are ready to pack and hand over orders. Vendor products are visible but can’t be bought while it is off.
-        </p>
+        <p className={styles.muted}>Keep this off until vendors can pack and hand over orders.</p>
         <div className={styles.buttons}>
           <button type="submit" className={styles.primary}>
             Save settings

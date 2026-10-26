@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { can, requireStaffPage } from '@/lib/admin/session';
 import { ImportForm } from './ImportForm';
 import styles from '../../admin.module.css';
@@ -13,14 +12,8 @@ export default async function ImportPage() {
     <>
       <div className={styles.pageHead}>
         <div>
-          <p className={styles.muted}>
-            <Link href="/admin/products">Products</Link> /
-          </p>
           <h1>Import products</h1>
-          <p className={styles.muted}>
-            Add or update many products from a spreadsheet saved as CSV. Rows whose web address (slug) already exists
-            update that product; empty cells keep its current value.
-          </p>
+          <p className={styles.muted}>Rows with an existing web address update that product; empty cells keep the current value.</p>
         </div>
         <a href="/admin/products/template" className={styles.secondary} download>
           Download the template

@@ -37,9 +37,7 @@ export default async function InventoryPage({ searchParams }: PageProps<'/admin/
       <div className={styles.pageHead}>
         <div>
           <h1>Inventory</h1>
-          <p className={styles.muted}>
-            Available = on hand minus units held for unpaid orders. Every change is logged with who, when and why.
-          </p>
+          <p className={styles.muted}>Available = on hand minus units held for unpaid orders.</p>
         </div>
         <div className={styles.buttons}>
           <Link href="/admin/inventory/movements" className={styles.secondary}>Stock movements</Link>
@@ -106,11 +104,7 @@ export default async function InventoryPage({ searchParams }: PageProps<'/admin/
             <thead>
               <tr>
                 <th scope="col">Product</th>
-                <th scope="col">Size</th>
-                <th scope="col" className={styles.num}>On hand</th>
-                <th scope="col" className={styles.num}>Held</th>
                 <th scope="col" className={styles.num}>Available</th>
-                <th scope="col" className={styles.num}>Alert at</th>
                 <th scope="col">Next expiry</th>
               </tr>
             </thead>
@@ -119,21 +113,23 @@ export default async function InventoryPage({ searchParams }: PageProps<'/admin/
                 <tr key={`${l.product_id}-${l.size_code}`} data-alert={l.is_low || undefined}>
                   <td>
                     <Link href={`/admin/inventory/${l.product_id}`}>{l.product_name}</Link>
-                    {!l.is_published && <span className={styles.muted}> · not on store</span>}
+                    <div className={styles.muted}>
+                      {l.size_label ?? 'One size'}
+                      {!l.is_published && ' · not on store'}
+                    </div>
                   </td>
-                  <td>{l.size_label ?? 'One size'}</td>
-                  <td className={styles.num}>{l.on_hand}</td>
-                  <td className={styles.num}>{l.reserved}</td>
                   <td className={styles.num}>
                     {l.available < 0 ? (
                       <span className={styles.badge} data-tone="bad">Short {-l.available}</span>
                     ) : l.is_low ? (
                       <span className={styles.badge} data-tone="warn">{l.available}</span>
                     ) : (
-                      l.available
+                      <strong>{l.available}</strong>
                     )}
+                    <div className={styles.muted}>
+                      {l.on_hand} on hand{l.reserved > 0 ? `, ${l.reserved} held` : ''}
+                    </div>
                   </td>
-                  <td className={styles.num}>{l.low_stock_threshold}</td>
                   <td>
                     {l.next_expiry ?? '–'}
                     {l.expiring_soon && <span className={styles.badge} data-tone="warn"> soon</span>}
