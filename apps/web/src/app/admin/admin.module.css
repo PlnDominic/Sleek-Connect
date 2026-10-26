@@ -80,6 +80,77 @@
   gap: 1px;
 }
 
+.navLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.navWrap {
+  min-width: 0;
+}
+
+.menuToggle {
+  display: none;
+}
+
+.navPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.navSearch input {
+  width: 100%;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  background: var(--c-surface);
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--c-ink);
+}
+
+.navSearch input:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 1px;
+  background: var(--c-canvas);
+}
+
+details.navGroup > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+details.navGroup > summary::-webkit-details-marker {
+  display: none;
+}
+
+details.navGroup > summary::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform 0.18s ease;
+}
+
+details.navGroup:not([open]) > summary::after {
+  transform: rotate(-45deg);
+}
+
+details.navGroup > summary:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
 .navHeading {
   margin: 0 0 6px;
   padding: 0 12px;
@@ -728,53 +799,47 @@ details.inline > summary {
   .user {
     padding: 0;
     background: none;
+    border: 0;
   }
 
   .userFoot {
     padding: 0;
   }
 
-  .nav {
+  .navWrap {
     grid-area: nav;
-    flex-direction: row;
-    gap: 6px;
-    overflow-x: auto;
-    padding: 2px 0 12px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    padding-bottom: 12px;
   }
 
-  .nav::-webkit-scrollbar {
+  .menuToggle {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    border: 1px solid var(--c-line-strong);
+    border-radius: var(--r-pill);
+    background: var(--c-canvas);
+    color: var(--c-ink);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .navPanel {
     display: none;
+    margin-top: 12px;
   }
 
-  .navGroup {
-    flex-direction: row;
-    gap: 6px;
+  .navPanel[data-open] {
+    display: flex;
   }
 
-  .navHeading {
-    display: none;
+  .nav {
+    gap: 16px;
   }
 
   .nav a {
-    flex: none;
-    padding: 7px 13px;
-    border: 1px solid var(--c-line);
-    border-radius: var(--r-pill);
-    white-space: nowrap;
-  }
-
-  .nav a[aria-current='page'] {
-    border-color: transparent;
-  }
-
-  .nav a[aria-current='page']::before {
-    display: none;
-  }
-
-  .brand {
-    gap: 4px 12px;
+    padding: 10px 12px;
   }
 
   .content {
@@ -860,4 +925,265 @@ label.secondary {
 .root small a {
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+/* Messages after an action: fixed at the bottom of the screen so a long form can't hide them. */
+.toasts {
+  position: fixed;
+  z-index: 60;
+  right: 24px;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: min(420px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0;
+  padding: 12px 14px 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--c-line);
+  background: var(--c-canvas);
+  color: var(--c-ink);
+  font-size: 14px;
+  line-height: 1.45;
+  box-shadow: 0 16px 40px -16px rgb(11 31 58 / 0.35);
+  animation: toast-in 0.18s ease-out;
+}
+
+.toastOk {
+  border-left: 4px solid var(--c-accent);
+}
+
+.toastBad {
+  border-left: 4px solid var(--c-accent-deep);
+}
+
+.toast span {
+  flex: 1;
+}
+
+.toastClose {
+  flex: none;
+  border: 0;
+  background: none;
+  padding: 0 2px;
+  color: var(--c-text-muted);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.unsaved {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-accent-deep);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+}
+
+/* Long forms: jump links at the top, and the save button stays in view. */
+.sectionNav {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  padding: 10px 0;
+  background: var(--c-canvas);
+  border-bottom: 1px solid var(--c-line);
+}
+
+.sectionNav a {
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+  color: var(--c-text-subtle);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.sectionNav a:hover {
+  background: var(--c-surface);
+  color: var(--c-ink);
+}
+
+.panel[id] {
+  scroll-margin-top: 64px;
+}
+
+.saveBar {
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 -12px 24px -16px rgb(11 31 58 / 0.25);
+}
+
+.itemTitle {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.productCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.thumb,
+.thumbEmpty {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--c-line);
+  object-fit: cover;
+  background: var(--c-surface);
+}
+
+.sortLink {
+  color: inherit;
+  white-space: nowrap;
+}
+
+.sortLink:hover {
+  color: var(--c-ink);
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 14px;
+}
+
+.pager a {
+  font-weight: 500;
+  color: var(--c-accent);
+}
+
+/* Skip link: first thing a keyboard user reaches, hidden until focused. */
+.skip {
+  position: absolute;
+  left: 12px;
+  top: -48px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--c-ink);
+  color: var(--c-canvas);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.skip:focus {
+  top: 12px;
+  color: var(--c-canvas);
+}
+
+.content:focus {
+  outline: none;
+}
+
+.breadcrumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--c-text-muted);
+}
+
+.breadcrumbs li + li::before {
+  content: '/';
+  margin-right: 4px;
+  color: var(--c-line-strong);
+}
+
+.breadcrumbs a {
+  color: var(--c-text-subtle);
+}
+
+.breadcrumbs a:hover {
+  color: var(--c-accent);
+}
+
+.breadcrumbs [aria-current='page'] {
+  color: var(--c-ink);
+  font-weight: 500;
+}
+
+/* Wide tables: a soft edge on the right shows there is more to scroll to. */
+.tableWrap {
+  background:
+    linear-gradient(to right, var(--c-canvas) 30%, transparent) left / 24px 100% no-repeat local,
+    linear-gradient(to left, var(--c-canvas) 30%, transparent) right / 24px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, rgb(11 31 58 / 0.12), transparent) left / 10px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, rgb(11 31 58 / 0.12), transparent) right / 10px 100% no-repeat scroll;
+}
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--c-canvas);
+}
+
+/* Empty lists look the same everywhere. */
+.empty {
+  padding: 32px 16px;
+  border: 1px dashed var(--c-line-strong);
+  border-radius: 14px;
+  text-align: center;
+  color: var(--c-text-subtle);
+  font-size: 14px;
+}
+
+/* Easier to read: slightly larger small text, and darker secondary text. */
+.muted {
+  font-size: 13.5px;
+  color: var(--c-text-subtle);
+}
+
+.table {
+  font-size: 14px;
+}
+
+.table th {
+  font-size: 11.5px;
+  color: var(--c-text-subtle);
+}
+
+.navHeading {
+  font-size: 11px;
+}
+
+.field small {
+  font-size: 12.5px;
+  color: var(--c-text-subtle);
 }

@@ -65,6 +65,9 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   await boss.getByRole('button', { name: /Record payment/ }).click();
   await boss.getByText(/Payment recorded/).waitFor({ timeout: 8000 });
   await shot(boss, 'admin-vendors');
+  await go(boss, BASE + '/admin');
+  assert(await boss.getByText('Vendors to approve').isVisible() && await boss.getByText('Vendor products to review').isVisible(), 'the dashboard counts vendors and vendor products waiting');
+  assert(await boss.getByRole('link', { name: 'Skip to content' }).count() === 1, 'there is a skip link for keyboard users');
 
   await go(ama, BASE + '/vendor');
   assert(await ama.getByRole('link', { name: 'Add a product' }).isVisible(), 'once paid, the vendor can add products');
@@ -77,6 +80,8 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   } });
   assert(!error && saved?.slug, 'a vendor product can be added');
   sql(`update public.inventory_levels set on_hand = 10 where product_id = '${saved.id}'`);
+  await go(boss, BASE + '/admin/search?q=shea');
+  assert(await boss.getByRole('link', { name: 'Shea Body Butter' }).isVisible(), 'the admin search finds a product by name');
   await go(boss, BASE + '/admin/vendors?tab=products');
   assert(await boss.getByRole('heading', { name: 'Shea Body Butter' }).isVisible(), 'it appears in the owner\'s review queue');
   await boss.getByLabel('Your markup (%)').fill('15');

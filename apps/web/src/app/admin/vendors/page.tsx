@@ -4,7 +4,7 @@ import { formatPrice } from '@sleek/shared';
 import { can, requireStaffPage } from '@/lib/admin/session';
 import { ActionForm } from '../ActionForm';
 import { Flash } from '../Flash';
-import { recordSubscription, reviewProduct, reviewVendor, saveMarketplaceSettings } from './actions';
+import { bulkReviewProducts, recordSubscription, reviewProduct, reviewVendor, saveMarketplaceSettings } from './actions';
 import styles from '../admin.module.css';
 
 export const metadata: Metadata = { title: 'Vendors' };
@@ -50,6 +50,7 @@ const tabs = [
 ] as const;
 type Tab = (typeof tabs)[number]['id'];
 
+const BULK_FORM = 'bulk-review';
 const statusLabels = { pending: 'Waiting for approval', active: 'Approved', suspended: 'Suspended', rejected: 'Rejected' } as const;
 const dateText = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 
@@ -136,12 +137,18 @@ async function VendorsTab({ staff }: { staff: Staff }) {
                 </button>
               )}
               {v.status === 'pending' && (
-                <button type="submit" name="decision" value="rejected" className={styles.secondary}>
+                <button type="submit" name="decision" value="rejected" className={styles.secondary} data-confirm={`Reject ${v.name}'s application?`}>
                   Reject
                 </button>
               )}
               {v.status === 'active' && (
-                <button type="submit" name="decision" value="suspended" className={styles.danger}>
+                <button
+                  type="submit"
+                  name="decision"
+                  value="suspended"
+                  className={styles.danger}
+                  data-confirm={`Suspend ${v.name}? Their store and ${v.products} product${v.products === 1 ? '' : 's'} come off the site until you approve them again.`}
+                >
                   Suspend
                 </button>
               )}
@@ -193,12 +200,42 @@ async function ReviewTab({ staff }: { staff: Staff }) {
   if (items.length === 0) return <p className={styles.empty}>No vendor products are waiting for review.</p>;
   const defaultMarkup = settings?.default_markup_percent ?? 10;
 
+  const ready = items.filter((p) => p.problems.length === 0).length;
   return (
     <>
+      <section className={styles.panel} aria-label="Review several at once">
+        <h2>Review several at once</h2>
+        <p className={styles.muted}>
+          Tick products below ({ready} of {items.length} are complete and can be approved), then approve or reject them together.
+        </p>
+        <ActionForm action={bulkReviewProducts} id={BULK_FORM} className={styles.form}>
+          <div className={styles.row}>
+            <label className={styles.field}>
+              <span>Markup for all ticked products (%)</span>
+              <input name="markup" type="number" min={0} max={200} step="0.5" placeholder={`Blank keeps each product's own (${defaultMarkup}% to start)`} />
+            </label>
+            <label className={styles.field}>
+              <span>Note to the vendors (optional)</span>
+              <input name="note" maxLength={500} />
+            </label>
+          </div>
+          <div className={styles.buttons}>
+            <button type="submit" name="decision" value="approved" className={styles.primary} data-confirm="Approve every ticked product?">
+              Approve ticked
+            </button>
+            <button type="submit" name="decision" value="rejected" className={styles.secondary} data-confirm="Reject every ticked product?">
+              Reject ticked
+            </button>
+          </div>
+        </ActionForm>
+      </section>
       {items.map((p) => (
         <section key={p.id} className={styles.panel}>
           <div className={styles.panelHead}>
-            <h2>{p.name}</h2>
+            <label className={styles.check}>
+              <input type="checkbox" name="ids" value={p.id} form={BULK_FORM} aria-label={`Select ${p.name}`} />
+              <strong className={styles.itemTitle}>{p.name}</strong>
+            </label>
             <span className={styles.badge} data-tone={p.problems.length ? 'bad' : 'warn'}>
               {p.problems.length ? 'Incomplete' : 'Ready to review'}
             </span>
@@ -231,7 +268,7 @@ async function ReviewTab({ staff }: { staff: Staff }) {
               <button type="submit" name="decision" value="approved" className={styles.primary} disabled={p.problems.length > 0}>
                 Approve at this markup
               </button>
-              <button type="submit" name="decision" value="rejected" className={styles.secondary}>
+              <button type="submit" name="decision" value="rejected" className={styles.secondary} data-confirm={`Reject ${p.name}?`}>
                 Reject
               </button>
             </div>

@@ -1,9 +1,10 @@
 'use client';
 
-import { useActionState, useState, useTransition, type FormEvent, type ReactNode } from 'react';
+import { useActionState, useEffect, useState, useTransition, type FormEvent, type ReactNode } from 'react';
 import { departmentIds, departmentLabels } from '@sleek/shared';
 import type { ActionState } from '@/lib/admin/action-state';
 import { kidsFilters, problemFields, productKinds, type ProductPayload, type SizePayload } from '@/lib/admin/product-payload';
+import { Toast } from '../Toast';
 import { saveProduct } from './actions';
 import styles from '../admin.module.css';
 
@@ -33,6 +34,15 @@ export function ProductForm({ product, categories, ageBands, imageKeys, problems
     const data = new FormData(event.currentTarget);
     startTransition(() => action(data));
   };
+  // Edits made since the last successful save (or since the page opened).
+  const [editedAt, setEditedAt] = useState<{ result: ActionState } | null>(null);
+  const dirty = editedAt !== null && !(state?.ok && state !== editedAt.result);
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [dirty]);
   const [department, setDepartment] = useState(product?.department ?? 'beauty');
   const [sizes, setSizes] = useState<SizePayload[]>(product?.sizes ?? []);
   const missing = new Set(problems.map((p) => problemFields[p]).filter(Boolean));
@@ -49,12 +59,24 @@ export function ProductForm({ product, categories, ageBands, imageKeys, problems
     setSizes((all) => all.map((s, j) => (j === i ? { ...s, ...patch } : patch.is_default ? { ...s, is_default: false } : s)));
 
   return (
-    <form onSubmit={submit} className={styles.form}>
+    <form onSubmit={submit} onInput={() => setEditedAt((e) => (dirty && e ? e : { result: state }))} className={styles.form}>
+      <nav className={styles.sectionNav} aria-label="Sections of this form">
+        {[
+          ['basics', 'Basics'],
+          ['pricing', 'Price and sizes'],
+          ['compliance', 'Product page and compliance'],
+          ['returns', 'Returns'],
+        ].map(([id, label]) => (
+          <a key={id} href={`#${id}`}>
+            {label}
+          </a>
+        ))}
+      </nav>
       <fieldset disabled={pending || !canEdit} className={styles.fieldset}>
         {product?.id && <input type="hidden" name="id" value={product.id} />}
         <input type="hidden" name="sizes_json" value={JSON.stringify(sizes)} />
 
-        <section className={styles.panel}>
+        <section className={styles.panel} id="basics">
           <h2>Basics</h2>
           <div className={styles.row}>
             {field('name', 'Name', <input name="name" required maxLength={120} defaultValue={product?.name} />)}
@@ -136,7 +158,7 @@ export function ProductForm({ product, categories, ageBands, imageKeys, problems
           {field('summary', 'Short summary', <input name="summary" defaultValue={product?.summary} />)}
         </section>
 
-        <section className={styles.panel}>
+        <section className={styles.panel} id="pricing">
           <h2>Price and sizes</h2>
           {sizes.length === 0 ? (
             <div className={styles.row}>
@@ -177,7 +199,7 @@ export function ProductForm({ product, categories, ageBands, imageKeys, problems
           </button>
         </section>
 
-        <section className={styles.panel}>
+        <section className={styles.panel} id="compliance">
           <h2>Product page and compliance</h2>
           <p className={styles.muted}>
             Products can only go on the store when these are filled in (PRD FR-100).{' '}
@@ -231,7 +253,7 @@ export function ProductForm({ product, categories, ageBands, imageKeys, problems
           )}
         </section>
 
-        <section className={styles.panel}>
+        <section className={styles.panel} id="returns">
           <h2>Returns</h2>
           <label className={styles.check}>
             <input type="checkbox" name="returnable" defaultChecked={product?.returnable ?? true} />
@@ -244,7 +266,7 @@ export function ProductForm({ product, categories, ageBands, imageKeys, problems
           {field('return_note', 'Return note', <input name="return_note" defaultValue={product?.return_note} maxLength={200} placeholder="e.g. Unopened and sealed only." />, 'Optional, shown on the product page')}
         </section>
 
-        <section className={styles.panel}>
+        <section className={`${styles.panel} ${styles.saveBar}`}>
           <label className={styles.check}>
             <input type="checkbox" name="publish" defaultChecked={product?.publish ?? false} />
             Show on the store
@@ -260,11 +282,8 @@ export function ProductForm({ product, categories, ageBands, imageKeys, problems
               {pending ? 'Saving…' : product?.id ? 'Save changes' : 'Create product'}
             </button>
           </div>
-          {state && (
-            <p role={state.ok ? 'status' : 'alert'} className={state.ok ? styles.success : styles.error}>
-              {state.message}
-            </p>
-          )}
+          {dirty && !pending && <p className={styles.unsaved}>You have unsaved changes.</p>}
+          <Toast state={state} />
         </section>
       </fieldset>
     </form>

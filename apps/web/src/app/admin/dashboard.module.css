@@ -158,3 +158,13 @@
     font-size: 26px;
   }
 }
+
+.flag {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-accent-deep);
+}

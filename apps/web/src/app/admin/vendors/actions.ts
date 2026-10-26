@@ -74,3 +74,31 @@ export async function saveMarketplaceSettings(_: ActionState, form: FormData): P
   refresh();
   return done('Marketplace settings saved.');
 }
+
+/** Approves or rejects every ticked vendor product in one go. A blank markup keeps each product's own markup. */
+export async function bulkReviewProducts(_: ActionState, form: FormData): Promise<ActionState> {
+  const decision = text(form, 'decision');
+  if (decision !== 'approved' && decision !== 'rejected') return { ok: false, message: 'Choose approve or reject.' };
+  const ids = form.getAll('ids').map(String);
+  if (ids.length === 0) return { ok: false, message: 'Tick the products you want to review first.' };
+  const markup = text(form, 'markup');
+  if (markup !== '' && !Number.isFinite(Number(markup))) return { ok: false, message: 'The markup must be a number.' };
+  const supabase = await createUserSupabase();
+  let succeeded = 0;
+  const failures: string[] = [];
+  for (const id of ids) {
+    const { error } = await supabase.rpc('admin_review_product', {
+      p_product_id: id,
+      p_decision: decision,
+      p_markup_percent: decision === 'approved' && markup !== '' ? Number(markup) : undefined,
+      p_note: text(form, 'note') || undefined,
+    });
+    if (error) failures.push(error.code === '22023' || error.code === '42501' ? error.message : 'That didn’t work.');
+    else succeeded++;
+  }
+  updateTag('catalog');
+  refresh();
+  const verb = decision === 'approved' ? 'Approved' : 'Rejected';
+  if (failures.length === 0) return done(`${verb} ${succeeded} product${succeeded === 1 ? '' : 's'}.`);
+  return { ok: false, message: `${verb} ${succeeded}. ${failures.length} could not be changed: ${failures.slice(0, 2).join(' ')}` };
+}

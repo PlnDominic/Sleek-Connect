@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 import type { StaffRole } from '@/lib/admin/session';
 import styles from './admin.module.css';
 
@@ -63,27 +64,55 @@ const adminOnlyLinks = new Set(['/admin/delivery']);
 export function AdminNav({ role }: { role: StaffRole }) {
   const pathname = usePathname();
   const isAdmin = role === 'admin';
+  // On phones the links sit behind a Menu button; moving to another page closes it again.
+  const [openFor, setOpenFor] = useState<string | null>(null);
+  const open = openFor === pathname;
   return (
-    <nav aria-label="Admin" className={styles.nav}>
-      {groups
-        .filter((group) => isAdmin || !group.adminOnly)
-        .map((group) => {
-          const links = group.links.filter((l) => isAdmin || !adminOnlyLinks.has(l.href));
-          if (links.length === 0) return null;
-          return (
-            <div key={group.heading ?? 'overview'} className={styles.navGroup}>
-              {group.heading && <p className={styles.navHeading}>{group.heading}</p>}
-              {links.map((l) => {
+    <div className={styles.navWrap}>
+      <button
+        type="button"
+        className={styles.menuToggle}
+        aria-expanded={open}
+        aria-controls="admin-nav"
+        onClick={() => setOpenFor(open ? null : pathname)}
+      >
+        {open ? 'Close menu' : 'Menu'}
+      </button>
+      <div id="admin-nav" className={styles.navPanel} data-open={open || undefined}>
+        <form action="/admin/search" role="search" className={styles.navSearch}>
+          <input name="q" type="search" placeholder="Search orders, products…" aria-label="Search the admin" autoComplete="off" />
+        </form>
+        <nav aria-label="Admin" className={styles.nav}>
+          {groups
+            .filter((group) => isAdmin || !group.adminOnly)
+            .map((group) => {
+              const links = group.links.filter((l) => isAdmin || !adminOnlyLinks.has(l.href));
+              if (links.length === 0) return null;
+              const items = links.map((l) => {
                 const active = l.href === '/admin' ? pathname === '/admin' : pathname.startsWith(l.href);
                 return (
                   <Link key={l.href} href={l.href} aria-current={active ? 'page' : undefined}>
                     {l.label}
                   </Link>
                 );
-              })}
-            </div>
-          );
-        })}
-    </nav>
+              });
+              // Groups with a heading fold away; the one holding the current page starts open.
+              if (!group.heading) {
+                return (
+                  <div key="overview" className={styles.navGroup}>
+                    {items}
+                  </div>
+                );
+              }
+              return (
+                <details key={group.heading} className={styles.navGroup} open>
+                  <summary className={styles.navHeading}>{group.heading}</summary>
+                  <div className={styles.navLinks}>{items}</div>
+                </details>
+              );
+            })}
+        </nav>
+      </div>
+    </div>
   );
 }

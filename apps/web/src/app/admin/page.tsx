@@ -31,6 +31,10 @@ export default async function Dashboard() {
     db.from('orders').select('order_number, status, customer_name, total_ghs, created_at').order('created_at', { ascending: false }).limit(8),
   ]);
   const low = (stock.data ?? []).filter((l) => l.is_low);
+  // Marketplace: stores waiting for approval and vendor products waiting for review (admins only).
+  const vendorRows = can(staff.role, 'vendors.manage') ? ((await db.rpc('admin_vendors')).data as unknown as { status: string; pending_products: number }[] | null) ?? [] : null;
+  const vendorsWaiting = vendorRows?.filter((v) => v.status === 'pending').length ?? 0;
+  const vendorProductsWaiting = vendorRows?.reduce((n, v) => n + Number(v.pending_products), 0) ?? 0;
   const reviewsPending = can(staff.role, 'reviews.moderate') ? ((await db.rpc('admin_review_counts').maybeSingle()).data?.pending ?? 0) : null;
 
   const hour = new Date().getUTCHours(); // Accra keeps GMT all year.
@@ -57,6 +61,12 @@ export default async function Dashboard() {
         { label: 'Returns to review', value: returnsToReview, href: '/admin/returns', alert: returnsToReview > 0 },
         { label: 'Return refunds due', value: returnRefunds, href: '/admin/returns?view=received', alert: returnRefunds > 0 },
         { label: 'Open support cases', value: openCases, href: '/admin/support', alert: openCases > 0 },
+        ...(vendorRows === null
+          ? []
+          : [
+              { label: 'Vendors to approve', value: vendorsWaiting, href: '/admin/vendors', alert: vendorsWaiting > 0 },
+              { label: 'Vendor products to review', value: vendorProductsWaiting, href: '/admin/vendors?tab=products', alert: vendorProductsWaiting > 0 },
+            ]),
         ...(reviewsPending === null ? [] : [{ label: 'Reviews to check', value: reviewsPending, href: '/admin/reviews', alert: reviewsPending > 0 }]),
       ],
     },
@@ -88,7 +98,10 @@ export default async function Dashboard() {
           <div className={dash.cards}>
             {section.cards.map((c) => (
               <Link key={c.label} href={c.href} className={dash.card} data-alert={c.alert || undefined}>
-                <span className={dash.label}>{c.label}</span>
+                <span className={dash.label}>
+                  {c.label}
+                  {c.alert && <span className={dash.flag}>Needs action</span>}
+                </span>
                 <strong className={dash.value}>{c.value}</strong>
                 <span className={dash.go} aria-hidden="true">
                   View →

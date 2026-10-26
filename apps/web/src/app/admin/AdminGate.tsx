@@ -4,6 +4,7 @@ import { Logo } from '@/components/Logo';
 import { getStaffSession, roleLabels } from '@/lib/admin/session';
 import { Icon } from '@/components/Icon';
 import { AdminNav } from './AdminNav';
+import { Breadcrumbs } from './Breadcrumbs';
 import { PasswordSignIn, SignInWithGoogle, SignOutButton } from './SessionButtons';
 import { SignInShell } from './SignInShell';
 import styles from './admin.module.css';
@@ -63,6 +64,9 @@ export async function AdminGate({ children }: { children: ReactNode }) {
 
   return (
     <div className={styles.shell}>
+      <a href="#main" className={styles.skip}>
+        Skip to content
+      </a>
       <aside className={styles.sidebar}>
         <div className={styles.sidebarInner}>
           <div className={styles.brand}>
@@ -95,7 +99,10 @@ export async function AdminGate({ children }: { children: ReactNode }) {
           </div>
         </div>
       </aside>
-      <main className={styles.content}>{children}</main>
+      <main id="main" tabIndex={-1} className={styles.content}>
+        <Breadcrumbs />
+        {children}
+      </main>
     </div>
   );
 }
