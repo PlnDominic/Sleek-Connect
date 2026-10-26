@@ -66,13 +66,14 @@ export async function AdminGate({ children }: { children: ReactNode }) {
       <aside className={styles.sidebar}>
         <div className={styles.sidebarInner}>
           <div className={styles.brand}>
-            <Logo size={19} href="/admin" />
+            <Link href="/admin" aria-label="Sleek Connect Store admin" style={{ textDecoration: 'none' }}>
+              <Logo size={19} onDark />
+            </Link>
             <span className={styles.brandLabel}>Admin</span>
           </div>
           <AdminNav role={session.role} />
           <div className={styles.account}>
             <Link href="/" className={styles.storeLink}>
-              <Icon name="store" size={16} strokeWidth={1.8} />
               View store
             </Link>
             <div className={styles.user}>
