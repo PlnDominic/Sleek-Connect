@@ -1,0 +1,160 @@
+/* The admin dashboard: a calm greeting, then what needs doing, grouped. */
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 4px;
+}
+
+.date {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+.greeting {
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.summary {
+  color: var(--c-text-subtle);
+  font-size: 15px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionTitle {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 18px 20px 16px;
+  border: 1px solid var(--c-line);
+  border-radius: 14px;
+  background: var(--c-canvas);
+  color: var(--c-ink);
+  text-decoration: none;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.card:hover {
+  border-color: var(--c-line-strong);
+  box-shadow: 0 10px 28px -18px rgb(11 31 58 / 0.3);
+  transform: translateY(-1px);
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-text-subtle);
+}
+
+.value {
+  margin-top: 6px;
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.go {
+  margin-top: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--c-accent);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.card:hover .go,
+.card:focus-visible .go {
+  opacity: 1;
+  transform: none;
+}
+
+/* Something is waiting: a coral dot and number. */
+.card[data-alert='true'] .value {
+  color: var(--c-accent-deep);
+}
+
+.card[data-alert='true']::after {
+  content: '';
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c-accent-warm);
+  box-shadow: 0 0 0 4px var(--c-blush);
+}
+
+.viewAll {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-accent);
+  text-decoration: none;
+}
+
+.viewAll:hover {
+  text-decoration: underline;
+}
+
+@media (hover: none) {
+  .go {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .card {
+    padding: 14px 14px 12px;
+  }
+
+  .greeting {
+    font-size: 26px;
+  }
+}

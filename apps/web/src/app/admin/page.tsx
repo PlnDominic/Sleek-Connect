@@ -5,6 +5,7 @@ import { can, requireStaffPage } from '@/lib/admin/session';
 import { formatDateTime, type OrderStatus } from '@/lib/orders';
 import { StatusBadge } from './StatusBadge';
 import styles from './admin.module.css';
+import dash from './dashboard.module.css';
 
 export const metadata: Metadata = { title: 'Dashboard' };
 
@@ -32,40 +33,79 @@ export default async function Dashboard() {
   const low = (stock.data ?? []).filter((l) => l.is_low);
   const reviewsPending = can(staff.role, 'reviews.moderate') ? ((await db.rpc('admin_review_counts').maybeSingle()).data?.pending ?? 0) : null;
 
-  const cards = [
-    { label: 'To pack', value: toPack, href: '/admin/orders?view=to_pack' },
-    { label: 'Ready for dispatch', value: ready, href: '/admin/orders?view=ready' },
-    { label: 'Out for delivery', value: out, href: '/admin/orders?view=out' },
-    { label: 'Delivery failed', value: failed, href: '/admin/orders?view=failed', alert: failed > 0 },
-    { label: 'Needs review', value: review, href: '/admin/orders?view=review', alert: review > 0 },
-    { label: 'Refunds due', value: refunds, href: '/admin/orders?view=refund', alert: refunds > 0 },
-    { label: 'Returns to review', value: returnsToReview, href: '/admin/returns', alert: returnsToReview > 0 },
-    { label: 'Return refunds due', value: returnRefunds, href: '/admin/returns?view=received', alert: returnRefunds > 0 },
-    { label: 'Open support cases', value: openCases, href: '/admin/support', alert: openCases > 0 },
-    ...(reviewsPending === null ? [] : [{ label: 'Reviews to check', value: reviewsPending, href: '/admin/reviews', alert: reviewsPending > 0 }]),
-    { label: 'Low stock', value: low.length, href: '/admin/inventory?show=low', alert: low.length > 0 },
-    { label: 'Expiry alerts', value: (expiring.data ?? []).length, href: '/admin/inventory', alert: (expiring.data ?? []).length > 0 },
+  const hour = new Date().getUTCHours(); // Accra keeps GMT all year.
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const name = (staff.name ?? staff.email?.split('@')[0] ?? '').split(' ')[0];
+  const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
+
+  type Card = { label: string; value: number; href: string; alert?: boolean };
+  const sections: { title: string; cards: Card[] }[] = [
+    {
+      title: 'Orders',
+      cards: [
+        { label: 'To pack', value: toPack, href: '/admin/orders?view=to_pack' },
+        { label: 'Ready for dispatch', value: ready, href: '/admin/orders?view=ready' },
+        { label: 'Out for delivery', value: out, href: '/admin/orders?view=out' },
+        { label: 'Delivery failed', value: failed, href: '/admin/orders?view=failed', alert: failed > 0 },
+      ],
+    },
+    {
+      title: 'Needs your attention',
+      cards: [
+        { label: 'Orders to review', value: review, href: '/admin/orders?view=review', alert: review > 0 },
+        { label: 'Refunds due', value: refunds, href: '/admin/orders?view=refund', alert: refunds > 0 },
+        { label: 'Returns to review', value: returnsToReview, href: '/admin/returns', alert: returnsToReview > 0 },
+        { label: 'Return refunds due', value: returnRefunds, href: '/admin/returns?view=received', alert: returnRefunds > 0 },
+        { label: 'Open support cases', value: openCases, href: '/admin/support', alert: openCases > 0 },
+        ...(reviewsPending === null ? [] : [{ label: 'Reviews to check', value: reviewsPending, href: '/admin/reviews', alert: reviewsPending > 0 }]),
+      ],
+    },
+    {
+      title: 'Stock',
+      cards: [
+        { label: 'Low stock', value: low.length, href: '/admin/inventory?show=low', alert: low.length > 0 },
+        { label: 'Expiry alerts', value: (expiring.data ?? []).length, href: '/admin/inventory', alert: (expiring.data ?? []).length > 0 },
+      ],
+    },
   ];
+  const attention = sections[1].cards.reduce((n, c) => n + c.value, 0) + low.length + (expiring.data ?? []).length;
 
   return (
     <>
-      <div className={styles.pageHead}>
-        <div>
-          <h1>Dashboard</h1>
-          <p className={styles.muted}>What needs doing today.</p>
-        </div>
-      </div>
-      <div className={styles.cards}>
-        {cards.map((c) => (
-          <Link key={c.label} href={c.href} className={styles.card} data-alert={c.alert || undefined}>
-            <span className={styles.muted}>{c.label}</span>
-            <strong>{c.value}</strong>
-          </Link>
-        ))}
-      </div>
+      <header className={dash.hero}>
+        <h1 className={dash.date}>Dashboard · {today}</h1>
+        <p className={dash.greeting}>
+          {greeting}
+          {name ? `, ${name}` : ''}
+        </p>
+        <p className={dash.summary}>
+          {attention === 0 ? 'Everything is up to date. Nothing needs your attention right now.' : `${attention} ${attention === 1 ? 'thing needs' : 'things need'} your attention today.`}
+        </p>
+      </header>
+      {sections.map((section) => (
+        <section key={section.title} aria-label={section.title} className={dash.section}>
+          <h2 className={dash.sectionTitle}>{section.title}</h2>
+          <div className={dash.cards}>
+            {section.cards.map((c) => (
+              <Link key={c.label} href={c.href} className={dash.card} data-alert={c.alert || undefined}>
+                <span className={dash.label}>{c.label}</span>
+                <strong className={dash.value}>{c.value}</strong>
+                <span className={dash.go} aria-hidden="true">
+                  View →
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ))}
       <div className={styles.columns}>
         <section className={styles.panel} aria-labelledby="recent-title">
-          <h2 id="recent-title">Latest orders</h2>
+          <div className={styles.panelHead}>
+            <h2 id="recent-title">Latest orders</h2>
+            <Link href="/admin/orders" className={dash.viewAll}>
+              View all
+            </Link>
+          </div>
           <table className={styles.table}>
             <tbody>
               {(recent.data ?? []).map((o) => (
@@ -86,7 +126,12 @@ export default async function Dashboard() {
           {(recent.data ?? []).length === 0 && <p className={styles.empty}>No orders yet.</p>}
         </section>
         <section className={styles.panel} aria-labelledby="low-title">
-          <h2 id="low-title">Low stock</h2>
+          <div className={styles.panelHead}>
+            <h2 id="low-title">Low stock</h2>
+            <Link href="/admin/inventory?show=low" className={dash.viewAll}>
+              View all
+            </Link>
+          </div>
           {low.length === 0 ? (
             <p className={styles.muted}>Nothing is running low.</p>
           ) : (
