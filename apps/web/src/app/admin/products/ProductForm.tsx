@@ -63,8 +63,8 @@ export function ProductForm({ product, categories, ageBands, imageKeys, problems
       <nav className={styles.sectionNav} aria-label="Sections of this form">
         {[
           ['basics', 'Basics'],
-          ['pricing', 'Price and sizes'],
-          ['compliance', 'Product page and compliance'],
+          ['pricing', 'Price'],
+          ['compliance', 'Details'],
           ['returns', 'Returns'],
         ].map(([id, label]) => (
           <a key={id} href={`#${id}`}>
@@ -120,42 +120,47 @@ export function ProductForm({ product, categories, ageBands, imageKeys, problems
                 </select>,
                 'Bath products count as cosmetics',
               )}
-            {field(
-              'kind',
-              'Placeholder picture',
-              <select name="kind" defaultValue={product?.kind ?? 'bottle'}>
-                {productKinds.map((k) => (
-                  <option key={k} value={k}>
-                    {k}
-                  </option>
-                ))}
-              </select>,
-              'Shown when there is no photo',
-            )}
           </div>
-          <div className={styles.row}>
-            {field(
-              'slug',
-              'Web address',
-              <input name="slug" defaultValue={product?.slug} placeholder="Made from the name" />,
-              '/products/…',
-            )}
-            {field(
-              'image_key',
-              'Photo',
-              <select name="image_key" defaultValue={product?.image_key ?? ''}>
-                <option value="">No photo yet</option>
-                {imageKeys.map((k) => (
-                  <option key={k} value={k}>
-                    {k}
-                  </option>
-                ))}
-              </select>,
-            )}
-            {field('badge', 'Badge', <input name="badge" defaultValue={product?.badge} placeholder="e.g. New, -20%" />)}
-          </div>
-          {field('tag', 'Card line', <input name="tag" defaultValue={product?.tag} placeholder="e.g. Ages 0+ · Tear-free" />)}
           {field('summary', 'Short summary', <input name="summary" defaultValue={product?.summary} />)}
+          <details className={styles.inline}>
+            <summary>More options</summary>
+            <div className={styles.form}>
+              <div className={styles.row}>
+                {field(
+                  'kind',
+                  'Placeholder picture',
+                  <select name="kind" defaultValue={product?.kind ?? 'bottle'}>
+                    {productKinds.map((k) => (
+                      <option key={k} value={k}>
+                        {k}
+                      </option>
+                    ))}
+                  </select>,
+                  'Shown when there is no photo',
+                )}
+                {field(
+                  'slug',
+                  'Web address',
+                  <input name="slug" defaultValue={product?.slug} placeholder="Made from the name" />,
+                  '/products/…',
+                )}
+                {field(
+                  'image_key',
+                  'Photo',
+                  <select name="image_key" defaultValue={product?.image_key ?? ''}>
+                    <option value="">No photo yet</option>
+                    {imageKeys.map((k) => (
+                      <option key={k} value={k}>
+                        {k}
+                      </option>
+                    ))}
+                  </select>,
+                )}
+                {field('badge', 'Badge', <input name="badge" defaultValue={product?.badge} placeholder="e.g. New, -20%" />)}
+              </div>
+              {field('tag', 'Card line', <input name="tag" defaultValue={product?.tag} placeholder="e.g. Ages 0+ · Tear-free" />)}
+            </div>
+          </details>
         </section>
 
         <section className={styles.panel} id="pricing">
@@ -200,41 +205,20 @@ export function ProductForm({ product, categories, ageBands, imageKeys, problems
         </section>
 
         <section className={styles.panel} id="compliance">
-          <h2>Product page and compliance</h2>
-          <p className={styles.muted}>
-            Products can only go on the store when these are filled in (PRD FR-100).{' '}
-            Beauty and bath products also need their FDA registration number.
-          </p>
+          <h2>Details</h2>
+          <p className={styles.muted}>Needed before a product can go on the store.</p>
           {field('description', 'Description', <textarea name="description" defaultValue={product?.description} />)}
-          <div className={styles.row}>
-            {field('highlights', 'Highlights', <textarea name="highlights" defaultValue={product?.highlights?.join('\n')} />, 'One per line')}
-            {field('free_from', 'Free from', <textarea name="free_from" defaultValue={product?.free_from?.join('\n')} />, 'One per line')}
-          </div>
           {field(
             'ingredients',
             cosmetic ? 'Ingredients (INCI list)' : 'Ingredients or materials',
             <textarea name="ingredients" defaultValue={product?.ingredients} />,
             'As printed on the pack',
           )}
-          {field(
-            'warning_label',
-            'Safety warning label',
-            <input name="warning_label" defaultValue={product?.warning_label} maxLength={200} placeholder="e.g. Choking hazard: small parts. Not for children under 3." />,
-            'Short and prominent: shown above “Add to bag” and in the bag. Leave empty if none.',
-          )}
-          {field('warnings', 'Safety notes', <textarea name="warnings" defaultValue={product?.warnings} />, 'The full safety notes, shown in the product details')}
-          {field('how_to_use', 'How to use', <textarea name="how_to_use" defaultValue={product?.how_to_use} />)}
+          {field('warnings', 'Safety notes', <textarea name="warnings" defaultValue={product?.warnings} />)}
           <div className={styles.row}>
             {field('country_of_origin', 'Country of origin', <input name="country_of_origin" defaultValue={product?.country_of_origin} />)}
             {field('regulatory_reference', 'FDA registration number', <input name="regulatory_reference" defaultValue={product?.regulatory_reference} />)}
-            {field('period_after_opening', 'Use within after opening', <input name="period_after_opening" defaultValue={product?.period_after_opening} placeholder="e.g. 12M" />)}
           </div>
-          {cosmetic && (
-            <div className={styles.row}>
-              {field('skin_types', 'Skin types', <textarea name="skin_types" defaultValue={product?.skin_types?.join('\n')} />, 'One per line, e.g. Dry, Oily, Sensitive. Used by the shop filters.')}
-              {field('shades', 'Shades', <textarea name="shades" defaultValue={product?.shades?.join('\n')} />, 'One per line, for makeup. Used by the shop filters.')}
-            </div>
-          )}
           {department === 'kids' && (
             <>
               {field('recommended_age', 'Recommended age', <input name="recommended_age" defaultValue={product?.recommended_age} placeholder="e.g. From birth (0+)" />)}
@@ -251,6 +235,29 @@ export function ProductForm({ product, categories, ageBands, imageKeys, problems
               </fieldset>
             </>
           )}
+          <details className={styles.inline}>
+            <summary>More details (optional)</summary>
+            <div className={styles.form}>
+              <div className={styles.row}>
+                {field('highlights', 'Highlights', <textarea name="highlights" defaultValue={product?.highlights?.join('\n')} />, 'One per line')}
+                {field('free_from', 'Free from', <textarea name="free_from" defaultValue={product?.free_from?.join('\n')} />, 'One per line')}
+              </div>
+              {field(
+                'warning_label',
+                'Safety warning label',
+                <input name="warning_label" defaultValue={product?.warning_label} maxLength={200} placeholder="e.g. Choking hazard: small parts. Not for children under 3." />,
+                'Shown above “Add to bag”. Leave empty if none.',
+              )}
+              {field('how_to_use', 'How to use', <textarea name="how_to_use" defaultValue={product?.how_to_use} />)}
+              {field('period_after_opening', 'Use within after opening', <input name="period_after_opening" defaultValue={product?.period_after_opening} placeholder="e.g. 12M" />)}
+              {cosmetic && (
+                <div className={styles.row}>
+                  {field('skin_types', 'Skin types', <textarea name="skin_types" defaultValue={product?.skin_types?.join('\n')} />, 'One per line, e.g. Dry, Oily, Sensitive. Used by the shop filters.')}
+                  {field('shades', 'Shades', <textarea name="shades" defaultValue={product?.shades?.join('\n')} />, 'One per line, for makeup. Used by the shop filters.')}
+                </div>
+              )}
+            </div>
+          </details>
         </section>
 
         <section className={styles.panel} id="returns">
@@ -259,10 +266,7 @@ export function ProductForm({ product, categories, ageBands, imageKeys, problems
             <input type="checkbox" name="returnable" defaultChecked={product?.returnable ?? true} />
             Can be returned within the return window
           </label>
-          <p className={styles.muted}>
-            Untick for items that can’t come back once opened (e.g. lipstick, opened skincare). Customers can still return
-            them if they arrive damaged, wrong or expired.
-          </p>
+          <p className={styles.muted}>Untick for items that can’t come back once opened. Damaged, wrong or expired items can always be returned.</p>
           {field('return_note', 'Return note', <input name="return_note" defaultValue={product?.return_note} maxLength={200} placeholder="e.g. Unopened and sealed only." />, 'Optional, shown on the product page')}
         </section>
 
