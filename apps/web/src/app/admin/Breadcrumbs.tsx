@@ -30,10 +30,11 @@ const labels: Record<string, string> = {
 
 const isId = (segment: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(segment);
 
-/** Where you are, and a way back up, on every page below the dashboard. */
+/** Where you are, and a way back up, on detail pages (an order, a product, a return…). */
 export function Breadcrumbs() {
   const segments = (usePathname() ?? '').split('/').filter(Boolean).slice(1);
-  if (segments.length === 0) return null;
+  // Top-level pages are named in the top bar; the trail only helps on pages below them.
+  if (segments.length < 2) return null;
   const crumbs = segments.map((segment, i) => ({
     href: `/admin/${segments.slice(0, i + 1).join('/')}`,
     label: labels[segment] ?? (isId(segment) ? 'Details' : decodeURIComponent(segment)),

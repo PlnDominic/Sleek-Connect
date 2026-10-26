@@ -3,8 +3,10 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+import type { IconName } from '@sleek/shared';
+import { Icon } from '@/components/Icon';
 import type { StaffRole } from '@/lib/admin/session';
-import styles from './admin.module.css';
+import styles from './shell.module.css';
 
 interface NavLink {
   href: string;
@@ -12,27 +14,34 @@ interface NavLink {
 }
 
 interface NavGroup {
-  /** Shown above the links; the first group has none. */
-  heading?: string;
+  label: string;
+  icon: IconName;
   adminOnly?: boolean;
   links: NavLink[];
 }
 
 const groups: NavGroup[] = [
-  { links: [{ href: '/admin', label: 'Dashboard' }] },
   {
-    heading: 'Sales',
+    label: 'Sales',
+    icon: 'bag',
     links: [
       { href: '/admin/orders', label: 'Orders' },
       { href: '/admin/returns', label: 'Returns' },
       { href: '/admin/finance', label: 'Finance' },
-      { href: '/admin/notifications', label: 'Notifications' },
-      { href: '/admin/support', label: 'Support' },
-      { href: '/admin/reviews', label: 'Reviews' },
     ],
   },
   {
-    heading: 'Stock & content',
+    label: 'Customers',
+    icon: 'headset',
+    links: [
+      { href: '/admin/support', label: 'Support' },
+      { href: '/admin/reviews', label: 'Reviews' },
+      { href: '/admin/notifications', label: 'Notifications' },
+    ],
+  },
+  {
+    label: 'Catalogue',
+    icon: 'box',
     links: [
       { href: '/admin/products', label: 'Products' },
       { href: '/admin/inventory', label: 'Inventory' },
@@ -40,20 +49,22 @@ const groups: NavGroup[] = [
     ],
   },
   {
-    heading: 'Fulfilment',
+    label: 'Delivery',
+    icon: 'truck',
     links: [
       { href: '/admin/riders', label: 'Riders' },
-      { href: '/admin/delivery', label: 'Delivery' },
+      { href: '/admin/delivery', label: 'Areas and fees' },
     ],
   },
+  { label: 'Marketplace', icon: 'store', adminOnly: true, links: [{ href: '/admin/vendors', label: 'Vendors' }] },
   {
-    heading: 'Manage',
+    label: 'Settings',
+    icon: 'sliders',
     adminOnly: true,
     links: [
-      { href: '/admin/vendors', label: 'Vendors' },
+      { href: '/admin/settings', label: 'Store settings' },
       { href: '/admin/staff', label: 'Staff' },
       { href: '/admin/audit', label: 'Audit log' },
-      { href: '/admin/settings', label: 'Settings' },
     ],
   },
 ];
@@ -61,58 +72,64 @@ const groups: NavGroup[] = [
 /** Pages only admins may open (the database enforces the same rule). */
 const adminOnlyLinks = new Set(['/admin/delivery']);
 
+/** The sidebar: Dashboard, then sections that fold open. The section holding the current page starts open. */
 export function AdminNav({ role }: { role: StaffRole }) {
   const pathname = usePathname();
   const isAdmin = role === 'admin';
-  // On phones the links sit behind a Menu button; moving to another page closes it again.
-  const [openFor, setOpenFor] = useState<string | null>(null);
-  const open = openFor === pathname;
+  const visible = groups
+    .filter((g) => isAdmin || !g.adminOnly)
+    .map((g) => ({ ...g, links: g.links.filter((l) => isAdmin || !adminOnlyLinks.has(l.href)) }))
+    .filter((g) => g.links.length > 0);
+  const activeGroup = visible.find((g) => g.links.some((l) => pathname.startsWith(l.href)))?.label;
+  const [open, setOpen] = useState<Set<string>>(() => new Set(activeGroup ? [activeGroup] : []));
+  const isOpen = (label: string) => open.has(label) || label === activeGroup;
+
   return (
-    <div className={styles.navWrap}>
-      <button
-        type="button"
-        className={styles.menuToggle}
-        aria-expanded={open}
-        aria-controls="admin-nav"
-        onClick={() => setOpenFor(open ? null : pathname)}
-      >
-        {open ? 'Close menu' : 'Menu'}
-      </button>
-      <div id="admin-nav" className={styles.navPanel} data-open={open || undefined}>
-        <form action="/admin/search" role="search" className={styles.navSearch}>
-          <input name="q" type="search" placeholder="Search orders, products…" aria-label="Search the admin" autoComplete="off" />
-        </form>
-        <nav aria-label="Admin" className={styles.nav}>
-          {groups
-            .filter((group) => isAdmin || !group.adminOnly)
-            .map((group) => {
-              const links = group.links.filter((l) => isAdmin || !adminOnlyLinks.has(l.href));
-              if (links.length === 0) return null;
-              const items = links.map((l) => {
-                const active = l.href === '/admin' ? pathname === '/admin' : pathname.startsWith(l.href);
-                return (
-                  <Link key={l.href} href={l.href} aria-current={active ? 'page' : undefined}>
+    <nav aria-label="Admin" className={styles.nav}>
+      <Link href="/admin" className={styles.item} aria-current={pathname === '/admin' ? 'page' : undefined}>
+        <Icon name="grid" size={18} strokeWidth={1.7} />
+        <span className={styles.itemLabel}>Dashboard</span>
+        {pathname === '/admin' && <span className={styles.activeDot} aria-hidden="true" />}
+      </Link>
+      {visible.map((g) => {
+        const expanded = isOpen(g.label);
+        const id = `nav-${g.label.toLowerCase()}`;
+        return (
+          <div key={g.label} className={styles.group}>
+            <button
+              type="button"
+              className={styles.item}
+              data-active={g.label === activeGroup || undefined}
+              aria-expanded={expanded}
+              aria-controls={id}
+              onClick={() =>
+                setOpen((all) => {
+                  const next = new Set(all);
+                  if (expanded) {
+                    next.delete(g.label);
+                  } else {
+                    next.add(g.label);
+                  }
+                  return next;
+                })
+              }
+            >
+              <Icon name={g.icon} size={18} strokeWidth={1.7} />
+              <span className={styles.itemLabel}>{g.label}</span>
+              <Icon name="chevronDown" size={15} strokeWidth={2} className={styles.chevron} />
+            </button>
+            {expanded && (
+              <div id={id} className={styles.children}>
+                {g.links.map((l) => (
+                  <Link key={l.href} href={l.href} aria-current={pathname.startsWith(l.href) ? 'page' : undefined}>
                     {l.label}
                   </Link>
-                );
-              });
-              // Groups with a heading fold away; the one holding the current page starts open.
-              if (!group.heading) {
-                return (
-                  <div key="overview" className={styles.navGroup}>
-                    {items}
-                  </div>
-                );
-              }
-              return (
-                <details key={group.heading} className={styles.navGroup} open>
-                  <summary className={styles.navHeading}>{group.heading}</summary>
-                  <div className={styles.navLinks}>{items}</div>
-                </details>
-              );
-            })}
-        </nav>
-      </div>
-    </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </nav>
   );
 }

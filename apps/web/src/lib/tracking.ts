@@ -35,16 +35,17 @@ export function trackingProgress(status: OrderStatus): TrackingProgress {
   }
 }
 
-const isWeekend = (d: Date) => d.getUTCDay() === 0 || d.getUTCDay() === 6;
+/** We deliver Monday to Saturday; only Sunday is a day off. */
+const isDayOff = (d: Date) => d.getUTCDay() === 0;
 
-/** Adds working days (Monday to Friday). Accra keeps GMT all year, so UTC dates are local dates. */
+/** Adds working days (Monday to Saturday). Accra keeps GMT all year, so UTC dates are local dates. */
 function addWorkingDays(from: Date, days: number): Date {
   const d = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate()));
-  while (isWeekend(d)) d.setUTCDate(d.getUTCDate() + 1);
+  while (isDayOff(d)) d.setUTCDate(d.getUTCDate() + 1);
   let left = days;
   while (left > 0) {
     d.setUTCDate(d.getUTCDate() + 1);
-    if (!isWeekend(d)) left--;
+    if (!isDayOff(d)) left--;
   }
   return d;
 }
@@ -59,8 +60,8 @@ export function expectedDelivery(option: DeliveryOption | undefined, paidAt: str
   if (!option || (option.daysMin === null && option.daysMax === null)) return null;
   const paid = new Date(paidAt);
   const late = option.cutoff !== null && paid.toISOString().slice(11, 16) >= option.cutoff;
-  // A weekend order waits for Monday anyway; a late weekday order goes out the next working day.
-  const dispatch = addWorkingDays(paid, late && !isWeekend(paid) ? 1 : 0);
+  // A Sunday order waits for Monday anyway; a late order on a working day goes out the next working day.
+  const dispatch = addWorkingDays(paid, late && !isDayOff(paid) ? 1 : 0);
   const min = option.daysMin ?? option.daysMax!;
   const max = Math.max(option.daysMax ?? min, min);
   const first = addWorkingDays(dispatch, min);

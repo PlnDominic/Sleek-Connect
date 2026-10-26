@@ -66,7 +66,7 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   await boss.getByText(/Payment recorded/).waitFor({ timeout: 8000 });
   await shot(boss, 'admin-vendors');
   await go(boss, BASE + '/admin');
-  assert(await boss.getByText('Vendors to approve').isVisible() && await boss.getByText('Vendor products to review').isVisible(), 'the dashboard counts vendors and vendor products waiting');
+  assert(await boss.getByRole('heading', { name: 'Needs attention' }).isVisible() && await boss.getByRole('heading', { name: 'Analytics' }).isVisible(), 'the dashboard shows sales and what needs attention');
   assert(await boss.getByRole('link', { name: 'Skip to content' }).count() === 1, 'there is a skip link for keyboard users');
 
   await go(ama, BASE + '/vendor');

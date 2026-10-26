@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { Logo } from '@/components/Logo';
 import { getStaffSession, roleLabels } from '@/lib/admin/session';
 import { Icon } from '@/components/Icon';
 import { AdminNav } from './AdminNav';
+import { Shell } from './Shell';
+import shell from './shell.module.css';
 import { Breadcrumbs } from './Breadcrumbs';
 import { PasswordSignIn, SignInWithGoogle, SignOutButton } from './SessionButtons';
 import { SignInShell } from './SignInShell';
-import styles from './admin.module.css';
 import signIn from './signin.module.css';
 
 /** Staff must be signed in (Google, or email and password) and be on the staff list (PRD FR-107). */
@@ -60,49 +60,36 @@ export async function AdminGate({ children }: { children: ReactNode }) {
   }
 
   const displayName = session.name ?? session.email?.split('@')[0] ?? 'Staff';
-  const initial = displayName.trim().charAt(0).toUpperCase();
 
   return (
-    <div className={styles.shell}>
-      <a href="#main" className={styles.skip}>
-        Skip to content
-      </a>
-      <aside className={styles.sidebar}>
-        <div className={styles.sidebarInner}>
-          <div className={styles.brand}>
-            <Logo size={19} href="/admin" />
-            <span className={styles.brandLabel}>Admin</span>
-          </div>
+    <Shell
+      user={{ name: displayName, role: roleLabels[session.role], avatar: session.avatar }}
+      menu={
+        <>
+          <span className={shell.menuEmail}>{session.email}</span>
+          <Link href="/" target="_blank">
+            View store
+          </Link>
+          <SignOutButton compact />
+        </>
+      }
+      sidebar={
+        <>
+          <Link href="/admin" className={shell.brand}>
+            <span className={shell.brandMark} aria-hidden="true">
+              SC
+            </span>
+            <span className={shell.brandText}>
+              <strong>Sleek Connect</strong>
+              <span>Store admin</span>
+            </span>
+          </Link>
           <AdminNav role={session.role} />
-          <div className={styles.account}>
-            <Link href="/" className={styles.storeLink}>
-              View store
-            </Link>
-            <div className={styles.user}>
-              <span className={styles.userAvatar} aria-hidden="true">
-                {session.avatar ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- the staff member's Google profile photo
-                  <img src={session.avatar} alt="" referrerPolicy="no-referrer" />
-                ) : (
-                  initial
-                )}
-              </span>
-              <span className={styles.userText}>
-                <strong>{displayName}</strong>
-                <span>{session.email}</span>
-              </span>
-            </div>
-            <div className={styles.userFoot}>
-              <span className={styles.roleTag}>{roleLabels[session.role]}</span>
-              <SignOutButton compact />
-            </div>
-          </div>
-        </div>
-      </aside>
-      <main id="main" tabIndex={-1} className={styles.content}>
-        <Breadcrumbs />
-        {children}
-      </main>
-    </div>
+        </>
+      }
+    >
+      <Breadcrumbs />
+      {children}
+    </Shell>
   );
 }

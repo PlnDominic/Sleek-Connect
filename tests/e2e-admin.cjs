@@ -93,7 +93,10 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   const sidebar = rookie.locator('aside').first();
   assert((await sidebar.evaluate((el) => getComputedStyle(el).backgroundColor)) === 'rgb(255, 255, 255)', 'the sidebar is white');
   assert((await rookie.getByRole('link', { name: 'Dashboard' }).getAttribute('aria-current')) === 'page', 'the sidebar marks the page you are on');
-  assert(await sidebar.getByText(`rookie+${stamp}@example.com`).isVisible() && await sidebar.getByText('Operations', { exact: true }).isVisible() && await sidebar.getByRole('link', { name: 'View store' }).isVisible(), 'the sidebar shows who is signed in, their role and a way back to the store');
+  const topbar = rookie.locator('header').first();
+  assert(await topbar.getByText('Operations', { exact: true }).isVisible(), 'the top bar shows who is signed in and their role');
+  await rookie.getByRole('button', { name: 'Account menu' }).click();
+  assert(await topbar.getByText(`rookie+${stamp}@example.com`).isVisible() && await topbar.getByRole('link', { name: 'View store', exact: true }).isVisible(), 'the account menu shows the email and a way back to the store');
   await shot(rookie, 'admin-dashboard');
   await rookie.getByRole('button', { name: 'Sign out' }).click();
   await rookie.getByRole('heading', { name: 'Welcome back' }).waitFor();
