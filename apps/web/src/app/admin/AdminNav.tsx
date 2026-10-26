@@ -2,15 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import type { IconName } from '@sleek/shared';
-import { Icon } from '@/components/Icon';
 import type { StaffRole } from '@/lib/admin/session';
 import styles from './admin.module.css';
 
 interface NavLink {
   href: string;
   label: string;
-  icon: IconName;
 }
 
 interface NavGroup {
@@ -21,41 +18,41 @@ interface NavGroup {
 }
 
 const groups: NavGroup[] = [
-  { links: [{ href: '/admin', label: 'Dashboard', icon: 'grid' }] },
+  { links: [{ href: '/admin', label: 'Dashboard' }] },
   {
     heading: 'Sales',
     links: [
-      { href: '/admin/orders', label: 'Orders', icon: 'bag' },
-      { href: '/admin/returns', label: 'Returns', icon: 'refresh' },
-      { href: '/admin/finance', label: 'Finance', icon: 'clipboard' },
-      { href: '/admin/notifications', label: 'Notifications', icon: 'bell' },
-      { href: '/admin/support', label: 'Support', icon: 'headset' },
-      { href: '/admin/reviews', label: 'Reviews', icon: 'star' },
+      { href: '/admin/orders', label: 'Orders' },
+      { href: '/admin/returns', label: 'Returns' },
+      { href: '/admin/finance', label: 'Finance' },
+      { href: '/admin/notifications', label: 'Notifications' },
+      { href: '/admin/support', label: 'Support' },
+      { href: '/admin/reviews', label: 'Reviews' },
     ],
   },
   {
     heading: 'Stock & content',
     links: [
-      { href: '/admin/products', label: 'Products', icon: 'box' },
-      { href: '/admin/inventory', label: 'Inventory', icon: 'layers' },
-      { href: '/admin/content', label: 'Content', icon: 'image' },
+      { href: '/admin/products', label: 'Products' },
+      { href: '/admin/inventory', label: 'Inventory' },
+      { href: '/admin/content', label: 'Content' },
     ],
   },
   {
     heading: 'Fulfilment',
     links: [
-      { href: '/admin/riders', label: 'Riders', icon: 'truck' },
-      { href: '/admin/delivery', label: 'Delivery', icon: 'pin' },
+      { href: '/admin/riders', label: 'Riders' },
+      { href: '/admin/delivery', label: 'Delivery' },
     ],
   },
   {
     heading: 'Manage',
     adminOnly: true,
     links: [
-      { href: '/admin/vendors', label: 'Vendors', icon: 'users' },
-      { href: '/admin/staff', label: 'Staff', icon: 'users' },
-      { href: '/admin/audit', label: 'Audit log', icon: 'clipboard' },
-      { href: '/admin/settings', label: 'Settings', icon: 'sliders' },
+      { href: '/admin/vendors', label: 'Vendors' },
+      { href: '/admin/staff', label: 'Staff' },
+      { href: '/admin/audit', label: 'Audit log' },
+      { href: '/admin/settings', label: 'Settings' },
     ],
   },
 ];
@@ -80,8 +77,7 @@ export function AdminNav({ role }: { role: StaffRole }) {
                 const active = l.href === '/admin' ? pathname === '/admin' : pathname.startsWith(l.href);
                 return (
                   <Link key={l.href} href={l.href} aria-current={active ? 'page' : undefined}>
-                    <Icon name={l.icon} size={18} strokeWidth={1.7} />
-                    <span>{l.label}</span>
+                    {l.label}
                   </Link>
                 );
               })}
