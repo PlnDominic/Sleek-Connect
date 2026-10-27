@@ -569,3 +569,156 @@
   padding: 6px 10px;
   font-size: 12.5px;
 }
+
+/* Orders, earnings, reports and messages. */
+.list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.listRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--c-line);
+  font-size: 14px;
+}
+
+.listRow:first-child {
+  border-top: 0;
+}
+
+.listMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.listMain small {
+  color: var(--c-text-subtle);
+  font-size: 12.5px;
+}
+
+.amount {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.orderCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 20px;
+  border: 1px solid var(--c-line);
+  border-radius: 16px;
+  background: var(--c-canvas);
+}
+
+.orderHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.orderHead strong {
+  font-size: 16px;
+}
+
+.balance {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.chart {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(6px, 1fr);
+  align-items: end;
+  gap: 4px;
+  height: 160px;
+  padding-top: 8px;
+}
+
+.bar {
+  min-height: 3px;
+  border-radius: 4px 4px 0 0;
+  background: var(--c-accent);
+  opacity: 0.85;
+}
+
+.bar[data-empty] {
+  background: var(--c-line);
+  opacity: 1;
+}
+
+.chartAxis {
+  display: flex;
+  justify-content: space-between;
+  color: var(--c-text-subtle);
+  font-size: 12px;
+}
+
+.periods {
+  display: flex;
+  gap: 8px;
+}
+
+.periods a {
+  padding: 6px 12px;
+  border: 1px solid var(--c-line);
+  border-radius: 999px;
+  color: var(--c-text-subtle);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.periods a[aria-current='page'] {
+  border-color: var(--c-accent);
+  color: var(--c-accent);
+  font-weight: 600;
+}
+
+.thread {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+.bubble {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--c-surface);
+  font-size: 14px;
+  white-space: pre-wrap;
+}
+
+.bubble[data-from='vendor'] {
+  align-self: flex-end;
+  background: var(--c-teal-soft);
+}
+
+.bubble small {
+  display: block;
+  margin-top: 4px;
+  color: var(--c-text-subtle);
+  font-size: 11.5px;
+}
+
+.diff {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}

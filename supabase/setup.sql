@@ -27,6 +27,10 @@
 --   20261024090100_home_fashion_categories.sql
 --   20261025090000_marketplace_vendors.sql
 --   20261026090000_vendor_identity.sql
+--   20261027090000_vendor_fulfilment.sql
+--   20261027100000_vendor_money_and_messages.sql
+--   20261027110000_store_discovery_reports.sql
+--   20261027120000_vendor_subscription_payments.sql
 --   seed.sql (starter catalogue)
 
 -- ===========================================================================
@@ -8003,6 +8007,1611 @@ begin
   return v_result;
 end;
 $$;
+
+-- ===========================================================================
+-- 20261027090000_vendor_fulfilment.sql
+-- ===========================================================================
+
+-- Vendor orders: vendors pack their own items, we collect them, and the order goes out as one parcel.
+--
+--  * Shoppers pay us for the whole order, and pay ONE delivery fee: every vendor hands their items to Sleek Connect and a
+--    single rider delivers the lot, so a cart with several vendors costs no more to deliver than any other cart.
+--  * Each vendor sees only their own lines of paid orders: no customer name, phone, address or delivery code.
+--  * The vendor marks their items packed; our operations team marks them collected. An order can be packed once every
+--    vendor has packed, and dispatched once every vendor's items have been collected.
+
+create type public.shipment_status as enum ('pending', 'packed', 'collected');
+
+create table public.order_shipments (
+  order_id uuid not null references public.orders (id) on delete cascade,
+  vendor_id uuid not null references public.vendors (id),
+  status public.shipment_status not null default 'pending',
+  packed_at timestamptz,
+  collected_at timestamptz,
+  collected_by text,
+  primary key (order_id, vendor_id)
+);
+
+create index order_shipments_vendor_idx on public.order_shipments (vendor_id, status);
+
+alter table public.order_shipments enable row level security;
+create policy "Staff can read shipments" on public.order_shipments
+  for select to authenticated using ((select public.current_staff_role()) is not null);
+grant select on public.order_shipments to authenticated;
+
+-- One shipment per vendor on an order, created with the first vendor line.
+create function public.order_items_shipment()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if new.vendor_id is not null and not exists (select 1 from public.vendors v where v.id = new.vendor_id and v.is_house) then
+    insert into public.order_shipments (order_id, vendor_id) values (new.order_id, new.vendor_id) on conflict do nothing;
+  end if;
+  return null;
+end;
+$$;
+
+create trigger order_items_shipment after insert on public.order_items
+  for each row execute function public.order_items_shipment();
+
+-- The vendor's own orders: paid orders that include their items. Customer details are never included.
+create function public.vendor_orders()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v public.vendors := public.vendor_require_own();
+begin
+  return coalesce((
+    select jsonb_agg(jsonb_build_object(
+      'order_id', o.id,
+      'order_number', o.order_number,
+      'paid_at', o.paid_at,
+      'order_status', o.status,
+      'shipment_status', sh.status,
+      'packed_at', sh.packed_at,
+      'collected_at', sh.collected_at,
+      'amount_ghs', (select coalesce(sum(oi.vendor_unit_price_ghs * oi.quantity), 0)
+                     from public.order_items oi where oi.order_id = o.id and oi.vendor_id = v.id),
+      'lines', (select jsonb_agg(jsonb_build_object(
+                  'product_name', oi.product_name, 'size_label', oi.size_label, 'quantity', oi.quantity,
+                  'unit_ghs', oi.vendor_unit_price_ghs, 'amount_ghs', oi.vendor_unit_price_ghs * oi.quantity)
+                  order by oi.product_name)
+                from public.order_items oi where oi.order_id = o.id and oi.vendor_id = v.id)
+    ) order by o.paid_at desc)
+    from public.orders o
+    join public.order_shipments sh on sh.order_id = o.id and sh.vendor_id = v.id
+    where o.paid_at is not null
+  ), '[]'::jsonb);
+end;
+$$;
+
+revoke all on function public.vendor_orders() from public, anon;
+grant execute on function public.vendor_orders() to authenticated;
+
+-- The vendor has packed their items for this order and they are ready for us to collect.
+create function public.vendor_mark_packed(p_order_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v public.vendors := public.vendor_require_own();
+  v_status public.order_status;
+begin
+  if v.status <> 'active' then
+    raise exception 'Your store is not active, so it can''t pack orders.' using errcode = '42501';
+  end if;
+  select o.status into v_status from public.orders o
+  join public.order_shipments sh on sh.order_id = o.id and sh.vendor_id = v.id
+  where o.id = p_order_id for update of sh;
+  if not found then
+    raise exception 'That order isn''t yours.' using errcode = '42501';
+  end if;
+  if v_status not in ('paid', 'packing', 'packed') then
+    raise exception 'This order is %, so there is nothing to pack.', replace(v_status::text, '_', ' ') using errcode = '22023';
+  end if;
+  update public.order_shipments sh set status = 'packed', packed_at = now()
+  where sh.order_id = p_order_id and sh.vendor_id = v.id and sh.status = 'pending';
+  perform public.audit('vendor.order_packed', 'order', p_order_id::text, jsonb_build_object('vendor', v.slug));
+end;
+$$;
+
+revoke all on function public.vendor_mark_packed(uuid) from public, anon;
+grant execute on function public.vendor_mark_packed(uuid) to authenticated;
+
+-- Our operations team collected a vendor's packed items.
+create function public.admin_collect_vendor_items(p_order_id uuid, p_vendor_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.require_staff(array['operations']::public.staff_role[]);
+  update public.order_shipments sh
+  set status = 'collected', collected_at = now(), collected_by = auth.jwt() ->> 'email'
+  where sh.order_id = p_order_id and sh.vendor_id = p_vendor_id and sh.status = 'packed';
+  if not found then
+    raise exception 'Those items aren''t packed and waiting for collection.' using errcode = '22023';
+  end if;
+  perform public.audit('order.vendor_items_collected', 'order', p_order_id::text, jsonb_build_object('vendor_id', p_vendor_id));
+end;
+$$;
+
+revoke all on function public.admin_collect_vendor_items(uuid, uuid) from public, anon;
+grant execute on function public.admin_collect_vendor_items(uuid, uuid) to authenticated;
+
+-- Vendor shipments for operations: what to collect from whom, with the vendor's phone.
+create function public.admin_vendor_shipments(p_order_id uuid default null)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.require_staff(array['operations']::public.staff_role[]);
+  return coalesce((
+    select jsonb_agg(jsonb_build_object(
+      'order_id', o.id, 'order_number', o.order_number, 'order_status', o.status,
+      'vendor_id', v.id, 'vendor_name', v.name, 'vendor_phone', pr.phone,
+      'status', sh.status, 'packed_at', sh.packed_at, 'collected_at', sh.collected_at,
+      'items', (select jsonb_agg(jsonb_build_object('name', oi.product_name, 'size', oi.size_label, 'quantity', oi.quantity)
+                  order by oi.product_name)
+                from public.order_items oi where oi.order_id = o.id and oi.vendor_id = v.id)
+    ) order by sh.status, o.paid_at)
+    from public.order_shipments sh
+    join public.orders o on o.id = sh.order_id
+    join public.vendors v on v.id = sh.vendor_id
+    left join public.vendor_private pr on pr.vendor_id = v.id
+    where (p_order_id is null and sh.status <> 'collected' and o.status in ('paid', 'packing', 'packed'))
+       or sh.order_id = p_order_id
+  ), '[]'::jsonb);
+end;
+$$;
+
+revoke all on function public.admin_vendor_shipments(uuid) from public, anon;
+grant execute on function public.admin_vendor_shipments(uuid) to authenticated;
+
+-- Packing, picking, dispatching and returning now understand vendor lines.
+create or replace function public.allocate_order_batches(p_order_id uuid)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $$
+declare
+  v_item record;
+  v_batch record;
+  v_left integer;
+  v_take integer;
+begin
+  for v_item in
+    select oi.id, oi.product_id, coalesce(oi.size_code, '') as size_code, oi.product_name, oi.size_label, oi.quantity
+    from public.order_items oi where oi.order_id = p_order_id and oi.product_id is not null
+      -- Vendors keep and pack their own stock, so only our own lines come from batches.
+      and (oi.vendor_id is null or oi.vendor_id = public.house_vendor_id())
+    order by oi.product_name
+  loop
+    v_left := v_item.quantity;
+    for v_batch in
+      select b.id, b.quantity from public.stock_batches b
+      where b.product_id = v_item.product_id and b.size_code = v_item.size_code and b.status = 'available'
+        and b.quantity > 0 and (b.expires_on is null or b.expires_on >= current_date)
+      order by b.expires_on nulls last, b.received_at
+      for update
+    loop
+      exit when v_left = 0;
+      v_take := least(v_left, v_batch.quantity);
+      update public.stock_batches b set quantity = b.quantity - v_take where b.id = v_batch.id;
+      insert into public.order_item_batches (order_item_id, batch_id, quantity) values (v_item.id, v_batch.id, v_take)
+      on conflict (order_item_id, batch_id) do update set quantity = public.order_item_batches.quantity + excluded.quantity;
+      perform public.log_stock_movement(v_item.product_id, v_item.size_code, v_batch.id, 'picked', -v_take, 0, p_order_id, null);
+      v_left := v_left - v_take;
+    end loop;
+    if v_left > 0 then
+      raise exception 'Not enough usable stock of % (short by %). Receive stock or check the batches.',
+        concat_ws(', ', v_item.product_name, v_item.size_label), v_left using errcode = '22023';
+    end if;
+  end loop;
+end;
+$$;
+
+create or replace function public.admin_pick_list(p_order_id uuid)
+ RETURNS TABLE(order_item_id uuid, product_name text, size_label text, ordered integer, batch_id uuid, batch_code text, expires_on date, quantity integer, packed boolean)
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $$
+declare
+  v_item record;
+  v_batch record;
+  v_left integer;
+  v_take integer;
+  v_used jsonb := '{}'::jsonb;
+  v_free integer;
+begin
+  perform public.require_staff();
+
+  if exists (select 1 from public.order_item_batches ab join public.order_items oi on oi.id = ab.order_item_id
+             where oi.order_id = p_order_id) then
+    return query
+    select oi.id, oi.product_name, oi.size_label, oi.quantity, b.id, b.batch_code, b.expires_on, ab.quantity, true
+    from public.order_items oi
+    join public.order_item_batches ab on ab.order_item_id = oi.id
+    join public.stock_batches b on b.id = ab.batch_id
+    where oi.order_id = p_order_id
+    order by oi.product_name, b.expires_on nulls last;
+    return;
+  end if;
+
+  for v_item in
+    select oi.id, oi.product_id, coalesce(oi.size_code, '') as size_code, oi.product_name, oi.size_label, oi.quantity
+    from public.order_items oi where oi.order_id = p_order_id and (oi.vendor_id is null or oi.vendor_id = public.house_vendor_id()) order by oi.product_name
+  loop
+    v_left := v_item.quantity;
+    for v_batch in
+      select b.id, b.batch_code, b.expires_on, b.quantity from public.stock_batches b
+      where b.product_id = v_item.product_id and b.size_code = v_item.size_code and b.status = 'available'
+        and b.quantity > 0 and (b.expires_on is null or b.expires_on >= current_date)
+      order by b.expires_on nulls last, b.received_at
+    loop
+      exit when v_left = 0;
+      -- Lines of the same order can draw on the same batch.
+      v_free := v_batch.quantity - coalesce((v_used ->> v_batch.id::text)::integer, 0);
+      continue when v_free <= 0;
+      v_take := least(v_left, v_free);
+      v_used := v_used || jsonb_build_object(v_batch.id::text, coalesce((v_used ->> v_batch.id::text)::integer, 0) + v_take);
+      order_item_id := v_item.id; product_name := v_item.product_name; size_label := v_item.size_label;
+      ordered := v_item.quantity; batch_id := v_batch.id; batch_code := v_batch.batch_code;
+      expires_on := v_batch.expires_on; quantity := v_take; packed := false;
+      return next;
+      v_left := v_left - v_take;
+    end loop;
+    if v_left > 0 then
+      order_item_id := v_item.id; product_name := v_item.product_name; size_label := v_item.size_label;
+      ordered := v_item.quantity; batch_id := null; batch_code := null; expires_on := null; quantity := v_left;
+      packed := false;
+      return next;
+    end if;
+  end loop;
+end;
+$$;
+
+create or replace function public.return_order_batches(p_order_id uuid, p_note text)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $$
+declare
+  v_row record;
+  v_sellable integer;
+begin
+  for v_row in
+    select ab.batch_id, ab.quantity, b.product_id, b.size_code, b.status
+    from public.order_item_batches ab
+    join public.order_items oi on oi.id = ab.order_item_id
+    join public.stock_batches b on b.id = ab.batch_id
+    where oi.order_id = p_order_id
+    for update of b
+  loop
+    v_sellable := case when v_row.status = 'available' then v_row.quantity else 0 end;
+    update public.stock_batches b set quantity = b.quantity + v_row.quantity where b.id = v_row.batch_id;
+    update public.inventory_levels i set on_hand = i.on_hand + v_sellable
+    where i.product_id = v_row.product_id and i.size_code = v_row.size_code;
+    perform public.log_stock_movement(v_row.product_id, v_row.size_code, v_row.batch_id, 'returned',
+      v_row.quantity, v_sellable, p_order_id, p_note);
+  end loop;
+  -- A vendor's units go back into the vendor's own stock.
+  for v_row in
+    select oi.product_id, coalesce(oi.size_code, '') as size_code, sum(oi.quantity)::integer as quantity
+    from public.order_items oi
+    join public.vendors v on v.id = oi.vendor_id and not v.is_house
+    where oi.order_id = p_order_id and oi.product_id is not null
+    group by oi.product_id, coalesce(oi.size_code, '')
+  loop
+    update public.inventory_levels i set on_hand = i.on_hand + v_row.quantity
+    where i.product_id = v_row.product_id and i.size_code = v_row.size_code;
+    perform public.log_stock_movement(v_row.product_id, v_row.size_code, null, 'returned',
+      v_row.quantity, v_row.quantity, p_order_id, p_note);
+  end loop;
+  delete from public.order_item_batches ab
+  using public.order_items oi
+  where oi.id = ab.order_item_id and oi.order_id = p_order_id;
+end;
+$$;
+
+create or replace function public.admin_pack_orders(p_order_ids uuid[])
+ RETURNS TABLE(order_id uuid, order_number text, ok boolean, message text)
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $$
+declare
+  v_id uuid;
+begin
+  perform public.require_staff(array['operations']::public.staff_role[]);
+  foreach v_id in array p_order_ids loop
+    order_id := v_id;
+    order_number := (select o.order_number from public.orders o where o.id = v_id);
+    begin
+      perform public.lock_order_for(v_id, array['paid', 'packing']::public.order_status[], 'packed');
+      if exists (select 1 from public.order_shipments sh where sh.order_id = v_id and sh.status = 'pending') then
+        raise exception 'Waiting for % to pack their items.',
+          (select string_agg(v.name, ', ') from public.order_shipments sh join public.vendors v on v.id = sh.vendor_id
+           where sh.order_id = v_id and sh.status = 'pending') using errcode = '22023';
+      end if;
+      perform public.allocate_order_batches(v_id);
+      update public.orders o set status = 'packed' where o.id = v_id;
+      ok := true;
+      message := null;
+    exception when sqlstate '22023' then
+      ok := false;
+      message := sqlerrm;
+    end;
+    return next;
+  end loop;
+end;
+$$;
+
+create or replace function public.admin_dispatch_order(p_order_id uuid, p_rider_id uuid DEFAULT NULL::uuid, p_courier_reference text DEFAULT NULL::text, p_note text DEFAULT NULL::text)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $$
+declare
+  v_order public.orders%rowtype;
+  v_rider public.riders%rowtype;
+  v_max integer;
+begin
+  perform public.require_staff(array['operations']::public.staff_role[]);
+  v_order := public.lock_order_for(p_order_id, array['packed', 'delivery_failed']::public.order_status[], 'dispatched');
+  -- Everything from vendors has to be with us before the order goes out.
+  if exists (select 1 from public.order_shipments sh where sh.order_id = p_order_id and sh.status <> 'collected') then
+    raise exception 'Collect the items from % before dispatching order %.',
+      (select string_agg(v.name, ', ') from public.order_shipments sh join public.vendors v on v.id = sh.vendor_id
+       where sh.order_id = p_order_id and sh.status <> 'collected'), v_order.order_number using errcode = '22023';
+  end if;
+  select s.max_delivery_attempts into v_max from public.store_settings s;
+  if v_order.delivery_attempts >= v_max then
+    raise exception 'Order % has had % delivery attempts, the limit. Return it to stock instead.',
+      v_order.order_number, v_order.delivery_attempts using errcode = '22023';
+  end if;
+  if p_rider_id is not null then
+    select * into v_rider from public.riders r where r.id = p_rider_id and r.is_active;
+    if not found then
+      raise exception 'Choose an active rider.' using errcode = '22023';
+    end if;
+  elsif coalesce(btrim(p_courier_reference), '') = '' then
+    raise exception 'Choose a rider, or enter the courier''s tracking reference.' using errcode = '22023';
+  end if;
+
+  perform public.set_order_event_context(p_note, jsonb_build_object(
+    'rider', v_rider.name, 'courier_reference', nullif(btrim(p_courier_reference), ''),
+    'attempt', v_order.delivery_attempts + 1));
+  update public.orders o
+  set status = 'out_for_delivery', rider_id = p_rider_id, courier_reference = nullif(btrim(p_courier_reference), ''),
+      delivery_attempts = o.delivery_attempts + 1
+  where o.id = p_order_id;
+end;
+$$;
+
+-- ===========================================================================
+-- 20261027100000_vendor_money_and_messages.sql
+-- ===========================================================================
+
+-- Vendor money, messages and notifications:
+--  * a payout ledger: what each vendor has earned from delivered orders, minus returns, minus what we've paid them
+--  * vendors keep a Mobile Money account for payouts
+--  * returns on vendor products come off the vendor's earnings, and the goods go back into the vendor's own stock
+--  * texts and emails to vendors (application, approval, payment, new orders, payouts, renewals), queued like customer ones
+--  * a message thread between each vendor and the owner
+
+-- ---------------------------------------------------------------------------
+-- Notifications to vendors
+-- ---------------------------------------------------------------------------
+
+alter table public.notifications
+  add column vendor_id uuid references public.vendors (id) on delete cascade;
+
+create index notifications_vendor_idx on public.notifications (vendor_id) where vendor_id is not null;
+
+-- Queues a text and an email to the vendor's saved contact details.
+create function public.queue_vendor_message(p_vendor_id uuid, p_template text, p_payload jsonb default '{}'::jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v public.vendors%rowtype;
+  pr public.vendor_private%rowtype;
+  v_payload jsonb;
+begin
+  select * into v from public.vendors x where x.id = p_vendor_id;
+  select * into pr from public.vendor_private x where x.vendor_id = p_vendor_id;
+  if v.id is null or pr.vendor_id is null then
+    return;
+  end if;
+  v_payload := coalesce(p_payload, '{}'::jsonb)
+    || jsonb_build_object('vendor_name', v.name, 'owner_name', coalesce(pr.owner_name, v.name), 'vendor_slug', v.slug);
+  if coalesce(pr.phone, '') <> '' then
+    insert into public.notifications (vendor_id, template, channel, recipient, payload)
+    values (p_vendor_id, p_template, 'sms', pr.phone, v_payload);
+  end if;
+  if coalesce(pr.email, '') <> '' then
+    insert into public.notifications (vendor_id, template, channel, recipient, payload)
+    values (p_vendor_id, p_template, 'email', pr.email, v_payload);
+  end if;
+end;
+$$;
+
+revoke all on function public.queue_vendor_message(uuid, text, jsonb) from public, anon, authenticated;
+
+-- A paid order with a vendor's items, or one cancelled after payment, is news for that vendor.
+create function public.queue_vendor_order_notifications()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_order public.orders%rowtype;
+  v_vendor record;
+  v_template text;
+begin
+  v_template := case new.status
+    when 'paid' then 'vendor_new_order'
+    when 'cancelled' then 'vendor_order_cancelled'
+  end;
+  if v_template is null then
+    return null;
+  end if;
+  select * into v_order from public.orders o where o.id = new.order_id;
+  if new.status = 'cancelled' and v_order.paid_at is null then
+    return null;
+  end if;
+  for v_vendor in
+    select sh.vendor_id, (select coalesce(sum(oi.quantity), 0) from public.order_items oi
+                          where oi.order_id = sh.order_id and oi.vendor_id = sh.vendor_id) as items
+    from public.order_shipments sh where sh.order_id = new.order_id
+  loop
+    perform public.queue_vendor_message(v_vendor.vendor_id, v_template,
+      jsonb_build_object('order_number', v_order.order_number, 'item_count', v_vendor.items));
+  end loop;
+  return null;
+end;
+$$;
+
+create trigger order_events_vendor_notifications after insert on public.order_events
+  for each row execute function public.queue_vendor_order_notifications();
+
+-- Reminders before a vendor's year ends: 30, 7 and 1 days ahead, on the day, and the day after. Run daily.
+create function public.queue_vendor_renewal_reminders()
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  r record;
+  v_count integer := 0;
+  v_fee numeric;
+begin
+  select st.vendor_annual_fee_ghs into v_fee from public.store_settings st;
+  for r in
+    select v.id, max(s.ends_on) as ends_on
+    from public.vendors v join public.vendor_subscriptions s on s.vendor_id = v.id
+    where v.status = 'active' and not v.is_house
+    group by v.id
+    having (max(s.ends_on) - current_date) in (30, 7, 1, 0, -1)
+  loop
+    perform public.queue_vendor_message(r.id, 'vendor_renewal_reminder',
+      jsonb_build_object('ends_on', r.ends_on, 'days_left', r.ends_on - current_date, 'fee_ghs', v_fee));
+    v_count := v_count + 1;
+  end loop;
+  return v_count;
+end;
+$$;
+
+revoke all on function public.queue_vendor_renewal_reminders() from public, anon, authenticated;
+
+select cron.schedule('vendor-renewal-reminders', '0 8 * * *', 'select public.queue_vendor_renewal_reminders()');
+
+-- ---------------------------------------------------------------------------
+-- Payout account and ledger
+-- ---------------------------------------------------------------------------
+
+alter table public.vendor_private
+  add column payout_network text check (payout_network is null or payout_network in ('mtn', 'telecel', 'at')),
+  add column payout_wallet text check (payout_wallet is null or length(btrim(payout_wallet)) between 9 and 20),
+  add column payout_name text check (payout_name is null or length(btrim(payout_name)) between 2 and 80);
+
+create table public.vendor_payouts (
+  id uuid primary key default gen_random_uuid(),
+  vendor_id uuid not null references public.vendors (id),
+  amount_ghs numeric(10, 2) not null check (amount_ghs > 0),
+  method text not null default 'momo' check (method in ('momo', 'bank', 'cash')),
+  reference text check (reference is null or length(reference) <= 100),
+  note text check (note is null or length(note) <= 500),
+  paid_by uuid references auth.users (id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
+create index vendor_payouts_vendor_idx on public.vendor_payouts (vendor_id, created_at desc);
+
+alter table public.vendor_payouts enable row level security;
+create policy "Vendors can read their own payouts" on public.vendor_payouts
+  for select to authenticated
+  using (exists (select 1 from public.vendors v where v.id = vendor_id and v.owner_id = (select auth.uid())));
+create policy "Admins can read payouts" on public.vendor_payouts
+  for select to authenticated using ((select public.current_staff_role()) in ('admin', 'finance'));
+grant select on public.vendor_payouts to authenticated;
+
+-- What a vendor has earned and what is still owed.
+--   earned   = their price x quantity on delivered orders
+--   returned = their price x quantity on returns we have received (the goods are back with them, or at fault)
+--   pending  = paid orders not delivered yet
+--   balance  = earned - returned - paid
+create function public.vendor_balance(p_vendor_id uuid)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select jsonb_build_object(
+    'earned', e.earned, 'returned', e.returned, 'paid', e.paid, 'pending', e.pending,
+    'balance', e.earned - e.returned - e.paid)
+  from (
+    select
+      coalesce((select sum(oi.vendor_unit_price_ghs * oi.quantity) from public.order_items oi
+                join public.orders o on o.id = oi.order_id
+                where oi.vendor_id = p_vendor_id and o.status = 'delivered'), 0) as earned,
+      coalesce((select sum(oi.vendor_unit_price_ghs * ri.quantity) from public.return_items ri
+                join public.return_requests rr on rr.id = ri.return_id
+                join public.order_items oi on oi.id = ri.order_item_id
+                where oi.vendor_id = p_vendor_id and rr.status in ('received', 'refunded')), 0) as returned,
+      coalesce((select sum(p.amount_ghs) from public.vendor_payouts p where p.vendor_id = p_vendor_id), 0) as paid,
+      coalesce((select sum(oi.vendor_unit_price_ghs * oi.quantity) from public.order_items oi
+                join public.orders o on o.id = oi.order_id
+                where oi.vendor_id = p_vendor_id
+                  and o.status in ('paid', 'packing', 'packed', 'out_for_delivery', 'delivery_failed')), 0) as pending
+  ) e;
+$$;
+
+revoke all on function public.vendor_balance(uuid) from public, anon, authenticated;
+
+create function public.vendor_set_payout_account(p_network text, p_wallet text, p_name text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v public.vendors := public.vendor_require_own();
+  v_wallet text := regexp_replace(coalesce(p_wallet, ''), '[^0-9+]', '', 'g');
+begin
+  if p_network is null or p_network not in ('mtn', 'telecel', 'at') then
+    raise exception 'Choose your Mobile Money network.' using errcode = '22023';
+  end if;
+  if length(v_wallet) < 9 or length(v_wallet) > 14 then
+    raise exception 'Enter a valid Mobile Money number.' using errcode = '22023';
+  end if;
+  if length(btrim(coalesce(p_name, ''))) < 2 then
+    raise exception 'Enter the name registered on that wallet.' using errcode = '22023';
+  end if;
+  update public.vendor_private pr
+  set payout_network = p_network, payout_wallet = v_wallet, payout_name = btrim(left(p_name, 80))
+  where pr.vendor_id = v.id;
+  perform public.audit('vendor.payout_account_set', 'vendor', v.id::text, jsonb_build_object('network', p_network));
+end;
+$$;
+
+revoke all on function public.vendor_set_payout_account(text, text, text) from public, anon;
+grant execute on function public.vendor_set_payout_account(text, text, text) to authenticated;
+
+-- The vendor's own statement: balance, delivered orders, returns and payouts.
+create function public.vendor_statement()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v public.vendors := public.vendor_require_own();
+begin
+  return public.vendor_balance(v.id) || jsonb_build_object(
+    'payout_account', (select jsonb_build_object('network', pr.payout_network, 'wallet', pr.payout_wallet, 'name', pr.payout_name)
+                       from public.vendor_private pr where pr.vendor_id = v.id),
+    'deliveries', coalesce((
+      select jsonb_agg(jsonb_build_object('order_number', t.order_number, 'delivered_at', t.delivered_at, 'amount_ghs', t.amount)
+                       order by t.delivered_at desc)
+      from (
+        select o.order_number, o.delivered_at, sum(oi.vendor_unit_price_ghs * oi.quantity) as amount
+        from public.order_items oi join public.orders o on o.id = oi.order_id
+        where oi.vendor_id = v.id and o.status = 'delivered'
+        group by o.order_number, o.delivered_at
+        order by o.delivered_at desc limit 100
+      ) t), '[]'::jsonb),
+    'returns', coalesce((
+      select jsonb_agg(jsonb_build_object('case_number', t.case_number, 'order_number', t.order_number, 'status', t.status,
+               'reason', t.reason, 'amount_ghs', t.amount) order by t.created_at desc)
+      from (
+        select rr.case_number, o.order_number, rr.status, rr.reason, rr.created_at,
+               sum(oi.vendor_unit_price_ghs * ri.quantity) as amount
+        from public.return_items ri
+        join public.return_requests rr on rr.id = ri.return_id
+        join public.order_items oi on oi.id = ri.order_item_id
+        join public.orders o on o.id = rr.order_id
+        where oi.vendor_id = v.id
+        group by rr.case_number, o.order_number, rr.status, rr.reason, rr.created_at
+        order by rr.created_at desc limit 50
+      ) t), '[]'::jsonb),
+    'payouts', coalesce((
+      select jsonb_agg(jsonb_build_object('amount_ghs', p.amount_ghs, 'method', p.method, 'reference', p.reference,
+               'created_at', p.created_at) order by p.created_at desc)
+      from public.vendor_payouts p where p.vendor_id = v.id), '[]'::jsonb)
+  );
+end;
+$$;
+
+revoke all on function public.vendor_statement() from public, anon;
+grant execute on function public.vendor_statement() to authenticated;
+
+-- The owner's view: every vendor with what they are owed, and where to send it.
+create function public.admin_vendor_balances()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.require_staff(array['finance']::public.staff_role[]);
+  return coalesce((
+    select jsonb_agg((public.vendor_balance(v.id)) || jsonb_build_object(
+      'vendor_id', v.id, 'name', v.name, 'slug', v.slug,
+      'payout_network', pr.payout_network, 'payout_wallet', pr.payout_wallet, 'payout_name', pr.payout_name,
+      'last_payout_at', (select max(p.created_at) from public.vendor_payouts p where p.vendor_id = v.id))
+      order by (public.vendor_balance(v.id) ->> 'balance')::numeric desc)
+    from public.vendors v
+    left join public.vendor_private pr on pr.vendor_id = v.id
+    where not v.is_house
+  ), '[]'::jsonb);
+end;
+$$;
+
+revoke all on function public.admin_vendor_balances() from public, anon;
+grant execute on function public.admin_vendor_balances() to authenticated;
+
+create function public.admin_vendor_payouts(p_limit integer default 50)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.require_staff(array['finance']::public.staff_role[]);
+  return coalesce((
+    select jsonb_agg(jsonb_build_object('id', p.id, 'vendor_name', v.name, 'amount_ghs', p.amount_ghs, 'method', p.method,
+             'reference', p.reference, 'note', p.note, 'created_at', p.created_at) order by p.created_at desc)
+    from (select * from public.vendor_payouts order by created_at desc limit least(coalesce(p_limit, 50), 200)) p
+    join public.vendors v on v.id = p.vendor_id
+  ), '[]'::jsonb);
+end;
+$$;
+
+revoke all on function public.admin_vendor_payouts(integer) from public, anon;
+grant execute on function public.admin_vendor_payouts(integer) to authenticated;
+
+-- Records a payout we have made. It can't be more than the vendor is owed.
+create function public.admin_record_payout(
+  p_vendor_id uuid, p_amount_ghs numeric, p_method text default 'momo', p_reference text default null, p_note text default null
+)
+returns numeric
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_balance numeric;
+begin
+  perform public.require_staff(array['finance']::public.staff_role[]);
+  if not exists (select 1 from public.vendors v where v.id = p_vendor_id and not v.is_house) then
+    raise exception 'That vendor no longer exists.' using errcode = '22023';
+  end if;
+  if p_amount_ghs is null or p_amount_ghs <= 0 then
+    raise exception 'Enter the amount you paid.' using errcode = '22023';
+  end if;
+  if coalesce(btrim(p_reference), '') = '' then
+    raise exception 'Enter the payment reference (for example the Mobile Money transaction ID).' using errcode = '22023';
+  end if;
+  v_balance := (public.vendor_balance(p_vendor_id) ->> 'balance')::numeric;
+  if p_amount_ghs > v_balance then
+    raise exception 'That is more than the GH₵% this vendor is owed.', to_char(v_balance, 'FM999999990.00') using errcode = '22023';
+  end if;
+  insert into public.vendor_payouts (vendor_id, amount_ghs, method, reference, note, paid_by)
+  values (p_vendor_id, p_amount_ghs, coalesce(nullif(p_method, ''), 'momo'), btrim(p_reference), nullif(btrim(p_note), ''), auth.uid());
+  perform public.queue_vendor_message(p_vendor_id, 'vendor_payout_sent',
+    jsonb_build_object('amount_ghs', p_amount_ghs, 'reference', btrim(p_reference)));
+  perform public.audit('vendor.payout_recorded', 'vendor', p_vendor_id::text,
+    jsonb_build_object('amount_ghs', p_amount_ghs, 'reference', btrim(p_reference)));
+  return v_balance - p_amount_ghs;
+end;
+$$;
+
+revoke all on function public.admin_record_payout(uuid, numeric, text, text, text) from public, anon;
+grant execute on function public.admin_record_payout(uuid, numeric, text, text, text) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Messages between a vendor and the owner
+-- ---------------------------------------------------------------------------
+
+create table public.vendor_messages (
+  id uuid primary key default gen_random_uuid(),
+  vendor_id uuid not null references public.vendors (id) on delete cascade,
+  sender text not null check (sender in ('vendor', 'owner')),
+  body text not null check (length(btrim(body)) between 1 and 2000),
+  -- When the other side opened it.
+  read_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index vendor_messages_vendor_idx on public.vendor_messages (vendor_id, created_at);
+
+alter table public.vendor_messages enable row level security;
+create policy "Vendors can read their own messages" on public.vendor_messages
+  for select to authenticated
+  using (exists (select 1 from public.vendors v where v.id = vendor_id and v.owner_id = (select auth.uid())));
+create policy "Admins can read vendor messages" on public.vendor_messages
+  for select to authenticated using ((select public.current_staff_role()) = 'admin');
+grant select on public.vendor_messages to authenticated;
+
+create function public.vendor_send_message(p_body text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v public.vendors := public.vendor_require_own();
+begin
+  if length(btrim(coalesce(p_body, ''))) < 1 or length(p_body) > 2000 then
+    raise exception 'Write a message (up to 2,000 characters).' using errcode = '22023';
+  end if;
+  if (select count(*) from public.vendor_messages m
+      where m.vendor_id = v.id and m.sender = 'vendor' and m.created_at > now() - interval '1 day') >= 30 then
+    raise exception 'You have sent a lot of messages today. We will reply soon.' using errcode = '22023';
+  end if;
+  insert into public.vendor_messages (vendor_id, sender, body) values (v.id, 'vendor', btrim(p_body));
+end;
+$$;
+
+revoke all on function public.vendor_send_message(text) from public, anon;
+grant execute on function public.vendor_send_message(text) to authenticated;
+
+-- The thread, oldest first. Opening it marks the owner's messages as read.
+create function public.vendor_messages()
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v public.vendors := public.vendor_require_own();
+begin
+  update public.vendor_messages m set read_at = now() where m.vendor_id = v.id and m.sender = 'owner' and m.read_at is null;
+  return coalesce((
+    select jsonb_agg(jsonb_build_object('sender', m.sender, 'body', m.body, 'created_at', m.created_at) order by m.created_at)
+    from (select * from public.vendor_messages where vendor_id = v.id order by created_at desc limit 200) m
+  ), '[]'::jsonb);
+end;
+$$;
+
+revoke all on function public.vendor_messages() from public, anon;
+grant execute on function public.vendor_messages() to authenticated;
+
+create function public.vendor_unread_messages()
+returns integer
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select count(*)::integer from public.vendor_messages m
+  join public.vendors v on v.id = m.vendor_id
+  where v.owner_id = auth.uid() and m.sender = 'owner' and m.read_at is null;
+$$;
+
+revoke all on function public.vendor_unread_messages() from public, anon;
+grant execute on function public.vendor_unread_messages() to authenticated;
+
+-- The owner's inbox: one row per vendor who has written, newest first.
+create function public.admin_vendor_threads()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.require_staff(array['admin']::public.staff_role[]);
+  return coalesce((
+    select jsonb_agg(jsonb_build_object(
+      'vendor_id', v.id, 'vendor_name', v.name,
+      'last_body', t.last_body, 'last_sender', t.last_sender, 'last_at', t.last_at, 'unread', t.unread)
+      order by t.unread desc, t.last_at desc)
+    from (
+      select m.vendor_id,
+             max(m.created_at) as last_at,
+             (array_agg(m.body order by m.created_at desc))[1] as last_body,
+             (array_agg(m.sender order by m.created_at desc))[1] as last_sender,
+             count(*) filter (where m.sender = 'vendor' and m.read_at is null)::integer as unread
+      from public.vendor_messages m group by m.vendor_id
+    ) t join public.vendors v on v.id = t.vendor_id
+  ), '[]'::jsonb);
+end;
+$$;
+
+revoke all on function public.admin_vendor_threads() from public, anon;
+grant execute on function public.admin_vendor_threads() to authenticated;
+
+create function public.admin_vendor_thread(p_vendor_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.require_staff(array['admin']::public.staff_role[]);
+  update public.vendor_messages m set read_at = now() where m.vendor_id = p_vendor_id and m.sender = 'vendor' and m.read_at is null;
+  return coalesce((
+    select jsonb_agg(jsonb_build_object('sender', m.sender, 'body', m.body, 'created_at', m.created_at) order by m.created_at)
+    from (select * from public.vendor_messages where vendor_id = p_vendor_id order by created_at desc limit 200) m
+  ), '[]'::jsonb);
+end;
+$$;
+
+revoke all on function public.admin_vendor_thread(uuid) from public, anon;
+grant execute on function public.admin_vendor_thread(uuid) to authenticated;
+
+create function public.admin_reply_vendor(p_vendor_id uuid, p_body text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.require_staff(array['admin']::public.staff_role[]);
+  if length(btrim(coalesce(p_body, ''))) < 1 or length(p_body) > 2000 then
+    raise exception 'Write a reply (up to 2,000 characters).' using errcode = '22023';
+  end if;
+  if not exists (select 1 from public.vendors v where v.id = p_vendor_id and not v.is_house) then
+    raise exception 'That vendor no longer exists.' using errcode = '22023';
+  end if;
+  insert into public.vendor_messages (vendor_id, sender, body) values (p_vendor_id, 'owner', btrim(p_body));
+  perform public.queue_vendor_message(p_vendor_id, 'vendor_message_reply', '{}'::jsonb);
+end;
+$$;
+
+revoke all on function public.admin_reply_vendor(uuid, text) from public, anon;
+grant execute on function public.admin_reply_vendor(uuid, text) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Existing vendor functions now send their messages.
+-- ---------------------------------------------------------------------------
+
+create or replace function public.vendor_apply(p_name text, p_owner_name text, p_email text, p_phone text, p_id_type text, p_id_number text, p_id_path text, p_tagline text DEFAULT NULL::text, p_accept_terms boolean DEFAULT false)
+ RETURNS uuid
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $$
+declare
+  v_user uuid := auth.uid();
+  v_name text := btrim(coalesce(p_name, ''));
+  v_owner text := btrim(coalesce(p_owner_name, ''));
+  v_email text := lower(btrim(coalesce(p_email, '')));
+  v_base text;
+  v_slug text;
+  v_try integer := 1;
+  v_id uuid;
+begin
+  if v_user is null or auth.jwt() ->> 'email' is null then
+    raise exception 'Sign in to apply for a store.' using errcode = '42501';
+  end if;
+  if public.current_staff_role() is not null then
+    raise exception 'Staff accounts can''t open vendor stores. Use another email address.' using errcode = '42501';
+  end if;
+  if exists (select 1 from public.vendors v where v.owner_id = v_user) then
+    raise exception 'You have already applied.' using errcode = '22023';
+  end if;
+  if length(v_name) < 2 or length(v_name) > 60 then
+    raise exception 'Enter your store name (2 to 60 characters).' using errcode = '22023';
+  end if;
+  if length(v_owner) < 2 or length(v_owner) > 80 then
+    raise exception 'Enter your full name as it appears on your ID.' using errcode = '22023';
+  end if;
+  if v_email !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' or length(v_email) > 200 then
+    raise exception 'Enter a valid email address.' using errcode = '22023';
+  end if;
+  if length(btrim(coalesce(p_phone, ''))) < 7 then
+    raise exception 'Enter a phone number we can reach you on.' using errcode = '22023';
+  end if;
+  if p_id_type is null or p_id_type not in ('ghana_card', 'passport', 'voters_id', 'drivers_license') then
+    raise exception 'Choose the type of ID you are submitting.' using errcode = '22023';
+  end if;
+  if length(btrim(coalesce(p_id_number, ''))) < 5 or length(btrim(p_id_number)) > 30 then
+    raise exception 'Enter your ID number.' using errcode = '22023';
+  end if;
+  if split_part(coalesce(p_id_path, ''), '/', 1) <> v_user::text
+     or not exists (select 1 from storage.objects o where o.bucket_id = 'vendor-ids' and o.name = p_id_path) then
+    raise exception 'Upload a photo or scan of your ID.' using errcode = '22023';
+  end if;
+  if not coalesce(p_accept_terms, false) then
+    raise exception 'Accept the vendor terms to continue.' using errcode = '22023';
+  end if;
+
+  v_base := left(public.vendor_slugify(v_name), 34);
+  if length(v_base) < 3 then
+    v_base := 'store-' || v_base;
+  end if;
+  v_slug := v_base;
+  while exists (select 1 from public.vendors v where v.slug = v_slug) loop
+    v_try := v_try + 1;
+    v_slug := v_base || '-' || v_try;
+  end loop;
+
+  insert into public.vendors (owner_id, slug, name, tagline)
+  values (v_user, v_slug, v_name, nullif(btrim(p_tagline), ''))
+  returning id into v_id;
+  insert into public.vendor_private (vendor_id, phone, email, terms_accepted_at, owner_name, id_type, id_number, id_document_path)
+  values (v_id, btrim(p_phone), v_email, now(), v_owner, p_id_type, btrim(p_id_number), p_id_path);
+  perform public.audit('vendor.applied', 'vendor', v_id::text, jsonb_build_object('slug', v_slug));
+  perform public.queue_vendor_message(v_id, 'vendor_application_received', '{}'::jsonb);
+  return v_id;
+end;
+$$;
+
+create or replace function public.admin_review_vendor(p_vendor_id uuid, p_decision vendor_status, p_note text DEFAULT NULL::text)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $$
+begin
+  perform public.require_staff(array['admin']::public.staff_role[]);
+  if p_decision = 'pending' then
+    raise exception 'Choose approve, reject or suspend.' using errcode = '22023';
+  end if;
+  update public.vendors v set status = p_decision where v.id = p_vendor_id and not v.is_house;
+  if not found then
+    raise exception 'That vendor no longer exists.' using errcode = '22023';
+  end if;
+  update public.vendor_private pr set review_note = nullif(btrim(left(p_note, 1000)), '') where pr.vendor_id = p_vendor_id;
+  perform public.queue_vendor_message(p_vendor_id,
+    case p_decision when 'active' then 'vendor_approved' when 'rejected' then 'vendor_rejected' else 'vendor_suspended' end,
+    jsonb_build_object('note', nullif(btrim(p_note), '')));
+  perform public.audit('vendor.' || p_decision::text, 'vendor', p_vendor_id::text, jsonb_build_object('note', p_note));
+end;
+$$;
+
+create or replace function public.admin_record_subscription(p_vendor_id uuid, p_amount_ghs numeric, p_method text DEFAULT 'manual'::text, p_reference text DEFAULT NULL::text, p_note text DEFAULT NULL::text)
+ RETURNS date
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $$
+declare
+  v_start date;
+  v_end date;
+begin
+  perform public.require_staff(array['admin']::public.staff_role[]);
+  if not exists (select 1 from public.vendors v where v.id = p_vendor_id and not v.is_house) then
+    raise exception 'That vendor no longer exists.' using errcode = '22023';
+  end if;
+  if p_amount_ghs is null or p_amount_ghs < 0 then
+    raise exception 'Enter the amount paid.' using errcode = '22023';
+  end if;
+  v_start := greatest(current_date, coalesce((select max(s.ends_on) + 1 from public.vendor_subscriptions s where s.vendor_id = p_vendor_id), current_date));
+  v_end := (v_start + interval '1 year')::date - 1;
+  insert into public.vendor_subscriptions (vendor_id, starts_on, ends_on, amount_ghs, method, reference, note, recorded_by)
+  values (p_vendor_id, v_start, v_end, p_amount_ghs, p_method, nullif(btrim(p_reference), ''), nullif(btrim(p_note), ''), auth.uid());
+  perform public.queue_vendor_message(p_vendor_id, 'vendor_subscription_paid',
+    jsonb_build_object('ends_on', v_end, 'amount_ghs', p_amount_ghs));
+  perform public.audit('vendor.subscription_recorded', 'vendor', p_vendor_id::text,
+    jsonb_build_object('amount_ghs', p_amount_ghs, 'starts_on', v_start, 'ends_on', v_end, 'method', p_method));
+  return v_end;
+end;
+$$;
+
+create or replace function public.admin_review_product(p_product_id uuid, p_decision product_review_status, p_markup_percent numeric DEFAULT NULL::numeric, p_note text DEFAULT NULL::text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $$
+declare
+  p public.products%rowtype;
+  v_problems text[];
+begin
+  perform public.require_staff(array['admin']::public.staff_role[]);
+  if p_decision not in ('approved', 'rejected', 'pending') then
+    raise exception 'Choose approve, reject or send back.' using errcode = '22023';
+  end if;
+  select x.* into p from public.products x
+  join public.vendors v on v.id = x.vendor_id and not v.is_house
+  where x.id = p_product_id for update of x;
+  if not found then
+    raise exception 'That vendor product no longer exists.' using errcode = '22023';
+  end if;
+  if p_markup_percent is not null and (p_markup_percent < 0 or p_markup_percent > 200) then
+    raise exception 'The markup must be between 0%% and 200%%.' using errcode = '22023';
+  end if;
+  v_problems := public.product_publish_problems(p_product_id);
+  if p_decision = 'approved' and cardinality(v_problems) > 0 then
+    raise exception 'This product is missing: %.', array_to_string(v_problems, ', ') using errcode = '22023';
+  end if;
+  update public.products x set
+    review_status = p_decision,
+    markup_percent = coalesce(p_markup_percent, x.markup_percent),
+    review_note = nullif(btrim(left(p_note, 500)), '')
+  where x.id = p_product_id;
+  perform public.audit('product.review_' || p_decision::text, 'product', p_product_id::text,
+    jsonb_build_object('markup_percent', coalesce(p_markup_percent, p.markup_percent), 'note', p_note));
+  if p_decision in ('approved', 'rejected') then
+    perform public.queue_vendor_message(p.vendor_id, 'vendor_product_reviewed', jsonb_build_object(
+      'product_name', p.name, 'decision', p_decision, 'note', nullif(btrim(p_note), ''),
+      'price_ghs', (select x.price_ghs from public.products x where x.id = p_product_id)));
+  end if;
+  return (select jsonb_build_object('id', x.id, 'review_status', x.review_status, 'markup_percent', x.markup_percent,
+            'price_ghs', x.price_ghs, 'is_published', x.is_published) from public.products x where x.id = p_product_id);
+end;
+$$;
+
+-- ===========================================================================
+-- 20261027110000_store_discovery_reports.sql
+-- ===========================================================================
+
+-- Finding stores, rating them, and vendors' own reports; plus a summary of what a vendor changed for re-review.
+
+-- ---------------------------------------------------------------------------
+-- Stores directory and ratings (public). A store's rating is the average of the published reviews of its products.
+-- ---------------------------------------------------------------------------
+
+create function public.store_directory()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'slug', v.slug, 'name', v.name, 'tagline', v.tagline, 'logo_path', v.logo_path, 'banner_path', v.banner_path,
+    'product_count', coalesce(c.products, 0), 'rating', coalesce(r.average, 0), 'review_count', coalesce(r.reviews, 0))
+    order by coalesce(c.products, 0) desc, v.name), '[]'::jsonb)
+  from public.vendors v
+  left join (select p.vendor_id, count(*)::integer as products from public.products p where p.is_published group by p.vendor_id) c
+    on c.vendor_id = v.id
+  left join (
+    select p.vendor_id, round(avg(rv.rating), 1) as average, count(*)::integer as reviews
+    from public.product_reviews rv join public.products p on p.id = rv.product_id
+    where p.is_published and rv.status = 'published' group by p.vendor_id
+  ) r on r.vendor_id = v.id
+  where not v.is_house and public.vendor_is_live(v.id) and coalesce(c.products, 0) > 0;
+$$;
+
+grant execute on function public.store_directory() to anon, authenticated;
+
+create function public.store_rating(p_slug text)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select jsonb_build_object('average', coalesce(round(avg(rv.rating), 1), 0), 'count', count(*)::integer)
+  from public.product_reviews rv
+  join public.products p on p.id = rv.product_id
+  join public.vendors v on v.id = p.vendor_id
+  where v.slug = p_slug and public.vendor_is_live(v.id) and p.is_published and rv.status = 'published';
+$$;
+
+grant execute on function public.store_rating(text) to anon, authenticated;
+
+create function public.store_reviews(p_slug text, p_limit integer default 6)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'rating', t.rating, 'title', t.title, 'body', t.body, 'display_name', t.display_name, 'created_at', t.created_at,
+    'product_name', t.name, 'product_slug', t.slug) order by t.created_at desc), '[]'::jsonb)
+  from (
+    select rv.rating, rv.title, rv.body, rv.display_name, rv.created_at, p.name, p.slug
+    from public.product_reviews rv
+    join public.products p on p.id = rv.product_id
+    join public.vendors v on v.id = p.vendor_id
+    where v.slug = p_slug and public.vendor_is_live(v.id) and p.is_published and rv.status = 'published'
+    order by rv.created_at desc
+    limit greatest(1, least(coalesce(p_limit, 6), 30))
+  ) t;
+$$;
+
+grant execute on function public.store_reviews(text, integer) to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- A vendor's sales report: per day, totals, and best sellers, from paid orders that were not cancelled or returned.
+-- ---------------------------------------------------------------------------
+
+create function public.vendor_report(p_days integer default 30)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v public.vendors := public.vendor_require_own();
+  n integer := greatest(7, least(coalesce(p_days, 30), 365));
+  v_from date := current_date - (greatest(7, least(coalesce(p_days, 30), 365)) - 1);
+begin
+  return (
+    with lines as (
+      select (o.paid_at at time zone 'UTC')::date as d, o.id as order_id, oi.product_name, oi.quantity,
+             oi.vendor_unit_price_ghs * oi.quantity as amount
+      from public.order_items oi join public.orders o on o.id = oi.order_id
+      where oi.vendor_id = v.id and o.paid_at is not null
+        and (o.paid_at at time zone 'UTC')::date >= v_from
+        and o.status not in ('cancelled', 'returned', 'pending_payment')
+    ),
+    per_day as (
+      select d, sum(quantity)::integer as units, sum(amount) as revenue, count(distinct order_id)::integer as orders
+      from lines group by d
+    )
+    select jsonb_build_object(
+      'days', (select jsonb_agg(jsonb_build_object('date', g.d::date, 'units', coalesce(p.units, 0),
+                 'revenue', coalesce(p.revenue, 0), 'orders', coalesce(p.orders, 0)) order by g.d)
+               from generate_series(v_from, current_date, interval '1 day') g(d)
+               left join per_day p on p.d = g.d::date),
+      'totals', jsonb_build_object('units', coalesce((select sum(quantity) from lines), 0),
+                'revenue', coalesce((select sum(amount) from lines), 0),
+                'orders', (select count(distinct order_id) from lines)),
+      'top_products', coalesce((
+        select jsonb_agg(jsonb_build_object('name', t.product_name, 'units', t.units, 'revenue', t.revenue) order by t.revenue desc)
+        from (select product_name, sum(quantity)::integer as units, sum(amount) as revenue
+              from lines group by product_name order by sum(amount) desc limit 8) t), '[]'::jsonb)
+    )
+  );
+end;
+$$;
+
+revoke all on function public.vendor_report(integer) from public, anon;
+grant execute on function public.vendor_report(integer) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- What a vendor changed: when an approved product goes back for review, the approved values are kept for the owner.
+-- ---------------------------------------------------------------------------
+
+alter table public.products add column review_previous jsonb;
+
+create or replace function public.vendor_save_product(p jsonb)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $$
+declare
+  v public.vendors := public.vendor_require_live();
+  v_id uuid := nullif(p ->> 'id', '')::uuid;
+  v_before public.products%rowtype;
+  v_name text := btrim(coalesce(p ->> 'name', ''));
+  v_slug text;
+  v_department public.department;
+  v_kind public.product_kind;
+  v_kids_filter public.kids_filter;
+  v_price numeric;
+  v_was numeric;
+  v_sizes jsonb := coalesce(p -> 'sizes', '[]'::jsonb);
+  v_bands jsonb := coalesce(p -> 'age_bands', '[]'::jsonb);
+  v_codes text[];
+  v_default_price numeric;
+  v_default_ord bigint := 0;
+  v_code text;
+  v_details jsonb;
+  v_problems text[];
+  v_publish boolean := coalesce((p ->> 'publish')::boolean, false);
+  v_review public.product_review_status;
+  v_skin_types text[] := array(select btrim(x) from jsonb_array_elements_text(
+    case when jsonb_typeof(p -> 'skin_types') = 'array' then p -> 'skin_types' else '[]'::jsonb end) x where btrim(x) <> '');
+  v_shades text[] := array(select btrim(x) from jsonb_array_elements_text(
+    case when jsonb_typeof(p -> 'shades') = 'array' then p -> 'shades' else '[]'::jsonb end) x where btrim(x) <> '');
+  v_resubmit boolean := false;
+  v_prev jsonb;
+begin
+  if v_name = '' or length(v_name) > 120 then
+    raise exception 'Enter a product name (up to 120 characters).' using errcode = '22023';
+  end if;
+  if v_id is not null then
+    select * into v_before from public.products x where x.id = v_id and x.vendor_id = v.id for update;
+    if not found then
+      raise exception 'That product isn''t in your store.' using errcode = '42501';
+    end if;
+  end if;
+
+  -- The web address is made from the name and kept once it exists, so shoppers' links keep working.
+  if v_before.id is not null then
+    v_slug := v_before.slug;
+  else
+    v_slug := left(public.vendor_slugify(v.slug || '-' || v_name), 70);
+    if v_slug = '' then
+      raise exception 'Enter a product name.' using errcode = '22023';
+    end if;
+    if exists (select 1 from public.products x where x.slug = v_slug) then
+      v_slug := v_slug || '-' || substr(replace(gen_random_uuid()::text, '-', ''), 1, 6);
+    end if;
+  end if;
+
+  begin
+    v_department := (p ->> 'department')::public.department;
+    v_kind := (p ->> 'kind')::public.product_kind;
+    v_kids_filter := nullif(p ->> 'kids_filter', '')::public.kids_filter;
+  exception when invalid_text_representation then
+    raise exception 'Choose a department, product type and kids filter from the lists.' using errcode = '22023';
+  end;
+  if v_department is null or v_kind is null then
+    raise exception 'Choose a department and product type.' using errcode = '22023';
+  end if;
+  if v_department = 'beauty' then
+    v_kids_filter := null;
+  end if;
+  if nullif(p ->> 'category_id', '') is not null
+     and not exists (select 1 from public.categories c where c.id = p ->> 'category_id') then
+    raise exception 'Choose a category from the list.' using errcode = '22023';
+  end if;
+
+  begin
+    v_price := nullif(btrim(p ->> 'price_ghs'), '')::numeric;
+    v_was := nullif(btrim(p ->> 'was_price_ghs'), '')::numeric;
+  exception when invalid_text_representation then
+    raise exception 'Prices must be numbers.' using errcode = '22023';
+  end;
+
+  if jsonb_typeof(v_sizes) <> 'array' or jsonb_typeof(v_bands) <> 'array' then
+    raise exception 'Invalid sizes or age bands.' using errcode = '22023';
+  end if;
+  select array_agg(lower(btrim(s ->> 'code'))) into v_codes from jsonb_array_elements(v_sizes) s;
+  if v_codes is not null then
+    if exists (select 1 from unnest(v_codes) c where c = '' or c !~ '^[a-z0-9][a-z0-9-]*$') then
+      raise exception 'Size codes may use lowercase letters, numbers and dashes only.' using errcode = '22023';
+    end if;
+    if (select count(distinct c) from unnest(v_codes) c) <> cardinality(v_codes) then
+      raise exception 'Each size needs its own code.' using errcode = '22023';
+    end if;
+    if exists (select 1 from jsonb_array_elements(v_sizes) s where coalesce(btrim(s ->> 'label'), '') = '') then
+      raise exception 'Give every size a label, e.g. "200 ml".' using errcode = '22023';
+    end if;
+    begin
+      if exists (select 1 from jsonb_array_elements(v_sizes) s where (s ->> 'price_ghs')::numeric < 0) then
+        raise exception 'Prices can''t be negative.' using errcode = '22023';
+      end if;
+      select (s ->> 'price_ghs')::numeric, ord into v_default_price, v_default_ord
+      from jsonb_array_elements(v_sizes) with ordinality as e(s, ord)
+      order by coalesce((s ->> 'is_default')::boolean, false) desc, ord
+      limit 1;
+    exception when invalid_text_representation then
+      raise exception 'Size prices must be numbers.' using errcode = '22023';
+    end;
+    v_price := v_default_price;
+  end if;
+  if v_price is null or v_price < 0 then
+    raise exception 'Enter a price.' using errcode = '22023';
+  end if;
+  if v_was is not null and v_was <= v_price then
+    raise exception 'The "was" price must be higher than the price.' using errcode = '22023';
+  end if;
+
+  v_details := jsonb_strip_nulls(jsonb_build_object(
+    'description', nullif(btrim(p ->> 'description'), ''),
+    'highlights', case when jsonb_typeof(p -> 'highlights') = 'array' and jsonb_array_length(p -> 'highlights') > 0
+                       then p -> 'highlights' end,
+    'freeFrom', case when jsonb_typeof(p -> 'free_from') = 'array' and jsonb_array_length(p -> 'free_from') > 0
+                     then p -> 'free_from' end,
+    'recommendedAge', nullif(btrim(p ->> 'recommended_age'), ''),
+    'warnings', nullif(btrim(p ->> 'warnings'), ''),
+    'howToUse', nullif(btrim(p ->> 'how_to_use'), '')
+  ));
+
+  if v_id is null then
+    insert into public.products (
+      vendor_id, review_status, publish_requested, vendor_price_ghs, vendor_was_price_ghs, markup_percent,
+      slug, name, brand, department, category_id, kids_filter, collection, price_ghs, was_price_ghs, badge, tag,
+      summary, image_key, tint, kind, details, ingredients, country_of_origin, regulatory_reference,
+      period_after_opening, skin_types, shades, warning_label, returnable, return_note, is_published
+    ) values (
+      v.id, 'pending', v_publish, v_price, v_was,
+      (select st.default_markup_percent from public.store_settings st),
+      v_slug, v_name, nullif(btrim(p ->> 'brand'), ''), v_department, nullif(p ->> 'category_id', ''), v_kids_filter,
+      null, v_price, v_was, null, '',
+      coalesce(btrim(p ->> 'summary'), ''), null,
+      case when v_department = 'beauty' then '#F4E3D7' else '#E3F0EC' end,
+      v_kind, v_details, nullif(btrim(p ->> 'ingredients'), ''), nullif(btrim(p ->> 'country_of_origin'), ''),
+      nullif(btrim(p ->> 'regulatory_reference'), ''), nullif(btrim(p ->> 'period_after_opening'), ''),
+      v_skin_types, v_shades, nullif(btrim(p ->> 'warning_label'), ''), coalesce((p ->> 'returnable')::boolean, true),
+      nullif(btrim(p ->> 'return_note'), ''), false
+    )
+    returning id into v_id;
+    perform public.audit('vendor.product_created', 'product', v_id::text, jsonb_build_object('vendor', v.slug));
+  else
+    -- Changing what the product is sends it back for another look; changing prices or stock does not.
+    v_resubmit := v_before.name is distinct from v_name
+      or v_before.brand is distinct from nullif(btrim(p ->> 'brand'), '')
+      or v_before.department is distinct from v_department
+      or v_before.kind is distinct from v_kind
+      or v_before.category_id is distinct from nullif(p ->> 'category_id', '')
+      or v_before.summary is distinct from coalesce(btrim(p ->> 'summary'), '')
+      or (v_before.details ->> 'description') is distinct from (v_details ->> 'description')
+      or v_before.ingredients is distinct from nullif(btrim(p ->> 'ingredients'), '');
+    -- Keep what the owner approved, so the review can show what changed.
+    v_prev := case
+      when v_resubmit and v_before.review_status = 'approved' and v_before.review_previous is null then jsonb_build_object(
+        'name', v_before.name, 'brand', v_before.brand, 'department', v_before.department,
+        'category_id', v_before.category_id, 'summary', v_before.summary,
+        'description', v_before.details ->> 'description', 'ingredients', v_before.ingredients)
+      else v_before.review_previous
+    end;
+    v_review := case when v_resubmit then 'pending' else v_before.review_status end;
+    update public.products x set
+      name = v_name, brand = nullif(btrim(p ->> 'brand'), ''), department = v_department,
+      category_id = nullif(p ->> 'category_id', ''), kids_filter = v_kids_filter,
+      vendor_price_ghs = v_price, vendor_was_price_ghs = v_was,
+      summary = coalesce(btrim(p ->> 'summary'), ''), kind = v_kind,
+      details = (coalesce(x.details, '{}'::jsonb) - array['description', 'highlights', 'freeFrom', 'recommendedAge',
+                 'warnings', 'howToUse']) || v_details,
+      ingredients = nullif(btrim(p ->> 'ingredients'), ''),
+      country_of_origin = nullif(btrim(p ->> 'country_of_origin'), ''),
+      regulatory_reference = nullif(btrim(p ->> 'regulatory_reference'), ''),
+      period_after_opening = nullif(btrim(p ->> 'period_after_opening'), ''),
+      skin_types = v_skin_types, shades = v_shades,
+      warning_label = nullif(btrim(p ->> 'warning_label'), ''),
+      returnable = coalesce((p ->> 'returnable')::boolean, true),
+      return_note = nullif(btrim(p ->> 'return_note'), ''),
+      publish_requested = v_publish,
+      review_status = v_review,
+      review_note = case when v_resubmit then null else x.review_note end,
+      review_previous = v_prev
+    where x.id = v_id;
+    perform public.audit('vendor.product_updated', 'product', v_id::text,
+      jsonb_build_object('vendor', v.slug, 'resubmitted', v_resubmit));
+  end if;
+
+  delete from public.product_sizes s where s.product_id = v_id;
+  insert into public.product_sizes (product_id, code, label, price_ghs, vendor_price_ghs, is_default, sort_order)
+  select v_id, lower(btrim(s ->> 'code')), btrim(s ->> 'label'), (s ->> 'price_ghs')::numeric,
+         (s ->> 'price_ghs')::numeric, ord = v_default_ord, (ord - 1)::smallint
+  from jsonb_array_elements(v_sizes) with ordinality as e(s, ord);
+
+  v_codes := coalesce(v_codes, array['']);
+  foreach v_code in array v_codes loop
+    insert into public.inventory_levels (product_id, size_code) values (v_id, v_code) on conflict do nothing;
+  end loop;
+  for v_code in
+    select i.size_code from public.inventory_levels i where i.product_id = v_id and i.size_code <> all (v_codes)
+  loop
+    if exists (select 1 from public.inventory_levels i where i.product_id = v_id and i.size_code = v_code
+                 and (i.on_hand <> 0 or i.reserved <> 0)) then
+      raise exception 'Size "%" still has stock. Set its stock to 0 and wait for open orders before removing the size.',
+        coalesce(nullif(v_code, ''), 'one size') using errcode = '22023';
+    end if;
+    delete from public.inventory_levels i where i.product_id = v_id and i.size_code = v_code;
+  end loop;
+
+  delete from public.product_age_bands b where b.product_id = v_id;
+  insert into public.product_age_bands (product_id, age_band_id)
+  select v_id, band from jsonb_array_elements_text(v_bands) band
+  where exists (select 1 from public.age_bands a where a.id = band)
+  on conflict do nothing;
+
+  v_problems := public.product_publish_problems(v_id);
+  return jsonb_build_object('id', v_id, 'slug', v_slug, 'problems', to_jsonb(v_problems));
+end;
+$$;
+
+create or replace function public.admin_vendor_products(p_status product_review_status DEFAULT 'pending'::product_review_status)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $$
+begin
+  perform public.require_staff(array['admin', 'catalogue']::public.staff_role[]);
+  return coalesce((
+    select jsonb_agg(jsonb_build_object(
+      'id', p.id, 'slug', p.slug, 'name', p.name, 'brand', p.brand, 'department', p.department, 'summary', p.summary,
+      'category_id', p.category_id, 'description', p.details ->> 'description', 'ingredients', p.ingredients,
+      'review_previous', p.review_previous,
+      'vendor_id', v.id, 'vendor_name', v.name, 'vendor_slug', v.slug,
+      'vendor_price_ghs', p.vendor_price_ghs, 'markup_percent', p.markup_percent, 'price_ghs', p.price_ghs,
+      'review_status', p.review_status, 'review_note', p.review_note, 'publish_requested', p.publish_requested,
+      'is_published', p.is_published, 'problems', to_jsonb(public.product_publish_problems(p.id)),
+      'image_count', (select count(*) from public.product_images i where i.product_id = p.id)
+    ) order by p.updated_at desc)
+    from public.products p join public.vendors v on v.id = p.vendor_id
+    where not v.is_house and p.review_status = p_status
+  ), '[]'::jsonb);
+end;
+$$;
+
+create or replace function public.admin_review_product(p_product_id uuid, p_decision product_review_status, p_markup_percent numeric DEFAULT NULL::numeric, p_note text DEFAULT NULL::text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $$
+declare
+  p public.products%rowtype;
+  v_problems text[];
+begin
+  perform public.require_staff(array['admin']::public.staff_role[]);
+  if p_decision not in ('approved', 'rejected', 'pending') then
+    raise exception 'Choose approve, reject or send back.' using errcode = '22023';
+  end if;
+  select x.* into p from public.products x
+  join public.vendors v on v.id = x.vendor_id and not v.is_house
+  where x.id = p_product_id for update of x;
+  if not found then
+    raise exception 'That vendor product no longer exists.' using errcode = '22023';
+  end if;
+  if p_markup_percent is not null and (p_markup_percent < 0 or p_markup_percent > 200) then
+    raise exception 'The markup must be between 0%% and 200%%.' using errcode = '22023';
+  end if;
+  v_problems := public.product_publish_problems(p_product_id);
+  if p_decision = 'approved' and cardinality(v_problems) > 0 then
+    raise exception 'This product is missing: %.', array_to_string(v_problems, ', ') using errcode = '22023';
+  end if;
+  update public.products x set
+    review_status = p_decision,
+    markup_percent = coalesce(p_markup_percent, x.markup_percent),
+    review_note = nullif(btrim(left(p_note, 500)), ''),
+    review_previous = case when p_decision in ('approved', 'rejected') then null else x.review_previous end
+  where x.id = p_product_id;
+  perform public.audit('product.review_' || p_decision::text, 'product', p_product_id::text,
+    jsonb_build_object('markup_percent', coalesce(p_markup_percent, p.markup_percent), 'note', p_note));
+  if p_decision in ('approved', 'rejected') then
+    perform public.queue_vendor_message(p.vendor_id, 'vendor_product_reviewed', jsonb_build_object(
+      'product_name', p.name, 'decision', p_decision, 'note', nullif(btrim(p_note), ''),
+      'price_ghs', (select x.price_ghs from public.products x where x.id = p_product_id)));
+  end if;
+  return (select jsonb_build_object('id', x.id, 'review_status', x.review_status, 'markup_percent', x.markup_percent,
+            'price_ghs', x.price_ghs, 'is_published', x.is_published) from public.products x where x.id = p_product_id);
+end;
+$$;
+
+-- ===========================================================================
+-- 20261027120000_vendor_subscription_payments.sql
+-- ===========================================================================
+
+-- Vendors can pay their yearly subscription online (Mobile Money or card through the payment provider), instead of the
+-- owner recording each payment by hand. The provider's verified notification is what opens or renews the store.
+
+create table public.vendor_subscription_payments (
+  id uuid primary key default gen_random_uuid(),
+  vendor_id uuid not null references public.vendors (id),
+  provider text not null,
+  provider_reference text not null,
+  amount_ghs numeric(10, 2) not null check (amount_ghs >= 0),
+  status public.payment_status not null default 'pending',
+  last_event jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (provider, provider_reference)
+);
+
+create index vendor_subscription_payments_vendor_idx on public.vendor_subscription_payments (vendor_id, created_at desc);
+
+create trigger vendor_subscription_payments_set_updated_at before update on public.vendor_subscription_payments
+  for each row execute function public.set_updated_at();
+
+alter table public.vendor_subscription_payments enable row level security;
+create policy "Vendors can read their own subscription payments" on public.vendor_subscription_payments
+  for select to authenticated
+  using (exists (select 1 from public.vendors v where v.id = vendor_id and v.owner_id = (select auth.uid())));
+create policy "Admins can read subscription payments" on public.vendor_subscription_payments
+  for select to authenticated using ((select public.current_staff_role()) in ('admin', 'finance'));
+grant select on public.vendor_subscription_payments to authenticated;
+
+-- A vendor starts paying for a year. The amount is the yearly fee from settings, never sent by the browser.
+create function public.start_vendor_subscription_payment(p_provider text, p_reference text)
+returns numeric
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v public.vendors := public.vendor_require_own();
+  v_fee numeric;
+begin
+  if v.status <> 'active' then
+    raise exception 'Your store has to be approved before you can pay.' using errcode = '42501';
+  end if;
+  select st.vendor_annual_fee_ghs into v_fee from public.store_settings st;
+  insert into public.vendor_subscription_payments (vendor_id, provider, provider_reference, amount_ghs)
+  values (v.id, p_provider, p_reference, v_fee);
+  return v_fee;
+end;
+$$;
+
+revoke all on function public.start_vendor_subscription_payment(text, text) from public, anon;
+grant execute on function public.start_vendor_subscription_payment(text, text) to authenticated;
+
+-- Applies a verified provider result (server side only, like confirm_payment). Safe to call more than once.
+-- Returns the date the subscription now runs to, or null if it did not open or renew the store.
+create function public.confirm_subscription_payment(
+  p_provider text, p_reference text, p_status text, p_amount_ghs numeric, p_event jsonb default null
+)
+returns date
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_payment public.vendor_subscription_payments%rowtype;
+  v_start date;
+  v_end date;
+begin
+  if p_status not in ('succeeded', 'failed') then
+    raise exception 'Unknown payment status %.', p_status using errcode = '22023';
+  end if;
+  select * into v_payment from public.vendor_subscription_payments p
+  where p.provider = p_provider and p.provider_reference = p_reference for update;
+  if not found then
+    raise exception 'Unknown payment %.', p_reference using errcode = '22023';
+  end if;
+  if v_payment.status in ('succeeded', 'failed') then
+    return null;
+  end if;
+
+  update public.vendor_subscription_payments p
+  set status = p_status::public.payment_status, last_event = p_event where p.id = v_payment.id;
+  if p_status = 'failed' then
+    return null;
+  end if;
+  if p_amount_ghs is distinct from v_payment.amount_ghs then
+    -- Money arrived but not the amount we asked for: leave it for the owner to sort out.
+    perform public.audit('vendor.subscription_payment_mismatch', 'vendor', v_payment.vendor_id::text,
+      jsonb_build_object('expected', v_payment.amount_ghs, 'received', p_amount_ghs, 'reference', p_reference));
+    return null;
+  end if;
+
+  v_start := greatest(current_date, coalesce((select max(s.ends_on) + 1 from public.vendor_subscriptions s
+                                              where s.vendor_id = v_payment.vendor_id), current_date));
+  v_end := (v_start + interval '1 year')::date - 1;
+  insert into public.vendor_subscriptions (vendor_id, starts_on, ends_on, amount_ghs, method, reference, note)
+  values (v_payment.vendor_id, v_start, v_end, v_payment.amount_ghs, 'momo', p_reference, 'Paid online');
+  perform public.queue_vendor_message(v_payment.vendor_id, 'vendor_subscription_paid',
+    jsonb_build_object('ends_on', v_end, 'amount_ghs', v_payment.amount_ghs));
+  perform public.audit('vendor.subscription_paid_online', 'vendor', v_payment.vendor_id::text,
+    jsonb_build_object('ends_on', v_end, 'amount_ghs', v_payment.amount_ghs, 'reference', p_reference));
+  return v_end;
+end;
+$$;
+
+revoke all on function public.confirm_subscription_payment(text, text, text, numeric, jsonb) from public, anon, authenticated;
 
 -- ===========================================================================
 -- seed.sql

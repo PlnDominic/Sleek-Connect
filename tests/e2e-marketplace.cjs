@@ -105,6 +105,56 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   await go(shopper, BASE + '/search?q=shea');
   assert(await shopper.getByText('Shea Body Butter').first().isVisible(), 'vendor products appear in the main search');
 
+  // --- Stores directory --------------------------------------------------------------------------
+  await go(shopper, BASE + '/stores');
+  assert(await shopper.getByRole('heading', { name: 'Stores', exact: true }).isVisible() && await shopper.getByRole('link', { name: /Ama's Beauty Hub/ }).isVisible(), 'the stores page lists open vendor stores');
+  await shot(shopper, 'stores');
+
+  // --- The vendor's working screens -------------------------------------------------------------
+  await go(ama, BASE + '/vendor/orders');
+  assert(await ama.getByText('Nothing to pack right now.').isVisible(), 'orders: nothing to pack yet');
+  assert(await ama.getByRole('link', { name: 'Earnings' }).isVisible() && await ama.getByRole('link', { name: 'Messages' }).isVisible(), 'the vendor menu has orders, earnings, reports and messages');
+  await go(ama, BASE + '/vendor/earnings');
+  assert(await ama.getByRole('heading', { name: 'We owe you' }).isVisible() && await ama.getByRole('heading', { name: 'Where we pay you' }).isVisible(), 'earnings: balance and payout account');
+  await ama.getByLabel('Mobile Money number').fill('024 123 4567');
+  await ama.getByLabel('Name on the wallet').fill('Ama Owusu');
+  await ama.getByRole('button', { name: 'Save payout account' }).click();
+  await ama.getByText('Payout account saved.').waitFor({ timeout: 8000 });
+  await shot(ama, 'vendor-earnings');
+  await go(ama, BASE + '/vendor/reports');
+  assert(await ama.getByRole('heading', { name: 'Sales by day' }).isVisible() && await ama.getByRole('heading', { name: 'Best sellers' }).isVisible(), 'reports: sales by day and best sellers');
+  await go(ama, BASE + '/vendor/messages');
+  await ama.getByLabel('Your message').fill('When will my first payout be?');
+  await ama.getByRole('button', { name: 'Send', exact: true }).click();
+  await ama.getByText(/Sent\. We will reply here/).waitFor({ timeout: 8000 });
+  assert(await ama.getByText('When will my first payout be?').isVisible(), 'messages: the vendor\'s message appears in the thread');
+
+  // --- The owner answers, and sees pickups and payouts ---------------------------------------------
+  await go(boss, BASE + '/admin/vendors?tab=messages');
+  await boss.getByRole('link', { name: /Ama's Beauty Hub \(1 new\)/ }).click();
+  await boss.getByText('When will my first payout be?').waitFor({ timeout: 8000 });
+  await boss.getByLabel('Your reply').fill('Every Friday, by Mobile Money.');
+  await boss.getByRole('button', { name: 'Send reply' }).click();
+  await boss.getByText('Reply sent.').waitFor({ timeout: 8000 });
+  await go(ama, BASE + '/vendor/messages');
+  assert(await ama.getByText('Every Friday, by Mobile Money.').isVisible(), 'the vendor reads the reply');
+  await go(boss, BASE + '/admin/vendors?tab=pickups');
+  assert(await boss.getByText('No vendor items are waiting to be collected.').isVisible(), 'pickups: nothing waiting');
+  await go(boss, BASE + '/admin/vendors?tab=payouts');
+  assert(await boss.getByRole('heading', { name: "Ama's Beauty Hub" }).isVisible() && await boss.getByText(/Owed in total/).isVisible(), 'payouts: what each vendor is owed');
+  await shot(boss, 'admin-payouts');
+
+  // --- Adding many products from a spreadsheet ---------------------------------------------------
+  await go(ama, BASE + '/vendor/products/import');
+  const csv = 'name,brand,department,type,category,price,was_price,stock,summary,description\nImported Soap,Ama Naturals,beauty,bottle,,25,,5,Gentle soap,A gentle soap\n,Ama Naturals,beauty,jar,,10,,1,,\n';
+  await ama.locator('input[type=file]').setInputFiles({ name: 'products.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) });
+  await ama.getByRole('button', { name: 'Add the products' }).click();
+  await ama.getByText(/Added 1 product/).waitFor({ timeout: 8000 });
+  assert(await ama.getByText(/Line 3: add a product name/).isVisible(), 'import: a line with a problem is reported by its line number');
+  assert(sql("select count(*) from public.products where name = 'Imported Soap'") === '1', 'import: the valid product was added');
+  const template = await ama.request.get(BASE + '/vendor/products/import/template');
+  assert(template.ok() && (await template.text()).startsWith('name,brand,department'), 'import: the template downloads');
+
   assert(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.join('; ') : ''));
   await browser.close();
   console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll marketplace screen checks passed');

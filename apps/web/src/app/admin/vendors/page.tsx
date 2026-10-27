@@ -4,7 +4,16 @@ import { formatPrice } from '@sleek/shared';
 import { can, requireStaffPage } from '@/lib/admin/session';
 import { ActionForm } from '../ActionForm';
 import { Flash } from '../Flash';
-import { bulkReviewProducts, recordSubscription, reviewProduct, reviewVendor, saveMarketplaceSettings } from './actions';
+import {
+  bulkReviewProducts,
+  collectItems,
+  recordPayout,
+  recordSubscription,
+  replyToVendor,
+  reviewProduct,
+  reviewVendor,
+  saveMarketplaceSettings,
+} from './actions';
 import styles from '../admin.module.css';
 
 export const metadata: Metadata = { title: 'Vendors' };
@@ -45,11 +54,65 @@ interface ReviewRow {
   publish_requested: boolean;
   problems: string[];
   image_count: number;
+  category_id: string | null;
+  description: string | null;
+  ingredients: string | null;
+  /** What an approved product looked like before the vendor changed it and sent it back for review. */
+  review_previous: Record<string, string | null> | null;
+}
+
+interface Shipment {
+  order_id: string;
+  order_number: string;
+  order_status: string;
+  vendor_id: string;
+  vendor_name: string;
+  vendor_phone: string | null;
+  status: 'pending' | 'packed' | 'collected';
+  packed_at: string | null;
+  items: { name: string; size: string | null; quantity: number }[];
+}
+
+interface Balance {
+  vendor_id: string;
+  name: string;
+  slug: string;
+  earned: number;
+  returned: number;
+  paid: number;
+  pending: number;
+  balance: number;
+  payout_network: string | null;
+  payout_wallet: string | null;
+  payout_name: string | null;
+  last_payout_at: string | null;
+}
+
+interface Payout {
+  id: string;
+  vendor_name: string;
+  amount_ghs: number;
+  method: string;
+  reference: string;
+  note: string | null;
+  created_at: string;
+}
+
+interface Thread {
+  vendor_id: string;
+  vendor_name: string;
+  last_body: string;
+  last_sender: 'vendor' | 'owner';
+  last_at: string;
+  unread: number;
 }
 
 const tabs = [
   { id: 'vendors', label: 'Vendors' },
   { id: 'products', label: 'Products to review' },
+  { id: 'pickups', label: 'Pickups' },
+  { id: 'payouts', label: 'Payouts' },
+  { id: 'messages', label: 'Messages' },
   { id: 'settings', label: 'Marketplace settings' },
 ] as const;
 type Tab = (typeof tabs)[number]['id'];
@@ -85,6 +148,9 @@ export default async function VendorsPage({ searchParams }: PageProps<'/admin/ve
       </nav>
       {tab === 'vendors' && <VendorsTab staff={staff} />}
       {tab === 'products' && <ReviewTab staff={staff} />}
+      {tab === 'pickups' && <PickupsTab staff={staff} />}
+      {tab === 'payouts' && <PayoutsTab staff={staff} />}
+      {tab === 'messages' && <MessagesTab staff={staff} vendor={typeof params.vendor === 'string' ? params.vendor : null} />}
       {tab === 'settings' && <SettingsTab staff={staff} />}
     </>
   );
@@ -281,6 +347,7 @@ async function ReviewTab({ staff }: { staff: Staff }) {
           </p>
           {p.summary && <p>{p.summary}</p>}
           {p.problems.length > 0 && <p className={styles.error}>Missing: {p.problems.join(', ')}.</p>}
+          {p.review_previous && <ChangedFields before={p.review_previous} after={p} />}
           <ActionForm action={reviewProduct.bind(null, p.id)}>
             <div className={styles.row}>
               <div className={styles.field}>
@@ -308,6 +375,206 @@ async function ReviewTab({ staff }: { staff: Staff }) {
           </ActionForm>
         </section>
       ))}
+    </>
+  );
+}
+
+const changeLabels: Record<string, string> = {
+  name: 'Name',
+  brand: 'Brand',
+  department: 'Department',
+  category_id: 'Category',
+  summary: 'Summary',
+  description: 'Description',
+  ingredients: 'Ingredients',
+};
+
+/** Shows what the vendor changed on a product that was already approved, so you review only the difference. */
+function ChangedFields({ before, after }: { before: Record<string, string | null>; after: ReviewRow }) {
+  const now = after as unknown as Record<string, string | null>;
+  const changed = Object.keys(changeLabels).filter((key) => (before[key] ?? '') !== (now[key] ?? ''));
+  return (
+    <div className={styles.notice} role="note">
+      <strong>Changed since you approved it</strong>
+      {changed.length === 0 ? (
+        <p>Only the price or photos changed.</p>
+      ) : (
+        <dl className={styles.facts}>
+          {changed.map((key) => (
+            <div key={key} style={{ display: 'contents' }}>
+              <dt>{changeLabels[key]}</dt>
+              <dd>
+                <s>{before[key] || 'empty'}</s> → {now[key] || 'empty'}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
+    </div>
+  );
+}
+
+async function PickupsTab({ staff }: { staff: Staff }) {
+  const { data, error } = await staff.supabase.rpc('admin_vendor_shipments');
+  if (error) throw error;
+  const shipments = data as unknown as Shipment[];
+  if (shipments.length === 0) return <p className={styles.empty}>No vendor items are waiting to be collected.</p>;
+  return (
+    <>
+      <p className={styles.muted}>Take each vendor’s packed bag, then mark it collected. An order can’t go out for delivery until all its vendor items are collected.</p>
+      {shipments.map((sh) => (
+        <section key={`${sh.order_id}-${sh.vendor_id}`} className={styles.panel}>
+          <div className={styles.panelHead}>
+            <h2>
+              {sh.order_number} · {sh.vendor_name}
+            </h2>
+            <span className={styles.badge} data-tone={sh.status === 'packed' ? 'good' : 'warn'}>
+              {sh.status === 'packed' ? 'Packed, ready to collect' : 'Vendor is still packing'}
+            </span>
+          </div>
+          <ul>
+            {sh.items.map((i, n) => (
+              <li key={n}>
+                {i.quantity} × {i.name}
+                {i.size ? ` (${i.size})` : ''}
+              </li>
+            ))}
+          </ul>
+          {sh.vendor_phone && <p className={styles.muted}>Call {sh.vendor_phone}</p>}
+          {sh.status === 'packed' && (
+            <ActionForm action={collectItems.bind(null, sh.order_id, sh.vendor_id)} confirm={`Have you collected the items from ${sh.vendor_name}?`}>
+              <div className={styles.buttons}>
+                <button type="submit" className={styles.primary}>
+                  Mark as collected
+                </button>
+              </div>
+            </ActionForm>
+          )}
+        </section>
+      ))}
+    </>
+  );
+}
+
+async function PayoutsTab({ staff }: { staff: Staff }) {
+  const [balances, payouts] = await Promise.all([staff.supabase.rpc('admin_vendor_balances'), staff.supabase.rpc('admin_vendor_payouts', { p_limit: 30 })]);
+  if (balances.error) throw balances.error;
+  if (payouts.error) throw payouts.error;
+  const owed = balances.data as unknown as Balance[];
+  const history = payouts.data as unknown as Payout[];
+  const totalOwed = owed.reduce((n, b) => n + Number(b.balance), 0);
+  return (
+    <>
+      <p className={styles.muted}>
+        Vendors earn their own price once an order is delivered; returned items come off. Pay them by Mobile Money, then record it here. Owed in total: <strong>{formatPrice(totalOwed)}</strong>.
+      </p>
+      {owed.length === 0 && <p className={styles.empty}>No vendors yet.</p>}
+      {owed.map((b) => (
+        <section key={b.vendor_id} className={styles.panel}>
+          <div className={styles.panelHead}>
+            <h2>{b.name}</h2>
+            <strong>{formatPrice(b.balance)}</strong>
+          </div>
+          <p className={styles.muted}>
+            Earned {formatPrice(b.earned)} · returns {formatPrice(b.returned)} · paid {formatPrice(b.paid)} · {formatPrice(b.pending)} still to be delivered
+          </p>
+          <p className={styles.muted}>
+            {b.payout_wallet ? `Pay to ${b.payout_network?.toUpperCase()} ${b.payout_wallet} (${b.payout_name})` : 'No payout account saved yet.'}
+          </p>
+          {b.balance > 0 && (
+            <ActionForm action={recordPayout.bind(null, b.vendor_id)} resetOnSuccess>
+              <div className={styles.row}>
+                <label className={styles.field}>
+                  <span>Amount paid (GH₵)</span>
+                  <input name="amount" type="number" min={0.01} max={b.balance} step="0.01" required defaultValue={b.balance} />
+                </label>
+                <label className={styles.field}>
+                  <span>Paid by</span>
+                  <select name="method" defaultValue="momo">
+                    <option value="momo">Mobile Money</option>
+                    <option value="bank">Bank transfer</option>
+                    <option value="cash">Cash</option>
+                  </select>
+                </label>
+                <label className={styles.field}>
+                  <span>Transaction reference</span>
+                  <input name="reference" required maxLength={100} />
+                </label>
+              </div>
+              <div className={styles.buttons}>
+                <button type="submit" className={styles.secondary} data-confirm={`Record this payment to ${b.name}? They will be told by SMS.`}>
+                  Mark as paid
+                </button>
+              </div>
+            </ActionForm>
+          )}
+        </section>
+      ))}
+      {history.length > 0 && (
+        <section className={styles.panel}>
+          <h2>Recent payments</h2>
+          <ul>
+            {history.map((p) => (
+              <li key={p.id}>
+                {dateText(p.created_at)} · {p.vendor_name} · {formatPrice(p.amount_ghs)} · {p.method} · ref {p.reference}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </>
+  );
+}
+
+async function MessagesTab({ staff, vendor }: { staff: Staff; vendor: string | null }) {
+  const { data, error } = await staff.supabase.rpc('admin_vendor_threads');
+  if (error) throw error;
+  const threads = data as unknown as Thread[];
+  let open: { sender: 'vendor' | 'owner'; body: string; created_at: string }[] = [];
+  const current = threads.find((t) => t.vendor_id === vendor);
+  if (current) {
+    const thread = await staff.supabase.rpc('admin_vendor_thread', { p_vendor_id: current.vendor_id });
+    if (thread.error) throw thread.error;
+    open = thread.data as unknown as typeof open;
+  }
+  if (threads.length === 0) return <p className={styles.empty}>No vendor has written to you yet.</p>;
+  return (
+    <>
+      <nav className={styles.tabs} aria-label="Conversations">
+        {threads.map((t) => (
+          <Link key={t.vendor_id} href={`/admin/vendors?tab=messages&vendor=${t.vendor_id}`} aria-current={t.vendor_id === vendor ? 'page' : undefined}>
+            {t.vendor_name}
+            {t.unread > 0 ? ` (${t.unread} new)` : ''}
+          </Link>
+        ))}
+      </nav>
+      {current ? (
+        <section className={styles.panel}>
+          <h2>{current.vendor_name}</h2>
+          <ul>
+            {open.map((m, i) => (
+              <li key={i}>
+                <strong>{m.sender === 'vendor' ? current.vendor_name : 'You'}</strong> · {dateText(m.created_at)}
+                <br />
+                {m.body}
+              </li>
+            ))}
+          </ul>
+          <ActionForm action={replyToVendor.bind(null, current.vendor_id)} resetOnSuccess>
+            <label className={styles.field}>
+              <span>Your reply</span>
+              <textarea name="body" rows={3} required maxLength={2000} />
+            </label>
+            <div className={styles.buttons}>
+              <button type="submit" className={styles.primary}>
+                Send reply
+              </button>
+            </div>
+          </ActionForm>
+        </section>
+      ) : (
+        <p className={styles.muted}>Choose a conversation above.</p>
+      )}
     </>
   );
 }

@@ -1,7 +1,7 @@
 import 'server-only';
 import { createAdminSupabase } from '@/lib/supabase/admin';
 import { emailProvider, smsProvider, toInternationalPhone } from './providers';
-import { renderMessage, type NotificationPayload } from './templates';
+import { renderMessage, type NotificationPayload, type VendorPayload } from './templates';
 
 /**
  * Sends queued customer messages. Called right after anything that changes an order's status, and on a schedule
@@ -30,7 +30,7 @@ export async function dispatchNotifications(limit = 20): Promise<{ sent: number;
         p_error: extra.error,
       });
 
-    const message = renderMessage(n.template, n.payload as unknown as NotificationPayload);
+    const message = renderMessage(n.template, n.payload as unknown as NotificationPayload | VendorPayload);
     const provider = n.channel === 'sms' ? smsProvider() : emailProvider();
     if (!message || !provider) {
       counts.skipped++;

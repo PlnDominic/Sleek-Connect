@@ -57,7 +57,7 @@ if [ "$ONLY" != "db" ]; then
   fresh; start; suite "shop pages, search, content, returns, help" e2e-store.cjs; server_errors
   fresh; start; suite "delivery, photos, wishlist, addresses, cancel, buy again" e2e-shopper.cjs; server_errors
   fresh; start; suite "terms, saved numbers, reviews, data export and deletion" e2e-privacy.cjs; server_errors
-  fresh; start; suite "vendors: apply, approve, pay, review, storefront" e2e-marketplace.cjs; server_errors
+  fresh; start; suite "vendors: apply, approve, pay, review, storefront, orders, earnings, messages, import" e2e-marketplace.cjs; server_errors
   stop
 fi
 
@@ -67,6 +67,7 @@ npx supabase db reset >/dev/null 2>&1; suite "database: addresses, photos, deliv
 npx supabase db reset >/dev/null 2>&1; suite "database: saved numbers, reviews, data export and deletion" db-privacy.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: launch security, checkout and delivery hardening" db-launch.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: vendors, subscriptions, review and markup" db-marketplace.cjs
+npx supabase db reset >/dev/null 2>&1; suite "database: vendor orders, payouts, messages, ratings, online subscription" db-vendor-ops.cjs
 
 if [ "$FAILED" = "0" ]; then echo "== all suites passed"; else echo "== some suites FAILED"; fi
 exit "$FAILED"

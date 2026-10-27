@@ -1,0 +1,110 @@
+/* The stores directory: a grid of cards, one per open vendor store. */
+
+.page {
+  padding-block: 32px 64px;
+}
+
+.page h1 {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.lead {
+  max-width: 60ch;
+  margin: 6px 0 24px;
+  color: var(--c-text-subtle);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 100%;
+  overflow: hidden;
+  padding: 0 18px 18px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-xl);
+  background: var(--c-canvas);
+  color: inherit;
+  text-decoration: none;
+}
+
+.card:hover {
+  border-color: var(--c-accent);
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+.banner {
+  position: relative;
+  display: block;
+  height: 84px;
+  margin-inline: -18px;
+  background: var(--c-surface);
+}
+
+.banner img {
+  object-fit: cover;
+}
+
+.logo,
+.initial {
+  width: 56px;
+  height: 56px;
+  margin-top: -28px;
+  border: 2px solid var(--c-canvas);
+  border-radius: var(--r-lg);
+  background: var(--c-canvas);
+  object-fit: cover;
+}
+
+.initial {
+  display: grid;
+  place-items: center;
+  background: var(--c-accent);
+  color: var(--c-canvas);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.card strong {
+  margin-top: 6px;
+  font-size: 16px;
+}
+
+.tagline {
+  color: var(--c-text-muted);
+  font-size: 14px;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  color: var(--c-text-subtle);
+  font-size: 13px;
+}
+
+.empty {
+  color: var(--c-text-muted);
+}
+
+.empty a {
+  color: var(--c-accent);
+  font-weight: 600;
+}

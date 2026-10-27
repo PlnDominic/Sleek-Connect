@@ -91,6 +91,47 @@
   font-weight: 600;
 }
 
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--c-text-muted);
+}
+
+.reviews {
+  margin-top: 40px;
+}
+
+.reviewList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.review {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-xl);
+  background: var(--c-canvas);
+  font-size: 14px;
+}
+
+.review small {
+  color: var(--c-text-muted);
+}
+
+.review a {
+  color: var(--c-accent);
+}
+
 @media (max-width: 600px) {
   .heroInner {
     gap: 14px;

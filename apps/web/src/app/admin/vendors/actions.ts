@@ -2,6 +2,7 @@
 
 import { refresh, updateTag } from 'next/cache';
 import { done, failed, text, type ActionState } from '@/lib/admin/action-state';
+import { formatPrice } from '@sleek/shared';
 import type { Database, Json } from '@/lib/supabase/database.types';
 import { createUserSupabase } from '@/lib/supabase/server';
 
@@ -101,4 +102,39 @@ export async function bulkReviewProducts(_: ActionState, form: FormData): Promis
   const verb = decision === 'approved' ? 'Approved' : 'Rejected';
   if (failures.length === 0) return done(`${verb} ${succeeded} product${succeeded === 1 ? '' : 's'}.`);
   return { ok: false, message: `${verb} ${succeeded}. ${failures.length} could not be changed: ${failures.slice(0, 2).join(' ')}` };
+}
+
+/** Staff have taken a vendor's packed items from them, so the order can go out. */
+export async function collectItems(orderId: string, vendorId: string, _: ActionState, form: FormData): Promise<ActionState> {
+  void form;
+  const supabase = await createUserSupabase();
+  const { error } = await supabase.rpc('admin_collect_vendor_items', { p_order_id: orderId, p_vendor_id: vendorId });
+  if (error) return failed(error);
+  refresh();
+  return done('Marked as collected.');
+}
+
+/** Records money already sent to a vendor, which takes it off what they are owed. */
+export async function recordPayout(vendorId: string, _: ActionState, form: FormData): Promise<ActionState> {
+  const amount = Number(text(form, 'amount'));
+  if (!Number.isFinite(amount) || amount <= 0) return { ok: false, message: 'Enter the amount you paid.' };
+  const supabase = await createUserSupabase();
+  const { data, error } = await supabase.rpc('admin_record_payout', {
+    p_vendor_id: vendorId,
+    p_amount_ghs: amount,
+    p_method: text(form, 'method') || 'momo',
+    p_reference: text(form, 'reference'),
+    p_note: text(form, 'note') || undefined,
+  });
+  if (error) return failed(error);
+  refresh();
+  return done(`Payment recorded. ${formatPrice(data)} is still owed to this vendor.`);
+}
+
+export async function replyToVendor(vendorId: string, _: ActionState, form: FormData): Promise<ActionState> {
+  const supabase = await createUserSupabase();
+  const { error } = await supabase.rpc('admin_reply_vendor', { p_vendor_id: vendorId, p_body: text(form, 'body') });
+  if (error) return failed(error);
+  refresh();
+  return done('Reply sent.');
 }

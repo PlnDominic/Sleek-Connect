@@ -4,7 +4,11 @@ import { refresh, updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { done, failed, text, type ActionState } from '@/lib/admin/action-state';
 import type { Json } from '@/lib/supabase/database.types';
+import { momoNetworks, type MomoNetwork } from '@sleek/shared';
+import { getCategories } from '@/lib/catalog';
+import { startSubscriptionPayment } from '@/lib/payments/subscription';
 import { createUserSupabase } from '@/lib/supabase/server';
+import { importLimit, readImport } from '@/lib/vendor-import';
 
 export async function applyForStore(_: ActionState, form: FormData): Promise<ActionState> {
   const supabase = await createUserSupabase();
@@ -143,4 +147,88 @@ export async function removeProductPhoto(photoId: string): Promise<PhotoResult> 
   updateTag('catalog');
   refresh();
   return { ok: true, message: 'Photo removed.' };
+}
+
+/** The vendor has put an order's items in a bag for Sleek Connect to collect. */
+export async function markPacked(orderId: string, _: ActionState, form: FormData): Promise<ActionState> {
+  void form;
+  const supabase = await createUserSupabase();
+  const { error } = await supabase.rpc('vendor_mark_packed', { p_order_id: orderId });
+  if (error) return failed(error);
+  refresh();
+  return done('Marked as packed. We will collect it.');
+}
+
+export async function savePayoutAccount(_: ActionState, form: FormData): Promise<ActionState> {
+  const supabase = await createUserSupabase();
+  const { error } = await supabase.rpc('vendor_set_payout_account', {
+    p_network: text(form, 'network'),
+    p_wallet: text(form, 'wallet'),
+    p_name: text(form, 'name'),
+  });
+  if (error) return failed(error);
+  refresh();
+  return done('Payout account saved.');
+}
+
+export async function sendMessage(_: ActionState, form: FormData): Promise<ActionState> {
+  const supabase = await createUserSupabase();
+  const { error } = await supabase.rpc('vendor_send_message', { p_body: text(form, 'body') });
+  if (error) return failed(error);
+  refresh();
+  return done('Sent. We will reply here.');
+}
+
+/** Adds products from a CSV file. Each product is saved the same way as the form, so every rule still applies. */
+export async function importProducts(_: ActionState, form: FormData): Promise<ActionState> {
+  const file = form.get('file');
+  if (!(file instanceof File) || file.size === 0) return { ok: false, message: 'Choose a CSV file first.' };
+  if (file.size > 1_000_000) return { ok: false, message: 'That file is too big. Keep it under 1 MB.' };
+
+  const { rows, problems } = readImport(await file.text(), await getCategories());
+  if (rows.length === 0) return { ok: false, message: problems.slice(0, 5).join(' ') || `Add up to ${importLimit} products at a time.` };
+
+  const supabase = await createUserSupabase();
+  let added = 0;
+  for (const row of rows) {
+    const { data, error } = await supabase.rpc('vendor_save_product', { p: row.product });
+    if (error) {
+      problems.push(`Line ${row.line}: ${error.code === '22023' || error.code === '42501' ? error.message : 'could not be saved.'}`);
+      continue;
+    }
+    added++;
+    if (row.stock !== null) {
+      const saved = data as unknown as { id: string };
+      const { error: stockError } = await supabase.rpc('vendor_set_stock', { p_product_id: saved.id, p_size_code: '', p_quantity: row.stock });
+      if (stockError) problems.push(`Line ${row.line}: saved, but the stock could not be set.`);
+    }
+  }
+  if (added > 0) {
+    updateTag('catalog');
+    refresh();
+  }
+  const skipped = problems.length ? ` ${problems.slice(0, 6).join(' ')}${problems.length > 6 ? ` …and ${problems.length - 6} more.` : ''}` : '';
+  return {
+    ok: added > 0,
+    message: added > 0
+      ? `Added ${added} product${added === 1 ? '' : 's'}. Add photos to each one, then they go for approval.${skipped}`
+      : `Nothing was added.${skipped}`,
+  };
+}
+
+/** Sends the Mobile Money prompt for the yearly fee. The store opens when the provider confirms it. */
+export async function payOnline(_: ActionState, form: FormData): Promise<ActionState> {
+  const network = text(form, 'network') as MomoNetwork;
+  const wallet = text(form, 'wallet').replace(/[^\d+]/g, '');
+  if (!momoNetworks.some((n) => n.id === network)) return { ok: false, message: 'Choose your Mobile Money network.' };
+  if (wallet.replace(/\D/g, '').length < 9) return { ok: false, message: 'Enter the Mobile Money number to charge.' };
+  const result = await startSubscriptionPayment({ network, wallet });
+  if (result.kind === 'requested') {
+    return done(
+      result.testMode
+        ? 'Test mode: no prompt was sent. The store opens once the test payment is confirmed.'
+        : 'Check your phone and approve the prompt. Your store opens as soon as the payment goes through.',
+    );
+  }
+  return { ok: false, message: result.reason };
 }

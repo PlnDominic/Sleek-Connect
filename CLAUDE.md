@@ -41,7 +41,12 @@
   from the vendor's price, the owner's markup, the owner's approval and a live (approved + paid) store, so never set them
   for vendor products. Vendors change things only through `public.vendor_*` functions, the owner through `admin_*`
   (admin role). Never expose `vendors.owner_id`, `vendor_private` (it holds applicants' IDs; the `vendor-ids` bucket is private), `vendor_price_ghs` or `markup_percent` to the public,
-  and keep ordering from vendor stores behind `store_settings.marketplace_orders_open` until fulfilment and payouts exist.
+  and keep ordering from vendor stores behind `store_settings.marketplace_orders_open` until you have rehearsed an order end to end.
+  Vendors see only their own paid lines (`vendor_orders`), never shopper details or delivery codes; they only pack
+  (`vendor_mark_packed`), staff collect (`admin_collect_vendor_items`) and dispatch is blocked until then. Vendor money is
+  `vendor_balance`/`admin_record_payout` (finance, reference required, never above the balance). Subscription payments are
+  confirmed only by `confirm_subscription_payment` from the webhook (references starting `SUB-`). Messages to vendors go
+  through `queue_vendor_message`, never directly into `notifications`.
 - Orders become paid only through `public.confirm_payment`, after the webhook has verified the provider's
   notification. Stock is reserved by `place_order` and released by `release_order_reservation`.
 - The order token must not reach anything staff can read either. Return photos are stored under

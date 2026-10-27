@@ -22,6 +22,16 @@ function unwrap<T>({ data, error }: { data: T | null; error: { message: string }
   return data as T;
 }
 
+/**
+ * Ratings and the stores page came with a later migration. Until it has been run on a database, those reads return
+ * `fallback` instead of failing the whole page (or the build); any other error is still thrown.
+ */
+function orMissing<T>({ data, error }: { data: unknown; error: { code?: string; message: string } | null }, fallback: T): T {
+  if (error && (error.code === 'PGRST202' || error.code === '42883')) return fallback;
+  if (error) throw new Error(`Supabase query failed: ${error.message}`);
+  return data as T;
+}
+
 function toProduct(row: ProductRow): Product {
   return productFromRow(row, photoUrl);
 }
@@ -231,6 +241,30 @@ export interface Storefront {
   banner?: string;
   isHouse: boolean;
   products: Product[];
+  /** Average of the published reviews on this store's products (0 when there are none). */
+  rating: { average: number; count: number };
+  reviews: StoreReview[];
+}
+
+export interface StoreReview {
+  rating: number;
+  title: string | null;
+  body: string | null;
+  display_name: string | null;
+  created_at: string;
+  product_name: string;
+  product_slug: string;
+}
+
+export interface StoreListing {
+  slug: string;
+  name: string;
+  tagline?: string;
+  logo?: string;
+  banner?: string;
+  productCount: number;
+  rating: number;
+  reviewCount: number;
 }
 
 /** A vendor's public store with the products on sale, or null when the store doesn't exist or isn't open. */
@@ -248,9 +282,12 @@ export async function getStorefront(slug: string): Promise<Storefront | null> {
     .maybeSingle();
   if (error) throw new Error(`Supabase query failed: ${error.message}`);
   if (!vendor) return null;
-  const rows = unwrap(
-    await supabase.from('products').select(productColumns).eq('vendor_id', vendor.id).order('created_at', { ascending: false }),
-  );
+  const [rows, rating, reviews] = await Promise.all([
+    supabase.from('products').select(productColumns).eq('vendor_id', vendor.id).order('created_at', { ascending: false }).then(unwrap),
+    supabase.rpc('store_rating', { p_slug: slug }).then((r) => orMissing(r, { average: 0, count: 0 })),
+    supabase.rpc('store_reviews', { p_slug: slug, p_limit: 6 }).then((r) => orMissing<StoreReview[]>(r, [])),
+  ]);
+  const stats = rating as { average: number; count: number };
   return {
     name: vendor.name,
     slug: vendor.slug,
@@ -260,7 +297,38 @@ export async function getStorefront(slug: string): Promise<Storefront | null> {
     banner: vendorAssetUrl(vendor.banner_path),
     isHouse: vendor.is_house,
     products: (rows as ProductRow[]).map(toProduct),
+    rating: { average: Number(stats.average), count: stats.count },
+    reviews,
   };
+}
+
+/** The open vendor stores that have something on sale, for the stores page. */
+export async function getStoreDirectory(): Promise<StoreListing[]> {
+  'use cache';
+  cacheLife('minutes');
+  cacheTag('catalog');
+  const rows = orMissing<
+    {
+      slug: string;
+      name: string;
+      tagline: string | null;
+      logo_path: string | null;
+      banner_path: string | null;
+      product_count: number;
+      rating: number;
+      review_count: number;
+    }[]
+  >(await createSupabase().rpc('store_directory'), []);
+  return rows.map((r) => ({
+    slug: r.slug,
+    name: r.name,
+    tagline: r.tagline ?? undefined,
+    logo: vendorAssetUrl(r.logo_path),
+    banner: vendorAssetUrl(r.banner_path),
+    productCount: r.product_count,
+    rating: Number(r.rating),
+    reviewCount: r.review_count,
+  }));
 }
 
 /** Slugs of the open stores, ours included, for the sitemap and pre-built store pages. */

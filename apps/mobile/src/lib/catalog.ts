@@ -11,7 +11,7 @@ import {
   type ProductRowLike,
   asImageKey,
 } from '@sleek/shared';
-import { photoUrl, supabase } from './supabase';
+import { photoUrl, supabase, vendorAssetUrl } from './supabase';
 
 function check<T>({ data, error }: { data: T | null; error: { message: string } | null }): T {
   if (error) throw new Error(error.message);
@@ -106,4 +106,38 @@ export async function getProduct(slug: string): Promise<Product | null> {
 export async function searchSlugs(query: string): Promise<string[]> {
   const rows = check(await supabase.rpc('search_products', { p_query: query, p_limit: 60 })) as { slug: string; score: number }[];
   return rows.map((r) => r.slug);
+}
+
+export interface Storefront {
+  slug: string;
+  name: string;
+  tagline?: string;
+  description?: string;
+  logo?: string;
+  isHouse: boolean;
+  rating: { average: number; count: number };
+  products: Product[];
+}
+
+/** A vendor's store and what it has on sale, or null when the store doesn't exist or isn't open. */
+export async function getStorefront(slug: string): Promise<Storefront | null> {
+  const vendor = check(
+    await supabase.from('vendors').select('id, slug, name, tagline, description, logo_path, is_house').eq('slug', slug).maybeSingle(),
+  ) as { id: string; slug: string; name: string; tagline: string | null; description: string | null; logo_path: string | null; is_house: boolean } | null;
+  if (!vendor) return null;
+  const [rows, rating] = await Promise.all([
+    supabase.from('products').select(productSelect).eq('vendor_id', vendor.id).order('created_at', { ascending: false }),
+    supabase.rpc('store_rating', { p_slug: slug }),
+  ]);
+  const stats = check(rating) as unknown as { average: number; count: number };
+  return {
+    slug: vendor.slug,
+    name: vendor.name,
+    tagline: vendor.tagline ?? undefined,
+    description: vendor.description ?? undefined,
+    logo: vendorAssetUrl(vendor.logo_path),
+    isHouse: vendor.is_house,
+    rating: { average: Number(stats.average), count: stats.count },
+    products: (check(rows) as unknown[]).map(toProduct),
+  };
 }

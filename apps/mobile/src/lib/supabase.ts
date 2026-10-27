@@ -19,3 +19,8 @@ export const supabase = createClient(url ?? 'https://not-configured.invalid', ke
 export function photoUrl(path: string): string {
   return `${url}/storage/v1/object/public/product-images/${path}`;
 }
+
+/** Public address of a vendor's logo or banner in the vendor-assets Storage bucket. */
+export function vendorAssetUrl(path: string | null): string | undefined {
+  return path ? `${url}/storage/v1/object/public/vendor-assets/${path}` : undefined;
+}

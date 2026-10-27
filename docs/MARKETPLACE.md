@@ -49,20 +49,76 @@ The vendor's own price and the markup are never shown to other vendors or the pu
 - Suggested markup (pre-filled when reviewing a product).
 - **Shoppers can order vendor products**: off by default.
 
-## What is not built yet
+## Running orders, money and messages
 
-Vendor products are visible but **cannot be bought** while "Shoppers can order vendor products" is off; `place_order`
-refuses them with "Ordering from vendor stores opens soon." Before turning it on, build:
+Added in `20261027090000_vendor_fulfilment.sql`, `20261027100000_vendor_money_and_messages.sql`,
+`20261027110000_store_discovery_reports.sql` and `20261027120000_vendor_subscription_payments.sql`.
 
-1. Splitting an order's fulfilment by vendor: vendors see only their own paid order lines, mark them packed and hand
-   them to a rider; delivery codes and proof of delivery must stay hidden from vendors, as they are from staff.
-2. Payouts: what each vendor is owed is already recorded per order line (`vendor_unit_price_ghs × quantity`); add a
-   payout ledger, a statement per vendor and a "mark as paid" action.
-3. Returns and refunds on vendor products (who bears the cost, and restocking into the vendor's stock).
-4. Delivery fees for orders that contain products from several vendors.
-5. Self-serve subscription payment (Mobile Money or card) through the existing payment provider instead of the owner
-   recording payments by hand.
-6. The mobile app: a "Sold by" line and vendor storefronts.
+### Fulfilment (vendors pack, Sleek Connect delivers)
+
+- Vendors hand their items to Sleek Connect; one rider delivers the whole order. When an order line is created for a
+  vendor, `order_items_shipment` makes an `order_shipments` row (`pending` → `packed` → `collected`).
+- `vendor_orders()` lists only **paid** orders, with only that vendor's lines at the vendor's own prices. It carries no
+  shopper name, phone, address, delivery code or order token. `vendor_mark_packed` is the vendor's only write.
+- Staff pick and pack only the shop's own lines (`admin_pick_list`). `admin_pack_orders` refuses to pack an order while a
+  vendor is still packing ("Waiting for … to pack their items."). Operations staff then collect the bag
+  (`admin_collect_vendor_items`, **Admin → Vendors → Pickups**), and `admin_dispatch_order` refuses until every vendor's
+  items are collected.
+- Stock: `place_order` reserves vendor stock and `confirm_payment` takes it, exactly as for our own range. Cancelling or
+  receiving a returned vendor item puts it back into the **vendor's** stock (`return_order_batches`).
+
+### Delivery fees
+
+An order has **one** delivery fee, however many vendors are in it. That is the owner's decision: the fee is the owner's
+income and the owner's rider does the delivery. Nothing changes in `place_order`.
+
+### Money
+
+- A vendor earns `vendor_unit_price_ghs × quantity` for each line once the order is **delivered**. A received
+  (or refunded) return comes off, at the vendor's price: **the vendor bears the cost of returns** on their products.
+  `vendor_balance(vendor)` returns `earned`, `returned`, `paid`, `pending` (paid but not yet delivered) and `balance`.
+- Finance records each payment to a vendor in **Admin → Vendors → Payouts** (`admin_record_payout`). It needs the Mobile
+  Money transaction reference, can't exceed the balance, is audited and is texted to the vendor. The vendor sees their
+  statement at `/vendor/earnings` and saves where to be paid (`vendor_set_payout_account`; stored in `vendor_private`).
+- Sleek Connect does not send the money itself; the owner pays by Mobile Money and records it.
+
+### Notifications and reminders
+
+`queue_vendor_message` writes SMS and email rows to `notifications` (with `vendor_id`; there is no order) for: application
+received, approved, rejected, suspended, subscription paid, product approved or rejected, new paid order, order cancelled
+after payment, payout sent, owner replied, and renewal reminders (30, 7 and 1 days before, on the day, and the day after;
+`queue_vendor_renewal_reminders`, pg_cron at 08:00 UTC). Messages are rendered in `lib/notifications/templates.ts` and sent
+by the same dispatcher as customer messages.
+
+### Messages
+
+Vendors and the owner talk in `vendor_messages` (`/vendor/messages`, **Admin → Vendors → Messages**). Only admins read
+conversations. A reply texts the vendor.
+
+### Discovery and reports
+
+- `/stores` lists open vendor stores that have something on sale (`store_directory`). Storefronts show a rating and recent
+  reviews (`store_rating`, `store_reviews`): the average of **published** reviews of that store's products, with no account
+  ids. The mobile app shows "Sold by" on a product and opens the storefront.
+- `/vendor/reports` shows sales by day and best sellers (`vendor_report`), at the vendor's own prices.
+- `/vendor/products/import` adds up to 200 products from a CSV (template at `/vendor/products/import/template`). Rows go
+  through `vendor_save_product`, so every rule still applies and each product still needs photos and the owner's approval.
+- When a vendor changes an approved product's name, brand, department, category, summary, description or ingredients,
+  `products.review_previous` keeps the earlier values so the review queue shows what changed. It is cleared on decision.
+
+### Paying the subscription online
+
+`start_vendor_subscription_payment` (vendor) records an attempt for the fee in settings; the provider's verified
+notification reaches `confirm_subscription_payment` (server only) through the payment webhook, for references that start
+with `SUB-`. A matching payment adds a year; a different amount is audited and **does not** renew. **This only moves real
+money once a real payment provider is added to `lib/payments`** (only the `test` provider exists). Until then the owner's
+payment instructions and **Record payment** still work.
+
+## Before turning on vendor orders
+
+Vendor products still **cannot be bought** while "Shoppers can order vendor products" is off. Before turning it on:
+a real SMS provider (so vendors hear about orders), at least one rehearsal order through packing, collection, delivery,
+a return and a payout, and a decision on the payout schedule you will tell vendors.
 
 ## Things to know
 
@@ -70,8 +126,9 @@ refuses them with "Ordering from vendor stores opens soon." Before turning it on
   vendor's price and markup.
 - The nightly job `refresh-vendor-products` runs at 00:10 UTC (pg_cron). Catalogue pages are cached for a few minutes,
   so an expiry can take a few minutes longer to show on the site.
-- Vendors can only be approved or suspended by an admin; there is no vendor-facing notification yet, so the owner
-  should phone or email the vendor after approving or recording a payment.
+- Vendors can only be approved or suspended by an admin. The vendor is texted and emailed about each decision once SMS
+  and email providers are set up.
+- The admin Vendors page is admin-only. Its database functions also accept operations (pickups) and finance (payouts).
 
 - Vendor IDs live in the private `vendor-ids` bucket under `<user id>/`. Applicants can write and read only their own folder; admins
   open them through short-lived signed links in Admin → Vendors. The vendor never sees their ID number again, and the file

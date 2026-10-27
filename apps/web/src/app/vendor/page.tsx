@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { formatPrice } from '@sleek/shared';
+import { momoNetworks } from '@sleek/shared';
+import { getPaymentProvider } from '@/lib/payments';
 import { getVendorSession, type VendorProduct } from '@/lib/vendor';
-import { setStock } from './actions';
+import { payOnline, setStock } from './actions';
 import { ApplyForm } from './ApplyForm';
 import { VendorForm } from './VendorForm';
 import styles from './vendor.module.css';
@@ -14,6 +16,35 @@ const reviewLabels = {
   approved: ['Approved', 'good'],
   rejected: ['Not approved', 'bad'],
 } as const;
+
+/** Asks for a Mobile Money number and sends the prompt for the yearly fee. */
+function PayOnline() {
+  return (
+    <VendorForm action={payOnline}>
+      <div className={styles.row}>
+        <label className={styles.field}>
+          <span>Network</span>
+          <select name="network" defaultValue="mtn">
+            {momoNetworks.map((n) => (
+              <option key={n.id} value={n.id}>
+                {n.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className={styles.field}>
+          <span>Mobile Money number</span>
+          <input name="wallet" type="tel" required />
+        </label>
+      </div>
+      <div className={styles.buttons}>
+        <button type="submit" className={styles.primary}>
+          Pay online
+        </button>
+      </div>
+    </VendorForm>
+  );
+}
 
 /** A single centred card: used for sign-in, applying and every waiting state. */
 function StatusCard({ title, children, mark }: { title: string; children: React.ReactNode; mark: string }) {
@@ -73,18 +104,22 @@ export default async function VendorHome() {
     );
   }
 
+  const online = getPaymentProvider() !== null;
   if (!vendor.live) {
     const renewing = Boolean(vendor.paid_until);
     return (
       <StatusCard title={renewing ? 'Renew your subscription' : 'Pay to open your store'} mark="GH₵">
         <p className={styles.statusFee}>{formatPrice(vendor.annual_fee_ghs)}</p>
         <p className={styles.muted}>per year{renewing ? ` · ended ${dateText(vendor.paid_until!)}` : ''}</p>
+        {online && <PayOnline />}
         {vendor.payment_instructions ? (
           <p className={styles.instructions}>{vendor.payment_instructions}</p>
         ) : (
-          <Link href="/help#contact" className={styles.quiet}>
-            Contact us to pay
-          </Link>
+          !online && (
+            <Link href="/help#contact" className={styles.quiet}>
+              Contact us to pay
+            </Link>
+          )
         )}
       </StatusCard>
     );
@@ -100,8 +135,14 @@ export default async function VendorHome() {
       {closesSoon !== null && closesSoon <= 30 && (
         <p className={styles.notice}>
           Your subscription {closesSoon < 0 ? 'has ended' : `ends in ${closesSoon} day${closesSoon === 1 ? '' : 's'}`}. Pay the yearly fee of{' '}
-          {formatPrice(vendor.annual_fee_ghs)} to keep your store open. {vendor.payment_instructions ?? ''}
+          {formatPrice(vendor.annual_fee_ghs)} to keep your store open. {online ? '' : (vendor.payment_instructions ?? '')}
         </p>
+      )}
+      {online && closesSoon !== null && closesSoon <= 30 && (
+        <section className={styles.panel}>
+          <h2>Renew online</h2>
+          <PayOnline />
+        </section>
       )}
 
       <div className={styles.stats}>

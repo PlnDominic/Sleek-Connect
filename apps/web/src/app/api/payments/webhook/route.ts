@@ -1,6 +1,7 @@
 import { after } from 'next/server';
 import { dispatchNotifications } from '@/lib/notifications/dispatch';
 import { getPaymentProvider, WebhookSignatureError } from '@/lib/payments';
+import { subscriptionReferencePrefix } from '@/lib/payments/subscription';
 import { createAdminSupabase } from '@/lib/supabase/admin';
 import { clientAddress, rateLimit, rateLimitResponse } from '@/lib/rate-limit';
 import { logger, requestId, withRequestId } from '@/lib/observability';
@@ -37,6 +38,23 @@ export async function POST(request: Request) {
     return withRequestId(Response.json({ error: 'Could not verify the payment notification.', requestId: id }, { status: 502 }), id);
   }
   if (!verified) return withRequestId(Response.json({ error: 'The provider has no final outcome yet.', requestId: id }, { status: 409 }), id);
+  if (verified.reference.startsWith(subscriptionReferencePrefix)) {
+    const { data: until, error: subscriptionError } = await createAdminSupabase().rpc('confirm_subscription_payment', {
+      p_provider: provider.name,
+      p_reference: verified.reference,
+      p_status: verified.status,
+      p_amount_ghs: verified.amountGhs,
+      p_event: verified.event as Json,
+    });
+    if (subscriptionError) {
+      if (subscriptionError.code === '22023') return withRequestId(Response.json({ error: subscriptionError.message, requestId: id }, { status: 422 }), id);
+      logger.error('confirm_subscription_payment_failed', subscriptionError, { requestId: id, provider: provider.name });
+      return withRequestId(Response.json({ error: 'Could not record the payment.', requestId: id }, { status: 500 }), id);
+    }
+    after(() => dispatchNotifications());
+    logger.info('subscription_webhook_recorded', { requestId: id, provider: provider.name, paidUntil: until });
+    return withRequestId(Response.json({ received: true, paidUntil: until }), id);
+  }
   const { data, error } = await createAdminSupabase().rpc('confirm_payment', {
     p_provider: provider.name,
     p_reference: verified.reference,

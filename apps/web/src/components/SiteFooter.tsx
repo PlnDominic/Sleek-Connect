@@ -26,6 +26,7 @@ const columns = [
   {
     title: 'Sell',
     links: [
+      { label: 'Browse stores', href: '/stores' },
       { label: 'Sell on Sleek Connect', href: '/sell' },
       { label: 'Vendor sign in', href: '/vendor' },
     ],

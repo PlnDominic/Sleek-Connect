@@ -229,14 +229,14 @@ isOneToOne: false
                   ]
                 },"notifications": {
                   Row: {
-                    "attempts": number,"channel": Database["public"]['Enums']["notification_channel"],"created_at": string,"id": string,"last_error": string | null,"next_attempt_at": string,"order_id": string | null,"payload": NonNullable<Json>,"provider": string | null,"provider_reference": string | null,"recipient": string,"sent_at": string | null,"status": Database["public"]['Enums']["notification_status"],"template": string
+                    "vendor_id": string | null,"attempts": number,"channel": Database["public"]['Enums']["notification_channel"],"created_at": string,"id": string,"last_error": string | null,"next_attempt_at": string,"order_id": string | null,"payload": NonNullable<Json>,"provider": string | null,"provider_reference": string | null,"recipient": string,"sent_at": string | null,"status": Database["public"]['Enums']["notification_status"],"template": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "attempts"?: number,"channel": Database["public"]['Enums']["notification_channel"],"created_at"?: string,"id"?: string,"last_error"?: string | null,"next_attempt_at"?: string,"order_id"?: string | null,"payload"?: NonNullable<Json>,"provider"?: string | null,"provider_reference"?: string | null,"recipient": string,"sent_at"?: string | null,"status"?: Database["public"]['Enums']["notification_status"],"template": string
+                    "vendor_id"?: string | null,"attempts"?: number,"channel": Database["public"]['Enums']["notification_channel"],"created_at"?: string,"id"?: string,"last_error"?: string | null,"next_attempt_at"?: string,"order_id"?: string | null,"payload"?: NonNullable<Json>,"provider"?: string | null,"provider_reference"?: string | null,"recipient": string,"sent_at"?: string | null,"status"?: Database["public"]['Enums']["notification_status"],"template": string
                   }
                   Update: {
-                    "attempts"?: number,"channel"?: Database["public"]['Enums']["notification_channel"],"created_at"?: string,"id"?: string,"last_error"?: string | null,"next_attempt_at"?: string,"order_id"?: string | null,"payload"?: NonNullable<Json>,"provider"?: string | null,"provider_reference"?: string | null,"recipient"?: string,"sent_at"?: string | null,"status"?: Database["public"]['Enums']["notification_status"],"template"?: string
+                    "vendor_id"?: string | null,"attempts"?: number,"channel"?: Database["public"]['Enums']["notification_channel"],"created_at"?: string,"id"?: string,"last_error"?: string | null,"next_attempt_at"?: string,"order_id"?: string | null,"payload"?: NonNullable<Json>,"provider"?: string | null,"provider_reference"?: string | null,"recipient"?: string,"sent_at"?: string | null,"status"?: Database["public"]['Enums']["notification_status"],"template"?: string
                   }
                   Relationships: [
                     {
@@ -244,6 +244,13 @@ isOneToOne: false
       columns: ["order_id"]
 isOneToOne: false
       referencedRelation: "orders"
+      referencedColumns: ["id"]
+    },
+                    {
+      foreignKeyName: "notifications_vendor_id_fkey"
+      columns: ["vendor_id"]
+isOneToOne: false
+      referencedRelation: "vendors"
       referencedColumns: ["id"]
     }
                   ]
@@ -486,14 +493,14 @@ isOneToOne: false
                   ]
                 },"products": {
                   Row: {
-                    "review_status": Database["public"]['Enums']["product_review_status"],"review_note": string | null,"publish_requested": boolean,"markup_percent": number,"vendor_id": string,"vendor_price_ghs": number | null,"vendor_was_price_ghs": number | null,"badge": string | null,"brand": string | null,"category_id": string | null,"collection": string | null,"country_of_origin": string | null,"created_at": string,"department": Database["public"]['Enums']["department"],"details": Json | null,"id": string,"image_key": string | null,"ingredients": string | null,"is_published": boolean,"kids_filter": Database["public"]['Enums']["kids_filter"] | null,"kind": Database["public"]['Enums']["product_kind"],"name": string,"period_after_opening": string | null,"price_ghs": number,"recall_reason": string | null,"recalled_at": string | null,"regulatory_reference": string | null,"return_note": string | null,"returnable": boolean,"shades": (string)[],"skin_types": (string)[],"slug": string,"summary": string,"tag": string,"tint": string,"updated_at": string,"warning_label": string | null,"was_price_ghs": number | null
+                    "review_previous": Json | null,"review_status": Database["public"]['Enums']["product_review_status"],"review_note": string | null,"publish_requested": boolean,"markup_percent": number,"vendor_id": string,"vendor_price_ghs": number | null,"vendor_was_price_ghs": number | null,"badge": string | null,"brand": string | null,"category_id": string | null,"collection": string | null,"country_of_origin": string | null,"created_at": string,"department": Database["public"]['Enums']["department"],"details": Json | null,"id": string,"image_key": string | null,"ingredients": string | null,"is_published": boolean,"kids_filter": Database["public"]['Enums']["kids_filter"] | null,"kind": Database["public"]['Enums']["product_kind"],"name": string,"period_after_opening": string | null,"price_ghs": number,"recall_reason": string | null,"recalled_at": string | null,"regulatory_reference": string | null,"return_note": string | null,"returnable": boolean,"shades": (string)[],"skin_types": (string)[],"slug": string,"summary": string,"tag": string,"tint": string,"updated_at": string,"warning_label": string | null,"was_price_ghs": number | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "review_status"?: Database["public"]['Enums']["product_review_status"],"review_note"?: string | null,"publish_requested"?: boolean,"markup_percent"?: number,"vendor_id"?: string,"vendor_price_ghs"?: number | null,"vendor_was_price_ghs"?: number | null,"badge"?: string | null,"brand"?: string | null,"category_id"?: string | null,"collection"?: string | null,"country_of_origin"?: string | null,"created_at"?: string,"department": Database["public"]['Enums']["department"],"details"?: Json | null,"id"?: string,"image_key"?: string | null,"ingredients"?: string | null,"is_published"?: boolean,"kids_filter"?: Database["public"]['Enums']["kids_filter"] | null,"kind": Database["public"]['Enums']["product_kind"],"name": string,"period_after_opening"?: string | null,"price_ghs": number,"recall_reason"?: string | null,"recalled_at"?: string | null,"regulatory_reference"?: string | null,"return_note"?: string | null,"returnable"?: boolean,"shades"?: (string)[],"skin_types"?: (string)[],"slug": string,"summary": string,"tag": string,"tint": string,"updated_at"?: string,"warning_label"?: string | null,"was_price_ghs"?: number | null
+                    "review_previous"?: Json | null,"review_status"?: Database["public"]['Enums']["product_review_status"],"review_note"?: string | null,"publish_requested"?: boolean,"markup_percent"?: number,"vendor_id"?: string,"vendor_price_ghs"?: number | null,"vendor_was_price_ghs"?: number | null,"badge"?: string | null,"brand"?: string | null,"category_id"?: string | null,"collection"?: string | null,"country_of_origin"?: string | null,"created_at"?: string,"department": Database["public"]['Enums']["department"],"details"?: Json | null,"id"?: string,"image_key"?: string | null,"ingredients"?: string | null,"is_published"?: boolean,"kids_filter"?: Database["public"]['Enums']["kids_filter"] | null,"kind": Database["public"]['Enums']["product_kind"],"name": string,"period_after_opening"?: string | null,"price_ghs": number,"recall_reason"?: string | null,"recalled_at"?: string | null,"regulatory_reference"?: string | null,"return_note"?: string | null,"returnable"?: boolean,"shades"?: (string)[],"skin_types"?: (string)[],"slug": string,"summary": string,"tag": string,"tint": string,"updated_at"?: string,"warning_label"?: string | null,"was_price_ghs"?: number | null
                   }
                   Update: {
-                    "review_status"?: Database["public"]['Enums']["product_review_status"],"review_note"?: string | null,"publish_requested"?: boolean,"markup_percent"?: number,"vendor_id"?: string,"vendor_price_ghs"?: number | null,"vendor_was_price_ghs"?: number | null,"badge"?: string | null,"brand"?: string | null,"category_id"?: string | null,"collection"?: string | null,"country_of_origin"?: string | null,"created_at"?: string,"department"?: Database["public"]['Enums']["department"],"details"?: Json | null,"id"?: string,"image_key"?: string | null,"ingredients"?: string | null,"is_published"?: boolean,"kids_filter"?: Database["public"]['Enums']["kids_filter"] | null,"kind"?: Database["public"]['Enums']["product_kind"],"name"?: string,"period_after_opening"?: string | null,"price_ghs"?: number,"recall_reason"?: string | null,"recalled_at"?: string | null,"regulatory_reference"?: string | null,"return_note"?: string | null,"returnable"?: boolean,"shades"?: (string)[],"skin_types"?: (string)[],"slug"?: string,"summary"?: string,"tag"?: string,"tint"?: string,"updated_at"?: string,"warning_label"?: string | null,"was_price_ghs"?: number | null
+                    "review_previous"?: Json | null,"review_status"?: Database["public"]['Enums']["product_review_status"],"review_note"?: string | null,"publish_requested"?: boolean,"markup_percent"?: number,"vendor_id"?: string,"vendor_price_ghs"?: number | null,"vendor_was_price_ghs"?: number | null,"badge"?: string | null,"brand"?: string | null,"category_id"?: string | null,"collection"?: string | null,"country_of_origin"?: string | null,"created_at"?: string,"department"?: Database["public"]['Enums']["department"],"details"?: Json | null,"id"?: string,"image_key"?: string | null,"ingredients"?: string | null,"is_published"?: boolean,"kids_filter"?: Database["public"]['Enums']["kids_filter"] | null,"kind"?: Database["public"]['Enums']["product_kind"],"name"?: string,"period_after_opening"?: string | null,"price_ghs"?: number,"recall_reason"?: string | null,"recalled_at"?: string | null,"regulatory_reference"?: string | null,"return_note"?: string | null,"returnable"?: boolean,"shades"?: (string)[],"skin_types"?: (string)[],"slug"?: string,"summary"?: string,"tag"?: string,"tint"?: string,"updated_at"?: string,"warning_label"?: string | null,"was_price_ghs"?: number | null
                   }
                   Relationships: [
                     {
@@ -715,14 +722,14 @@ isOneToOne: false
                   ]
                 },"vendor_private": {
                   Row: {
-                    "email": string | null,"id_document_path": string | null,"id_number": string | null,"id_type": string | null,"owner_name": string | null,"phone": string | null,"review_note": string | null,"terms_accepted_at": string | null,"vendor_id": string
+                    "payout_name": string | null,"payout_network": string | null,"payout_wallet": string | null,"email": string | null,"id_document_path": string | null,"id_number": string | null,"id_type": string | null,"owner_name": string | null,"phone": string | null,"review_note": string | null,"terms_accepted_at": string | null,"vendor_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "email"?: string | null,"id_document_path"?: string | null,"id_number"?: string | null,"id_type"?: string | null,"owner_name"?: string | null,"phone"?: string | null,"review_note"?: string | null,"terms_accepted_at"?: string | null,"vendor_id": string
+                    "payout_name"?: string | null,"payout_network"?: string | null,"payout_wallet"?: string | null,"email"?: string | null,"id_document_path"?: string | null,"id_number"?: string | null,"id_type"?: string | null,"owner_name"?: string | null,"phone"?: string | null,"review_note"?: string | null,"terms_accepted_at"?: string | null,"vendor_id": string
                   }
                   Update: {
-                    "email"?: string | null,"id_document_path"?: string | null,"id_number"?: string | null,"id_type"?: string | null,"owner_name"?: string | null,"phone"?: string | null,"review_note"?: string | null,"terms_accepted_at"?: string | null,"vendor_id"?: string
+                    "payout_name"?: string | null,"payout_network"?: string | null,"payout_wallet"?: string | null,"email"?: string | null,"id_document_path"?: string | null,"id_number"?: string | null,"id_type"?: string | null,"owner_name"?: string | null,"phone"?: string | null,"review_note"?: string | null,"terms_accepted_at"?: string | null,"vendor_id"?: string
                   }
                   Relationships: [
                     {
@@ -747,6 +754,86 @@ isOneToOne: false
                   Relationships: [
                     {
       foreignKeyName: "vendor_subscriptions_vendor_id_fkey"
+      columns: ["vendor_id"]
+isOneToOne: false
+      referencedRelation: "vendors"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"order_shipments": {
+                  Row: {
+                    "collected_at": string | null,"collected_by": string | null,"order_id": string,"packed_at": string | null,"status": Database["public"]['Enums']["shipment_status"],"vendor_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "collected_at"?: string | null,"collected_by"?: string | null,"order_id": string,"packed_at"?: string | null,"status"?: Database["public"]['Enums']["shipment_status"],"vendor_id": string
+                  }
+                  Update: {
+                    "collected_at"?: string | null,"collected_by"?: string | null,"order_id"?: string,"packed_at"?: string | null,"status"?: Database["public"]['Enums']["shipment_status"],"vendor_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "order_shipments_vendor_id_fkey"
+      columns: ["vendor_id"]
+isOneToOne: false
+      referencedRelation: "vendors"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vendor_payouts": {
+                  Row: {
+                    "amount_ghs": number,"created_at": string,"id": string,"method": string,"note": string | null,"paid_by": string | null,"reference": string | null,"vendor_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount_ghs": number,"created_at"?: string,"id"?: string,"method"?: string,"note"?: string | null,"paid_by"?: string | null,"reference"?: string | null,"vendor_id": string
+                  }
+                  Update: {
+                    "amount_ghs"?: number,"created_at"?: string,"id"?: string,"method"?: string,"note"?: string | null,"paid_by"?: string | null,"reference"?: string | null,"vendor_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vendor_payouts_vendor_id_fkey"
+      columns: ["vendor_id"]
+isOneToOne: false
+      referencedRelation: "vendors"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vendor_messages": {
+                  Row: {
+                    "body": string,"created_at": string,"id": string,"read_at": string | null,"sender": string,"vendor_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body": string,"created_at"?: string,"id"?: string,"read_at"?: string | null,"sender": string,"vendor_id": string
+                  }
+                  Update: {
+                    "body"?: string,"created_at"?: string,"id"?: string,"read_at"?: string | null,"sender"?: string,"vendor_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vendor_messages_vendor_id_fkey"
+      columns: ["vendor_id"]
+isOneToOne: false
+      referencedRelation: "vendors"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"vendor_subscription_payments": {
+                  Row: {
+                    "amount_ghs": number,"created_at": string,"id": string,"last_event": Json | null,"provider": string,"provider_reference": string,"status": Database["public"]['Enums']["payment_status"],"updated_at": string,"vendor_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount_ghs": number,"created_at"?: string,"id"?: string,"last_event"?: Json | null,"provider": string,"provider_reference": string,"status"?: Database["public"]['Enums']["payment_status"],"updated_at"?: string,"vendor_id": string
+                  }
+                  Update: {
+                    "amount_ghs"?: number,"created_at"?: string,"id"?: string,"last_event"?: Json | null,"provider"?: string,"provider_reference"?: string,"status"?: Database["public"]['Enums']["payment_status"],"updated_at"?: string,"vendor_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vendor_subscription_payments_vendor_id_fkey"
       columns: ["vendor_id"]
 isOneToOne: false
       referencedRelation: "vendors"
@@ -779,6 +866,70 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
+"admin_collect_vendor_items":
+{ Args: { "p_order_id": string,"p_vendor_id": string }; Returns: undefined
+                           },
+"admin_record_payout":
+{ Args: { "p_amount_ghs": number,"p_method"?: string,"p_note"?: string,"p_reference"?: string,"p_vendor_id": string }; Returns: number
+                           },
+"admin_reply_vendor":
+{ Args: { "p_body": string,"p_vendor_id": string }; Returns: undefined
+                           },
+"admin_vendor_balances":
+{ Args: never; Returns: Json
+                           },
+"admin_vendor_payouts":
+{ Args: { "p_limit"?: number }; Returns: Json
+                           },
+"admin_vendor_shipments":
+{ Args: { "p_order_id"?: string }; Returns: Json
+                           },
+"admin_vendor_thread":
+{ Args: { "p_vendor_id": string }; Returns: Json
+                           },
+"admin_vendor_threads":
+{ Args: never; Returns: Json
+                           },
+"confirm_subscription_payment":
+{ Args: { "p_amount_ghs": number,"p_event"?: Json,"p_provider": string,"p_reference": string,"p_status": string }; Returns: string
+                           },
+"start_vendor_subscription_payment":
+{ Args: { "p_provider": string,"p_reference": string }; Returns: number
+                           },
+"store_directory":
+{ Args: never; Returns: Json
+                           },
+"store_rating":
+{ Args: { "p_slug": string }; Returns: Json
+                           },
+"store_reviews":
+{ Args: { "p_limit"?: number,"p_slug": string }; Returns: Json
+                           },
+"vendor_mark_packed":
+{ Args: { "p_order_id": string }; Returns: undefined
+                           },
+"vendor_messages":
+{ Args: never; Returns: Json
+                           },
+"vendor_orders":
+{ Args: never; Returns: Json
+                           },
+"vendor_report":
+{ Args: { "p_days"?: number }; Returns: Json
+                           },
+"vendor_send_message":
+{ Args: { "p_body": string }; Returns: undefined
+                           },
+"vendor_set_payout_account":
+{ Args: { "p_name": string,"p_network": string,"p_wallet": string }; Returns: undefined
+                           },
+"vendor_statement":
+{ Args: never; Returns: Json
+                           },
+"vendor_unread_messages":
+{ Args: never; Returns: number
+                           },
+
 "admin_record_subscription":
 { Args: { "p_amount_ghs": number,"p_method"?: string,"p_note"?: string,"p_reference"?: string,"p_vendor_id": string }; Returns: string
                            },
@@ -1198,7 +1349,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "batch_status": "available"|"quarantined"|"recalled"|"expired","delivery_failure_reason": "customer_unreachable"|"customer_absent"|"wrong_address"|"refused"|"rider_issue"|"other","department": "beauty"|"kids"|"home"|"fashion","kids_filter": "bath"|"toys"|"clothing"|"gifts","momo_network": "mtn"|"telecel"|"at","notification_channel": "sms"|"email","notification_status": "queued"|"sending"|"sent"|"failed"|"not_sent","order_status": "pending_payment"|"paid"|"packing"|"packed"|"out_for_delivery"|"delivery_failed"|"delivered"|"cancelled"|"returned","payment_method": "momo"|"card","payment_status": "pending"|"succeeded"|"failed"|"expired","product_review_status": "draft"|"pending"|"approved"|"rejected","product_kind": "bottle"|"jar"|"tube"|"garment"|"toy"|"gift","return_outcome": "restock"|"quarantine"|"write_off","return_reason": "damaged"|"wrong_item"|"not_as_described"|"expired_or_near_expiry"|"changed_mind"|"other","return_status": "requested"|"approved"|"rejected"|"received"|"refunded","review_status": "pending"|"published"|"rejected","staff_role": "admin"|"catalogue"|"operations"|"support"|"finance"|"read_only","stock_movement_reason": "opening"|"received"|"sold"|"picked"|"returned"|"restocked"|"adjusted"|"damaged"|"lost"|"found"|"quarantined"|"released"|"recalled"|"expired"|"written_off","support_status": "open"|"answered"|"closed","support_topic": "delivery"|"damaged_or_wrong"|"payment"|"product_question"|"account"|"other","vendor_status": "pending"|"active"|"suspended"|"rejected"
+            "batch_status": "available"|"quarantined"|"recalled"|"expired","delivery_failure_reason": "customer_unreachable"|"customer_absent"|"wrong_address"|"refused"|"rider_issue"|"other","department": "beauty"|"kids"|"home"|"fashion","kids_filter": "bath"|"toys"|"clothing"|"gifts","momo_network": "mtn"|"telecel"|"at","notification_channel": "sms"|"email","notification_status": "queued"|"sending"|"sent"|"failed"|"not_sent","order_status": "pending_payment"|"paid"|"packing"|"packed"|"out_for_delivery"|"delivery_failed"|"delivered"|"cancelled"|"returned","payment_method": "momo"|"card","shipment_status": "pending"|"packed"|"collected","payment_status": "pending"|"succeeded"|"failed"|"expired","product_review_status": "draft"|"pending"|"approved"|"rejected","product_kind": "bottle"|"jar"|"tube"|"garment"|"toy"|"gift","return_outcome": "restock"|"quarantine"|"write_off","return_reason": "damaged"|"wrong_item"|"not_as_described"|"expired_or_near_expiry"|"changed_mind"|"other","return_status": "requested"|"approved"|"rejected"|"received"|"refunded","review_status": "pending"|"published"|"rejected","staff_role": "admin"|"catalogue"|"operations"|"support"|"finance"|"read_only","stock_movement_reason": "opening"|"received"|"sold"|"picked"|"returned"|"restocked"|"adjusted"|"damaged"|"lost"|"found"|"quarantined"|"released"|"recalled"|"expired"|"written_off","support_status": "open"|"answered"|"closed","support_topic": "delivery"|"damaged_or_wrong"|"payment"|"product_question"|"account"|"other","vendor_status": "pending"|"active"|"suspended"|"rejected"
           }
           CompositeTypes: {
             [_ in never]: never

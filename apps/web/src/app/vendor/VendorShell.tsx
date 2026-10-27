@@ -7,14 +7,25 @@ import { Icon } from '@/components/Icon';
 import type { IconName } from '@sleek/shared';
 import shell from './shell.module.css';
 
-const links: { href: string; label: string; icon: IconName; match: (p: string) => boolean }[] = [
+type Badge = 'orders' | 'messages';
+
+const links: { href: string; label: string; icon: IconName; match: (p: string) => boolean; badge?: Badge }[] = [
   { href: '/vendor', label: 'Overview', icon: 'grid', match: (p) => p === '/vendor' },
-  { href: '/vendor/products/new', label: 'Add a product', icon: 'plus', match: (p) => p === '/vendor/products/new' },
+  { href: '/vendor/orders', label: 'Orders', icon: 'truck', match: (p) => p === '/vendor/orders', badge: 'orders' },
+  { href: '/vendor/products/new', label: 'Add a product', icon: 'plus', match: (p) => p === '/vendor/products/new' || p === '/vendor/products/import' },
+  { href: '/vendor/earnings', label: 'Earnings', icon: 'card', match: (p) => p === '/vendor/earnings' },
+  { href: '/vendor/reports', label: 'Sales reports', icon: 'layers', match: (p) => p === '/vendor/reports' },
+  { href: '/vendor/messages', label: 'Messages', icon: 'chat', match: (p) => p === '/vendor/messages', badge: 'messages' },
   { href: '/vendor/store', label: 'Store page', icon: 'store', match: (p) => p === '/vendor/store' },
 ];
 
 const titles = (path: string): [string, string] => {
   if (path === '/vendor') return ['Overview', 'Your store at a glance'];
+  if (path === '/vendor/orders') return ['Orders', 'Pack what shoppers have paid for'];
+  if (path === '/vendor/earnings') return ['Earnings', 'What you are owed and what we have paid'];
+  if (path === '/vendor/reports') return ['Sales reports', 'How your products are selling'];
+  if (path === '/vendor/messages') return ['Messages', 'Talk to the Sleek Connect team'];
+  if (path === '/vendor/products/import') return ['Add many products', 'Upload a spreadsheet'];
   if (path === '/vendor/store') return ['Store page', 'Your name, logo and description'];
   if (path === '/vendor/products/new') return ['Add a product', 'It goes on sale once we approve it'];
   if (path.startsWith('/vendor/products/')) return ['Edit product', 'Photos, price and details'];
@@ -26,11 +37,14 @@ export function VendorShell({
   store,
   slug,
   status,
+  badges,
   children,
 }: {
   store: string;
   slug: string;
   status: { label: string; tone: 'good' | 'warn' };
+  /** Orders waiting to be packed and unread messages from us. */
+  badges: Record<Badge, number>;
   children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -54,6 +68,11 @@ export function VendorShell({
             <Link key={l.href} href={l.href} className={shell.item} aria-current={l.match(pathname) ? 'page' : undefined}>
               <Icon name={l.icon} size={18} strokeWidth={1.7} />
               {l.label}
+              {l.badge && badges[l.badge] > 0 && (
+                <span className={shell.count} aria-label={`${badges[l.badge]} waiting`}>
+                  {badges[l.badge]}
+                </span>
+              )}
             </Link>
           ))}
           <Link href="/vendor" className={shell.item} aria-current={pathname.startsWith('/vendor/products/') && pathname !== '/vendor/products/new' ? 'page' : undefined}>

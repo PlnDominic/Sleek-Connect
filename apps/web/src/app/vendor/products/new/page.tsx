@@ -18,7 +18,10 @@ export default async function NewProductPage() {
         ← Back to your store
       </Link>
       <h1 className={styles.title}>Add a product</h1>
-      <p className={styles.lead}>You can add photos and set your stock right after you save.</p>
+      <p className={styles.lead}>
+        You can add photos and set your stock right after you save. Have a lot to add?{' '}
+        <Link href="/vendor/products/import">Upload a spreadsheet</Link>.
+      </p>
       <ProductForm categories={categories} ageBands={ageBands} />
     </>
   );
