@@ -5,7 +5,7 @@
 #   npm test -- db           # database suites only (no browser, no build)
 #
 # Needs: Docker with the local stack running (npm run db:start), apps/web/.env.local pointing at it (with
-# SUPABASE_SECRET_KEY, PAYMENT_PROVIDER=test, PAYMENT_WEBHOOK_SECRET, SMS_PROVIDER=console, EMAIL_PROVIDER=console),
+# SUPABASE_SECRET_KEY, PAYMENT_PROVIDER=test, PAYMENT_WEBHOOK_SECRET, SMS_PROVIDER=console, EMAIL_PROVIDER=console, PUSH_PROVIDER=console),
 # and Playwright's Chromium (npx playwright install chromium). Screenshots and logs go to tests/.output.
 set -uo pipefail
 cd "$(dirname "$0")/.."
@@ -58,6 +58,7 @@ if [ "$ONLY" != "db" ]; then
   fresh; start; suite "delivery, photos, wishlist, addresses, cancel, buy again" e2e-shopper.cjs; server_errors
   fresh; start; suite "terms, saved numbers, reviews, data export and deletion" e2e-privacy.cjs; server_errors
   fresh; start; suite "vendors: apply, approve, pay, review, storefront, orders, earnings, messages, import" e2e-marketplace.cjs; server_errors
+  fresh; start; suite "mobile app: payment prompt endpoint" e2e-mobile-api.cjs; server_errors
   stop
 fi
 
@@ -68,6 +69,7 @@ npx supabase db reset >/dev/null 2>&1; suite "database: saved numbers, reviews, 
 npx supabase db reset >/dev/null 2>&1; suite "database: launch security, checkout and delivery hardening" db-launch.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: vendors, subscriptions, review and markup" db-marketplace.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: vendor orders, payouts, messages, ratings, online subscription" db-vendor-ops.cjs
+npx supabase db reset >/dev/null 2>&1; suite "database: mobile app push notifications" db-mobile.cjs
 
 if [ "$FAILED" = "0" ]; then echo "== all suites passed"; else echo "== some suites FAILED"; fi
 exit "$FAILED"

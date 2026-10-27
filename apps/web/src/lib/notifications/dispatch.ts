@@ -1,6 +1,6 @@
 import 'server-only';
 import { createAdminSupabase } from '@/lib/supabase/admin';
-import { emailProvider, smsProvider, toInternationalPhone } from './providers';
+import { emailProvider, pushProvider, smsProvider, toInternationalPhone, UnregisteredDeviceError } from './providers';
 import { renderMessage, type NotificationPayload, type VendorPayload } from './templates';
 
 /**
@@ -31,20 +31,28 @@ export async function dispatchNotifications(limit = 20): Promise<{ sent: number;
       });
 
     const message = renderMessage(n.template, n.payload as unknown as NotificationPayload | VendorPayload);
-    const provider = n.channel === 'sms' ? smsProvider() : emailProvider();
+    const provider = n.channel === 'sms' ? smsProvider() : n.channel === 'push' ? pushProvider() : emailProvider();
     if (!message || !provider) {
       counts.skipped++;
       await finish('not_sent', {
-        error: message ? `No ${n.channel === 'sms' ? 'SMS' : 'email'} provider is set up` : `Unknown template ${n.template}`,
+        error: message ? `No ${n.channel === 'sms' ? 'SMS' : n.channel === 'push' ? 'push' : 'email'} provider is set up` : `Unknown template ${n.template}`,
       });
       continue;
     }
     try {
       const to = n.channel === 'sms' ? toInternationalPhone(n.recipient) : n.recipient;
-      const result = await provider.send(to, message);
+      const payload = n.payload as { order_token?: string };
+      const result = await provider.send(to, message, n.channel === 'push' ? { data: { orderToken: payload.order_token ?? '' } } : undefined);
       counts.sent++;
       await finish('sent', { provider: provider.name, reference: result.reference });
     } catch (cause) {
+      if (cause instanceof UnregisteredDeviceError) {
+        // The app was removed from that phone: forget it rather than retrying.
+        counts.skipped++;
+        await admin.rpc('forget_push_device', { p_token: n.recipient });
+        await finish('not_sent', { provider: provider.name, error: cause.message });
+        continue;
+      }
       counts.failed++;
       await finish('failed', { provider: provider.name, error: cause instanceof Error ? cause.message : String(cause) });
     }

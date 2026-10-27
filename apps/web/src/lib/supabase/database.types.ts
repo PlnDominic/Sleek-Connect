@@ -425,6 +425,46 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"push_devices": {
+                  Row: {
+                    "created_at": string,"platform": string,"token": string,"updated_at": string,"user_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"platform": string,"token": string,"updated_at"?: string,"user_id"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"platform"?: string,"token"?: string,"updated_at"?: string,"user_id"?: string | null
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"push_device_orders": {
+                  Row: {
+                    "order_id": string,"token": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "order_id": string,"token": string
+                  }
+                  Update: {
+                    "order_id"?: string,"token"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "push_device_orders_token_fkey"
+      columns: ["token"]
+isOneToOne: false
+      referencedRelation: "push_devices"
+      referencedColumns: ["token"]
+    },{
+      foreignKeyName: "push_device_orders_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "orders"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"product_images": {
                   Row: {
                     "alt": string | null,"created_at": string,"id": string,"path": string,"product_id": string,"sort_order": number
@@ -1301,6 +1341,15 @@ isOneToOne: false
 "record_signup_consent":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
+"register_push_device":
+{ Args: { "p_order_token"?: string,"p_platform": string,"p_token": string }; Returns: undefined
+                           },
+"unregister_push_device":
+{ Args: { "p_token": string }; Returns: undefined
+                           },
+"forget_push_device":
+{ Args: { "p_token": string }; Returns: undefined
+                           },
 "release_order_reservation":
 { Args: { "p_order_id": string,"p_reason": string }; Returns: undefined
                            },
@@ -1349,7 +1398,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "batch_status": "available"|"quarantined"|"recalled"|"expired","delivery_failure_reason": "customer_unreachable"|"customer_absent"|"wrong_address"|"refused"|"rider_issue"|"other","department": "beauty"|"kids"|"home"|"fashion","kids_filter": "bath"|"toys"|"clothing"|"gifts","momo_network": "mtn"|"telecel"|"at","notification_channel": "sms"|"email","notification_status": "queued"|"sending"|"sent"|"failed"|"not_sent","order_status": "pending_payment"|"paid"|"packing"|"packed"|"out_for_delivery"|"delivery_failed"|"delivered"|"cancelled"|"returned","payment_method": "momo"|"card","shipment_status": "pending"|"packed"|"collected","payment_status": "pending"|"succeeded"|"failed"|"expired","product_review_status": "draft"|"pending"|"approved"|"rejected","product_kind": "bottle"|"jar"|"tube"|"garment"|"toy"|"gift","return_outcome": "restock"|"quarantine"|"write_off","return_reason": "damaged"|"wrong_item"|"not_as_described"|"expired_or_near_expiry"|"changed_mind"|"other","return_status": "requested"|"approved"|"rejected"|"received"|"refunded","review_status": "pending"|"published"|"rejected","staff_role": "admin"|"catalogue"|"operations"|"support"|"finance"|"read_only","stock_movement_reason": "opening"|"received"|"sold"|"picked"|"returned"|"restocked"|"adjusted"|"damaged"|"lost"|"found"|"quarantined"|"released"|"recalled"|"expired"|"written_off","support_status": "open"|"answered"|"closed","support_topic": "delivery"|"damaged_or_wrong"|"payment"|"product_question"|"account"|"other","vendor_status": "pending"|"active"|"suspended"|"rejected"
+            "batch_status": "available"|"quarantined"|"recalled"|"expired","delivery_failure_reason": "customer_unreachable"|"customer_absent"|"wrong_address"|"refused"|"rider_issue"|"other","department": "beauty"|"kids"|"home"|"fashion","kids_filter": "bath"|"toys"|"clothing"|"gifts","momo_network": "mtn"|"telecel"|"at","notification_channel": "sms"|"email"|"push","notification_status": "queued"|"sending"|"sent"|"failed"|"not_sent","order_status": "pending_payment"|"paid"|"packing"|"packed"|"out_for_delivery"|"delivery_failed"|"delivered"|"cancelled"|"returned","payment_method": "momo"|"card","shipment_status": "pending"|"packed"|"collected","payment_status": "pending"|"succeeded"|"failed"|"expired","product_review_status": "draft"|"pending"|"approved"|"rejected","product_kind": "bottle"|"jar"|"tube"|"garment"|"toy"|"gift","return_outcome": "restock"|"quarantine"|"write_off","return_reason": "damaged"|"wrong_item"|"not_as_described"|"expired_or_near_expiry"|"changed_mind"|"other","return_status": "requested"|"approved"|"rejected"|"received"|"refunded","review_status": "pending"|"published"|"rejected","staff_role": "admin"|"catalogue"|"operations"|"support"|"finance"|"read_only","stock_movement_reason": "opening"|"received"|"sold"|"picked"|"returned"|"restocked"|"adjusted"|"damaged"|"lost"|"found"|"quarantined"|"released"|"recalled"|"expired"|"written_off","support_status": "open"|"answered"|"closed","support_topic": "delivery"|"damaged_or_wrong"|"payment"|"product_question"|"account"|"other","vendor_status": "pending"|"active"|"suspended"|"rejected"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1469,7 +1518,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "batch_status": ["available", "quarantined", "recalled", "expired"],"delivery_failure_reason": ["customer_unreachable", "customer_absent", "wrong_address", "refused", "rider_issue", "other"],"department": ["beauty", "kids", "home", "fashion"],"kids_filter": ["bath", "toys", "clothing", "gifts"],"momo_network": ["mtn", "telecel", "at"],"notification_channel": ["sms", "email"],"notification_status": ["queued", "sending", "sent", "failed", "not_sent"],"order_status": ["pending_payment", "paid", "packing", "packed", "out_for_delivery", "delivery_failed", "delivered", "cancelled", "returned"],"payment_method": ["momo", "card"],"payment_status": ["pending", "succeeded", "failed", "expired"],"product_kind": ["bottle", "jar", "tube", "garment", "toy", "gift"],"return_outcome": ["restock", "quarantine", "write_off"],"return_reason": ["damaged", "wrong_item", "not_as_described", "expired_or_near_expiry", "changed_mind", "other"],"return_status": ["requested", "approved", "rejected", "received", "refunded"],"review_status": ["pending", "published", "rejected"],"staff_role": ["admin", "catalogue", "operations", "support", "finance", "read_only"],"stock_movement_reason": ["opening", "received", "sold", "picked", "returned", "restocked", "adjusted", "damaged", "lost", "found", "quarantined", "released", "recalled", "expired", "written_off"],"support_status": ["open", "answered", "closed"],"support_topic": ["delivery", "damaged_or_wrong", "payment", "product_question", "account", "other"]
+            "batch_status": ["available", "quarantined", "recalled", "expired"],"delivery_failure_reason": ["customer_unreachable", "customer_absent", "wrong_address", "refused", "rider_issue", "other"],"department": ["beauty", "kids", "home", "fashion"],"kids_filter": ["bath", "toys", "clothing", "gifts"],"momo_network": ["mtn", "telecel", "at"],"notification_channel": ["sms", "email", "push"],"notification_status": ["queued", "sending", "sent", "failed", "not_sent"],"order_status": ["pending_payment", "paid", "packing", "packed", "out_for_delivery", "delivery_failed", "delivered", "cancelled", "returned"],"payment_method": ["momo", "card"],"payment_status": ["pending", "succeeded", "failed", "expired"],"product_kind": ["bottle", "jar", "tube", "garment", "toy", "gift"],"return_outcome": ["restock", "quarantine", "write_off"],"return_reason": ["damaged", "wrong_item", "not_as_described", "expired_or_near_expiry", "changed_mind", "other"],"return_status": ["requested", "approved", "rejected", "received", "refunded"],"review_status": ["pending", "published", "rejected"],"staff_role": ["admin", "catalogue", "operations", "support", "finance", "read_only"],"stock_movement_reason": ["opening", "received", "sold", "picked", "returned", "restocked", "adjusted", "damaged", "lost", "found", "quarantined", "released", "recalled", "expired", "written_off"],"support_status": ["open", "answered", "closed"],"support_topic": ["delivery", "damaged_or_wrong", "payment", "product_question", "account", "other"]
           }
         }
 } as const

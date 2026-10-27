@@ -11,7 +11,7 @@ Expo** for the mobile app (App Store and Google Play, tested in Expo Go). The we
 | [`apps/web`](apps/web) | Next.js 16 storefront (Home, Shop and category pages with filters, Search, Shop by age, Product, Bag, Checkout, Account with addresses and saved items, order tracking, receipts, cancellation, returns and the help centre) and the staff admin console at `/admin` | Active. Runs on Supabase |
 | [`tests`](tests) | Database and browser test suites (`npm test`), also run by GitHub Actions | Active |
 | [`supabase`](supabase) | Database schema (migrations), access rules and starter data | Active |
-| [`apps/mobile`](apps/mobile) | Expo SDK 57 app: Home, Shop (live search and filters), Product, Bag, Saved, Shop by age | Reads the live catalogue from Supabase; checkout continues on the website until sign-in and native checkout are built |
+| [`apps/mobile`](apps/mobile) | Expo SDK 57 app: Home, Shop (live search and filters), Product, Bag, Saved, Shop by age | Reads the live catalogue from Supabase, signs shoppers in, places and pays for orders, tracks them and sends push notifications |
 | [`packages/shared`](packages/shared) | Design tokens, icons, types, starter catalogue and bag state used by both apps | Active |
 
 ## Run it locally
@@ -37,6 +37,7 @@ PAYMENT_PROVIDER=test
 PAYMENT_WEBHOOK_SECRET=...     # any long random string, e.g. `openssl rand -hex 24`
 SMS_PROVIDER=console           # writes SMS to the server log instead of sending
 EMAIL_PROVIDER=console
+PUSH_PROVIDER=console          # app push notifications; `expo` sends them for real
 ```
 
 To use the admin console locally, add yourself as staff (see [Admin console](#admin-console)).
@@ -311,6 +312,7 @@ Customers get an SMS (and an email if they signed in) when their order is confir
 of a return, and when they open a support case or staff reply to it. Messages queue in the `notifications` table, which
 doubles as the delivery log. Failed sends are retried up to five times.
 
+- `PUSH_PROVIDER` (`expo` or `console`) turns on push notifications to the mobile app; `EXPO_ACCESS_TOKEN` is optional.
 - `SMS_PROVIDER` and `EMAIL_PROVIDER` pick the senders. `console` writes messages to the server log for development
   and is ignored on Vercel production. With no provider set, messages are recorded as "not sent".
 - Messages are sent right after each status change. To retry failures on a schedule, call
@@ -428,13 +430,24 @@ catalogue as the website.
   (live search that forgives typos, department and category filters, sorting), Product (photo gallery, sizes, stock,
   Add to bag), Bag (quantities, subtotal), Saved items, and links to help and legal pages. The bag and saved items are kept
   on the phone.
-- **Checkout:** the app can't place orders itself yet. "Continue to secure checkout" opens the website's
-  `/bag/continue?items=slug:size:qty,…`, which checks every item against the catalogue (prices come from the database,
-  never from the link), fills the web bag and goes straight to checkout, where delivery details and Mobile Money payment
-  happen as usual.
-- **Not built in the app yet:** sign-in (phone OTP, Google), saved addresses, order history and live tracking, placing and
-  paying for an order inside the app, push notifications, and real app icons. These need server endpoints the app can call
-  (order placement and payment start use the secret key, which must stay on the server).
+- **Sign-in (Account tab):** phone code (same as the website) or Google; the session is kept on the phone. Shoppers confirm
+  they are 18+ and accept the terms, can turn order notifications on or off, and can **delete their account in the app**
+  (an App Store requirement), which removes the same data as on the website. For Google, add the app's redirect address
+  to Supabase → Authentication → URL Configuration → Redirect URLs (`sleekconnect://auth/callback`; Expo Go shows its own
+  `exp://…/--/auth/callback` address in the Metro log).
+- **Checkout:** delivery details (a saved address fills in for signed-in shoppers), delivery option and fee, Mobile Money
+  number and an optional promo code. The app calls `place_order` itself with the publishable key (so prices and the total
+  come from the database); the Mobile Money prompt is sent by the website's `POST /api/payments/start`, because that
+  needs the server-side payment provider. The screen then follows the order until it is paid.
+- **Order tracking:** Account → Your orders lists a signed-in shopper's orders, orders opened on the phone, and finds any
+  order by number and phone. The order screen shows progress, the delivery code once the order is on its way, the rider,
+  the history, and lets shoppers pay again or cancel before packing. Returns and receipts open the website.
+- **Push notifications:** the phone registers its Expo push token (`register_push_device`) when the shopper allows
+  notifications, and each order status change that sends an SMS or email also sends a push (`PUSH_PROVIDER=expo` on the
+  server). Tapping a notification opens the order. Remote push can't be received in Expo Go on Android; use a development
+  build. See [docs/MOBILE_RELEASE.md](docs/MOBILE_RELEASE.md) for building, credentials and the store listings.
+- **Still on the website:** returns, receipts, wishlists sync, saved addresses and Mobile Money number management, and
+  vendor tools.
 - **Speed:** product photos are cached on the phone, lists are virtualised, data is cached between screens and refreshed in
   the background, and searching waits for a short pause in typing.
 

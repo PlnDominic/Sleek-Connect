@@ -1,5 +1,6 @@
 import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
+import { authStorage } from './storage';
 
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -8,11 +9,11 @@ const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 export const configured = Boolean(url && key);
 
 /**
- * The store's database, read with the publishable key (row level security decides what is visible). Nobody signs in
- * yet, so nothing is stored on the device.
+ * The store's database, used with the publishable key (row level security decides what is visible). Shoppers who sign
+ * in keep their session on the phone; everyone else browses as a guest.
  */
 export const supabase = createClient(url ?? 'https://not-configured.invalid', key ?? 'not-configured', {
-  auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  auth: { storage: authStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, flowType: 'pkce' },
 });
 
 /** Public address of a photo in the product-images Storage bucket. */

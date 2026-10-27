@@ -12,8 +12,10 @@
   It is tested in **Expo Go**, so only use libraries bundled in Expo Go (install them with `npx expo install`) and keep
   the Expo SDK on the version Expo Go supports. The mobile app reads the catalogue from Supabase with the
   publishable key (`EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `apps/mobile/.env.local`; see
-  `.env.example`), mapping rows with the same `productFromRow` as the web store. It can't place orders yet: checkout hands
-  the bag to the website (`/bag/continue`) until the app has its own sign-in, checkout and order tracking.
+  `.env.example`), mapping rows with the same `productFromRow` as the web store. It signs shoppers in, calls
+  `place_order` itself (prices still come from the database), asks the website's `POST /api/payments/start` to send the
+  Mobile Money prompt (the secret key stays on the server), tracks orders with `get_order`/`my_orders`, and gets push
+  notifications through `register_push_device` and the dispatcher's `push` channel. Release notes: `docs/MOBILE_RELEASE.md`.
 - `packages/shared` holds tokens, icons, types, the starter catalogue and the bag provider used by both apps.
 
 ## Database rules

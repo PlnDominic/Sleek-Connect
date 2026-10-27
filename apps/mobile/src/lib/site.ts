@@ -15,3 +15,6 @@ export function checkoutHandoff(lines: { slug: string; sizeId?: string; qty: num
   const items = lines.map((l) => `${l.slug}:${l.sizeId ?? ''}:${l.qty}`).join(',');
   return `/bag/continue?items=${encodeURIComponent(items)}`;
 }
+
+/** A page or API route of the website. */
+export const siteAddress = (path: string) => `${base}${path}`;

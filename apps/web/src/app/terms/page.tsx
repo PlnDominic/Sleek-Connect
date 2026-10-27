@@ -53,8 +53,8 @@ export default async function TermsPage() {
       body: (
         <>
           <p>
-            You don’t need an account to buy. If you sign in (with Google), we keep your bag, saved addresses, saved items and
-            order history together. You are responsible for what happens under your account, so keep your Google account
+            You don’t need an account to buy. If you sign in (with your phone or Google), we keep your bag, saved addresses, saved items and
+            order history together. You are responsible for what happens under your account, so keep your phone and sign-in
             secure and tell us if you think someone else has used it.
           </p>
           <p>

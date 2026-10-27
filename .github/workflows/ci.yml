@@ -46,6 +46,7 @@ jobs:
           PAYMENT_WEBHOOK_SECRET=ci-webhook-secret-not-used-anywhere-else
           SMS_PROVIDER=console
           EMAIL_PROVIDER=console
+          PUSH_PROVIDER=console
           CRON_SECRET=ci-cron-secret
           ENV
 

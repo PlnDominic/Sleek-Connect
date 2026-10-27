@@ -43,8 +43,9 @@ export default async function PrivacyPage() {
       body: (
         <ul>
           <li>
-            <strong>Your account.</strong> If you sign in with Google: your email address, name and profile photo from Google, and
-            when you confirmed you are 18 or over and accepted our terms. We never see your Google password.
+            <strong>Your account.</strong> If you sign in with your phone: your phone number. If you sign in with Google: your email
+            address, name and profile photo from Google. Either way, we record when you confirmed you are 18 or over and accepted our
+            terms. We never see your Google password.
           </li>
           <li>
             <strong>Your orders.</strong> The name, phone number, area, GhanaPost GPS address and rider directions you give us for
@@ -55,6 +56,11 @@ export default async function PrivacyPage() {
           </li>
           <li>
             <strong>Messages you send us.</strong> Support cases, return requests and any photos you attach to a return.
+          </li>
+          <li>
+            <strong>The mobile app.</strong> Your sign-in is kept on your phone so you stay signed in. If you allow notifications, we
+            keep a push token, which identifies your phone to the push service, and the order or account it belongs to, so we can tell
+            you when an order is packed, on its way and delivered. You can turn this off in the app at any time.
           </li>
           <li>
             <strong>Technical data.</strong> Standard information your browser sends (such as IP address and device type) and error
@@ -84,7 +90,7 @@ export default async function PrivacyPage() {
           <p>We don’t sell your data. We share only what is needed, with:</p>
           <ul>
             <li>Our <strong>payment provider</strong>{business.paymentProvider ? ` (${business.paymentProvider})` : ''}, to take your Mobile Money payment and confirm it.</li>
-            <li>Our <strong>messaging providers</strong>, to send SMS and email about your order.</li>
+            <li>Our <strong>messaging providers</strong>, to send SMS and email about your order, and Expo&apos;s push service, to deliver app notifications.</li>
             <li><strong>Our riders</strong>, who see your name, phone number, address and directions for the delivery only.</li>
             <li>Our <strong>hosting and database providers</strong> (Supabase and Vercel), who store and serve the data for us under contract.</li>
             <li>Authorities, when the law requires it.</li>
@@ -110,6 +116,7 @@ export default async function PrivacyPage() {
           </li>
           <li><strong>Support cases and return photos:</strong> removed or scrubbed when you delete your account, and otherwise kept only as long as needed to resolve the case.</li>
           <li><strong>Queued and sent messages:</strong> dropped when you delete your account.</li>
+          <li><strong>Push tokens:</strong> removed when you turn notifications off in the app, when the app is removed from your phone, or when you delete your account.</li>
         </ul>
       ),
     },
