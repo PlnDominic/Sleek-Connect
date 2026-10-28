@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, StyleSheet, TextInput, type TextInputInstance, View } from 'react-native';
 import { colors, departmentIds, departmentLabels, isDepartment, radii, type Department, type Product } from '@sleek/shared';
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
@@ -22,7 +22,7 @@ const sorts: { id: Sort; label: string }[] = [
 export default function ShopScreen() {
   const top = useScreenTop();
   const params = useLocalSearchParams<{ department?: string; category?: string; focus?: string }>();
-  const input = useRef<TextInput>(null);
+  const input = useRef<TextInputInstance>(null);
   const department: Department | undefined = isDepartment(params.department) ? params.department : undefined;
   const category = params.category;
   const [text, setText] = useState('');

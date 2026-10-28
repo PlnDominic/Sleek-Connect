@@ -23,8 +23,8 @@
     "test": "bash tests/run-all.sh"
   },
   "overrides": {
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.117.3",

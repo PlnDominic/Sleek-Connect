@@ -18,7 +18,7 @@ const items: { label: string; icon: IconName; route: string }[] = [
   { label: 'Account', icon: 'user', route: 'account' },
 ];
 
-function TabBar({ state, navigation }: TabBarProps) {
+function TabBar({ state, navigateToTab }: TabBarProps) {
   const insets = useSafeAreaInsets();
   const current = state.routes[state.index]?.name;
   const { count } = useBag();
@@ -34,7 +34,10 @@ function TabBar({ state, navigation }: TabBarProps) {
             accessibilityRole="tab"
             accessibilityState={{ selected: active }}
             accessibilityLabel={item.route === 'bag' ? `Bag, ${count} ${count === 1 ? 'item' : 'items'}` : item.label}
-            onPress={() => navigation.navigate(item.route)}
+            onPress={() => {
+              const route = state.routes.find((r) => r.name === item.route);
+              if (route) navigateToTab(route.key);
+            }}
             style={styles.item}
           >
             <View>
