@@ -70,6 +70,7 @@ npx supabase db reset >/dev/null 2>&1; suite "database: launch security, checkou
 npx supabase db reset >/dev/null 2>&1; suite "database: vendors, subscriptions, review and markup" db-marketplace.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: vendor orders, payouts, messages, ratings, online subscription" db-vendor-ops.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: mobile app push notifications" db-mobile.cjs
+npx supabase db reset >/dev/null 2>&1; suite "database: launch schema verification" db-schema-verify.cjs
 
 if [ "$FAILED" = "0" ]; then echo "== all suites passed"; else echo "== some suites FAILED"; fi
 exit "$FAILED"

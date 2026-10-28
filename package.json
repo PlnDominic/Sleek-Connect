@@ -16,6 +16,7 @@
     "db:reset": "supabase db reset",
     "db:seed:generate": "tsx scripts/generate-seed.ts",
     "db:setup:generate": "tsx scripts/bundle-setup.ts",
+    "db:verify": "tsx scripts/verify-schema.ts",
     "db:types": "supabase gen types typescript --local > apps/web/src/lib/supabase/database.types.ts",
     "payments:simulate": "tsx scripts/simulate-payment.ts",
     "smoke:production": "node tests/smoke-production.cjs",

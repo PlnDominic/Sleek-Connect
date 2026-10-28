@@ -417,6 +417,15 @@ placeholders: a line or card appears only once its value is set, and prices that
   order, payment, delivery, return and support messages are not affected. The choices are stored with the account profile
   metadata and are ready for the future campaign sender to enforce.
 
+## Checking a database before launch
+
+`npm run db:verify` calls `public.verify_launch_schema()` on the project in `apps/web/.env.local` (or on any project, by setting
+`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`). It lists, by name only, any missing table, function,
+index or storage bucket, any table without row level security, any server-only function a public role can run, and any
+order secret (`delivery_code`, `public_token`) a public role can read. It exits with an error if anything is wrong, so it
+can gate a release. The lists live in `supabase/migrations/20261028100000_launch_schema_verification.sql`; add new tables and
+functions there when the app starts to depend on them (the vendor and mobile-app objects are not in it yet).
+
 ## The mobile app
 
 `apps/mobile` is an Expo (React Native) app for the App Store and Google Play, tested in Expo Go. It shows the same live
