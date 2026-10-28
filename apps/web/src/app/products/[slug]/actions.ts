@@ -2,6 +2,7 @@
 
 import { updateTag } from 'next/cache';
 import { createUserSupabase } from '@/lib/supabase/server';
+import { rateLimitAction } from '@/lib/rate-limit';
 
 export type ReviewResult = { ok: true } | { ok: false; message: string };
 
@@ -28,6 +29,11 @@ export async function reportProductReview(reviewId: string, reason: string): Pro
  * again, so the catalogue cache is refreshed.
  */
 export async function submitReview(slug: string, rating: number, title: string, body: string): Promise<ReviewResult> {
+  // One address can only try so often (P0 item 9); staff moderation still decides what shoppers see.
+  const limit = await rateLimitAction({ key: 'review-submit', limit: 10, windowMs: 10 * 60_000 });
+  if (!limit.allowed) {
+    return { ok: false, message: `Too many attempts just now. Try again in ${Math.ceil(limit.retryAfter / 60)} minute(s).` };
+  }
   const supabase = await createUserSupabase();
   const { error } = await supabase.rpc('submit_review', { p_slug: slug, p_rating: rating, p_title: title, p_body: body });
   if (error) {

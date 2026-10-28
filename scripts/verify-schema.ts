@@ -1,27 +1,15 @@
 /**
- * Checks that a Supabase project has the schema the app expects: tables with row level security, the functions the
- * app calls, the indexes behind the busy queries, the storage buckets, and the grants that keep order secrets and
- * server-only functions away from public roles. It calls `public.verify_launch_schema()` and lists only names.
+ * Repeats the launch schema check (P0 items 1 and 2) against any Supabase project: it applies nothing and reads
+ * only names of anything missing or wrongly granted.
  *
- *   npm run db:verify                      # the project in apps/web/.env.local
- *   NEXT_PUBLIC_SUPABASE_URL=… NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=… npm run db:verify   # any other project
+ *   npm run db:verify                                  # the project in apps/web/.env.local
+ *   npm run db:verify -- <url> <key>                   # hosted production (SUPABASE_SECRET_KEY or the publishable key)
  *
- * Exits with 1 when anything is missing or wrongly granted, so it can gate a release or a deploy.
+ * Exits 1 when the schema is not the one the application expects, so it can gate a deployment.
  */
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createClient } from '@supabase/supabase-js';
-
-// npm runs scripts from the repository root.
-const envFile = resolve('apps/web/.env.local');
-if (existsSync(envFile)) process.loadEnvFile(envFile);
-
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-if (!url || !key) {
-  console.error('Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (or fill in apps/web/.env.local).');
-  process.exit(1);
-}
 
 type Report = {
   ok: boolean;
@@ -34,34 +22,64 @@ type Report = {
   exposed_secret_columns: string[];
 };
 
-async function main(url: string, key: string) {
-  const { data, error } = await createClient(url, key, { auth: { persistSession: false } }).rpc('verify_launch_schema');
+const checks: [keyof Report, string][] = [
+  ['missing_tables', 'tables missing'],
+  ['tables_without_rls', 'tables without row level security'],
+  ['missing_functions', 'functions missing'],
+  ['missing_indexes', 'indexes missing'],
+  ['missing_buckets', 'storage buckets missing'],
+  ['grant_problems', 'function grant problems'],
+  ['exposed_secret_columns', 'order secret columns readable by a public role'],
+];
+
+function fail(message: string): never {
+  console.error(message);
+  process.exit(1);
+}
+
+async function main() {
+  // npm runs scripts from the repository root.
+  const envFile = resolve('apps/web/.env.local');
+  if (existsSync(envFile)) process.loadEnvFile(envFile);
+
+  const [argUrl, argKey] = process.argv.slice(2);
+  const url = argUrl || process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = argKey || process.env.SUPABASE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !key) {
+    fail(
+      'A Supabase URL and key are needed.\n' +
+        '  Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY in apps/web/.env.local,\n' +
+        '  or pass them: npm run db:verify -- <url> <key>',
+    );
+  }
+
+  const client = createClient(url, key, { auth: { persistSession: false } });
+  const { data, error } = await client.rpc('verify_launch_schema');
+
   if (error) {
-    console.error(`Could not run the check: ${error.message}`);
-    console.error('If the function is missing, run supabase/migrations/20261028100000_launch_schema_verification.sql on this project.');
-    process.exit(1);
+    if (error.code === 'PGRST202') {
+      fail(
+        'verify_launch_schema() does not exist on this project.\n' +
+          'The migrations have not been applied (P0 item 1): run `npx supabase db push --include-seed`,\n' +
+          'or paste supabase/setup.sql into the SQL Editor for a new project.',
+      );
+    }
+    fail(`The schema check could not run: ${error.message}`);
   }
 
   const report = data as unknown as Report;
-  const sections: [string, string[]][] = [
-    ['Missing tables', report.missing_tables],
-    ['Tables without row level security', report.tables_without_rls],
-    ['Missing functions', report.missing_functions],
-    ['Missing indexes', report.missing_indexes],
-    ['Missing storage buckets', report.missing_buckets],
-    ['Wrong grants', report.grant_problems],
-    ['Order secrets readable by public roles', report.exposed_secret_columns],
-  ];
-  for (const [title, names] of sections) {
-    if (names.length === 0) continue;
-    console.error(`${title}:`);
-    for (const name of names) console.error(`  - ${name}`);
+  let failed = report.ok === false;
+  for (const [field, label] of checks) {
+    const values = report[field] as string[];
+    if (Array.isArray(values) && values.length > 0) {
+      failed = true;
+      console.error(`FAIL — ${label}: ${values.join(', ')}`);
+    } else {
+      console.log(`ok - ${label}: none`);
+    }
   }
-  if (!report.ok) process.exit(1);
-  console.log(`Schema OK at ${url}`);
+  console.log(failed ? 'SCHEMA MISMATCH' : 'schema matches the application');
+  process.exit(failed ? 1 : 0);
 }
 
-main(url, key).catch((cause) => {
-  console.error(cause);
-  process.exit(1);
-});
+void main();

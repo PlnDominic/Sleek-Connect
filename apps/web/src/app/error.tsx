@@ -10,7 +10,16 @@ type ErrorBoundaryProps = {
 
 export default function Error({ error, reset }: ErrorBoundaryProps) {
   useEffect(() => {
-    console.error('Unhandled storefront error', error);
+    // One structured line, shaped like the server logs (P0 item 6).
+    console.error(
+      JSON.stringify({
+        timestamp: new Date().toISOString(),
+        level: 'error',
+        event: 'storefront_error',
+        message: error.message,
+        digest: error.digest,
+      }),
+    );
   }, [error]);
 
   return (

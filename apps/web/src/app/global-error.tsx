@@ -1,6 +1,20 @@
 'use client';
 
-export default function GlobalError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+import { useEffect } from 'react';
+
+export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  useEffect(() => {
+    console.error(
+      JSON.stringify({
+        timestamp: new Date().toISOString(),
+        level: 'error',
+        event: 'global_error',
+        message: error.message,
+        digest: error.digest,
+      }),
+    );
+  }, [error]);
+
   return (
     <html lang="en-GH">
       <body style={{ margin: 0 }}>

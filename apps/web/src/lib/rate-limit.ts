@@ -1,3 +1,5 @@
+import { headers } from 'next/headers';
+
 type Bucket = { count: number; resetAt: number };
 type RateLimitOptions = { key: string; limit: number; windowMs: number };
 
@@ -34,4 +36,15 @@ export function rateLimitResponse(retryAfter: number, requestId?: string) {
   response.headers.set('Cache-Control', 'no-store');
   if (requestId) response.headers.set('x-request-id', requestId);
   return response;
+}
+
+/**
+ * The same limiter for server actions, which never see a `Request`: the caller's address comes from the headers
+ * Next.js provides to the action instead.
+ */
+export async function rateLimitAction({ key, limit, windowMs }: RateLimitOptions) {
+  const requestHeaders = await headers();
+  const forwarded = requestHeaders.get('x-forwarded-for')?.split(',')[0]?.trim();
+  const address = forwarded || requestHeaders.get('x-real-ip') || 'unknown';
+  return rateLimit({ key: `${key}:${address}`, limit, windowMs });
 }

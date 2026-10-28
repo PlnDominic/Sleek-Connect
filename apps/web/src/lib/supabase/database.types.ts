@@ -1401,6 +1401,12 @@ isOneToOne: false
                            },
 "submit_review":
 { Args: { "p_body": string,"p_rating": number,"p_slug": string,"p_title": string }; Returns: Database["public"]['Enums']["review_status"]
+                           },
+"verify_fn_privilege":
+{ Args: { "p_function": string,"p_privilege": string,"p_role": string }; Returns: boolean
+                           },
+"verify_launch_schema":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            }
           }
           Enums: {

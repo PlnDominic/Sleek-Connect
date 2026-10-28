@@ -53,6 +53,35 @@ const errOf = async (promise) => (await promise).error;
   const second = await admin.rpc('confirm_payment', { p_provider: 'test', p_reference: reference, p_status: 'succeeded', p_amount_ghs: order.total_ghs });
   assert(!first.error && !second.error && second.data?.[0]?.payment_status === 'succeeded', 'replayed final payment confirmation is harmless');
 
+  // Checkout integrity: concurrent and repeated submissions cannot oversell the last unit (item 12).
+  const racePhone = `024${String(Date.now()).slice(-7)}`;
+  const buy = () => anon.rpc('place_order', {
+    p_customer: { name: 'Race Test', phone: racePhone, area: 'Osu' },
+    p_delivery_option: 'standard',
+    p_payment: { method: 'momo', network: 'mtn', wallet: racePhone },
+    p_items: [{ slug: 'argan-hair-oil', quantity: 1 }],
+    p_is_gift: false,
+  });
+  sql("update public.inventory_levels i set on_hand = 1, reserved = 0 from public.products p where p.id = i.product_id and p.slug = 'argan-hair-oil'");
+  const raced = await Promise.all([buy(), buy(), buy(), buy(), buy()]);
+  const won = raced.filter((r) => !r.error);
+  assert(won.length === 1, `exactly one of five concurrent checkouts wins the last unit (${won.length} succeeded)`);
+  assert(sql("select i.on_hand - i.reserved from public.inventory_levels i join public.products p on p.id = i.product_id where p.slug = 'argan-hair-oil'") === '0', 'the last unit is reserved, never oversold');
+  assert(sql(`select count(*) from public.orders where phone = '${racePhone}'`) === '1', 'a losing checkout leaves no half-created order');
+  const replay1 = await buy();
+  const replay2 = await buy();
+  assert(replay1.error && replay2.error && sql(`select count(*) from public.orders where phone = '${racePhone}'`) === '1', 'a double submission cannot take the reserved unit twice');
+
+  // Product compliance: the validator names missing launch fields and clears once they are entered (item 18).
+  const argan = sql("select id from public.products where slug = 'argan-hair-oil'");
+  assert(await errOf(anon.rpc('product_publish_problems', { p_product_id: argan })), 'the compliance validator is not readable anonymously');
+  const flagged = await admin.rpc('product_publish_problems', { p_product_id: argan });
+  assert(flagged.data?.includes('brand') && flagged.data?.includes('country of origin') && flagged.data?.includes('FDA registration number'),
+    `a beauty product missing regulatory fields is flagged (${JSON.stringify(flagged.data)})`);
+  sql(`update public.products set brand = 'Kente Botanics', ingredients = 'Cold-pressed argan oil', country_of_origin = 'Ghana', regulatory_reference = 'FDA/GHA-001', details = coalesce(details, '{}'::jsonb) || '{"description":"A light oil that smooths hair.","warnings":"For external use only."}'::jsonb where id = '${argan}'`);
+  const cleared = await admin.rpc('product_publish_problems', { p_product_id: argan });
+  assert(Array.isArray(cleared.data) && cleared.data.length === 0, `the product passes the compliance validator once its fields are complete (${JSON.stringify(cleared.data)})`);
+
   console.log(failures ? `\\n${failures} FAILED` : '\\nALL PASSED');
   process.exit(failures ? 1 : 0);
 })().catch((error) => { console.error(error); process.exit(1); });
