@@ -26,8 +26,8 @@ Sleek Connect sends customer notifications through the provider adapters in `app
 
 Limits: about 500 messages a day on a personal Gmail account (about 2,000 on Workspace), and Gmail always shows the signed-in
 address as the sender. For a busy store, move to a transactional email service later by adding another provider next to
-`gmail`; nothing else changes. Customer emails go only to signed-in shoppers who have an email address (Google sign-in);
-everyone else is reached by SMS.
+`gmail`; nothing else changes. Customer emails go to the optional email typed at checkout, or else the signed-in account's email
+(Google sign-in); everyone else is reached by SMS.
 
 ## Required test matrix
 

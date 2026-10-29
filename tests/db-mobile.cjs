@@ -82,6 +82,23 @@ const pushes = (orderNumber) => sql(`select coalesce(string_agg(n.recipient || '
   assert(sql(`select count(*) from public.push_devices where token = '${token('ama3')}'`) === '0', 'deleting the account removes their phones');
   assert(sql('select count(*) from public.push_device_orders') === '0', 'and keeps nothing that points at their orders');
 
+  // --- An optional email at checkout (mobile and web) -----------------------------------------------
+  const withEmail = (email) => anon.rpc('place_order', {
+    p_customer: { name: 'Esi Mensah', phone: '024 123 4567', area: 'East Legon', email },
+    p_delivery_option: 'standard', p_payment: { method: 'momo', network: 'mtn', wallet: '024 765 4321' },
+    p_items: [{ slug: 'argan-hair-oil', quantity: 1 }], p_is_gift: false,
+  }).single();
+  assert((await withEmail('not-an-email')).error?.message.includes('email address'), 'a malformed email is refused');
+  assert((await withEmail(`${'a'.repeat(250)}@example.com`)).error?.message.includes('email address'), 'and so is an over-long one');
+  const emailed = (await withEmail('  Esi.Guest@Example.COM ')).data;
+  assert(emailed?.order_number && sql(`select contact_email from public.orders where order_number = '${emailed.order_number}'`) === 'esi.guest@example.com', 'a valid one is trimmed and stored in lower case');
+  assert((await rows(anon.from('orders').select('contact_email'))).length === 0 && (await rows(kofi.from('orders').select('contact_email'))).length === 0, 'it cannot be read from the browser, by anyone');
+  await pay(emailed);
+  assert(sql(`select string_agg(n.channel || ':' || n.recipient, ',' order by n.channel) from public.notifications n join public.orders o on o.id = n.order_id where o.order_number = '${emailed.order_number}' and n.channel <> 'push'`) === 'email:esi.guest@example.com,sms:024 123 4567', 'order updates go to that address by email as well as SMS');
+  const noEmail = (await withEmail('')).data;
+  await pay(noEmail);
+  assert(sql(`select count(*) from public.notifications n join public.orders o on o.id = n.order_id where o.order_number = '${noEmail.order_number}' and n.channel = 'email'`) === '0', 'without one, a guest still gets SMS only');
+
   console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll mobile database checks passed');
   process.exit(failures ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(1); });

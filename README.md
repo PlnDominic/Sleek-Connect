@@ -318,8 +318,10 @@ doubles as the delivery log. Failed sends are retried up to five times.
   Optional: `EMAIL_FROM_NAME`, `EMAIL_REPLY_TO`, and `STORE_ALERT_EMAIL`, an inbox that receives a copy of every order and
   vendor event as it happens (without delivery codes or order links), including for shoppers who gave no email. Check the
   settings with `npm run email:test -- you@example.com`. Gmail allows about 500 messages a day on a personal account
-  (about 2,000 on Workspace) and always sends from the signed-in address. Customer order emails go to signed-in shoppers who
-  have an email address (Google sign-in); phone sign-in and guest shoppers get SMS only, so email never replaces SMS.
+  (about 2,000 on Workspace) and always sends from the signed-in address. Customer order emails go to the address typed in
+  the optional **Email** field at checkout (web and app), or else to the signed-in account's email (Google sign-in);
+  shoppers with neither get SMS only, so email never replaces SMS. The address is kept on the order (`orders.contact_email`,
+  not readable from any browser role) and removed when the account is deleted.
 - `SMS_PROVIDER` and `EMAIL_PROVIDER` pick the senders. `console` writes messages to the server log for development
   and is ignored on Vercel production. With no provider set, messages are recorded as "not sent".
 - Messages are sent right after each status change. To retry failures on a schedule, call

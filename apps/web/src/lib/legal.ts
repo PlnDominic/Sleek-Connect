@@ -1,5 +1,5 @@
 /** When the terms and privacy notice were last changed. Update it whenever either page changes. */
-export const legalUpdated = '27 October 2026';
+export const legalUpdated = '29 October 2026';
 
 const clean = (value: string | undefined) => value?.trim() || undefined;
 

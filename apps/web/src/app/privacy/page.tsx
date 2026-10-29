@@ -48,7 +48,7 @@ export default async function PrivacyPage() {
             terms. We never see your Google password.
           </li>
           <li>
-            <strong>Your orders.</strong> The name, phone number, area, GhanaPost GPS address and rider directions you give us for
+            <strong>Your orders.</strong> The name, phone number, email address (if you give one), area, GhanaPost GPS address and rider directions you give us for
             delivery; what you bought and paid; the Mobile Money network and number you paid with; and the status history of the order.
           </li>
           <li>

@@ -91,6 +91,7 @@ function Details({
   const areas = delivery.areas.map((a) => a.name);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState(user?.email ?? '');
   const [area, setArea] = useState(areas.includes(defaultDeliveryArea) ? defaultDeliveryArea : (areas[0] ?? ''));
   const [directions, setDirections] = useState('');
   const [gps, setGps] = useState('');
@@ -146,11 +147,12 @@ function Details({
     setError(null);
     if (name.trim().length < 2) return setError('Enter the name of the person receiving the order.');
     if (phone.replace(/\D/g, '').length < 9) return setError('Enter a phone number we can call for delivery.');
+    if (email.trim() && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) return setError('Check the email address, or leave it empty.');
     if (wallet.replace(/\D/g, '').length < 9) return setError('Enter the Mobile Money number you will pay from.');
     setBusy(true);
     try {
       const order = await placeOrder({
-        customer: { name: name.trim(), phone: phone.trim(), area, ghanapostGps: gps.trim() || undefined, directions: directions.trim() || undefined },
+        customer: { name: name.trim(), phone: phone.trim(), email: email.trim() || undefined, area, ghanapostGps: gps.trim() || undefined, directions: directions.trim() || undefined },
         deliveryOption: optionId,
         payment: { network, wallet: wallet.trim() },
         items: items.map((i) => ({ slug: i.slug, size: i.sizeId, quantity: i.qty })),
@@ -196,6 +198,7 @@ function Details({
         <Card title="Delivery details">
           <Field label="Full name" value={name} onChangeText={setName} autoComplete="name" textContentType="name" />
           <Field label="Phone number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" autoComplete="tel" textContentType="telephoneNumber" placeholder="024 123 4567" hint="The rider calls this number." />
+          <Field label="Email (optional)" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" textContentType="emailAddress" placeholder="you@example.com" hint="We’ll email your order updates as well as texting them." />
           <Choices label="Area" value={area} options={areas.map((a) => ({ id: a, label: a }))} onChange={setArea} />
           <Field label="Directions (optional)" value={directions} onChangeText={setDirections} multiline placeholder="Landmarks, gate colour, floor…" />
           <Field label="GhanaPost GPS (optional)" value={gps} onChangeText={setGps} autoCapitalize="characters" placeholder="GA-123-4567" />

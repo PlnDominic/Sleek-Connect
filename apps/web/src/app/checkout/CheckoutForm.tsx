@@ -182,6 +182,7 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
         customer: {
           name: text('name'),
           phone: text('phone'),
+          email: text('email') || undefined,
           area: text('area'),
           ghanapostGps: text('gps') || undefined,
           directions: text('directions') || undefined,
@@ -254,6 +255,20 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
                 </Field>
                 <Field id="ph" label="Phone number">
                   <input id="ph" name="phone" type="tel" autoComplete="tel" required placeholder={sampleCustomer.phone} />
+                </Field>
+                <Field id="em" label="Email (optional)">
+                  <input
+                    id="em"
+                    key={user?.email ?? 'guest'}
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    maxLength={254}
+                    defaultValue={user?.email ?? ''}
+                    placeholder="you@example.com"
+                    aria-describedby="em-hint"
+                  />
+                  <small id="em-hint">We’ll email your order updates as well as texting them.</small>
                 </Field>
                 <Field id="area" label="Area in Accra">
                   <select id="area" name="area" required value={area} onChange={(e) => setArea(e.target.value)}>

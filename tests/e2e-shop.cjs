@@ -17,9 +17,10 @@ const simulate = (order, status, extra = '') => {
 const env = Object.fromEntries(fs.readFileSync(ROOT + '/apps/web/.env.local', 'utf8').split('\n').filter(l => l.includes('=') && !l.startsWith('#')).map(l => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1)]));
 const stock = (slug, size = '') => sql(`select on_hand || '/' || reserved from public.inventory_levels i join public.products p on p.id = i.product_id where p.slug = '${slug}' and i.size_code = '${size}'`);
 
-async function fillDetails(page, { option = 'Same day' } = {}) {
+async function fillDetails(page, { option = 'Same day', email } = {}) {
   await page.getByLabel('Full name').fill('Ama Owusu');
   await page.getByLabel('Phone number').fill('024 123 4567');
+  if (email) await page.getByLabel('Email (optional)').fill(email);
   await page.getByLabel('Area in Accra').selectOption('Osu');
   await page.getByRole('radio', { name: new RegExp(option) }).check();
   await page.getByLabel('Wallet number').fill('024 765 4321');
@@ -118,7 +119,8 @@ const statusPanel = (page) => page.locator('aside:visible').getByRole('status').
   }
   const before = stock('gentle-baby-wash-shampoo', '200');
   await go(page, BASE + '/checkout');
-  await fillDetails(page);
+  assert(await page.getByLabel('Email (optional)').isVisible(), 'checkout asks for an optional email');
+  await fillDetails(page, { email: 'Ama.Guest@Example.com' });
   await page.getByRole('button', { name: 'Pay with MTN MoMo' }).click();
   await statusPanel(page).filter({ hasText: 'Check your phone' }).waitFor();
   const text = await statusPanel(page).textContent();
@@ -133,6 +135,8 @@ const statusPanel = (page) => page.locator('aside:visible').getByRole('status').
   await statusPanel(page).filter({ hasText: 'Payment received' }).waitFor({ timeout: 10000 });
   assert(true, 'checkout shows payment received');
   assert(sql(`select status from public.orders where order_number = '${order1}'`) === 'paid', 'order is paid');
+  assert(sql(`select contact_email from public.orders where order_number = '${order1}'`) === 'ama.guest@example.com', 'the guest\'s email is kept on the order, in lower case');
+  assert(sql(`select string_agg(n.channel || ':' || n.recipient, ',' order by n.channel) from public.notifications n join public.orders o on o.id = n.order_id where o.order_number = '${order1}' and n.template = 'order_confirmed'`) === 'email:ama.guest@example.com,sms:024 123 4567', 'a guest gets the confirmation by email as well as SMS');
   assert(stock('gentle-baby-wash-shampoo', '200') === `${Number(before.split('/')[0]) - 1}/${before.split('/')[1]}`, `reservation converted to sale (${stock('gentle-baby-wash-shampoo', '200')})`);
   await page.waitForTimeout(300);
   assert(await bagCount(page) === 0, 'bag cleared once paid');
