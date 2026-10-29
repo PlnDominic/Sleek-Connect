@@ -58,6 +58,9 @@
   files are removed through the Storage API by the delete action, never by deleting `storage.objects` rows.
 - Product reviews reach the public only through `get_product_reviews` / `get_review_summary` (published ones, no account
   ids). Anything that changes what reviews are visible must call `updateTag('catalog')`.
+- Emails go out through `lib/notifications` (`EMAIL_PROVIDER=gmail` uses Nodemailer and an App Password; keep
+  `GMAIL_APP_PASSWORD` server-only). The store-alert copy (`STORE_ALERT_EMAIL`) must never contain `delivery_code` or the
+  order token link.
 - Anonymous functions that send customer messages or reveal orders (`create_support_case`, `find_order`) are rate
   limited in the database. Keep that in mind for any new public function that queues an SMS.
 

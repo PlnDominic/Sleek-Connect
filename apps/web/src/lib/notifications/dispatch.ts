@@ -4,6 +4,29 @@ import { emailProvider, pushProvider, smsProvider, toInternationalPhone, Unregis
 import { renderMessage, type NotificationPayload, type VendorPayload } from './templates';
 
 /**
+ * A copy of what happened, for the store's own inbox (STORE_ALERT_EMAIL). Every customer order or vendor event queues one
+ * SMS row, so alerting from those rows reaches the store even for shoppers who gave no email. It is sent once, on the
+ * first attempt, and never retried, so a failed alert can't hold up or duplicate the customer's message. The delivery
+ * code and the order link are left out: they are the shopper's proof of delivery and must not sit in an inbox.
+ */
+async function alertStore(n: { template: string; recipient: string; payload: unknown }) {
+  const to = process.env.STORE_ALERT_EMAIL?.trim();
+  const provider = to ? emailProvider() : null;
+  if (!to || !provider) return;
+  const payload = { ...(n.payload as Record<string, unknown>), delivery_code: '(hidden)', order_token: undefined };
+  const message = renderMessage(n.template, payload as unknown as NotificationPayload | VendorPayload);
+  if (!message) return;
+  try {
+    await provider.send(to, {
+      subject: `[Store alert] ${message.subject}`,
+      text: `${message.text}\n\nSent to: ${n.recipient}\nTemplate: ${n.template}`,
+    });
+  } catch (cause) {
+    console.error('Store alert email failed', cause instanceof Error ? cause.message : cause);
+  }
+}
+
+/**
  * Sends queued customer messages. Called right after anything that changes an order's status, and on a schedule
  * to retry failures. Messages for a channel with no provider are recorded as not sent, with the reason.
  */
@@ -29,6 +52,8 @@ export async function dispatchNotifications(limit = 20): Promise<{ sent: number;
         p_reference: extra.reference,
         p_error: extra.error,
       });
+
+    if (n.channel === 'sms' && n.attempts === 1) await alertStore(n);
 
     const message = renderMessage(n.template, n.payload as unknown as NotificationPayload | VendorPayload);
     const provider = n.channel === 'sms' ? smsProvider() : n.channel === 'push' ? pushProvider() : emailProvider();

@@ -18,6 +18,7 @@
     "db:setup:generate": "tsx scripts/bundle-setup.ts",
     "db:types": "supabase gen types typescript --local > apps/web/src/lib/supabase/database.types.ts",
     "db:verify": "tsx scripts/verify-schema.ts",
+    "email:test": "tsx scripts/send-test-email.ts",
     "payments:simulate": "tsx scripts/simulate-payment.ts",
     "smoke:production": "node tests/smoke-production.cjs",
     "test": "bash tests/run-all.sh"

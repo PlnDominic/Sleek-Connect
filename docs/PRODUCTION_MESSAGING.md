@@ -12,6 +12,23 @@ Sleek Connect sends customer notifications through the provider adapters in `app
 6. Confirm the provider's timeout, retry, delivery-status, and rate-limit behavior.
 7. Set `CRON_SECRET` on Vercel and add the same value, plus `SITE_URL`, as GitHub repository secrets; the `Notification dispatch` workflow calls `/api/notifications/dispatch` every five minutes with the bearer token.
 
+## Email through Gmail (Nodemailer)
+
+`EMAIL_PROVIDER=gmail` sends through a Gmail or Google Workspace account with Nodemailer (`lib/notifications/gmail.ts`).
+
+1. In the Google account: turn on 2-Step Verification, then Security → App passwords, and create one for "Sleek Connect".
+2. In Vercel (Production and Preview): `EMAIL_PROVIDER=gmail`, `GMAIL_USER=<the address>`, `GMAIL_APP_PASSWORD=<the 16 characters>`.
+   Optional: `EMAIL_FROM_NAME`, `EMAIL_REPLY_TO`, and `STORE_ALERT_EMAIL` (a copy of every order and vendor event, for the
+   store's own inbox; delivery codes and order links are left out).
+3. Locally, put the same values in `apps/web/.env.local` and run `npm run email:test -- you@example.com`. It signs in to
+   Gmail and sends one message, and says what is wrong if Gmail refuses.
+4. `/api/health` reports email as `configured`, or `misconfigured` if the address or App Password is missing.
+
+Limits: about 500 messages a day on a personal Gmail account (about 2,000 on Workspace), and Gmail always shows the signed-in
+address as the sender. For a busy store, move to a transactional email service later by adding another provider next to
+`gmail`; nothing else changes. Customer emails go only to signed-in shoppers who have an email address (Google sign-in);
+everyone else is reached by SMS.
+
 ## Required test matrix
 
 Use a real but controlled customer account and a staff-owned phone/email address. Confirm that no sensitive delivery code is printed in public logs.

@@ -1,4 +1,5 @@
 import 'server-only';
+import { createGmailTransport, gmailConfig, gmailMessage } from './gmail';
 
 export interface SendResult {
   /** The provider's message ID, kept in the delivery log. */
@@ -33,12 +34,31 @@ const consoleProvider = (channel: 'sms' | 'email' | 'push'): MessageProvider => 
   },
 });
 
+let cachedTransport: ReturnType<typeof createGmailTransport> | undefined;
+
+/** Email through a Gmail account (Nodemailer). Misconfigured (no GMAIL_USER or GMAIL_APP_PASSWORD) means off. */
+function gmailProvider(): MessageProvider | null {
+  const config = gmailConfig();
+  if (!config) {
+    console.error('EMAIL_PROVIDER=gmail needs GMAIL_USER and GMAIL_APP_PASSWORD, so email is off.');
+    return null;
+  }
+  const transport = (cachedTransport ??= createGmailTransport(config));
+  return {
+    name: 'gmail',
+    async send(to, message) {
+      const info = await transport.sendMail(gmailMessage(config, to, message, process.env.EMAIL_REPLY_TO?.trim() || undefined));
+      return { reference: info.messageId };
+    },
+  };
+}
 function pick(channel: 'sms' | 'email' | 'push', name: string | undefined): MessageProvider | null {
   if (!name) return null;
   if (name === 'console') {
     // Logging a message isn't delivering it, so never pretend to on the live site.
     return process.env.VERCEL_ENV === 'production' ? null : consoleProvider(channel);
   }
+  if (name === 'gmail' && channel === 'email') return gmailProvider();
   console.error(`Unknown ${channel} provider "${name}", so ${channel} messages are off.`);
   return null;
 }
