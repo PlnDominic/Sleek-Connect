@@ -1,6 +1,7 @@
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
+import { AndroidImportance } from 'expo-notifications';
 import { router } from 'expo-router';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
@@ -24,7 +25,7 @@ export async function registerForPush(orderToken?: string, { ask = true }: { ask
   if (Platform.OS === 'web' || !Device.isDevice) return 'unsupported';
   try {
     if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('default', { name: 'Order updates', importance: Notifications.AndroidImportance.DEFAULT });
+      await Notifications.setNotificationChannelAsync('default', { name: 'Order updates', importance: AndroidImportance.DEFAULT });
     }
     let { status } = await Notifications.getPermissionsAsync();
     if (status !== 'granted') {

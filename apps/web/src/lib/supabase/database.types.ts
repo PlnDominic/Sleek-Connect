@@ -1341,12 +1341,6 @@ isOneToOne: false
 "record_signup_consent":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
-"verify_launch_schema":
-{ Args: never; Returns: Json
-                           },
-"verify_fn_privilege":
-{ Args: { "p_function": string,"p_privilege": string,"p_role": string }; Returns: boolean
-                           },
 "register_push_device":
 { Args: { "p_order_token"?: string,"p_platform": string,"p_token": string }; Returns: undefined
                            },
