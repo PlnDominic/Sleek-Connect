@@ -208,6 +208,10 @@ const count = (page) => page.locator('#results-count:visible').first().textConte
   await staff.getByLabel('Return window (days)').fill('10');
   await staff.getByRole('button', { name: 'Save settings' }).click();
   await staff.getByRole('status').filter({ hasText: 'Settings saved.' }).waitFor();
+  await staff.getByLabel('Send a test email to').fill('owner@example.com');
+  await staff.getByRole('button', { name: 'Send test email' }).click();
+  await staff.getByRole('status').filter({ hasText: 'Test email sent to owner@example.com through console' }).waitFor();
+  assert(true, 'an admin can send a test email from Settings');
   await go(shopper, BASE + '/help');
   assert(await main(shopper).locator('a[href="tel:+233301234567"]').count() === 1, 'help centre has a call link');
   assert(await main(shopper).locator('a[href^="https://wa.me/233240001111"]').count() === 1, 'help centre has a WhatsApp link');
