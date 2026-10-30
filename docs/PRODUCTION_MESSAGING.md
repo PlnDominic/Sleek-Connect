@@ -32,9 +32,10 @@ address as the sender. For a busy store, move to a transactional email service l
 ## How the emails look
 
 Every email is sent as a designed HTML message plus a plain-text copy (`lib/notifications/email-html.ts`, `renderEmail` in
-`templates.ts`): the store's name, a heading, the message, the key facts in a box (order number, total, rider, amount…), the
-delivery code shown large when the rider will ask for it, and one button for the link. It uses only tables and inline
-styles, with no images, so it renders the same in Gmail, Outlook and phone mail apps. Store alerts carry a "Store alert" label
+`templates.ts`), in the manner of Apple's own mail: the system font, one calm column on a plain page, a large heading,
+the message, the key facts as rows between hairlines, the delivery code in a quiet panel when the rider will ask for it, and
+one rounded button in the store's teal. It follows the reader's light or dark setting and uses only tables and inline styles,
+with no images, so it renders the same in Gmail, Outlook and phone mail apps. Store alerts carry a small "Store alert" label
 and never show a delivery code or an order link. Links use `SITE_URL`: set it to your public address (for example
 `https://sleekconnectstore.vercel.app`) so buttons open the right site.
 

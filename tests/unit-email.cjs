@@ -40,11 +40,11 @@ const assert = (c, m) => { if (!c) { failures++; console.error('FAIL:', m); } el
   });
   assert(html.includes('Order &lt;SC-1001&gt; is on the way') && !html.includes('<SC-1001>'), 'what is put in an email is escaped');
   assert(html.includes('482915') && html.includes('View your order') && html.includes('href="https://shop.example/orders/abc"'), 'it shows the code, the button and its link');
-  assert(html.includes('Sleek <span') && html.includes('Help centre'), 'and carries the store name and a help link');
+  assert(html.includes('Sleek Connect Store') && html.includes('Help centre') && html.includes('prefers-color-scheme: dark'), 'and carries the store name, a help link and a dark-mode version');
   assert(!/<img/i.test(html) && !/<script/i.test(html), 'with no images or scripts to be blocked');
   assert(escapeHtml(`"a" & 'b'`) === '&quot;a&quot; &amp; &#39;b&#39;', 'quotes and ampersands are escaped');
   const bare = buildEmailHtml({ subject: 'Hello', body: 'Just words.', helpUrl: 'https://shop.example/help' });
-  assert(!bare.includes('Button not working') && !bare.includes('border:2px dashed'), 'no button or code box when there is nothing to show');
+  assert(!bare.includes('class="cta"') && !bare.includes('letter-spacing:8px'), 'no button or code panel when there is nothing to show');
 
   console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll email checks passed');
   process.exit(failures ? 1 : 0);
