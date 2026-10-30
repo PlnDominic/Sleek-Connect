@@ -1,17 +1,24 @@
 {
   "expo": {
-    "name": "Sleek Connect",
+    "name": "Sleek Connect Store",
     "slug": "sleek-connect",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "com.sleekconnect.store",
+      "buildNumber": "1",
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.sleekconnect.store",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0F766E",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -27,8 +34,25 @@
       "expo-router",
       "expo-status-bar",
       "expo-font",
-      "expo-splash-screen",
-      "expo-image"
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "backgroundColor": "#FFFFFF"
+        }
+      ],
+      "expo-image",
+      "expo-sqlite",
+      "expo-web-browser",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#0F766E",
+          "defaultChannel": "default"
+        }
+      ]
     ],
     "scheme": "sleekconnect",
     "experiments": {

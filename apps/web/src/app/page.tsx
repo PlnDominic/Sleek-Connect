@@ -1,37 +1,69 @@
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import {
-  bestSellers,
-  categories,
-  colors,
-  formatPrice,
-  getProduct,
-  newArrivals,
-  pending,
-  type IconName,
-  type Product,
-} from '@sleek/shared';
+import { colors, formatPrice, type Category, type IconName, type Product } from '@sleek/shared';
 import { AddToBagButton } from '@/components/AddToBagButton';
 import { Icon } from '@/components/Icon';
+import { JsonLd } from '@/components/JsonLd';
 import { NewArrivalsRail } from '@/components/NewArrivalsRail';
+import { ProductCard } from '@/components/ProductCard';
 import { ProductImage } from '@/components/ProductImage';
 import { SiteFooter } from '@/components/SiteFooter';
 import { AnnouncementBar, SiteHeader } from '@/components/SiteHeader';
+import { Countdown } from '@/components/Countdown';
+import { getHomeCatalog } from '@/lib/catalog';
+import { getHomeContent, type Banner } from '@/lib/content';
 import { images } from '@/lib/images';
+import { siteName, siteUrl } from '@/lib/site';
 import styles from './home.module.css';
 
-export default function HomePage() {
+export const metadata: Metadata = { alternates: { canonical: '/' } };
+
+export default async function HomePage() {
+  const [{ categories, newArrivals, bestSellers }, { hero, promos, heroProducts }] = await Promise.all([
+    getHomeCatalog(),
+    getHomeContent(),
+  ]);
+
+  const base = siteUrl();
   return (
     <>
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@graph': [
+            {
+              '@type': 'Organization',
+              '@id': `${base}/#organization`,
+              name: siteName,
+              url: base,
+              address: { '@type': 'PostalAddress', addressLocality: 'Accra', addressCountry: 'GH' },
+              areaServed: 'Accra, Ghana',
+            },
+            {
+              '@type': 'WebSite',
+              '@id': `${base}/#website`,
+              url: base,
+              name: siteName,
+              publisher: { '@id': `${base}/#organization` },
+              // Lets search engines offer a search box for the store in their results.
+              potentialAction: {
+                '@type': 'SearchAction',
+                target: { '@type': 'EntryPoint', urlTemplate: `${base}/search?q={search_term_string}` },
+                'query-input': 'required name=search_term_string',
+              },
+            },
+          ],
+        }}
+      />
       <AnnouncementBar />
       <SiteHeader current="Home" />
       <main>
-        <Hero />
-        <FeatureStrip />
-        <Categories />
-        <NewArrivals />
-        <BestSellers />
-        <Promotions />
+        <Hero banner={hero ?? defaultHero} products={heroProducts} />
+        <Categories categories={categories} />
+        <NewArrivals products={newArrivals} />
+        <BestSellers products={bestSellers} />
+        {promos.length > 0 && <Promotions banners={promos} />}
         <TrustBar />
       </main>
       <SiteFooter />
@@ -39,44 +71,56 @@ export default function HomePage() {
   );
 }
 
-const heroCards = [
-  { slug: 'vitamin-c-brightening-serum', label: 'Vitamin C Serum', className: styles.floatSerum },
-  { slug: 'whipped-shea-body-butter', label: 'Shea Body Butter', className: styles.floatShea },
-  { slug: 'velvet-matte-lip-colour', label: 'Matte Lip Colour', className: styles.floatLip },
-  { slug: 'gentle-baby-wash-shampoo', label: 'Baby Wash, 400 ml', className: styles.floatBabyWash },
-];
+/** Shown if staff remove every hero banner. Matches the starter banner. */
+const defaultHero: Banner = {
+  id: 'default',
+  kicker: 'Trending now',
+  title: 'Glow Products\nYou\'ll Love',
+  body: 'Beauty, home, fashion and everything for little ones,\ncurated for modern families in Ghana.',
+  cta: { label: 'Shop Now', href: '/shop?sort=newest' },
+  secondaryCta: { label: 'Shop Baby & Kids', href: '/shop/kids' },
+  image: 'heroModel',
+  theme: 'light',
+};
 
-function Hero() {
+/** Text with line breaks where staff typed them. */
+function Lines({ text }: { text: string }) {
+  return text.split('\n').map((line, i) => (
+    <span key={i}>
+      {i > 0 && <br />}
+      {line}
+    </span>
+  ));
+}
+
+// Positions of the floating product cards around the hero image, in collection order.
+const floatPositions = [styles.floatSerum, styles.floatShea, styles.floatLip, styles.floatBabyWash];
+
+function Hero({ banner, products }: { banner: Banner; products: Product[] }) {
   return (
     <section className={styles.hero}>
       <div className={`container ${styles.heroInner}`}>
         <div className={styles.heroCopy}>
-          <span className={styles.kicker}>Trending now</span>
+          {banner.kicker && <span className={styles.kicker}>{banner.kicker}</span>}
           <h1 className={styles.heroTitle}>
-            Glow Products
-            <br />
-            You&apos;ll Love
+            <Lines text={banner.title} />
           </h1>
-          <p className={styles.heroLead}>
-            Authentic beauty and safe picks for little ones,
-            <br />
-            curated for modern families in Ghana.
-          </p>
+          {banner.body && (
+            <p className={styles.heroLead}>
+              <Lines text={banner.body} />
+            </p>
+          )}
           <div className={styles.heroActions}>
-            <Link href="#new-arrivals" className={styles.primaryCta}>
-              Shop Now <Icon name="arrowRight" size={17} strokeWidth={2} />
-            </Link>
-            <Link href="/products/gentle-baby-wash-shampoo" className={styles.secondaryCta}>
-              Shop Baby &amp; Kids
-            </Link>
-          </div>
-          <div className={styles.socialProof}>
-            <span className={styles.avatars} aria-hidden="true">
-              {colors.avatar.map((tone) => (
-                <span key={tone} style={{ background: tone }} />
-              ))}
-            </span>
-            <span>Loved by {pending.shopperCount}+ shoppers across Accra</span>
+            {banner.cta && (
+              <Link href={banner.cta.href} className={styles.primaryCta}>
+                {banner.cta.label} <Icon name="arrowRight" size={17} strokeWidth={2} />
+              </Link>
+            )}
+            {banner.secondaryCta && (
+              <Link href={banner.secondaryCta.href} className={styles.secondaryCta}>
+                {banner.secondaryCta.label}
+              </Link>
+            )}
           </div>
         </div>
 
@@ -96,53 +140,25 @@ function Hero() {
             />
           </svg>
           <Image
-            src={images.heroModel}
-            alt="Woman with natural hair and glowing skin"
+            src={images[banner.image ?? 'heroModel']}
+            alt=""
             priority
             sizes="(max-width: 900px) 50vw, 300px"
             className={styles.heroModel}
           />
-          {heroCards.map((card) => {
-            const product = getProduct(card.slug)!;
-            return (
-              <Link key={card.slug} href={`/products/${card.slug}`} className={`${styles.floatCard} ${card.className}`}>
-                <ProductImage image={product.image} tint={product.tint} kind={product.kind} alt="" sizes="126px" className={styles.floatImage} />
-                <span className={styles.floatName}>{card.label}</span>
-                <strong className={styles.floatPrice}>{formatPrice(product.price)}</strong>
-              </Link>
-            );
-          })}
+          {products.slice(0, floatPositions.length).map((product, i) => (
+            <Link key={product.slug} href={`/products/${product.slug}`} className={`${styles.floatCard} ${floatPositions[i]}`}>
+              <ProductImage image={product.image} photo={product.photos?.[0]?.url} tint={product.tint} kind={product.kind} alt="" sizes="126px" className={styles.floatImage} />
+              <span className={styles.floatName}>{product.name}</span>
+              <strong className={styles.floatPrice}>{formatPrice(product.price)}</strong>
+            </Link>
+          ))}
           <div aria-hidden="true" className={styles.heroDots}>
             <span />
             <span className={styles.heroDotActive} />
             <span />
           </div>
         </div>
-      </div>
-    </section>
-  );
-}
-
-const features: { icon: IconName; title: string; sub: string }[] = [
-  { icon: 'truck', title: 'Tracked Delivery', sub: 'Across Accra, to your door' },
-  { icon: 'lockKeyhole', title: 'Secure Payments', sub: 'Mobile Money and card' },
-  { icon: 'shieldCheck', title: 'Authentic Guarantee', sub: 'Full refund if not genuine' },
-  { icon: 'headset', title: 'Real Support', sub: 'Always here to help' },
-];
-
-function FeatureStrip() {
-  return (
-    <section className="container">
-      <div className={styles.features}>
-        {features.map((f) => (
-          <div key={f.title} className={styles.feature}>
-            <Icon name={f.icon} size={30} strokeWidth={1.5} />
-            <span className={styles.featureText}>
-              <strong>{f.title}</strong>
-              <span>{f.sub}</span>
-            </span>
-          </div>
-        ))}
       </div>
     </section>
   );
@@ -159,13 +175,13 @@ function SectionHeader({ title, linkLabel, href = '#' }: { title: string; linkLa
   );
 }
 
-function Categories() {
+function Categories({ categories }: { categories: Category[] }) {
   return (
     <section id="categories" className={`container ${styles.section}`}>
-      <SectionHeader title="Shop by Categories" linkLabel="View All Categories" />
+      <SectionHeader title="Shop by Categories" linkLabel="View All Categories" href="/shop" />
       <div className={styles.categoryGrid}>
         {categories.map((c) => (
-          <Link key={c.id} href="#" className={styles.categoryCard}>
+          <Link key={c.id} href={`/shop/${c.department}/${c.id}`} className={styles.categoryCard}>
             <ProductImage image={c.image} tint={c.tint} kind={c.kind} alt="" sizes="(max-width: 600px) 50vw, 200px" fill />
             <span className={styles.categoryLabel}>
               <strong>{c.name}</strong>
@@ -180,52 +196,13 @@ function Categories() {
   );
 }
 
-function ProductCard({ product }: { product: Product }) {
-  return (
-    <article className={styles.productCard}>
-      <div className={styles.productCardTop}>
-        {product.badge ? (
-          <span className={styles.badge} style={{ background: product.badge === 'New' ? colors.ink : colors.accent }}>
-            {product.badge}
-          </span>
-        ) : (
-          <span />
-        )}
-        <button type="button" aria-label={`Save ${product.name}`} className={styles.saveButton}>
-          <Icon name="heart" size={17} />
-        </button>
-      </div>
-      <ProductImage
-        image={product.image}
-        tint={colors.surfaceSunken}
-        kind={product.kind}
-        alt={product.name}
-        sizes="(max-width: 600px) 50vw, 200px"
-        className={styles.productCardImage}
-      />
-      <Link href={`/products/${product.slug}`} className={styles.productCardName}>
-        {product.name}
-      </Link>
-      <span className={styles.priceRow}>
-        <strong>{formatPrice(product.price)}</strong>
-        {product.was && <s>{formatPrice(product.was)}</s>}
-      </span>
-      <div className={styles.productCardFooter}>
-        <span>{product.tag}</span>
-        <AddToBagButton slug={product.slug} sizeId={product.defaultSize} label={`Add ${product.name} to bag`} className={styles.roundAdd}>
-          <Icon name="bag" size={15} strokeWidth={2} />
-        </AddToBagButton>
-      </div>
-    </article>
-  );
-}
 
-function NewArrivals() {
+function NewArrivals({ products }: { products: Product[] }) {
   return (
     <section id="new-arrivals" className={`container ${styles.section}`}>
-      <SectionHeader title="New Arrivals" linkLabel="View All New Arrivals" />
+      <SectionHeader title="New Arrivals" linkLabel="View All New Arrivals" href="/shop?sort=newest" />
       <NewArrivalsRail>
-        {newArrivals.map((p) => (
+        {products.map((p) => (
           <ProductCard key={p.slug} product={p} />
         ))}
       </NewArrivalsRail>
@@ -233,15 +210,15 @@ function NewArrivals() {
   );
 }
 
-function BestSellers() {
+function BestSellers({ products }: { products: Product[] }) {
   return (
     <section id="best-sellers" className={`container ${styles.section}`}>
-      <SectionHeader title="Best Sellers" linkLabel="View All Best Sellers" />
+      <SectionHeader title="Best Sellers" linkLabel="View All Best Sellers" href="/shop" />
       <div className={styles.bestGrid}>
-        {bestSellers.map((p) => (
+        {products.map((p) => (
           <article key={p.slug} className={styles.bestCard}>
             <div className={styles.bestMedia}>
-              <ProductImage image={p.image} tint={colors.surfaceSunken} kind={p.kind} alt={p.name} sizes="200px" className={styles.bestImage} />
+              <ProductImage image={p.image} photo={p.photos?.[0]?.url} tint={colors.surfaceSunken} kind={p.kind} alt={p.name} sizes="200px" className={styles.bestImage} />
               <span className={styles.bestBadge}>Bestseller</span>
             </div>
             <div className={styles.bestBody}>
@@ -254,10 +231,15 @@ function BestSellers() {
               </span>
               <span className={styles.bestSummary}>{p.summary}</span>
               <div className={styles.bestActions}>
-                <AddToBagButton slug={p.slug} sizeId={p.defaultSize} className={styles.quickAdd}>
-                  Quick Add
+                <AddToBagButton product={p} disabled={p.inStock === false} className={styles.quickAdd}>
+                  {p.inStock === false ? 'Sold out' : 'Quick Add'}
                 </AddToBagButton>
-                <AddToBagButton slug={p.slug} sizeId={p.defaultSize} label={`Add ${p.name} to bag`} className={styles.squareAdd}>
+                <AddToBagButton
+                  product={p}
+                  disabled={p.inStock === false}
+                  label={`Add ${p.name} to bag`}
+                  className={styles.squareAdd}
+                >
                   <Icon name="bag" size={16} />
                 </AddToBagButton>
               </div>
@@ -269,46 +251,26 @@ function BestSellers() {
   );
 }
 
-const countdown = [
-  { value: '02', unit: 'Days' },
-  { value: '15', unit: 'Hours' },
-  { value: '45', unit: 'Mins' },
-  { value: '30', unit: 'Secs' },
-];
+const promoThemes = { sale: styles.promoSale, gift: styles.promoGift, light: styles.promoLight };
 
-function Promotions() {
+function Promotions({ banners }: { banners: Banner[] }) {
   return (
     <section className={`container ${styles.promoSection}`}>
       <div className={styles.promoGrid}>
-        <div className={`${styles.promo} ${styles.promoSale}`}>
-          <span className={styles.promoKicker}>Flash Sale</span>
-          <strong className={styles.promoTitle}>Up To {pending.saleMaxPercent}% Off</strong>
-          {/* Sale end time is not set yet; these are the design's sample values. */}
-          <div aria-label="Sale ends in 2 days, 15 hours, 45 minutes" className={styles.countdown}>
-            {countdown.map((part, i) => (
-              <span key={part.unit} className={styles.countdownPart}>
-                {i > 0 && <strong aria-hidden="true">:</strong>}
-                <span>
-                  <strong>{part.value}</strong>
-                  <span>{part.unit}</span>
-                </span>
-              </span>
-            ))}
+        {banners.map((b) => (
+          <div key={b.id} className={`${styles.promo} ${promoThemes[b.theme]}`}>
+            {b.kicker && <span className={styles.promoKicker}>{b.kicker}</span>}
+            <strong className={styles.promoTitle}>{b.title}</strong>
+            {b.body && <span className={styles.promoText}>{b.body}</span>}
+            {b.countdownTo && <Countdown to={b.countdownTo} className={styles.countdown} partClassName={styles.countdownPart} />}
+            {b.cta && (
+              <Link href={b.cta.href} className={`${styles.promoCta} ${b.theme === 'sale' ? styles.promoCtaSale : ''}`}>
+                {b.cta.label}
+              </Link>
+            )}
+            {b.image && <Image src={images[b.image]} alt="" sizes="(max-width: 900px) 44vw, 270px" className={styles.promoImage} />}
           </div>
-          <Link href="#" className={`${styles.promoCta} ${styles.promoCtaSale}`}>
-            Shop Sale Now
-          </Link>
-          <Image src={images.flashSale} alt="" sizes="(max-width: 900px) 44vw, 270px" className={styles.promoImage} />
-        </div>
-        <div className={`${styles.promo} ${styles.promoGift}`}>
-          <span className={styles.promoKicker}>New Collection</span>
-          <strong className={styles.promoTitle}>Gift Season 2026</strong>
-          <span className={styles.promoText}>Wrapped gift sets for her, for him and for little ones.</span>
-          <Link href="/products/newborn-gift-hamper" className={styles.promoCta}>
-            Shop Collection
-          </Link>
-          <Image src={images.giftCollection} alt="" sizes="(max-width: 900px) 44vw, 270px" className={styles.promoImage} />
-        </div>
+        ))}
       </div>
     </section>
   );

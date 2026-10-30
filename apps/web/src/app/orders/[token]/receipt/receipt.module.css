@@ -1,0 +1,168 @@
+.page {
+  min-height: 100vh;
+  background: var(--c-surface);
+  padding: 32px 16px 64px;
+}
+
+.toolbar {
+  max-width: 720px;
+  margin: 0 auto 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.toolbar button {
+  height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: var(--r-lg);
+  background: var(--c-ink);
+  color: var(--c-canvas);
+  font-weight: 700;
+}
+
+.sheet {
+  max-width: 720px;
+  margin: 0 auto;
+  background: var(--c-canvas);
+  border-radius: var(--r-xl);
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  font-size: 14px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.headerText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  color: var(--c-text-muted);
+}
+
+.headerText h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
+.facts {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.facts div {
+  flex: 1 1 180px;
+}
+
+.facts dt {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--c-text-muted);
+  margin-bottom: 4px;
+}
+
+.facts dd {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.lines {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.lines th,
+.lines td {
+  padding: 10px 0;
+  text-align: right;
+  border-bottom: 1px solid var(--c-line);
+}
+
+.lines th:first-child,
+.lines td:first-child {
+  text-align: left;
+}
+
+.lines thead th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--c-text-muted);
+  font-weight: 600;
+}
+
+.lines tfoot th {
+  font-weight: 400;
+  color: var(--c-text-muted);
+}
+
+.lines tfoot tr:last-child th,
+.lines tfoot tr:last-child td {
+  border-bottom: 0;
+}
+
+.total th,
+.total td {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.lines .total th {
+  color: var(--c-ink);
+  font-weight: 700;
+}
+
+.size {
+  display: block;
+  color: var(--c-text-muted);
+  font-size: 12px;
+}
+
+.footer {
+  font-size: 12px;
+  color: var(--c-text-muted);
+  border-top: 1px solid var(--c-line);
+  padding-top: 16px;
+}
+
+@media print {
+  .page {
+    background: none;
+    padding: 0;
+  }
+
+  .toolbar {
+    display: none;
+  }
+
+  .sheet {
+    padding: 0;
+    max-width: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .sheet {
+    padding: 24px 18px;
+  }
+
+  .headerText {
+    align-items: flex-start;
+  }
+}

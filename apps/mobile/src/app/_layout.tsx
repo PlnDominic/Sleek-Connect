@@ -5,6 +5,9 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { colors } from '@sleek/shared';
 import { BagProvider } from '@sleek/shared/bag';
+import { AuthProvider } from '@/lib/auth';
+import { PushSetup } from '@/lib/push';
+import { getDeviceStorage } from '@/lib/storage';
 import { fontFiles } from '@/theme/fonts';
 
 SplashScreen.preventAutoHideAsync();
@@ -18,10 +21,14 @@ export default function RootLayout() {
 
   if (!loaded && !error) return null;
 
+  // The bag is kept on the phone between visits.
   return (
-    <BagProvider>
-      <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }} />
-    </BagProvider>
+    <AuthProvider>
+      <BagProvider storage={getDeviceStorage}>
+        <StatusBar style="dark" />
+        <PushSetup />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }} />
+      </BagProvider>
+    </AuthProvider>
   );
 }

@@ -1,0 +1,69 @@
+/* Recent orders on /track. */
+.recent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recentHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.recentHead h2 {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.forget {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--c-text-muted);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.recent ul {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recentRow {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-xl);
+  background: var(--c-canvas);
+  color: var(--c-ink);
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+
+.recentRow:hover {
+  border-color: var(--c-line-strong);
+  color: var(--c-ink);
+}
+
+.recentTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.status {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-accent);
+}

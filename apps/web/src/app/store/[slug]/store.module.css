@@ -1,0 +1,151 @@
+/* A vendor's storefront: banner, logo and name, then the products on sale. */
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-line);
+}
+
+.banner {
+  object-fit: cover;
+  opacity: 0.35;
+}
+
+.heroInner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-block: 36px;
+}
+
+.logo,
+.initial {
+  flex: none;
+  width: 88px;
+  height: 88px;
+  border-radius: var(--r-xl);
+  background: var(--c-canvas);
+  border: 1px solid var(--c-line);
+  object-fit: cover;
+}
+
+.initial {
+  display: grid;
+  place-items: center;
+  background: var(--c-accent);
+  color: var(--c-canvas);
+  font-size: 36px;
+  font-weight: 700;
+}
+
+.kicker {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+
+.hero h1 {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.tagline {
+  margin-top: 4px;
+  color: var(--c-text-muted);
+}
+
+.body {
+  padding-block: 28px 56px;
+}
+
+.about {
+  max-width: 70ch;
+  margin-bottom: 24px;
+  color: var(--c-text-subtle);
+  white-space: pre-line;
+}
+
+.count {
+  margin-bottom: 14px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 16px;
+}
+
+.empty {
+  color: var(--c-text-muted);
+}
+
+.empty a {
+  color: var(--c-accent);
+  font-weight: 600;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--c-text-muted);
+}
+
+.reviews {
+  margin-top: 40px;
+}
+
+.reviewList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.review {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-xl);
+  background: var(--c-canvas);
+  font-size: 14px;
+}
+
+.review small {
+  color: var(--c-text-muted);
+}
+
+.review a {
+  color: var(--c-accent);
+}
+
+@media (max-width: 600px) {
+  .heroInner {
+    gap: 14px;
+    padding-block: 24px;
+  }
+
+  .logo,
+  .initial {
+    width: 64px;
+    height: 64px;
+    font-size: 26px;
+  }
+
+  .hero h1 {
+    font-size: 24px;
+  }
+}
