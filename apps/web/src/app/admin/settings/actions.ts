@@ -3,7 +3,9 @@
 import { refresh, updateTag } from 'next/cache';
 import { done, failed, text, type ActionState } from '@/lib/admin/action-state';
 import { can, requireStaffPage } from '@/lib/admin/session';
+import { buildEmailHtml } from '@/lib/notifications/email-html';
 import { emailProvider } from '@/lib/notifications/providers';
+import { siteUrl } from '@/lib/site';
 import { rateLimit } from '@/lib/rate-limit';
 import type { Json } from '@/lib/supabase/database.types';
 import { createUserSupabase } from '@/lib/supabase/server';
@@ -43,9 +45,21 @@ export async function sendTestEmail(_: ActionState, form: FormData): Promise<Act
     return { ok: false, message: 'Email isn’t set up. Set EMAIL_PROVIDER=gmail, GMAIL_USER and GMAIL_APP_PASSWORD on the server, then redeploy.' };
   }
   try {
+    const subject = 'Sleek Connect Store: test email';
+    const text = `This is a test message from Sleek Connect Store, sent by ${staff.email ?? 'an admin'}. If you can read it, order and vendor emails will reach people.`;
     await provider.send(to, {
-      subject: 'Sleek Connect Store: test email',
-      text: `This is a test message from Sleek Connect Store, sent by ${staff.email ?? 'an admin'}. If you can read it, order and vendor emails will reach people.`,
+      subject,
+      text,
+      html: buildEmailHtml({
+        subject,
+        body: 'This is a test message. If you can read it, order and vendor emails will reach people.',
+        facts: [
+          ['Sent by', staff.email ?? 'an admin'],
+          ['Sent through', provider.name],
+        ],
+        reason: 'You asked for this test from the admin console.',
+        helpUrl: `${siteUrl()}/help`,
+      }),
     });
   } catch (cause) {
     const reason = cause instanceof Error ? cause.message : 'unknown error';

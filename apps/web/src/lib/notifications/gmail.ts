@@ -38,12 +38,13 @@ export function createGmailTransport(config: GmailConfig): Transporter {
 }
 
 /** The message Nodemailer sends: plain text, from the store's name at the Gmail address. */
-export function gmailMessage(config: GmailConfig, to: string, message: { subject: string; text: string }, replyTo?: string): SendMailOptions {
+export function gmailMessage(config: GmailConfig, to: string, message: { subject: string; text: string; html?: string }, replyTo?: string): SendMailOptions {
   return {
     from: { name: config.fromName, address: config.user },
     to,
     subject: message.subject,
     text: message.text,
+    ...(message.html && { html: message.html }),
     ...(replyTo && { replyTo }),
   };
 }

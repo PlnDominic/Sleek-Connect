@@ -1,10 +1,12 @@
 import 'server-only';
 import { formatPrice } from '@sleek/shared';
+import { siteUrl } from '@/lib/site';
 import { logger } from '@/lib/observability';
 import { createAdminSupabase } from '@/lib/supabase/admin';
 import { emailProvider, pushProvider, smsProvider, toInternationalPhone, UnregisteredDeviceError } from './providers';
+import { buildEmailHtml } from './email-html';
 import { maskRecipient } from './mask';
-import { renderMessage, type NotificationPayload, type VendorPayload } from './templates';
+import { renderEmail, renderMessage, type NotificationPayload, type VendorPayload } from './templates';
 
 /**
  * A copy of what happened, for the store's own inbox (STORE_ALERT_EMAIL). Every customer order or vendor event queues one
@@ -55,15 +57,30 @@ export async function alertStoreNewOrder(order: {
     : { count: 0 };
   const customerEmailed = (count ?? 0) > 0;
   logger.info('order_received_email', { order: order.orderNumber, queued: customerEmailed, reason: customerEmailed ? 'queued for sending' : 'no email address given, or the hourly limit for it was reached' });
-  const lines = [
-    `Order ${order.orderNumber} was placed on the ${order.source === 'app' ? 'mobile app' : 'website'} and is waiting for payment.`,
-    `Total: ${order.total === null ? 'to be confirmed (delivery fee not set)' : formatPrice(order.total)}${order.itemCount ? ` · ${order.itemCount} item${order.itemCount === 1 ? '' : 's'}` : ''}`,
-    order.customerName ? `Customer: ${order.customerName}${order.phone ? `, ${order.phone}` : ''}${order.area ? `, ${order.area}` : ''}` : null,
-    `Payment: ${order.payment === 'requested' ? 'prompt sent' : order.payment === 'unavailable' ? 'online payment is not switched on, no prompt was sent' : order.payment}`,
-    `The customer ${customerEmailed ? 'was sent an "order received" email' : 'was not emailed (no address given, or the limit of three an hour for it was reached)'}.`,
-  ].filter(Boolean);
+  const facts: [string, string][] = [
+    ['Order', order.orderNumber],
+    ['Total', order.total === null ? 'To be confirmed (delivery fee not set)' : formatPrice(order.total)],
+  ];
+  if (order.itemCount) facts.push(['Items', String(order.itemCount)]);
+  if (order.customerName) facts.push(['Customer', order.customerName]);
+  if (order.phone) facts.push(['Phone', order.phone]);
+  if (order.area) facts.push(['Area', order.area]);
+  facts.push(['Placed on', order.source === 'app' ? 'The mobile app' : 'The website']);
+  facts.push(['Payment', order.payment === 'requested' ? 'Prompt sent' : order.payment === 'unavailable' ? 'Not switched on, no prompt sent' : order.payment]);
+  facts.push(['Customer email', customerEmailed ? '"Order received" email queued' : 'None sent (no address given, or the limit of three an hour was reached)']);
+  const subject = `New order ${order.orderNumber}`;
+  const text = `A new order is waiting for payment.\n\n${facts.map(([label, value]) => `${label}: ${value}`).join('\n')}`;
+  const html = buildEmailHtml({
+    subject,
+    body: 'A new order was placed and is waiting for payment.',
+    facts,
+    tag: 'Store alert',
+    reason: 'A notice for the store owner.',
+    helpUrl: `${siteUrl()}/admin/orders`,
+    cta: { label: 'Open the admin console', url: `${siteUrl()}/admin/orders` },
+  });
   try {
-    const result = await target.provider.send(target.to, { subject: `[Store alert] New order ${order.orderNumber}`, text: lines.join('\n') });
+    const result = await target.provider.send(target.to, { subject: `[Store alert] ${subject}`, text, html });
     logger.info('store_alert_sent', { template: 'order_placed', order: order.orderNumber, to: maskRecipient(target.to), provider: target.provider.name, reference: result.reference });
   } catch (cause) {
     logger.error('store_alert_failed', cause, { template: 'order_placed', order: order.orderNumber, to: maskRecipient(target.to) });
@@ -75,12 +92,13 @@ async function alertStore(n: { template: string; recipient: string; payload: unk
   if (!target) return;
   const { to, provider } = target;
   const payload = { ...(n.payload as Record<string, unknown>), delivery_code: '(hidden)', order_token: undefined };
-  const message = renderMessage(n.template, payload as unknown as NotificationPayload | VendorPayload);
+  const message = renderEmail(n.template, payload as unknown as NotificationPayload | VendorPayload, { sentTo: n.recipient });
   if (!message) return;
   try {
     const result = await provider.send(to, {
       subject: `[Store alert] ${message.subject}`,
       text: `${message.text}\n\nSent to: ${n.recipient}\nTemplate: ${n.template}`,
+      html: message.html,
     });
     logger.info('store_alert_sent', { template: n.template, to: maskRecipient(to), provider: provider.name, reference: result.reference });
   } catch (cause) {
@@ -119,9 +137,11 @@ export async function dispatchNotifications(limit = 20): Promise<{ sent: number;
         p_error: extra.error,
       });
 
-    if (n.attempts === 1 && (n.channel === 'sms' || (n.channel === 'email' && n.template === 'order_received'))) await alertStore(n);
+    // The "order received" step has its own alert (alertStoreNewOrder), so only the later messages are copied here.
+    if (n.attempts === 1 && n.channel === 'sms') await alertStore(n);
 
-    const message = renderMessage(n.template, n.payload as unknown as NotificationPayload | VendorPayload);
+    const content = n.payload as unknown as NotificationPayload | VendorPayload;
+    const message = n.channel === 'email' ? renderEmail(n.template, content) : renderMessage(n.template, content);
     const provider = n.channel === 'sms' ? smsProvider() : n.channel === 'push' ? pushProvider() : emailProvider();
     if (!message || !provider) {
       counts.skipped++;

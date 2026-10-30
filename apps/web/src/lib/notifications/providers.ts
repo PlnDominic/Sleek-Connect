@@ -24,7 +24,7 @@ export class UnregisteredDeviceError extends Error {
 /** An SMS or email gateway. Real providers (e.g. an SMS aggregator in Ghana, an email API) implement this. */
 export interface MessageProvider {
   readonly name: string;
-  send(to: string, message: { subject: string; text: string }, options?: SendOptions): Promise<SendResult>;
+  send(to: string, message: { subject: string; text: string; html?: string }, options?: SendOptions): Promise<SendResult>;
 }
 
 /** Writes messages to the server log instead of sending them. Development only. */

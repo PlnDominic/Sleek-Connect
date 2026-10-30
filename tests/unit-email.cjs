@@ -3,6 +3,7 @@ require('tsx/cjs');
 const nodemailer = require('nodemailer');
 const { gmailConfig, gmailMessage } = require('../apps/web/src/lib/notifications/gmail.ts');
 const { maskRecipient } = require('../apps/web/src/lib/notifications/mask.ts');
+const { buildEmailHtml, splitTrailingUrl, escapeHtml } = require('../apps/web/src/lib/notifications/email-html.ts');
 let failures = 0;
 const assert = (c, m) => { if (!c) { failures++; console.error('FAIL:', m); } else console.log('ok -', m); };
 
@@ -27,6 +28,23 @@ const assert = (c, m) => { if (!c) { failures++; console.error('FAIL:', m); } el
   assert(maskRecipient('+233241234567') === '***567' && maskRecipient('024 123 4567') === '***567', 'logged phone numbers keep the last three digits');
   const masked = maskRecipient('ExponentPushToken[abcdefghijklmnop]');
   assert(masked.startsWith('ExponentPushToken[') && !masked.includes('abcdefghijklmnop'), 'and push tokens are cut short');
+
+  // The designed email.
+  const split = splitTrailingUrl('Hi Ama, thanks for your order SC-1001. Track it: https://shop.example/orders/abc');
+  assert(split.url === 'https://shop.example/orders/abc' && split.body === 'Hi Ama, thanks for your order SC-1001.', 'a closing link is split off the message and becomes the button');
+  assert(splitTrailingUrl('No link here.').url === null, 'a message without a link has no button');
+  const html = buildEmailHtml({
+    subject: 'Order <SC-1001> is on the way', body: 'Hi Ama,\n\nGive the rider your code.', facts: [['Order', 'SC-1001']],
+    code: { label: 'Your delivery code', value: '482915' }, cta: { label: 'View your order', url: 'https://shop.example/orders/abc' },
+    helpUrl: 'https://shop.example/help', reason: 'Because of your order.',
+  });
+  assert(html.includes('Order &lt;SC-1001&gt; is on the way') && !html.includes('<SC-1001>'), 'what is put in an email is escaped');
+  assert(html.includes('482915') && html.includes('View your order') && html.includes('href="https://shop.example/orders/abc"'), 'it shows the code, the button and its link');
+  assert(html.includes('Sleek <span') && html.includes('Help centre'), 'and carries the store name and a help link');
+  assert(!/<img/i.test(html) && !/<script/i.test(html), 'with no images or scripts to be blocked');
+  assert(escapeHtml(`"a" & 'b'`) === '&quot;a&quot; &amp; &#39;b&#39;', 'quotes and ampersands are escaped');
+  const bare = buildEmailHtml({ subject: 'Hello', body: 'Just words.', helpUrl: 'https://shop.example/help' });
+  assert(!bare.includes('Button not working') && !bare.includes('border:2px dashed'), 'no button or code box when there is nothing to show');
 
   console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll email checks passed');
   process.exit(failures ? 1 : 0);

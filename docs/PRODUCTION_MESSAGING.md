@@ -29,6 +29,15 @@ address as the sender. For a busy store, move to a transactional email service l
 `gmail`; nothing else changes. Customer emails go to the optional email typed at checkout, or else the signed-in account's email
 (Google sign-in); everyone else is reached by SMS.
 
+## How the emails look
+
+Every email is sent as a designed HTML message plus a plain-text copy (`lib/notifications/email-html.ts`, `renderEmail` in
+`templates.ts`): the store's name, a heading, the message, the key facts in a box (order number, total, rider, amount…), the
+delivery code shown large when the rider will ask for it, and one button for the link. It uses only tables and inline
+styles, with no images, so it renders the same in Gmail, Outlook and phone mail apps. Store alerts carry a "Store alert" label
+and never show a delivery code or an order link. Links use `SITE_URL`: set it to your public address (for example
+`https://sleekconnectstore.vercel.app`) so buttons open the right site.
+
 ## Checking emails in the logs
 
 Every send is logged as one JSON line (Vercel → project → Logs, or the terminal in development). Recipients are masked
