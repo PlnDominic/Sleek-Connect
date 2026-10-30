@@ -2,7 +2,7 @@
 
 import { after } from 'next/server';
 import type { MomoNetwork } from '@sleek/shared';
-import { dispatchNotifications } from '@/lib/notifications/dispatch';
+import { alertStoreNewOrder, dispatchNotifications } from '@/lib/notifications/dispatch';
 import { logger } from '@/lib/observability';
 import { startOrderPayment, type PaymentStart } from '@/lib/payments/start';
 import { createUserSupabase } from '@/lib/supabase/server';
@@ -123,6 +123,20 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     { network: input.payment.network, wallet: input.payment.wallet },
   );
   if (payment.kind === 'failed') return { ok: false, error: payment.reason };
+
+  // Tell the store about every order, whether or not the shopper gave an email.
+  after(() =>
+    alertStoreNewOrder({
+      orderNumber: data.order_number,
+      total,
+      customerName: input.customer.name,
+      phone: input.customer.phone,
+      area: input.customer.area,
+      itemCount: input.items.reduce((n, i) => n + i.quantity, 0),
+      source: 'web',
+      payment: payment.kind,
+    }),
+  );
 
   return {
     ok: true,

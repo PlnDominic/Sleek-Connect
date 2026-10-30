@@ -129,6 +129,7 @@ const statusPanel = (page) => page.locator('aside:visible').getByRole('status').
   assert(text.includes('Test mode'), 'test mode note shown');
   assert(stock('gentle-baby-wash-shampoo', '200') === before.replace(/\/(\d+)$/, (_, r) => '/' + (Number(r) + 1)), `stock reserved (${before} -> ${stock('gentle-baby-wash-shampoo', '200')})`);
   assert(sql(`select o.total_ghs || ' ' || p.amount_ghs || ' ' || p.status from public.orders o join public.payments p on p.order_id = o.id where o.order_number = '${order1}'`) === '80.00 80.00 pending', 'payment recorded for DB total 50 + 30 fee');
+  assert(sql(`select string_agg(n.channel || ':' || n.recipient, ',') from public.notifications n join public.orders o on o.id = n.order_id where o.order_number = '${order1}' and n.template = 'order_received'`) === 'email:ama.guest@example.com', 'placing the order queued an "order received" email for the guest');
   assert(await bagCount(page) === 1, 'bag kept while payment is pending');
   await page.screenshot({ path: OUT + '/checkout-pending.png' });
   console.log('   simulate:', simulate(order1, 'succeeded'));

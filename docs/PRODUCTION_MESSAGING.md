@@ -42,7 +42,9 @@ Every send is logged as one JSON line (Vercel → project → Logs, or the termi
 | `notification_sent` | A message was handed to its provider and recorded as sent (`template`, `channel`, `to`, `reference`). |
 | `notification_failed` | The provider refused or timed out (`willRetry` is true for the first four attempts). |
 | `notification_not_sent` | Nothing was sent: no provider is set up, or the template is unknown. |
-| `store_alert_sent` / `store_alert_failed` | The copy to `STORE_ALERT_EMAIL`. |
+| `order_received_email` | Right after an order is placed: whether the database queued an "order received" email for the shopper (`queued`) and, if not, why. |
+| `store_alert_sent` / `store_alert_failed` | The copy to `STORE_ALERT_EMAIL`: one `New order SC-… ` alert for every order placed (whether or not the shopper gave an email), plus a copy of each customer message. |
+| `store_alert_skipped` | No alert was sent because `STORE_ALERT_EMAIL` is not set, or no email provider is set up (`reason` says which). |
 | `notifications_dispatched` | The end-of-run totals (`sent`, `failed`, `skipped`). |
 
 To follow one email: find `order_placed`, then `notification_sent` with `template: "order_received"` and `channel: "email"`,

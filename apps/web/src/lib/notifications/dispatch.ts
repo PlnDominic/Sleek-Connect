@@ -1,4 +1,5 @@
 import 'server-only';
+import { formatPrice } from '@sleek/shared';
 import { logger } from '@/lib/observability';
 import { createAdminSupabase } from '@/lib/supabase/admin';
 import { emailProvider, pushProvider, smsProvider, toInternationalPhone, UnregisteredDeviceError } from './providers';
@@ -11,10 +12,68 @@ import { renderMessage, type NotificationPayload, type VendorPayload } from './t
  * first attempt, and never retried, so a failed alert can't hold up or duplicate the customer's message. The delivery
  * code and the order link are left out: they are the shopper's proof of delivery and must not sit in an inbox.
  */
-async function alertStore(n: { template: string; recipient: string; payload: unknown }) {
+function storeAlertTarget(event: string) {
   const to = process.env.STORE_ALERT_EMAIL?.trim();
-  const provider = to ? emailProvider() : null;
-  if (!to || !provider) return;
+  if (!to) {
+    logger.warn('store_alert_skipped', { event, reason: 'STORE_ALERT_EMAIL is not set' });
+    return null;
+  }
+  const provider = emailProvider();
+  if (!provider) {
+    logger.warn('store_alert_skipped', { event, reason: 'no email provider is set up (EMAIL_PROVIDER, GMAIL_USER, GMAIL_APP_PASSWORD)' });
+    return null;
+  }
+  return { to, provider };
+}
+
+/**
+ * Tells the store an order was placed, even when the shopper gave no email and nothing is queued for them. Sent right
+ * after placing, best effort. Has the details the owner needs to act, but no order link or delivery code.
+ */
+const alertedOrders = new Set<string>();
+
+export async function alertStoreNewOrder(order: {
+  orderNumber: string;
+  total: number | null;
+  customerName?: string;
+  phone?: string;
+  area?: string;
+  itemCount?: number;
+  source: 'web' | 'app';
+  payment: string;
+}) {
+  // The app asks for a payment prompt more than once per order; alert once (per server instance, best effort).
+  if (alertedOrders.has(order.orderNumber)) return;
+  alertedOrders.add(order.orderNumber);
+  const target = storeAlertTarget('order_placed');
+  if (!target) return;
+  // Whether the database queued an "order received" email for the shopper (it does when they gave an address).
+  const admin = createAdminSupabase();
+  const { data: row } = await admin.from('orders').select('id').eq('order_number', order.orderNumber).maybeSingle();
+  const { count } = row
+    ? await admin.from('notifications').select('id', { count: 'exact', head: true }).eq('order_id', row.id).eq('template', 'order_received')
+    : { count: 0 };
+  const customerEmailed = (count ?? 0) > 0;
+  logger.info('order_received_email', { order: order.orderNumber, queued: customerEmailed, reason: customerEmailed ? 'queued for sending' : 'no email address given, or the hourly limit for it was reached' });
+  const lines = [
+    `Order ${order.orderNumber} was placed on the ${order.source === 'app' ? 'mobile app' : 'website'} and is waiting for payment.`,
+    `Total: ${order.total === null ? 'to be confirmed (delivery fee not set)' : formatPrice(order.total)}${order.itemCount ? ` · ${order.itemCount} item${order.itemCount === 1 ? '' : 's'}` : ''}`,
+    order.customerName ? `Customer: ${order.customerName}${order.phone ? `, ${order.phone}` : ''}${order.area ? `, ${order.area}` : ''}` : null,
+    `Payment: ${order.payment === 'requested' ? 'prompt sent' : order.payment === 'unavailable' ? 'online payment is not switched on, no prompt was sent' : order.payment}`,
+    `The customer ${customerEmailed ? 'was sent an "order received" email' : 'was not emailed (no address given, or the limit of three an hour for it was reached)'}.`,
+  ].filter(Boolean);
+  try {
+    const result = await target.provider.send(target.to, { subject: `[Store alert] New order ${order.orderNumber}`, text: lines.join('\n') });
+    logger.info('store_alert_sent', { template: 'order_placed', order: order.orderNumber, to: maskRecipient(target.to), provider: target.provider.name, reference: result.reference });
+  } catch (cause) {
+    logger.error('store_alert_failed', cause, { template: 'order_placed', order: order.orderNumber, to: maskRecipient(target.to) });
+  }
+}
+
+async function alertStore(n: { template: string; recipient: string; payload: unknown }) {
+  const target = storeAlertTarget(n.template);
+  if (!target) return;
+  const { to, provider } = target;
   const payload = { ...(n.payload as Record<string, unknown>), delivery_code: '(hidden)', order_token: undefined };
   const message = renderMessage(n.template, payload as unknown as NotificationPayload | VendorPayload);
   if (!message) return;

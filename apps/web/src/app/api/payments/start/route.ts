@@ -1,6 +1,6 @@
 import { after } from 'next/server';
 import { momoNetworks, type MomoNetwork } from '@sleek/shared';
-import { dispatchNotifications } from '@/lib/notifications/dispatch';
+import { alertStoreNewOrder, dispatchNotifications } from '@/lib/notifications/dispatch';
 import { startOrderPayment } from '@/lib/payments/start';
 import { UUID_PATTERN } from '@/lib/orders';
 import { logger, requestId, withRequestId } from '@/lib/observability';
@@ -38,5 +38,6 @@ export async function POST(request: Request) {
   after(() => dispatchNotifications());
 
   const result = await startOrderPayment({ token, number: data.order_number, total: data.total_ghs }, { network, wallet });
+  after(() => alertStoreNewOrder({ orderNumber: data.order_number, total: data.total_ghs, source: 'app', payment: result.kind }));
   return withRequestId(Response.json({ ...result, requestId: id }, { headers: { 'Cache-Control': 'no-store' } }), id);
 }
