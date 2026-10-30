@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { requireStaffPage } from '@/lib/admin/session';
+import { can, requireStaffPage } from '@/lib/admin/session';
 import { formatDateTime } from '@/lib/orders';
+import { ActionForm } from '../ActionForm';
+import { sendTestEmail } from '../settings/actions';
 import styles from '../admin.module.css';
 
 export const metadata: Metadata = { title: 'Notifications' };
@@ -41,6 +43,25 @@ export default async function NotificationsPage({ searchParams }: PageProps<'/ad
         <Summary label="Pending" value={String(pending.length)} tone={pending.length > 0 ? 'warn' : undefined} />
         <Summary label="Failed or not sent" value={String(failed.length)} tone={failed.length > 0 ? 'bad' : undefined} />
       </section>
+      {can(staff.role, 'settings.edit') && (
+        <ActionForm action={sendTestEmail}>
+          <section className={styles.panel} aria-label="Send a test email">
+            <h2>Test the email sender</h2>
+            <p className={styles.muted}>Sends one message through the store&apos;s email provider (Gmail), so you can see that emails will reach people.</p>
+            <div className={styles.row}>
+              <label className={styles.field}>
+                <span>Send a test email to</span>
+                <input name="to" type="email" required defaultValue={staff.email ?? ''} />
+              </label>
+            </div>
+            <div className={styles.buttons}>
+              <button type="submit" className={styles.secondary}>
+                Send test email
+              </button>
+            </div>
+          </section>
+        </ActionForm>
+      )}
       <nav className={styles.tabs} aria-label="Notification status">
         {statuses.map((item) => (
           <Link key={item} href={`/admin/notifications?status=${item}`} aria-current={item === status ? 'page' : undefined}>
