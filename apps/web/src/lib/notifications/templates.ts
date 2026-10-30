@@ -22,6 +22,8 @@ export interface NotificationPayload {
   /** A note from staff: the reason for a decision, or a reply to a support case. */
   note?: string | null;
   refund_amount_ghs?: number | null;
+  /** When the held stock is released if the order isn't paid (ISO), for "order received". */
+  reserved_until?: string | null;
 }
 
 export interface Message {
@@ -138,6 +140,17 @@ function renderCustomerMessage(template: string, p: NotificationPayload): Messag
   const link = p.order_token ? `${siteUrl()}/orders/${p.order_token}` : `${siteUrl()}/help`;
   const hi = `Hi ${firstName(p.customer_name)},`;
   switch (template) {
+    case 'order_received': {
+      const until = p.reserved_until
+        ? new Date(p.reserved_until).toLocaleTimeString('en-GH', { hour: 'numeric', minute: '2-digit', timeZone: 'Africa/Accra' })
+        : null;
+      return {
+        subject: `We received your order ${p.order_number}`,
+        text: `${hi} thanks for your order ${p.order_number}${p.total_ghs === null ? '' : ` (${formatPrice(p.total_ghs)})`}. ${
+          until ? `We're holding your items until ${until}. ` : ''
+        }Approve the Mobile Money payment to confirm it, and we'll email you again when it is. Track it: ${link}`,
+      };
+    }
     case 'order_confirmed':
       return {
         subject: `Order ${p.order_number} confirmed`,

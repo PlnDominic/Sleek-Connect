@@ -1,6 +1,9 @@
 'use server';
 
+import { after } from 'next/server';
 import type { MomoNetwork } from '@sleek/shared';
+import { dispatchNotifications } from '@/lib/notifications/dispatch';
+import { logger } from '@/lib/observability';
 import { startOrderPayment, type PaymentStart } from '@/lib/payments/start';
 import { createUserSupabase } from '@/lib/supabase/server';
 
@@ -110,6 +113,10 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     } as never);
     if (giftError) return { ok: false, error: giftError.message };
   }
+
+  // The "order received" email is queued by place_order; send it now instead of waiting for the next scheduled run.
+  logger.info('order_placed', { orderNumber: data.order_number, source: 'web', emailGiven: Boolean(input.customer.email) });
+  after(() => dispatchNotifications());
 
   const payment = await startOrderPayment(
     { token: data.order_token, number: data.order_number, total },

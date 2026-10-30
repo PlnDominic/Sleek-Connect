@@ -1,5 +1,7 @@
 import 'server-only';
+import { logger } from '@/lib/observability';
 import { createGmailTransport, gmailConfig, gmailMessage } from './gmail';
+import { maskRecipient } from './mask';
 
 export interface SendResult {
   /** The provider's message ID, kept in the delivery log. */
@@ -40,7 +42,7 @@ let cachedTransport: ReturnType<typeof createGmailTransport> | undefined;
 function gmailProvider(): MessageProvider | null {
   const config = gmailConfig();
   if (!config) {
-    console.error('EMAIL_PROVIDER=gmail needs GMAIL_USER and GMAIL_APP_PASSWORD, so email is off.');
+    logger.error('email_provider_misconfigured', new Error('EMAIL_PROVIDER=gmail needs GMAIL_USER and GMAIL_APP_PASSWORD, so email is off.'));
     return null;
   }
   const transport = (cachedTransport ??= createGmailTransport(config));
@@ -48,6 +50,11 @@ function gmailProvider(): MessageProvider | null {
     name: 'gmail',
     async send(to, message) {
       const info = await transport.sendMail(gmailMessage(config, to, message, process.env.EMAIL_REPLY_TO?.trim() || undefined));
+      // What Gmail said, so the server log shows an email was really accepted (and for whom), not only attempted.
+      const accepted = info.accepted?.length ?? 0;
+      const rejected = info.rejected?.length ?? 0;
+      logger.info('gmail_response', { to: maskRecipient(to), subject: message.subject, accepted, rejected, messageId: info.messageId, response: info.response });
+      if (accepted === 0) throw new Error(`Gmail did not accept ${maskRecipient(to)}${info.response ? `: ${info.response}` : ''}`);
       return { reference: info.messageId };
     },
   };

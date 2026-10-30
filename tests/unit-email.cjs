@@ -2,6 +2,7 @@
 require('tsx/cjs');
 const nodemailer = require('nodemailer');
 const { gmailConfig, gmailMessage } = require('../apps/web/src/lib/notifications/gmail.ts');
+const { maskRecipient } = require('../apps/web/src/lib/notifications/mask.ts');
 let failures = 0;
 const assert = (c, m) => { if (!c) { failures++; console.error('FAIL:', m); } else console.log('ok -', m); };
 
@@ -21,6 +22,11 @@ const assert = (c, m) => { if (!c) { failures++; console.error('FAIL:', m); } el
   assert(sent.replyTo[0].address === 'help@example.com', 'replies go to the reply-to address when one is set');
   const plain = JSON.parse((await transport.sendMail(gmailMessage(config, 'a@example.com', { subject: 's', text: 't' }))).message);
   assert(!plain.replyTo, 'and nowhere special when it is not');
+
+  assert(maskRecipient('kofi.mensah@example.com') === 'k***@example.com', 'logged email addresses keep the first letter and the domain');
+  assert(maskRecipient('+233241234567') === '***567' && maskRecipient('024 123 4567') === '***567', 'logged phone numbers keep the last three digits');
+  const masked = maskRecipient('ExponentPushToken[abcdefghijklmnop]');
+  assert(masked.startsWith('ExponentPushToken[') && !masked.includes('abcdefghijklmnop'), 'and push tokens are cut short');
 
   console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll email checks passed');
   process.exit(failures ? 1 : 0);

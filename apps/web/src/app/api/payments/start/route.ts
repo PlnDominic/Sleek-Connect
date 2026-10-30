@@ -1,4 +1,6 @@
+import { after } from 'next/server';
 import { momoNetworks, type MomoNetwork } from '@sleek/shared';
+import { dispatchNotifications } from '@/lib/notifications/dispatch';
 import { startOrderPayment } from '@/lib/payments/start';
 import { UUID_PATTERN } from '@/lib/orders';
 import { logger, requestId, withRequestId } from '@/lib/observability';
@@ -31,6 +33,9 @@ export async function POST(request: Request) {
   if (!data || data.status !== 'pending_payment') {
     return withRequestId(Response.json({ kind: 'failed', reason: 'This order isn’t waiting for payment.', requestId: id }, { status: 409 }), id);
   }
+
+  // The app placed this order straight in the database, so its "order received" email is waiting to be sent.
+  after(() => dispatchNotifications());
 
   const result = await startOrderPayment({ token, number: data.order_number, total: data.total_ghs }, { network, wallet });
   return withRequestId(Response.json({ ...result, requestId: id }, { headers: { 'Cache-Control': 'no-store' } }), id);

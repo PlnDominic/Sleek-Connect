@@ -1,6 +1,8 @@
 import 'server-only';
+import { logger } from '@/lib/observability';
 import { createAdminSupabase } from '@/lib/supabase/admin';
 import { emailProvider, pushProvider, smsProvider, toInternationalPhone, UnregisteredDeviceError } from './providers';
+import { maskRecipient } from './mask';
 import { renderMessage, type NotificationPayload, type VendorPayload } from './templates';
 
 /**
@@ -17,12 +19,13 @@ async function alertStore(n: { template: string; recipient: string; payload: unk
   const message = renderMessage(n.template, payload as unknown as NotificationPayload | VendorPayload);
   if (!message) return;
   try {
-    await provider.send(to, {
+    const result = await provider.send(to, {
       subject: `[Store alert] ${message.subject}`,
       text: `${message.text}\n\nSent to: ${n.recipient}\nTemplate: ${n.template}`,
     });
+    logger.info('store_alert_sent', { template: n.template, to: maskRecipient(to), provider: provider.name, reference: result.reference });
   } catch (cause) {
-    console.error('Store alert email failed', cause instanceof Error ? cause.message : cause);
+    logger.error('store_alert_failed', cause, { template: n.template, to: maskRecipient(to) });
   }
 }
 
@@ -33,17 +36,21 @@ async function alertStore(n: { template: string; recipient: string; payload: unk
 export async function dispatchNotifications(limit = 20): Promise<{ sent: number; failed: number; skipped: number }> {
   const counts = { sent: 0, failed: 0, skipped: 0 };
   if (!process.env.SUPABASE_SECRET_KEY) {
-    console.warn('SUPABASE_SECRET_KEY is not set; customer messages stay queued.');
+    logger.warn('notifications_not_dispatched', { reason: 'SUPABASE_SECRET_KEY is not set, so messages stay queued' });
     return counts;
   }
   const admin = createAdminSupabase();
   const { data: due, error } = await admin.rpc('claim_notifications', { p_limit: limit });
   if (error) {
-    console.error('claim_notifications failed', error);
+    logger.error('notifications_claim_failed', error);
     return counts;
   }
 
+  const emails = due.filter((n) => n.channel === 'email').length;
+  logger.info('notifications_claimed', { count: due.length, email: emails, sms: due.filter((n) => n.channel === 'sms').length, push: due.length - emails - due.filter((n) => n.channel === 'sms').length });
+
   for (const n of due) {
+    const about = { id: n.id, template: n.template, channel: n.channel, to: maskRecipient(n.recipient), attempt: n.attempts };
     const finish = (outcome: 'sent' | 'failed' | 'not_sent', extra: { provider?: string; reference?: string; error?: string } = {}) =>
       admin.rpc('finish_notification', {
         p_id: n.id,
@@ -53,12 +60,14 @@ export async function dispatchNotifications(limit = 20): Promise<{ sent: number;
         p_error: extra.error,
       });
 
-    if (n.channel === 'sms' && n.attempts === 1) await alertStore(n);
+    if (n.attempts === 1 && (n.channel === 'sms' || (n.channel === 'email' && n.template === 'order_received'))) await alertStore(n);
 
     const message = renderMessage(n.template, n.payload as unknown as NotificationPayload | VendorPayload);
     const provider = n.channel === 'sms' ? smsProvider() : n.channel === 'push' ? pushProvider() : emailProvider();
     if (!message || !provider) {
       counts.skipped++;
+      const why = message ? `No ${n.channel} provider is set up` : `Unknown template ${n.template}`;
+      logger.warn('notification_not_sent', { ...about, reason: why });
       await finish('not_sent', {
         error: message ? `No ${n.channel === 'sms' ? 'SMS' : n.channel === 'push' ? 'push' : 'email'} provider is set up` : `Unknown template ${n.template}`,
       });
@@ -69,18 +78,22 @@ export async function dispatchNotifications(limit = 20): Promise<{ sent: number;
       const payload = n.payload as { order_token?: string };
       const result = await provider.send(to, message, n.channel === 'push' ? { data: { orderToken: payload.order_token ?? '' } } : undefined);
       counts.sent++;
+      logger.info('notification_sent', { ...about, provider: provider.name, reference: result.reference });
       await finish('sent', { provider: provider.name, reference: result.reference });
     } catch (cause) {
       if (cause instanceof UnregisteredDeviceError) {
         // The app was removed from that phone: forget it rather than retrying.
         counts.skipped++;
+        logger.warn('notification_not_sent', { ...about, provider: provider.name, reason: 'the phone no longer has the app' });
         await admin.rpc('forget_push_device', { p_token: n.recipient });
         await finish('not_sent', { provider: provider.name, error: cause.message });
         continue;
       }
       counts.failed++;
+      logger.error('notification_failed', cause, { ...about, provider: provider.name, willRetry: n.attempts < 5 });
       await finish('failed', { provider: provider.name, error: cause instanceof Error ? cause.message : String(cause) });
     }
   }
+  logger.info('notifications_dispatched', { ...counts });
   return counts;
 }

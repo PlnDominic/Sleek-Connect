@@ -93,11 +93,15 @@ const pushes = (orderNumber) => sql(`select coalesce(string_agg(n.recipient || '
   const emailed = (await withEmail('  Esi.Guest@Example.COM ')).data;
   assert(emailed?.order_number && sql(`select contact_email from public.orders where order_number = '${emailed.order_number}'`) === 'esi.guest@example.com', 'a valid one is trimmed and stored in lower case');
   assert((await rows(anon.from('orders').select('contact_email'))).length === 0 && (await rows(kofi.from('orders').select('contact_email'))).length === 0, 'it cannot be read from the browser, by anyone');
+  assert(sql(`select string_agg(n.channel || ':' || n.recipient || ':' || n.template, ',') from public.notifications n join public.orders o on o.id = n.order_id where o.order_number = '${emailed.order_number}'`) === 'email:esi.guest@example.com:order_received', 'placing the order queues an "order received" email at once, and no SMS');
+  assert(sql(`select n.payload ->> 'total_ghs' from public.notifications n join public.orders o on o.id = n.order_id where o.order_number = '${emailed.order_number}' and n.template = 'order_received'`) === '150.00', 'it carries the order total the database worked out');
   await pay(emailed);
-  assert(sql(`select string_agg(n.channel || ':' || n.recipient, ',' order by n.channel) from public.notifications n join public.orders o on o.id = n.order_id where o.order_number = '${emailed.order_number}' and n.channel <> 'push'`) === 'email:esi.guest@example.com,sms:024 123 4567', 'order updates go to that address by email as well as SMS');
+  assert(sql(`select string_agg(n.channel || ':' || n.recipient, ',' order by n.channel, n.template) from public.notifications n join public.orders o on o.id = n.order_id where o.order_number = '${emailed.order_number}' and n.channel <> 'push'`) === 'email:esi.guest@example.com,email:esi.guest@example.com,sms:024 123 4567', 'once paid, the confirmation goes by email and SMS as before');
+  for (let i = 0; i < 3; i++) await withEmail('esi.guest@example.com');
+  assert(sql("select count(*) from public.notifications where template = 'order_received' and recipient = 'esi.guest@example.com'") === '3', 'an address gets at most three \"order received\" emails an hour');
   const noEmail = (await withEmail('')).data;
   await pay(noEmail);
-  assert(sql(`select count(*) from public.notifications n join public.orders o on o.id = n.order_id where o.order_number = '${noEmail.order_number}' and n.channel = 'email'`) === '0', 'without one, a guest still gets SMS only');
+  assert(sql(`select count(*) from public.notifications n join public.orders o on o.id = n.order_id where o.order_number = '${noEmail.order_number}' and n.channel = 'email'`) === '0', 'without one, a guest still gets no email (SMS only)');
 
   console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll mobile database checks passed');
   process.exit(failures ? 1 : 0);

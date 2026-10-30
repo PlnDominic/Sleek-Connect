@@ -29,11 +29,30 @@ address as the sender. For a busy store, move to a transactional email service l
 `gmail`; nothing else changes. Customer emails go to the optional email typed at checkout, or else the signed-in account's email
 (Google sign-in); everyone else is reached by SMS.
 
+## Checking emails in the logs
+
+Every send is logged as one JSON line (Vercel → project → Logs, or the terminal in development). Recipients are masked
+(`k***@example.com`, `***567`), and no message text, delivery code or order link is logged.
+
+| Event | Meaning |
+| --- | --- |
+| `order_placed` | An order was placed on the website (`emailGiven` says whether an address was typed). An "order received" email is queued by the database and sent straight away. |
+| `notifications_claimed` | The sender picked up queued messages (`count`, and how many are email, SMS, push). |
+| `gmail_response` | Gmail's answer for one email: `accepted`/`rejected` counts, `messageId` and the SMTP `response` (for example `250 2.0.0 OK`). This is the proof Gmail took it. |
+| `notification_sent` | A message was handed to its provider and recorded as sent (`template`, `channel`, `to`, `reference`). |
+| `notification_failed` | The provider refused or timed out (`willRetry` is true for the first four attempts). |
+| `notification_not_sent` | Nothing was sent: no provider is set up, or the template is unknown. |
+| `store_alert_sent` / `store_alert_failed` | The copy to `STORE_ALERT_EMAIL`. |
+| `notifications_dispatched` | The end-of-run totals (`sent`, `failed`, `skipped`). |
+
+To follow one email: find `order_placed`, then `notification_sent` with `template: "order_received"` and `channel: "email"`,
+and the `gmail_response` just before it. In development (`EMAIL_PROVIDER=console`) the whole message is also printed.
+
 ## Required test matrix
 
 Use a real but controlled customer account and a staff-owned phone/email address. Confirm that no sensitive delivery code is printed in public logs.
 
-- Order confirmation: SMS and email are sent once.
+- Order received (at checkout) and order confirmation (once paid): the email is sent once, and the logs show `gmail_response` and `notification_sent` for it.
 - Payment failure: the customer receives the failure message and stock is released.
 - Packing, dispatch, delivered, failed delivery, cancellation, return, refund, and support reply messages are delivered.
 - Provider timeout: the notification is marked `failed` and remains eligible for retry.
