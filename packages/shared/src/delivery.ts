@@ -20,6 +20,8 @@ export interface DeliveryConfig {
   rates: { zoneId: string; optionId: string; fee: number | null; available: boolean }[];
   options: DeliveryOption[];
   freeThreshold: number | null;
+  /** Pay on delivery (cash to the rider): whether it is offered, and the largest order it is offered for. */
+  payOnDelivery: { enabled: boolean; maxGhs: number | null };
 }
 
 export interface DeliveryQuote {

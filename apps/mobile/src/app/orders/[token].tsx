@@ -10,6 +10,7 @@ import {
   formatPriceOr,
   momoNetworks,
   networkNames,
+  payOnDeliveryLabels,
   statusLabels,
   trackingProgress,
   type MomoNetwork,
@@ -81,7 +82,9 @@ function OrderView({ order, token, onChanged }: { order: CustomerOrder; token: s
   const delivery = useQuery('delivery-config', getDeliveryConfig, 5 * 60_000);
   const progress = trackingProgress(order.status);
   const timeline = buildTimeline(order);
-  const arrival = order.paid_at ? expectedDelivery(delivery.data?.options.find((o) => o.id === order.delivery_option), order.paid_at) : null;
+  const payOnDelivery = order.payment_method === 'cod';
+  const dispatchFrom = order.paid_at ?? order.cod_confirmed_at;
+  const arrival = dispatchFrom ? expectedDelivery(delivery.data?.options.find((o) => o.id === order.delivery_option), dispatchFrom) : null;
   const [notifying, setNotifying] = useState<'unknown' | 'on' | 'off'>('unknown');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -114,7 +117,7 @@ function OrderView({ order, token, onChanged }: { order: CustomerOrder; token: s
 
       <Card>
         <AppText weight="bold" size={18}>
-          {statusLabels[order.status]}
+          {(payOnDelivery && payOnDeliveryLabels[order.status]) || statusLabels[order.status]}
         </AppText>
         <TrackingBar status={order.status} />
         {progress.problem ? <Notice>{progress.problem}</Notice> : null}
@@ -130,7 +133,17 @@ function OrderView({ order, token, onChanged }: { order: CustomerOrder; token: s
         ) : null}
       </Card>
 
-      {order.status === 'pending_payment' && <PayAgain token={token} reservedUntil={order.reserved_until} onChanged={onChanged} />}
+      {order.status === 'pending_payment' && !payOnDelivery && <PayAgain token={token} reservedUntil={order.reserved_until} onChanged={onChanged} />}
+      {payOnDelivery && ['pending_payment', 'paid', 'packing', 'packed', 'out_for_delivery'].includes(order.status) ? (
+        <Card title="Pay on delivery">
+          <AppText size={14}>
+            {order.status === 'pending_payment'
+              ? 'We’ll call you to confirm this order. '
+              : ''}
+            Pay {formatPriceOr(order.total_ghs, 'the total')} in cash to the rider when it arrives.
+          </AppText>
+        </Card>
+      ) : null}
 
       {order.status === 'out_for_delivery' && order.delivery_code ? (
         <Card title="Your delivery code">
@@ -165,7 +178,7 @@ function OrderView({ order, token, onChanged }: { order: CustomerOrder; token: s
         <Total label="Delivery" value={order.delivery_fee_ghs === null ? 'To be confirmed' : order.delivery_fee_ghs === 0 ? 'Free' : formatPrice(order.delivery_fee_ghs)} />
         <Total label="Total" value={formatPriceOr(order.total_ghs, 'To be confirmed')} bold />
         <AppText size={12} color={colors.textMuted}>
-          {order.payment_method === 'card' ? 'Card' : `${order.momo_network ? networkNames[order.momo_network] : 'Mobile Money'}${order.wallet_ending ? `, wallet ending ${order.wallet_ending}` : ''}`}
+          {order.payment_method === 'cod' ? 'Pay on delivery (cash)' : order.payment_method === 'card' ? 'Card' : `${order.momo_network ? networkNames[order.momo_network] : 'Mobile Money'}${order.wallet_ending ? `, wallet ending ${order.wallet_ending}` : ''}`}
         </AppText>
       </Card>
 

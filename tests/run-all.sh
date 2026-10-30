@@ -71,6 +71,7 @@ npx supabase db reset >/dev/null 2>&1; suite "database: vendors, subscriptions, 
 npx supabase db reset >/dev/null 2>&1; suite "database: vendor orders, payouts, messages, ratings, online subscription" db-vendor-ops.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: mobile app push notifications" db-mobile.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: launch schema verification" db-schema-verify.cjs
+npx supabase db reset >/dev/null 2>&1; suite "database: pay on delivery" db-pay-on-delivery.cjs
 suite "email: Gmail sender (Nodemailer)" unit-email.cjs
 
 if [ "$FAILED" = "0" ]; then echo "== all suites passed"; else echo "== some suites FAILED"; fi

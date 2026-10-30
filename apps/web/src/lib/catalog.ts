@@ -128,7 +128,7 @@ export async function getDeliveryConfig(): Promise<DeliveryConfig> {
   cacheTag('catalog');
 
   const supabase = createSupabase();
-  const [areas, zones, rates, options, settings] = await Promise.all([
+  const [areas, zones, rates, options, settings, cod] = await Promise.all([
     supabase.from('delivery_areas').select('name, zone_id').eq('is_active', true).order('sort_order').then(unwrap),
     supabase.from('delivery_zones').select('id, name').order('sort_order').then(unwrap),
     supabase.from('delivery_rates').select('zone_id, option_id, fee_ghs, is_available').then(unwrap),
@@ -138,6 +138,8 @@ export async function getDeliveryConfig(): Promise<DeliveryConfig> {
       .order('sort_order')
       .then(unwrap),
     supabase.from('store_settings').select('free_delivery_threshold_ghs').single().then(unwrap),
+    // Read apart from the rest: checkout keeps working (without the option) on a database that doesn't have it yet.
+    supabase.from('store_settings').select('pay_on_delivery_enabled, pay_on_delivery_max_ghs').single(),
   ]);
   return {
     areas: areas.map((a) => ({ name: a.name, zoneId: a.zone_id })),
@@ -153,6 +155,10 @@ export async function getDeliveryConfig(): Promise<DeliveryConfig> {
       cutoff: o.cutoff_time?.slice(0, 5) ?? null,
     })),
     freeThreshold: settings?.free_delivery_threshold_ghs ?? null,
+    payOnDelivery: {
+      enabled: cod.data?.pay_on_delivery_enabled ?? false,
+      maxGhs: cod.data?.pay_on_delivery_max_ghs ?? null,
+    },
   };
 }
 

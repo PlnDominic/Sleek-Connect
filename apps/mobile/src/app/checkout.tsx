@@ -9,7 +9,7 @@ import { ProductImage } from '@/components/ProductImage';
 import { EmptyState, ErrorState, Skeleton } from '@/components/States';
 import { BackButton, BottomBar, useScreenTop } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
-import { getDeliveryConfig, placeOrder, requestPayment, type PaymentRequest, type PlacedOrder } from '@/lib/checkout';
+import { getDeliveryConfig, notifyCodOrder, placeOrder, requestPayment, type PaymentRequest, type PlacedOrder } from '@/lib/checkout';
 import { getOrderStatus, rememberOrder } from '@/lib/orders';
 import { registerForPush } from '@/lib/push';
 import { useQuery } from '@/lib/query';
@@ -96,8 +96,10 @@ function Details({
   const [directions, setDirections] = useState('');
   const [gps, setGps] = useState('');
   const [optionId, setOptionId] = useState(delivery.options[0]?.id ?? '');
+  const [payWith, setPayWith] = useState<'momo' | 'cod'>('momo');
   const [network, setNetwork] = useState<MomoNetwork>('mtn');
   const [wallet, setWallet] = useState('');
+  const { clear } = useBag();
   const [promo, setPromo] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -141,6 +143,13 @@ function Details({
   const chosen = quotes.find((x) => x.option.id === optionId);
   const fee = chosen?.q.available ? chosen.q.fee : null;
 
+  // Pay on delivery needs a known total, and may be capped by the store.
+  const codSetting = delivery.payOnDelivery;
+  const total = fee === null ? null : subtotal + fee;
+  const codBlocked =
+    total === null ? 'Choose an area with a delivery fee first.' : codSetting.maxGhs !== null && total > codSetting.maxGhs ? `Available for orders up to ${formatPrice(codSetting.maxGhs)}.` : null;
+  const cod = payWith === 'cod' && codSetting.enabled && codBlocked === null;
+
   const canPlace = !soldOut && !busy && !!chosen?.q.available;
 
   async function submit() {
@@ -148,13 +157,13 @@ function Details({
     if (name.trim().length < 2) return setError('Enter the name of the person receiving the order.');
     if (phone.replace(/\D/g, '').length < 9) return setError('Enter a phone number we can call for delivery.');
     if (email.trim() && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) return setError('Check the email address, or leave it empty.');
-    if (wallet.replace(/\D/g, '').length < 9) return setError('Enter the Mobile Money number you will pay from.');
+    if (!cod && wallet.replace(/\D/g, '').length < 9) return setError('Enter the Mobile Money number you will pay from.');
     setBusy(true);
     try {
       const order = await placeOrder({
         customer: { name: name.trim(), phone: phone.trim(), email: email.trim() || undefined, area, ghanapostGps: gps.trim() || undefined, directions: directions.trim() || undefined },
         deliveryOption: optionId,
-        payment: { network, wallet: wallet.trim() },
+        payment: cod ? { cod: true } : { network, wallet: wallet.trim() },
         items: items.map((i) => ({ slug: i.slug, size: i.sizeId, quantity: i.qty })),
         promoCode: promo,
         signedIn: !!user,
@@ -162,6 +171,13 @@ function Details({
       rememberOrder({ token: order.orderToken, orderNumber: order.orderNumber });
       // Asking now is the moment shoppers expect updates; "no" never blocks the order.
       void registerForPush(order.orderToken);
+      if (cod) {
+        // Nothing to charge: staff call to confirm, and the rider collects the cash.
+        void notifyCodOrder(order.orderToken);
+        clear();
+        router.replace({ pathname: '/orders/[token]', params: { token: order.orderToken } });
+        return;
+      }
       const payer = { network, wallet: wallet.trim() };
       onPlaced({ order, payer, prompt: await requestPayment(order.orderToken, payer) });
     } catch (cause) {
@@ -218,9 +234,28 @@ function Details({
           />
         </Card>
 
-        <Card title="Pay with Mobile Money">
-          <Choices label="Network" value={network} onChange={setNetwork} options={momoNetworks.map((n) => ({ id: n.id, label: n.label }))} />
-          <Field label="Mobile Money number" value={wallet} onChangeText={setWallet} keyboardType="phone-pad" placeholder="024 123 4567" hint="You will get a prompt on this phone to approve the payment." />
+        <Card title="Payment">
+          {codSetting.enabled ? (
+            <Choices
+              label="How you pay"
+              value={cod ? 'cod' : 'momo'}
+              onChange={setPayWith}
+              options={[
+                { id: 'momo', label: 'Mobile Money', sub: 'Approve a prompt on your phone' },
+                { id: 'cod', label: 'Pay on delivery', sub: codBlocked ?? 'Pay cash to the rider. We call you to confirm first.', disabled: codBlocked !== null },
+              ]}
+            />
+          ) : null}
+          {cod ? (
+            <AppText size={13} color={colors.textMuted}>
+              We’ll call you to confirm the order before we pack it. Have {total === null ? 'the total' : formatPrice(total)} in cash ready for the rider. Not available for items from independent stores.
+            </AppText>
+          ) : (
+            <>
+              <Choices label="Network" value={network} onChange={setNetwork} options={momoNetworks.map((n) => ({ id: n.id, label: n.label }))} />
+              <Field label="Mobile Money number" value={wallet} onChangeText={setWallet} keyboardType="phone-pad" placeholder="024 123 4567" hint="You will get a prompt on this phone to approve the payment." />
+            </>
+          )}
           <Field label="Promo code (optional)" value={promo} onChangeText={setPromo} autoCapitalize="characters" />
         </Card>
 
@@ -237,7 +272,7 @@ function Details({
         {error && <Notice>{error}</Notice>}
       </ScrollView>
       <BottomBar>
-        <Button label={busy ? 'Placing your order…' : 'Place order and pay'} onPress={() => void submit()} disabled={!canPlace} busy={busy} />
+        <Button label={busy ? 'Placing your order…' : cod ? 'Place order, pay on delivery' : 'Place order and pay'} onPress={() => void submit()} disabled={!canPlace} busy={busy} />
       </BottomBar>
     </KeyboardAvoidingView>
   );

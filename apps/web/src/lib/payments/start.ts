@@ -4,10 +4,14 @@ import type { MomoNetwork } from '@sleek/shared';
 import { createAdminSupabase } from '@/lib/supabase/admin';
 import { getPaymentProvider } from './index';
 
-export type PaymentStart =
+/** What starting an online payment can come to. */
+export type OnlinePaymentStart =
   | { kind: 'requested'; testMode: boolean }
   | { kind: 'unavailable'; reason: string }
   | { kind: 'failed'; reason: string };
+
+/** Pay on delivery has nothing to start: staff confirm the order and the rider collects the cash. */
+export type PaymentStart = OnlinePaymentStart | { kind: 'cod' };
 
 /**
  * Starts payment for a freshly placed order: records the attempt, then asks the provider to charge the amount the
@@ -16,7 +20,7 @@ export type PaymentStart =
 export async function startOrderPayment(
   order: { token: string; number: string; total: number | null },
   payer: { network: MomoNetwork; wallet: string },
-): Promise<PaymentStart> {
+): Promise<OnlinePaymentStart> {
   const provider = getPaymentProvider();
   if (!provider) {
     return { kind: 'unavailable', reason: 'Online payment isn’t switched on yet, so no payment prompt was sent.' };

@@ -8,12 +8,14 @@ export interface CustomerOrder {
   status: OrderStatus;
   created_at: string;
   paid_at: string | null;
+  /** Pay on delivery: when staff confirmed the order. */
+  cod_confirmed_at: string | null;
   reserved_until: string | null;
   customer_name: string;
   area: string;
   delivery_option: string;
   is_gift: boolean;
-  payment_method: 'momo' | 'card';
+  payment_method: 'momo' | 'card' | 'cod';
   momo_network: 'mtn' | 'telecel' | 'at' | null;
   wallet_ending: string | null;
   subtotal_ghs: number;

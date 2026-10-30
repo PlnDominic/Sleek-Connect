@@ -37,6 +37,12 @@ export const statusShort: Record<OrderStatus, string> = {
   returned: 'Returned',
 };
 
+/** Pay on delivery orders are confirmed by a person, not by a payment, so two of the names change. */
+export const payOnDeliveryLabels: Partial<Record<OrderStatus, string>> = {
+  pending_payment: 'Order placed, waiting for our call',
+  paid: 'Order confirmed',
+};
+
 export const failureReasons: Record<DeliveryFailureReason, string> = {
   customer_unreachable: 'We couldn’t reach you by phone',
   customer_absent: 'No one was available to receive it',
@@ -68,12 +74,15 @@ export interface TimelineStep {
  */
 export function buildTimeline(order: {
   status: OrderStatus;
+  /** 'cod' for pay on delivery orders: they are confirmed by a call, not by a payment. */
+  payment_method?: string;
   events: { status: OrderStatus; at: string; reason: DeliveryFailureReason | null }[];
 }): TimelineStep[] {
   const final = finalStatuses.includes(order.status);
+  const label = (status: OrderStatus) => (order.payment_method === 'cod' && payOnDeliveryLabels[status]) || statusLabels[status];
   const steps: TimelineStep[] = order.events.map((event, i) => ({
     key: `${event.status}-${i}`,
-    title: statusLabels[event.status],
+    title: label(event.status),
     at: event.at,
     detail: event.reason ? failureReasons[event.reason] : undefined,
     state: i === order.events.length - 1 && !final ? 'current' : 'done',
@@ -83,7 +92,7 @@ export function buildTimeline(order: {
       order.status === 'packing' ? 'paid' : order.status,
     );
     for (const status of happyPath.slice(from + 1)) {
-      steps.push({ key: `next-${status}`, title: statusLabels[status], state: 'upcoming' });
+      steps.push({ key: `next-${status}`, title: label(status), state: 'upcoming' });
     }
   }
   return steps;

@@ -66,13 +66,13 @@ export async function alertStoreNewOrder(order: {
   if (order.phone) facts.push(['Phone', order.phone]);
   if (order.area) facts.push(['Area', order.area]);
   facts.push(['Placed on', order.source === 'app' ? 'The mobile app' : 'The website']);
-  facts.push(['Payment', order.payment === 'requested' ? 'Prompt sent' : order.payment === 'unavailable' ? 'Not switched on, no prompt sent' : order.payment]);
+  facts.push(['Payment', order.payment === 'requested' ? 'Prompt sent' : order.payment === 'unavailable' ? 'Not switched on, no prompt sent' : order.payment === 'cod' ? 'Pay on delivery: call the customer to confirm' : order.payment]);
   facts.push(['Customer email', customerEmailed ? '"Order received" email queued' : 'None sent (no address given, or the limit of three an hour was reached)']);
   const subject = `New order ${order.orderNumber}`;
-  const text = `A new order is waiting for payment.\n\n${facts.map(([label, value]) => `${label}: ${value}`).join('\n')}`;
+  const text = `${order.payment === 'cod' ? 'A new pay on delivery order is waiting for your confirmation.' : 'A new order is waiting for payment.'}\n\n${facts.map(([label, value]) => `${label}: ${value}`).join('\n')}`;
   const html = buildEmailHtml({
     subject,
-    body: 'A new order was placed and is waiting for payment.',
+    body: order.payment === 'cod' ? 'A new pay on delivery order was placed. Call the customer to confirm it.' : 'A new order was placed and is waiting for payment.',
     facts,
     tag: 'Store alert',
     reason: 'A notice for the store owner.',

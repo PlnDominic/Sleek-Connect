@@ -64,8 +64,10 @@ async function OrderDetails({ params }: { params: PageProps<'/orders/[token]'>['
     getStoreInfo(),
   ]);
   const option = delivery.options.find((o) => o.label === order.delivery_option);
+  // Pay on delivery orders count from when we confirmed them; online orders from when they were paid.
+  const dispatchFrom = order.paid_at ?? order.cod_confirmed_at;
   const expected =
-    order.paid_at && ['paid', 'packing', 'packed', 'out_for_delivery'].includes(order.status) ? expectedDelivery(option, order.paid_at) : null;
+    dispatchFrom && ['paid', 'packing', 'packed', 'out_for_delivery'].includes(order.status) ? expectedDelivery(option, dispatchFrom) : null;
 
   return (
     <>
@@ -234,7 +236,11 @@ async function OrderDetails({ params }: { params: PageProps<'/orders/[token]'>['
                 <dt>Payment</dt>
                 <dd>
                   {paymentSummary(order)}
-                  {order.paid_at ? ` · paid ${formatDateTime(order.paid_at)}` : ' · not paid yet'}
+                  {order.paid_at
+                    ? ` · ${order.payment_method === 'cod' ? 'cash collected' : 'paid'} ${formatDateTime(order.paid_at)}`
+                    : order.payment_method === 'cod'
+                      ? ' · pay the rider when it arrives'
+                      : ' · not paid yet'}
                 </dd>
               </div>
             </dl>

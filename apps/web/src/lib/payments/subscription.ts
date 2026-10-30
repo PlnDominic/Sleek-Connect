@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import type { MomoNetwork } from '@sleek/shared';
 import { createUserSupabase } from '@/lib/supabase/server';
 import { createAdminSupabase } from '@/lib/supabase/admin';
-import type { PaymentStart } from './start';
+import type { OnlinePaymentStart } from './start';
 import { getPaymentProvider } from './index';
 
 /** Webhook references that start with this belong to a vendor's yearly subscription, not to an order. */
@@ -14,7 +14,7 @@ export const subscriptionReferencePrefix = 'SUB-';
  * amount from the fee in settings), then the provider is asked to charge it. A verified notification at the payment
  * webhook is what opens or renews the store, through `confirm_subscription_payment`.
  */
-export async function startSubscriptionPayment(payer: { network: MomoNetwork; wallet: string }): Promise<PaymentStart> {
+export async function startSubscriptionPayment(payer: { network: MomoNetwork; wallet: string }): Promise<OnlinePaymentStart> {
   const provider = getPaymentProvider();
   if (!provider) return { kind: 'unavailable', reason: 'Online payment isn’t switched on yet. Pay as shown below and we will record it.' };
 

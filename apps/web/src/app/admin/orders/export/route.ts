@@ -17,6 +17,8 @@ export async function GET(request: Request) {
     .limit(10000);
   if ('statuses' in config) query = query.in('status', [...config.statuses]);
   if ('flag' in config) query = query.eq(config.flag, true);
+  if ('method' in config) query = query.eq('payment_method', config.method);
+  if ('notMethod' in config) query = query.neq('payment_method', config.notMethod);
   if (q) {
     const term = q.replace(/[^\p{L}\p{N} +-]/gu, '');
     query = query.or(`order_number.ilike.%${term}%,customer_name.ilike.%${term}%,phone.ilike.%${term}%`);

@@ -72,6 +72,15 @@ export async function dispatchOrder(orderId: string, orderNumber: string, _: Act
   flash(orderPage(orderNumber), 'Out for delivery. The customer has been sent their delivery code.');
 }
 
+/** Pay on delivery: staff confirm the order (usually after a call), so it can be packed. */
+export async function confirmCodOrder(orderId: string, orderNumber: string, _: ActionState, form: FormData): Promise<ActionState> {
+  const supabase = await createUserSupabase();
+  const { error } = await supabase.rpc('admin_confirm_cod_order', { p_order_id: orderId, p_note: text(form, 'note') || undefined });
+  if (error) return failed(error);
+  afterStatusChange();
+  flash(orderPage(orderNumber), 'Order confirmed. It is in the to-pack queue, and the customer has been told.');
+}
+
 export async function markDelivered(orderId: string, orderNumber: string, _: ActionState, form: FormData): Promise<ActionState> {
   const supabase = await createUserSupabase();
   const { data, error } = await supabase.rpc('admin_mark_delivered', {
@@ -79,6 +88,7 @@ export async function markDelivered(orderId: string, orderNumber: string, _: Act
     p_recipient: text(form, 'recipient'),
     p_code: text(form, 'code'),
     p_note: text(form, 'note') || undefined,
+    p_cash_collected: form.get('cash_collected') === 'on',
   });
   if (error) return failed(error);
   if (data === 'wrong_code') {

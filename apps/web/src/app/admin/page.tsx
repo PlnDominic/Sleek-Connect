@@ -28,7 +28,8 @@ export default async function Dashboard({ searchParams }: PageProps<'/admin'>) {
   const today = new Date(`${dayKey(now)}T00:00:00Z`);
   const since30 = new Date(today.getTime() - 29 * DAY);
 
-  const [toPack, ready, out, failed, review, refunds, returnsToReview, returnRefunds, openCases, stock, expiring, recent, paid] = await Promise.all([
+  const [toConfirm, toPack, ready, out, failed, review, refunds, returnsToReview, returnRefunds, openCases, stock, expiring, recent, paid] = await Promise.all([
+    count(orders().eq('status', 'pending_payment').eq('payment_method', 'cod')),
     count(orders().in('status', ['paid', 'packing'])),
     count(orders().eq('status', 'packed')),
     count(orders().eq('status', 'out_for_delivery')),
@@ -129,6 +130,11 @@ export default async function Dashboard({ searchParams }: PageProps<'/admin'>) {
           <strong className={dash.statValue}>{formatPrice(todaySales.total)}</strong>
           <p className={dash.statNote}>Orders to fulfil</p>
           <div className={dash.segments}>
+            {toConfirm > 0 && (
+              <Link href="/admin/orders?view=confirm" data-on>
+                To confirm <b>{toConfirm}</b>
+              </Link>
+            )}
             <Link href="/admin/orders?view=to_pack" data-on={toPack > 0 || undefined}>
               To pack <b>{toPack}</b>
             </Link>

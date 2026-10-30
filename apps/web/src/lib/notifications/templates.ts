@@ -25,6 +25,8 @@ export interface NotificationPayload {
   refund_amount_ghs?: number | null;
   /** When the held stock is released if the order isn't paid (ISO), for "order received". */
   reserved_until?: string | null;
+  /** Pay on delivery: the customer pays the rider in cash, after staff confirm the order by phone. */
+  pay_on_delivery?: boolean;
 }
 
 export interface Message {
@@ -144,6 +146,14 @@ function renderCustomerMessage(template: string, p: NotificationPayload): Messag
   const hi = `Hi ${firstName(p.customer_name)},`;
   switch (template) {
     case 'order_received': {
+      if (p.pay_on_delivery) {
+        return {
+          subject: `We received your order ${p.order_number}`,
+          text: `${hi} thanks for your order ${p.order_number}${p.total_ghs === null ? '' : ` (${formatPrice(p.total_ghs)})`}. We'll call you to confirm it. You pay ${
+            p.total_ghs === null ? 'the total' : formatPrice(p.total_ghs)
+          } in cash when it arrives. Track it: ${link}`,
+        };
+      }
       const until = p.reserved_until
         ? new Date(p.reserved_until).toLocaleTimeString('en-GH', { hour: 'numeric', minute: '2-digit', timeZone: 'Africa/Accra' })
         : null;
@@ -155,6 +165,14 @@ function renderCustomerMessage(template: string, p: NotificationPayload): Messag
       };
     }
     case 'order_confirmed':
+      if (p.pay_on_delivery) {
+        return {
+          subject: `Order ${p.order_number} confirmed`,
+          text: `${hi} thank you! Sleek Connect Store order ${p.order_number} is confirmed. Please have ${
+            p.total_ghs === null ? 'the total' : formatPrice(p.total_ghs)
+          } in cash ready for the rider. Track it: ${link}`,
+        };
+      }
       return {
         subject: `Order ${p.order_number} confirmed`,
         text: `${hi} thank you! Sleek Connect Store order ${p.order_number}${
@@ -169,7 +187,9 @@ function renderCustomerMessage(template: string, p: NotificationPayload): Messag
     case 'out_for_delivery':
       return {
         subject: `Order ${p.order_number} is on the way`,
-        text: `${hi} order ${p.order_number} is on the way${p.rider_name ? ` with ${p.rider_name}` : ''}. Give the rider your delivery code ${p.delivery_code}. ${link}`,
+        text: `${hi} order ${p.order_number} is on the way${p.rider_name ? ` with ${p.rider_name}` : ''}. Give the rider your delivery code ${p.delivery_code}${
+          p.pay_on_delivery ? ` and pay ${p.total_ghs === null ? 'the total' : formatPrice(p.total_ghs)} in cash` : ''
+        }. ${link}`,
       };
     case 'order_delivered':
       return {

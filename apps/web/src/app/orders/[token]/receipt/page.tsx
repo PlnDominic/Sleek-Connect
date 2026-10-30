@@ -33,7 +33,7 @@ async function Receipt({ params }: { params: PageProps<'/orders/[token]/receipt'
     return (
       <div className={styles.sheet}>
         <Logo />
-        <p>The receipt for order {order.order_number} will be ready once it has been paid.</p>
+        <p>The receipt for order {order.order_number} will be ready once it has been paid{order.payment_method === 'cod' ? ' (when the rider collects the cash)' : ''}.</p>
         <Link href={`/orders/${token}`}>Back to your order</Link>
       </div>
     );

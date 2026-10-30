@@ -464,6 +464,8 @@ catalogue as the website.
   notifications, and each order status change that sends an SMS or email also sends a push (`PUSH_PROVIDER=expo` on the
   server). Tapping a notification opens the order. Remote push can't be received in Expo Go on Android; use a development
   build. See [docs/MOBILE_RELEASE.md](docs/MOBILE_RELEASE.md) for building, credentials and the store listings.
+- **Pay on delivery:** checkout offers cash to the rider as well as Mobile Money (no bank option). Staff confirm the order by
+  phone, and the rider's cash is recorded at delivery. See [docs/PAY_ON_DELIVERY.md](docs/PAY_ON_DELIVERY.md).
 - **Still on the website:** returns, receipts, wishlists sync, saved addresses and Mobile Money number management, and
   vendor tools.
 - **Speed:** product photos are cached on the phone, lists are virtualised, data is cached between screens and refreshed in

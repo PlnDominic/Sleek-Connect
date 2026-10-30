@@ -49,8 +49,14 @@
   `vendor_balance`/`admin_record_payout` (finance, reference required, never above the balance). Subscription payments are
   confirmed only by `confirm_subscription_payment` from the webhook (references starting `SUB-`). Messages to vendors go
   through `queue_vendor_message`, never directly into `notifications`.
-- Orders become paid only through `public.confirm_payment`, after the webhook has verified the provider's
+- Online orders become paid only through `public.confirm_payment`, after the webhook has verified the provider's
   notification. Stock is reserved by `place_order` and released by `release_order_reservation`.
+- Pay on delivery (`payment_method = 'cod'`, cash to the rider, no bank option; see `docs/PAY_ON_DELIVERY.md`): `place_order`
+  holds the stock for `pay_on_delivery_hold_hours`; staff confirm it with `admin_confirm_cod_order` (reservation becomes a
+  sale, status `paid`, `cod_confirmed_at` set, `paid_at` stays empty); `admin_mark_delivered(..., p_cash_collected)` records the
+  cash (a `payments` row with provider `cash`, `paid_at`, `cash_collected_ghs`). Nothing else may set `paid_at` for a
+  `cod` order, so revenue counts when the cash is in hand and cancelled orders never show a refund due. COD is refused for
+  vendor-store items, above `pay_on_delivery_max_ghs`, or when the fee is unknown.
 - The order token must not reach anything staff can read either. Return photos are stored under
   `public.return_photo_folder(token)` (a hash), not the token.
 - Shoppers can export and delete their own data only through `public.export_my_data` and `public.delete_my_account`

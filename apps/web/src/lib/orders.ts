@@ -2,6 +2,7 @@ import type { Database } from '@/lib/supabase/database.types';
 import {
   buildTimeline,
   failureReasons,
+  formatPrice,
   finalStatuses,
   networkNames,
   statusLabels,
@@ -21,6 +22,8 @@ export interface CustomerOrder {
   status: OrderStatus;
   created_at: string;
   paid_at: string | null;
+  /** Pay on delivery: when staff confirmed the order (nothing is paid until the rider collects the cash). */
+  cod_confirmed_at: string | null;
   reserved_until: string | null;
   customer_name: string;
   phone: string;
@@ -29,7 +32,7 @@ export interface CustomerOrder {
   directions: string | null;
   delivery_option: string;
   is_gift: boolean;
-  payment_method: 'momo' | 'card';
+  payment_method: 'momo' | 'card' | 'cod';
   momo_network: 'mtn' | 'telecel' | 'at' | null;
   wallet_ending: string | null;
   subtotal_ghs: number;
@@ -123,14 +126,28 @@ export const formatTime = (iso: string) => timeOnly.format(new Date(iso));
 
 export function paymentSummary(order: Pick<CustomerOrder, 'payment_method' | 'momo_network' | 'wallet_ending'>): string {
   if (order.payment_method === 'card') return 'Card';
+  if (order.payment_method === 'cod') return 'Pay on delivery (cash)';
   const network = order.momo_network ? networkNames[order.momo_network] : 'Mobile Money';
   return order.wallet_ending ? `${network}, wallet ending ${order.wallet_ending}` : network;
+}
+
+/** Pay on delivery orders: a reminder to have the cash ready. */
+function cashNote(order: Pick<CustomerOrder, 'payment_method' | 'total_ghs'>): string {
+  return order.payment_method === 'cod' ? ` and pay ${order.total_ghs === null ? 'the total' : formatPrice(order.total_ghs)} in cash` : '';
 }
 
 /** The headline and next steps shown at the top of the order page (PRD FR-028). */
 export function orderHeadline(order: CustomerOrder): { title: string; body: string } {
   switch (order.status) {
     case 'pending_payment':
+      if (order.payment_method === 'cod') {
+        return {
+          title: 'Order received',
+          body: `We’ll call you on ${order.phone} to confirm it. You pay ${
+            order.total_ghs === null ? 'the total' : formatPrice(order.total_ghs)
+          } in cash when it arrives.`,
+        };
+      }
       return {
         title: 'Waiting for payment',
         body: order.reserved_until
@@ -139,6 +156,14 @@ export function orderHeadline(order: CustomerOrder): { title: string; body: stri
       };
     case 'paid':
     case 'packing':
+      if (order.payment_method === 'cod') {
+        return {
+          title: 'Order confirmed',
+          body: `We’re getting your order ready. Please have ${
+            order.total_ghs === null ? 'the total' : formatPrice(order.total_ghs)
+          } in cash ready for the rider.`,
+        };
+      }
       return { title: 'Order confirmed', body: 'We’re getting your order ready. We’ll text you when it’s on the way.' };
     case 'packed':
       return { title: 'Packed and ready', body: 'Your order is packed and batch-checked, and will go out with a rider soon.' };
@@ -146,8 +171,8 @@ export function orderHeadline(order: CustomerOrder): { title: string; body: stri
       return {
         title: 'On the way',
         body: order.rider
-          ? `${order.rider.name} is bringing your order. Give them your delivery code when it arrives.`
-          : 'Your order is with our courier. Give them your delivery code when it arrives.',
+          ? `${order.rider.name} is bringing your order. Give them your delivery code when it arrives${cashNote(order)}.`
+          : `Your order is with our courier. Give them your delivery code when it arrives${cashNote(order)}.`,
       };
     case 'delivered':
       return {

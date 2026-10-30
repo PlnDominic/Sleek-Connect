@@ -10,7 +10,7 @@ import { createUserSupabase } from '@/lib/supabase/server';
 export interface PlaceOrderInput {
   customer: { name: string; phone: string; email?: string; area: string; ghanapostGps?: string; directions?: string };
   deliveryOption: string;
-  payment: { method: 'momo'; network: MomoNetwork; wallet: string };
+  payment: { method: 'momo'; network: MomoNetwork; wallet: string } | { method: 'cod' };
   items: { slug: string; size?: string; quantity: number }[];
   isGift: boolean;
   promoCode?: string;
@@ -27,7 +27,7 @@ export type PlaceOrderResult =
       orderNumber: string;
       /** Lets the browser follow the order's payment status without signing in. */
       orderToken: string;
-      /** When the reserved stock is released if the order isn't paid (ISO timestamp). */
+      /** When the reserved stock is released if the order isn't paid, or for pay on delivery isn't confirmed (ISO timestamp). */
       reservedUntil: string;
       subtotal: number;
       deliveryFee: number | null;
@@ -55,7 +55,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         directions: input.customer.directions ?? null,
       },
       p_delivery_option: input.deliveryOption,
-      p_payment: { method: input.payment.method, network: input.payment.network, wallet: input.payment.wallet },
+      p_payment: input.payment.method === 'cod' ? { method: 'cod' } : { method: 'momo', network: input.payment.network, wallet: input.payment.wallet },
       p_items: input.items.map((i) => ({ slug: i.slug, size: i.size ?? null, quantity: i.quantity })),
       p_is_gift: input.isGift,
     })
@@ -82,7 +82,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     if (saveError && saveError.code !== '22023') console.error('save_address failed', saveError);
   }
 
-  if (input.saveWallet) {
+  if (input.saveWallet && input.payment.method === 'momo') {
     // Best effort too. Only the network and number are kept, never a PIN.
     const { error: saveError } = await supabase.rpc('save_payment_method', {
       p: { network: input.payment.network, wallet_number: input.payment.wallet },
@@ -118,10 +118,13 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   logger.info('order_placed', { orderNumber: data.order_number, source: 'web', emailGiven: Boolean(input.customer.email) });
   after(() => dispatchNotifications());
 
-  const payment = await startOrderPayment(
-    { token: data.order_token, number: data.order_number, total },
-    { network: input.payment.network, wallet: input.payment.wallet },
-  );
+  const payment: PaymentStart =
+    input.payment.method === 'cod'
+      ? { kind: 'cod' }
+      : await startOrderPayment(
+          { token: data.order_token, number: data.order_number, total },
+          { network: input.payment.network, wallet: input.payment.wallet },
+        );
   if (payment.kind === 'failed') return { ok: false, error: payment.reason };
 
   // Tell the store about every order, whether or not the shopper gave an email.

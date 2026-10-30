@@ -9,6 +9,7 @@ import { Flash } from '../../Flash';
 import { StatusBadge } from '../../StatusBadge';
 import {
   cancelOrder,
+  confirmCodOrder,
   dispatchOrder,
   markDelivered,
   markFailed,
@@ -55,6 +56,8 @@ export default async function AdminOrderPage({ params, searchParams }: PageProps
   const fulfil = can(staff.role, 'orders.fulfil');
   const id = order.id;
   const shortfall = (pick.data ?? []).some((r) => r.batch_id === null);
+  const cod = order.payment_method === 'cod';
+  const cashDue = cod && !order.paid_at;
   const attemptsLeft = (settings.data?.max_delivery_attempts ?? 2) - order.delivery_attempts;
 
   const dispatchForm = (
@@ -95,7 +98,8 @@ export default async function AdminOrderPage({ params, searchParams }: PageProps
           </h1>
           <p className={styles.muted}>
             Placed {formatDateTime(order.created_at)}
-            {order.paid_at && ` · paid ${formatDateTime(order.paid_at)}`}
+            {cod && ' · pay on delivery'}
+            {order.paid_at && ` · ${cod ? 'cash collected' : 'paid'} ${formatDateTime(order.paid_at)}`}
           </p>
         </div>
         {['paid', 'packing', 'packed'].includes(status) && (
@@ -141,7 +145,25 @@ export default async function AdminOrderPage({ params, searchParams }: PageProps
         <section className={styles.panel} aria-labelledby="next-title">
           <h2 id="next-title">Next step</h2>
           {!fulfil && <p className={styles.muted}>Your role can view this order but not move it along.</p>}
-          {fulfil && status === 'pending_payment' && <p className={styles.muted}>Waiting for the customer to pay.</p>}
+          {fulfil && status === 'pending_payment' && !cod && <p className={styles.muted}>Waiting for the customer to pay.</p>}
+          {fulfil && status === 'pending_payment' && cod && (
+            <ActionForm action={confirmCodOrder.bind(null, id, order.order_number)}>
+              <p>
+                <strong>Pay on delivery.</strong> Call {order.customer_name} on {order.phone} to confirm the order and the address. The
+                rider collects {formatPriceOr(order.total_ghs as number | null, 'the total')} in cash.
+              </p>
+              {order.reservation_expires_at && (
+                <p className={styles.muted}>
+                  The stock is held until {formatDateTime(order.reservation_expires_at)}. After that the order is cancelled.
+                </p>
+              )}
+              <label className={styles.field}>
+                <span>Note for the history (optional)</span>
+                <input name="note" placeholder="e.g. Spoke to the customer" />
+              </label>
+              <button type="submit" className={styles.primary}>Confirm order</button>
+            </ActionForm>
+          )}
           {fulfil && (status === 'paid' || status === 'packing') && (
             <>
               {shortfall && (
@@ -165,6 +187,11 @@ export default async function AdminOrderPage({ params, searchParams }: PageProps
             <>
               <ActionForm action={markDelivered.bind(null, id, order.order_number)}>
                 <h3>Delivered</h3>
+                {cashDue && (
+                  <p className={styles.notice} role="note">
+                    <strong>Collect {formatPriceOr(order.total_ghs as number | null, 'the total')} in cash</strong> before handing the order over.
+                  </p>
+                )}
                 <div className={styles.row}>
                   <label className={styles.field}>
                     <span>Received by</span>
@@ -182,6 +209,12 @@ export default async function AdminOrderPage({ params, searchParams }: PageProps
                   <label className={styles.field}>
                     <span>Note</span>
                     <input name="note" />
+                  </label>
+                )}
+                {cashDue && (
+                  <label className={styles.check}>
+                    <input type="checkbox" name="cash_collected" required />
+                    I collected {formatPriceOr(order.total_ghs as number | null, 'the total')} in cash
                   </label>
                 )}
                 <button type="submit" className={styles.primary}>Mark as delivered</button>
@@ -362,7 +395,11 @@ export default async function AdminOrderPage({ params, searchParams }: PageProps
           <p className={styles.muted}>
             {order.payment_method === 'momo'
               ? `${order.momo_network ? networkNames[order.momo_network as 'mtn'] : 'Mobile Money'} · ${order.wallet_number}`
-              : 'Card'}
+              : cod
+                ? order.paid_at
+                  ? `Pay on delivery · ${formatPriceOr(order.cash_collected_ghs as number | null, '')} cash collected`
+                  : 'Pay on delivery · cash not collected yet'
+                : 'Card'}
           </p>
         </section>
 

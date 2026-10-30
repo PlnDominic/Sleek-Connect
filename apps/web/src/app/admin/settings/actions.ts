@@ -10,11 +10,16 @@ import { rateLimit } from '@/lib/rate-limit';
 import type { Json } from '@/lib/supabase/database.types';
 import { createUserSupabase } from '@/lib/supabase/server';
 
-const numbers = ['return_window_days', 'reservation_minutes', 'low_stock_threshold', 'expiry_alert_days', 'max_delivery_attempts'];
+const numbers = ['return_window_days', 'reservation_minutes', 'pay_on_delivery_hold_hours', 'low_stock_threshold', 'expiry_alert_days', 'max_delivery_attempts'];
 const texts = ['support_phone', 'support_whatsapp', 'support_email', 'support_hours'];
 
 export async function saveSettings(_: ActionState, form: FormData): Promise<ActionState> {
-  const p: Record<string, string | boolean> = { require_delivery_code: form.get('require_delivery_code') === 'on' };
+  const p: Record<string, string | boolean> = {
+    require_delivery_code: form.get('require_delivery_code') === 'on',
+    pay_on_delivery_enabled: form.get('pay_on_delivery_enabled') === 'on',
+    // Empty means no largest order.
+    pay_on_delivery_max_ghs: text(form, 'pay_on_delivery_max_ghs'),
+  };
   for (const key of numbers) if (text(form, key)) p[key] = text(form, key);
   // Empty text clears the setting.
   for (const key of texts) p[key] = text(form, key);

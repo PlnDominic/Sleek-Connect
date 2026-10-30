@@ -13,7 +13,7 @@ import { placeOrder, type PlaceOrderResult } from './actions';
 import { useOrderStatus, type OrderStatus } from './useOrderStatus';
 import styles from './checkout.module.css';
 
-type PaymentMethod = 'momo' | 'card';
+type PaymentMethod = 'momo' | 'card' | 'cod';
 
 type PlacedOrder = Omit<Extract<PlaceOrderResult, { ok: true }>, 'ok'> & { items: ResolvedBagItem[] };
 
@@ -75,9 +75,11 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
 
   // The bag is kept until the order is paid, so a failed or expired payment can simply be retried.
   const { clear } = bag;
+  // Pay on delivery has nothing left to retry once it is placed, so its bag is cleared straight away.
+  const codPlaced = placed?.payment.kind === 'cod';
   useEffect(() => {
-    if (isPaid) clear();
-  }, [isPaid, clear]);
+    if (isPaid || codPlaced) clear();
+  }, [isPaid, codPlaced, clear]);
 
   useEffect(() => {
     const tick = () => setNow(new Date());
@@ -164,6 +166,10 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
   const subtotal = placed?.subtotal ?? bag.subtotal;
   const shownFee = placed ? placed.deliveryFee : fee;
   const total = placed ? placed.total : fee === null ? null : bag.subtotal + fee;
+  // Pay on delivery needs a known total, and may be capped by an admin.
+  const cod = delivery.payOnDelivery;
+  const codMax = cod.maxGhs;
+  const codBlocked = total === null ? 'Choose an area with a delivery fee first.' : codMax !== null && total > codMax ? `Available for orders up to ${formatPrice(codMax)}. Pay with Mobile Money for this one.` : null;
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -188,13 +194,13 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
           directions: text('directions') || undefined,
         },
         deliveryOption: deliveryId,
-        payment: { method: 'momo', network, wallet },
+        payment: method === 'cod' ? { method: 'cod' } : { method: 'momo', network, wallet },
         items: orderedItems.map((i) => ({ slug: i.slug, size: i.sizeId, quantity: i.qty })),
         isGift,
         promoCode: promoCode.trim() || undefined,
         giftMessage: giftMessage.trim() || undefined,
         saveAddress: signedIn && saveAddress,
-        saveWallet: canSaveWallet && saveWallet,
+        saveWallet: method === 'momo' && canSaveWallet && saveWallet,
       });
       if (!result.ok) {
         setError(result.error);
@@ -408,6 +414,27 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
                   </>
                 )}
               </div>
+              {cod.enabled && (
+                <div className={styles.payOption} data-checked={method === 'cod'}>
+                  <label className={styles.payHeader}>
+                    <input type="radio" name="pay" checked={method === 'cod'} disabled={codBlocked !== null} onChange={() => choosePayment('cod')} />
+                    <span className={styles.payText}>
+                      <strong>Pay on delivery</strong>
+                      <span>Pay cash to the rider when your order arrives</span>
+                    </span>
+                    <span className={styles.payIcon}>
+                      <Icon name="truck" size={22} />
+                    </span>
+                  </label>
+                  {codBlocked && <p className={styles.note}>{codBlocked}</p>}
+                  {method === 'cod' && !codBlocked && (
+                    <p className={styles.note}>
+                      We’ll call you to confirm the order before we pack it. Have {formatPriceOr(total, 'the total')} in cash ready for the rider.
+                      Pay on delivery isn’t available for items from independent stores.
+                    </p>
+                  )}
+                </div>
+              )}
               <div className={styles.payOption} data-checked={method === 'card'}>
                 <label className={styles.payHeader}>
                   <input type="radio" name="pay" checked={method === 'card'} onChange={() => choosePayment('card')} />
@@ -494,7 +521,7 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
         ) : (
           <>
             <button type="submit" form="checkout-form" className={styles.payButton} disabled={items.length === 0 || placing}>
-              {placing ? 'Placing your order...' : method === 'momo' ? `Pay with ${networkLabel}` : 'Pay by card'}
+              {placing ? 'Placing your order...' : method === 'momo' ? `Pay with ${networkLabel}` : method === 'cod' ? 'Place order, pay on delivery' : 'Pay by card'}
             </button>
             {error && (
               <p role="alert" className={styles.error}>
@@ -528,6 +555,7 @@ interface OrderProgressProps {
 /** What happened to the order after it was placed, kept up to date from the server. */
 function OrderProgress({ order, live, prompt, onRetry }: OrderProgressProps) {
   const status = live?.status ?? 'pending_payment';
+  if (order.payment.kind === 'cod') return <CodProgress order={order} status={status} />;
   const paymentStatus = live?.paymentStatus ?? null;
   const heldUntil = clockTime.format(new Date(order.reservedUntil));
 
@@ -603,6 +631,41 @@ function OrderProgress({ order, live, prompt, onRetry }: OrderProgressProps) {
           to approve it.
         </span>
       )}
+    </div>
+  );
+}
+
+/** Pay on delivery: staff confirm by phone, then the rider collects the cash. */
+function CodProgress({ order, status }: { order: PlacedOrder; status: OrderStatus['status'] }) {
+  const items = order.items.reduce((sum, item) => sum + item.qty, 0);
+  const cash = formatPriceOr(order.total, 'the total');
+  if (status === 'cancelled') {
+    return (
+      <div role="status" className={styles.statusPanel} data-tone="problem">
+        <strong>Order {order.orderNumber} was cancelled</strong>
+        <span>We couldn’t confirm it, so the items were released. You haven’t been charged. Call us or place the order again.</span>
+        <Link href="/" className={styles.statusLink}>
+          Continue shopping
+        </Link>
+      </div>
+    );
+  }
+  const confirmed = status !== 'pending_payment';
+  return (
+    <div role="status" className={styles.statusPanel} data-tone={confirmed ? 'success' : undefined}>
+      <strong>{confirmed ? 'Order confirmed' : `Order ${order.orderNumber} received`}</strong>
+      <span>
+        {confirmed
+          ? `Order ${order.orderNumber} is confirmed and we’re getting it ready. Have ${cash} in cash ready for the rider.`
+          : `We’ll call you to confirm it. You pay ${cash} in cash when it arrives.`}
+      </span>
+      <span>{items} items · {formatPriceOr(order.total, 'To be confirmed')} · Pay on delivery</span>
+      <Link href={`/orders/${order.orderToken}`} className={styles.retry}>
+        Follow this order
+      </Link>
+      <Link href={`/account?next=${encodeURIComponent(`/orders/${order.orderToken}`)}`} className={styles.statusLink}>
+        Create an account to keep this order with your history
+      </Link>
     </div>
   );
 }

@@ -1,8 +1,10 @@
 // The Gmail sender (Nodemailer): settings, the message it builds, and that the store alert leaves secrets out.
+process.env.TSX_TSCONFIG_PATH ??= require('path').resolve(__dirname, '../apps/web/tsconfig.json');
 require('tsx/cjs');
 const nodemailer = require('nodemailer');
 const { gmailConfig, gmailMessage } = require('../apps/web/src/lib/notifications/gmail.ts');
 const { maskRecipient } = require('../apps/web/src/lib/notifications/mask.ts');
+const { renderMessage } = require('../apps/web/src/lib/notifications/templates.ts');
 const { buildEmailHtml, splitTrailingUrl, escapeHtml } = require('../apps/web/src/lib/notifications/email-html.ts');
 let failures = 0;
 const assert = (c, m) => { if (!c) { failures++; console.error('FAIL:', m); } else console.log('ok -', m); };
@@ -45,6 +47,15 @@ const assert = (c, m) => { if (!c) { failures++; console.error('FAIL:', m); } el
   assert(escapeHtml(`"a" & 'b'`) === '&quot;a&quot; &amp; &#39;b&#39;', 'quotes and ampersands are escaped');
   const bare = buildEmailHtml({ subject: 'Hello', body: 'Just words.', helpUrl: 'https://shop.example/help' });
   assert(!bare.includes('class="cta"') && !bare.includes('letter-spacing:8px'), 'no button or code panel when there is nothing to show');
+
+  // Pay on delivery wording: the shopper is told it is cash, and that we will call.
+  const cod = { order_number: 'SC-1007', customer_name: 'Esi Mensah', total_ghs: 150, order_token: 'abc', delivery_code: '4821', rider_name: 'Yaw', courier_reference: null, reason: null, refund_due: false, pay_on_delivery: true };
+  const received = renderMessage('order_received', cod).text;
+  assert(received.includes('call you to confirm') && received.includes('GH₵ 150 in cash') && !received.includes('Mobile Money'), 'pay on delivery: "order received" says we will call and the amount is paid in cash');
+  assert(renderMessage('order_confirmed', cod).text.includes('GH₵ 150 in cash ready for the rider'), 'the confirmation asks for the cash to be ready');
+  assert(renderMessage('out_for_delivery', cod).text.includes('delivery code 4821 and pay GH₵ 150 in cash'), 'the "on the way" message repeats the amount');
+  assert(!renderMessage('out_for_delivery', { ...cod, pay_on_delivery: false }).text.includes('cash'), 'online orders are unchanged');
+  assert(renderMessage('order_received', { ...cod, pay_on_delivery: false }).text.includes('Mobile Money'), 'and still ask for the Mobile Money approval');
 
   console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll email checks passed');
   process.exit(failures ? 1 : 0);

@@ -21,10 +21,12 @@ export default async function OrdersPage({ searchParams }: PageProps<'/admin/ord
 
   let query = staff.supabase
     .from('orders')
-    .select('id, order_number, status, customer_name, phone, area, delivery_option_id, total_ghs, created_at, needs_review, refund_due, is_gift, order_items(quantity)')
+    .select('id, order_number, status, customer_name, phone, area, delivery_option_id, total_ghs, created_at, needs_review, refund_due, is_gift, payment_method, order_items(quantity)')
     .limit(200);
   if ('statuses' in config) query = query.in('status', [...config.statuses]);
   if ('flag' in config) query = query.eq(config.flag, true);
+  if ('method' in config) query = query.eq('payment_method', config.method);
+  if ('notMethod' in config) query = query.neq('payment_method', config.notMethod);
   if (q) {
     const term = q.replace(/[^\p{L}\p{N} +-]/gu, '');
     query = query.or(`order_number.ilike.%${term}%,customer_name.ilike.%${term}%,phone.ilike.%${term}%`);
@@ -61,6 +63,7 @@ export default async function OrdersPage({ searchParams }: PageProps<'/admin/ord
                 <div className={styles.muted}>
                   {formatDateTime(o.created_at)}
                   {o.is_gift && ' · gift'}
+                  {o.payment_method === 'cod' && ' · pay on delivery'}
                 </div>
               </td>
               <td>
