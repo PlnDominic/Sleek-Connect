@@ -14077,7 +14077,7 @@ revoke all on function public.admin_remove_review_reply(uuid) from public, anon;
 grant execute on function public.admin_remove_review_reply(uuid) to authenticated;
 
 -- The public review list now carries the seller's reply.
-drop function public.get_product_reviews_page(text, integer, integer, integer);
+drop function if exists public.get_product_reviews_page(text, integer, integer, integer);
 create function public.get_product_reviews_page(p_slug text, p_limit integer default 10, p_offset integer default 0, p_min_rating integer default 0)
 returns table (id uuid, rating smallint, title text, body text, display_name text, created_at timestamptz, seller_reply text, seller_replied_at timestamptz)
 language sql
