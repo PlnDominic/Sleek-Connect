@@ -7,8 +7,8 @@ import type { Database, Json } from '@/lib/supabase/database.types';
 import { createUserSupabase } from '@/lib/supabase/server';
 
 const vendorDecisions: Database['public']['Enums']['vendor_status'][] = ['active', 'rejected', 'suspended'];
-export const onboardingChecks = ['id_matches', 'id_valid', 'phone_confirmed', 'products_allowed', 'address_confirmed', 'business_documents'] as const;
-export const productChecks = ['photos_ok', 'description_ok', 'claims_ok', 'ingredients_ok', 'expiry_ok', 'authentic_ok', 'regulatory_ok', 'safety_ok'] as const;
+const onboardingChecks = ['id_matches', 'id_valid', 'phone_confirmed', 'products_allowed', 'address_confirmed', 'business_documents'] as const;
+const productChecks = ['photos_ok', 'description_ok', 'claims_ok', 'ingredients_ok', 'expiry_ok', 'authentic_ok', 'regulatory_ok', 'safety_ok'] as const;
 const productDecisions: Database['public']['Enums']['product_review_status'][] = ['approved', 'rejected', 'pending'];
 
 export async function reviewVendor(vendorId: string, _: ActionState, form: FormData): Promise<ActionState> {
