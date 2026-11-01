@@ -15,6 +15,8 @@ export function createTestProvider(secret: string): PaymentProvider {
   return {
     name: 'test',
     testMode: true,
+    supportsCard: false,
+    hostedCheckout: false,
 
     async requestPayment(request) {
       console.info(`[test payments] would request GH₵ ${request.amountGhs} for ${request.orderNumber} (${request.reference})`);

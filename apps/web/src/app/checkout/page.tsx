@@ -4,6 +4,7 @@ import { Icon } from '@/components/Icon';
 import { Logo } from '@/components/Logo';
 import { SiteFooter } from '@/components/SiteFooter';
 import { getDeliveryConfig } from '@/lib/catalog';
+import { getPaymentProvider } from '@/lib/payments';
 import { CheckoutForm } from './CheckoutForm';
 import styles from './checkout.module.css';
 
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
 
 export default async function CheckoutPage() {
   const delivery = await getDeliveryConfig();
+  const provider = getPaymentProvider();
 
   return (
     <div className={styles.page}>
@@ -44,7 +46,7 @@ export default async function CheckoutPage() {
           </span>
         </div>
       </header>
-      <CheckoutForm delivery={delivery} />
+      <CheckoutForm delivery={delivery} payments={{ card: provider?.supportsCard ?? false, hosted: provider?.hostedCheckout ?? false }} />
       <SiteFooter />
     </div>
   );

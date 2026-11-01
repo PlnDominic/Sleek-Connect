@@ -151,8 +151,8 @@ export function orderHeadline(order: CustomerOrder): { title: string; body: stri
       return {
         title: 'Waiting for payment',
         body: order.reserved_until
-          ? `Approve the payment prompt on your phone. Your items are held until ${formatTime(order.reserved_until)}.`
-          : 'Approve the payment prompt on your phone to confirm your order.',
+          ? `Approve the payment to confirm your order. Your items are held until ${formatTime(order.reserved_until)}.`
+          : 'Approve the payment to confirm your order.',
       };
     case 'paid':
     case 'packing':

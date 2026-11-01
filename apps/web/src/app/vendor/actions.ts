@@ -224,6 +224,8 @@ export async function payOnline(_: ActionState, form: FormData): Promise<ActionS
   if (wallet.replace(/\D/g, '').length < 9) return { ok: false, message: 'Enter the Mobile Money number to charge.' };
   const result = await startSubscriptionPayment({ network, wallet });
   if (result.kind === 'requested') {
+    // With a hosted payment page the vendor pays there, and comes back to their dashboard.
+    if (result.checkoutUrl) redirect(result.checkoutUrl);
     return done(
       result.testMode
         ? 'Test mode: no prompt was sent. The store opens once the test payment is confirmed.'

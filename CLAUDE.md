@@ -57,6 +57,10 @@
   cash (a `payments` row with provider `cash`, `paid_at`, `cash_collected_ghs`). Nothing else may set `paid_at` for a
   `cod` order, so revenue counts when the cash is in hand and cancelled orders never show a refund due. COD is refused for
   vendor-store items, above `pay_on_delivery_max_ghs`, or when the fee is unknown.
+- Online payment goes through the provider interface in `apps/web/src/lib/payments` (`PAYMENT_PROVIDER=hubtel` for Mobile Money
+  and cards on Hubtel's hosted checkout, `test` for development; see `docs/HUBTEL.md`). A callback is never trusted on its
+  own: Hubtel's has no signature, so its address carries a secret and `verify()` asks Hubtel's status API before
+  `confirm_payment` runs. Keep `HUBTEL_API_KEY` server-only.
 - The order token must not reach anything staff can read either. Return photos are stored under
   `public.return_photo_folder(token)` (a hash), not the token.
 - Shoppers can export and delete their own data only through `public.export_my_data` and `public.delete_my_account`

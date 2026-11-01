@@ -10,7 +10,7 @@ import { createUserSupabase } from '@/lib/supabase/server';
 export interface PlaceOrderInput {
   customer: { name: string; phone: string; email?: string; area: string; ghanapostGps?: string; directions?: string };
   deliveryOption: string;
-  payment: { method: 'momo'; network: MomoNetwork; wallet: string } | { method: 'cod' };
+  payment: { method: 'momo'; network: MomoNetwork; wallet: string } | { method: 'card' } | { method: 'cod' };
   items: { slug: string; size?: string; quantity: number }[];
   isGift: boolean;
   promoCode?: string;
@@ -55,7 +55,10 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         directions: input.customer.directions ?? null,
       },
       p_delivery_option: input.deliveryOption,
-      p_payment: input.payment.method === 'cod' ? { method: 'cod' } : { method: 'momo', network: input.payment.network, wallet: input.payment.wallet },
+      p_payment:
+        input.payment.method === 'momo'
+          ? { method: 'momo', network: input.payment.network, wallet: input.payment.wallet }
+          : { method: input.payment.method },
       p_items: input.items.map((i) => ({ slug: i.slug, size: i.size ?? null, quantity: i.quantity })),
       p_is_gift: input.isGift,
     })
@@ -123,7 +126,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       ? { kind: 'cod' }
       : await startOrderPayment(
           { token: data.order_token, number: data.order_number, total },
-          { network: input.payment.network, wallet: input.payment.wallet },
+          input.payment.method === 'card' ? { method: 'card' } : { method: 'momo', network: input.payment.network, wallet: input.payment.wallet },
         );
   if (payment.kind === 'failed') return { ok: false, error: payment.reason };
 

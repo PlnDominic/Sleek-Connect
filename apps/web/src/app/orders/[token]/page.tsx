@@ -19,11 +19,12 @@ import {
 } from '@/lib/orders';
 import { getDeliveryConfig, getProductsBySlugs, getStoreInfo } from '@/lib/catalog';
 import { telHref } from '@/lib/contact';
+import { getPaymentProvider } from '@/lib/payments';
 import { expectedDelivery } from '@/lib/tracking';
 import { TrackingBar } from '@/components/TrackingBar';
 import { photoUrl } from '@/lib/photos';
 import { AutoRefresh } from './AutoRefresh';
-import { BuyAgain, CancelOrder } from './OrderActions';
+import { BuyAgain, CancelOrder, PayNow } from './OrderActions';
 import { TrackingTools } from './TrackingTools';
 import { getCustomerOrder } from './data';
 import styles from './order.module.css';
@@ -64,6 +65,7 @@ async function OrderDetails({ params }: { params: PageProps<'/orders/[token]'>['
     getStoreInfo(),
   ]);
   const option = delivery.options.find((o) => o.label === order.delivery_option);
+  const provider = getPaymentProvider();
   // Pay on delivery orders count from when we confirmed them; online orders from when they were paid.
   const dispatchFrom = order.paid_at ?? order.cod_confirmed_at;
   const expected =
@@ -293,6 +295,9 @@ async function OrderDetails({ params }: { params: PageProps<'/orders/[token]'>['
                 lines={order.items.map((i) => ({ slug: i.slug, sizeCode: i.size_code, quantity: i.quantity, name: i.name }))}
                 products={products}
               />
+            )}
+            {order.status === 'pending_payment' && order.payment_method !== 'cod' && provider?.hostedCheckout && (
+              <PayNow token={token} network={order.momo_network} card={provider.supportsCard} />
             )}
             {order.can_cancel && <CancelOrder token={token} paid={Boolean(order.paid_at)} />}
             {canReturn && (

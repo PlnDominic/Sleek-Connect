@@ -117,3 +117,50 @@ export function BuyAgain({ lines, products }: { lines: ReorderLine[]; products: 
     </>
   );
 }
+
+/**
+ * "Pay now" for an order still waiting for payment, when the payment provider has its own payment page: back to that
+ * page after a cancelled or abandoned attempt, or to switch between Mobile Money and card.
+ */
+export function PayNow({ token, network, card }: { token: string; network: string | null; card: boolean }) {
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const pay = (method: 'momo' | 'card') =>
+    startTransition(async () => {
+      setError(null);
+      try {
+        const response = await fetch('/api/payments/start', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ orderToken: token, method, network: network ?? 'mtn', wallet: '' }),
+        });
+        const body = (await response.json()) as { kind?: string; checkoutUrl?: string; reason?: string };
+        if (body.kind === 'requested' && body.checkoutUrl) {
+          window.location.assign(body.checkoutUrl);
+          return;
+        }
+        setError(body.reason ?? 'We couldn’t start the payment. Please try again.');
+      } catch {
+        setError('We couldn’t reach the store. Check your connection and try again.');
+      }
+    });
+
+  return (
+    <div className={styles.actions}>
+      <button type="button" className={styles.primary} disabled={pending} onClick={() => pay('momo')}>
+        {pending ? 'Opening payment…' : 'Pay with Mobile Money'}
+      </button>
+      {card && (
+        <button type="button" className={styles.secondary} disabled={pending} onClick={() => pay('card')}>
+          Pay by card
+        </button>
+      )}
+      {error && (
+        <p role="alert" className={styles.error}>
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}

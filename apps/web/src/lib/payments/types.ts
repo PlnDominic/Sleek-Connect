@@ -6,8 +6,17 @@ export interface PaymentRequest {
   reference: string;
   orderNumber: string;
   amountGhs: number;
-  network: MomoNetwork;
-  wallet: string;
+  method: 'momo' | 'card';
+  /** Mobile Money only. Providers with a hosted payment page use these to pre-fill it. */
+  network?: MomoNetwork;
+  wallet?: string;
+  /** Where the shopper (or vendor) should land after paying or cancelling, as a path on this site. */
+  returnPath: string;
+}
+
+/** What the provider wants shown next. A provider with a hosted payment page returns its address. */
+export interface PaymentInstructions {
+  checkoutUrl?: string;
 }
 
 /** A final payment outcome reported by a provider. */
@@ -29,13 +38,18 @@ export interface PaymentProvider {
   readonly name: string;
   /** True when no real money moves. */
   readonly testMode: boolean;
+  /** Whether card payments are available (as well as Mobile Money). */
+  readonly supportsCard: boolean;
+  /** True when the shopper pays on the provider's own page (they are sent to `checkoutUrl`) instead of a phone prompt. */
+  readonly hostedCheckout: boolean;
   /** Asks the provider to charge the shopper, for example by sending the Mobile Money approval prompt. */
-  requestPayment(request: PaymentRequest): Promise<void>;
+  requestPayment(request: PaymentRequest): Promise<PaymentInstructions | void>;
   /**
    * Checks that a webhook really came from the provider and reads it. Returns null for notifications that aren't a
-   * final payment outcome. Throws `WebhookSignatureError` when the signature doesn't match.
+   * final payment outcome. Throws `WebhookSignatureError` when the signature doesn't match. `url` is the address the
+   * notification was posted to, for providers that authenticate theirs with a secret in it.
    */
-  readWebhook(rawBody: string, headers: Headers): Promise<PaymentResult | null>;
+  readWebhook(rawBody: string, headers: Headers, url?: URL): Promise<PaymentResult | null>;
   /**
    * Confirms the outcome with the provider itself (for real providers, a server-to-server status lookup) instead of
    * trusting the notification body alone. Returns null if the provider has no final outcome yet.

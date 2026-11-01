@@ -4,6 +4,7 @@ import type { MomoNetwork } from '@sleek/shared';
 import { createUserSupabase } from '@/lib/supabase/server';
 import { createAdminSupabase } from '@/lib/supabase/admin';
 import type { OnlinePaymentStart } from './start';
+import type { PaymentInstructions } from './types';
 import { getPaymentProvider } from './index';
 
 /** Webhook references that start with this belong to a vendor's yearly subscription, not to an order. */
@@ -30,8 +31,16 @@ export async function startSubscriptionPayment(payer: { network: MomoNetwork; wa
     return { kind: 'failed', reason: 'We couldn’t start the payment. Please try again.' };
   }
 
+  let instructions: PaymentInstructions | void;
   try {
-    await provider.requestPayment({ reference, orderNumber: 'Store subscription', amountGhs: amount, ...payer });
+    instructions = await provider.requestPayment({
+      reference,
+      orderNumber: 'Store subscription',
+      amountGhs: amount,
+      method: 'momo',
+      returnPath: '/vendor',
+      ...payer,
+    });
   } catch (cause) {
     console.error(`${provider.name}: subscription payment request failed`, cause);
     const { error: closeError } = await createAdminSupabase().rpc('confirm_subscription_payment', {
@@ -44,5 +53,5 @@ export async function startSubscriptionPayment(payer: { network: MomoNetwork; wa
     if (closeError) console.error('Could not close the failed subscription payment', closeError);
     return { kind: 'failed', reason: 'We couldn’t send the payment prompt. Please try again.' };
   }
-  return { kind: 'requested', testMode: provider.testMode };
+  return { kind: 'requested', testMode: provider.testMode, checkoutUrl: instructions?.checkoutUrl };
 }

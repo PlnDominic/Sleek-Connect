@@ -19,6 +19,8 @@ type PlacedOrder = Omit<Extract<PlaceOrderResult, { ok: true }>, 'ok'> & { items
 
 interface CheckoutFormProps {
   delivery: DeliveryConfig;
+  /** What the payment provider offers: cards as well as Mobile Money, and whether the shopper pays on its own page. */
+  payments: { card: boolean; hosted: boolean };
 }
 
 interface SavedAddress {
@@ -46,7 +48,7 @@ const clockTime = new Intl.DateTimeFormat('en-GH', { hour: 'numeric', minute: '2
 
 const paidStatuses: OrderStatus['status'][] = ['paid', 'packed', 'out_for_delivery', 'delivered'];
 
-export function CheckoutForm({ delivery }: CheckoutFormProps) {
+export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
   const bag = useBag();
   const { user, consented } = useAuth();
   const areas = delivery.areas.map((a) => a.name);
@@ -174,7 +176,7 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
-    if (method === 'card') {
+    if (method === 'card' && !payments.card) {
       setCardNotice(true);
       return;
     }
@@ -194,7 +196,7 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
           directions: text('directions') || undefined,
         },
         deliveryOption: deliveryId,
-        payment: method === 'cod' ? { method: 'cod' } : { method: 'momo', network, wallet },
+        payment: method === 'momo' ? { method: 'momo', network, wallet } : { method },
         items: orderedItems.map((i) => ({ slug: i.slug, size: i.sizeId, quantity: i.qty })),
         isGift,
         promoCode: promoCode.trim() || undefined,
@@ -440,7 +442,7 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
                   <input type="radio" name="pay" checked={method === 'card'} onChange={() => choosePayment('card')} />
                   <span className={styles.payText}>
                     <strong>Debit or credit card</strong>
-                    <span>Visa, Mastercard</span>
+                    <span>{payments.card ? 'Visa, Mastercard, on our payment partner’s secure page' : 'Visa, Mastercard (coming soon)'}</span>
                   </span>
                   <span className={styles.payIcon}>
                     <Icon name="card" size={22} />
@@ -535,8 +537,13 @@ export function CheckoutForm({ delivery }: CheckoutFormProps) {
             )}
             {method === 'momo' && !cardNotice && (
               <p className={styles.note}>
-                You&apos;ll get a prompt on {walletDisplay}. Enter your PIN to approve. We never see or store your PIN.
+                {payments.hosted
+                  ? 'You’ll continue to our payment partner’s secure page to approve the payment. We never see or store your PIN.'
+                  : `You’ll get a prompt on ${walletDisplay}. Enter your PIN to approve. We never see or store your PIN.`}
               </p>
+            )}
+            {method === 'card' && payments.card && (
+              <p className={styles.note}>You’ll continue to our payment partner’s secure page to enter your card. We never see or store your card details.</p>
             )}
           </>
         )}
@@ -555,6 +562,11 @@ interface OrderProgressProps {
 /** What happened to the order after it was placed, kept up to date from the server. */
 function OrderProgress({ order, live, prompt, onRetry }: OrderProgressProps) {
   const status = live?.status ?? 'pending_payment';
+  // With a hosted payment page, the shopper is sent there straight away (the button is there if the browser blocks it).
+  const checkoutUrl = order.payment.kind === 'requested' ? order.payment.checkoutUrl : undefined;
+  useEffect(() => {
+    if (checkoutUrl) window.location.assign(checkoutUrl);
+  }, [checkoutUrl]);
   if (order.payment.kind === 'cod') return <CodProgress order={order} status={status} />;
   const paymentStatus = live?.paymentStatus ?? null;
   const heldUntil = clockTime.format(new Date(order.reservedUntil));
@@ -609,6 +621,24 @@ function OrderProgress({ order, live, prompt, onRetry }: OrderProgressProps) {
         <span>
           Your items are held until {heldUntil}. {order.payment.reason}
         </span>
+        <Link href={`/orders/${order.orderToken}`} className={styles.statusLink}>
+          Follow this order
+        </Link>
+      </div>
+    );
+  }
+
+  if (checkoutUrl) {
+    return (
+      <div role="status" className={styles.statusPanel}>
+        <strong>Continue to payment</strong>
+        <span>
+          Order {order.orderNumber} is waiting for payment. We’re taking you to our payment partner’s page; if nothing happens, use the
+          button. Your items are held until {heldUntil}.
+        </span>
+        <a href={checkoutUrl} className={styles.retry}>
+          Pay {formatPriceOr(order.total, 'now')}
+        </a>
         <Link href={`/orders/${order.orderToken}`} className={styles.statusLink}>
           Follow this order
         </Link>

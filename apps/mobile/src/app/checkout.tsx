@@ -9,7 +9,7 @@ import { ProductImage } from '@/components/ProductImage';
 import { EmptyState, ErrorState, Skeleton } from '@/components/States';
 import { BackButton, BottomBar, useScreenTop } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
-import { getDeliveryConfig, notifyCodOrder, placeOrder, requestPayment, type PaymentRequest, type PlacedOrder } from '@/lib/checkout';
+import { getDeliveryConfig, getPaymentOptions, notifyCodOrder, openPaymentPage, placeOrder, requestPayment, type PaymentRequest, type PlacedOrder } from '@/lib/checkout';
 import { getOrderStatus, rememberOrder } from '@/lib/orders';
 import { registerForPush } from '@/lib/push';
 import { useQuery } from '@/lib/query';
@@ -30,6 +30,7 @@ export default function CheckoutScreen() {
   const top = useScreenTop();
   const { items, count, subtotal } = useBag();
   const delivery = useQuery('delivery-config', getDeliveryConfig, 5 * 60_000);
+  const payments = useQuery('payment-options', getPaymentOptions, 60_000);
   const [placed, setPlaced] = useState<Placed | null>(null);
 
   if (items.length === 0 && !placed) {
@@ -51,14 +52,14 @@ export default function CheckoutScreen() {
   return placed ? (
     <Waiting placed={placed} onRetryDetails={() => setPlaced(null)} />
   ) : (
-    <Details delivery={delivery.data} items={items} count={count} subtotal={subtotal} onPlaced={setPlaced} />
+    <Details delivery={delivery.data} card={payments.data?.card ?? false} items={items} count={count} subtotal={subtotal} onPlaced={setPlaced} />
   );
 }
 
 /** An order that has been placed, with the payer to charge and what happened to the first payment prompt. */
 interface Placed {
   order: PlacedOrder;
-  payer: { network: MomoNetwork; wallet: string };
+  payer: { network: MomoNetwork; wallet: string } | { card: true };
   prompt: PaymentRequest;
 }
 
@@ -75,12 +76,15 @@ function Header({ title = 'Checkout' }: { title?: string }) {
 
 function Details({
   delivery,
+  card,
   items,
   count,
   subtotal,
   onPlaced,
 }: {
   delivery: DeliveryConfig;
+  /** The payment provider takes cards. */
+  card: boolean;
   items: ReturnType<typeof useBag>['items'];
   count: number;
   subtotal: number;
@@ -96,7 +100,7 @@ function Details({
   const [directions, setDirections] = useState('');
   const [gps, setGps] = useState('');
   const [optionId, setOptionId] = useState(delivery.options[0]?.id ?? '');
-  const [payWith, setPayWith] = useState<'momo' | 'cod'>('momo');
+  const [payWith, setPayWith] = useState<'momo' | 'card' | 'cod'>('momo');
   const [network, setNetwork] = useState<MomoNetwork>('mtn');
   const [wallet, setWallet] = useState('');
   const { clear } = useBag();
@@ -149,6 +153,7 @@ function Details({
   const codBlocked =
     total === null ? 'Choose an area with a delivery fee first.' : codSetting.maxGhs !== null && total > codSetting.maxGhs ? `Available for orders up to ${formatPrice(codSetting.maxGhs)}.` : null;
   const cod = payWith === 'cod' && codSetting.enabled && codBlocked === null;
+  const cardPay = payWith === 'card' && card;
 
   const canPlace = !soldOut && !busy && !!chosen?.q.available;
 
@@ -157,13 +162,13 @@ function Details({
     if (name.trim().length < 2) return setError('Enter the name of the person receiving the order.');
     if (phone.replace(/\D/g, '').length < 9) return setError('Enter a phone number we can call for delivery.');
     if (email.trim() && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) return setError('Check the email address, or leave it empty.');
-    if (!cod && wallet.replace(/\D/g, '').length < 9) return setError('Enter the Mobile Money number you will pay from.');
+    if (!cod && !cardPay && wallet.replace(/\D/g, '').length < 9) return setError('Enter the Mobile Money number you will pay from.');
     setBusy(true);
     try {
       const order = await placeOrder({
         customer: { name: name.trim(), phone: phone.trim(), email: email.trim() || undefined, area, ghanapostGps: gps.trim() || undefined, directions: directions.trim() || undefined },
         deliveryOption: optionId,
-        payment: cod ? { cod: true } : { network, wallet: wallet.trim() },
+        payment: cod ? { cod: true } : cardPay ? { card: true } : { network, wallet: wallet.trim() },
         items: items.map((i) => ({ slug: i.slug, size: i.sizeId, quantity: i.qty })),
         promoCode: promo,
         signedIn: !!user,
@@ -178,7 +183,7 @@ function Details({
         router.replace({ pathname: '/orders/[token]', params: { token: order.orderToken } });
         return;
       }
-      const payer = { network, wallet: wallet.trim() };
+      const payer = cardPay ? ({ card: true } as const) : { network, wallet: wallet.trim() };
       onPlaced({ order, payer, prompt: await requestPayment(order.orderToken, payer) });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'We couldn’t place your order. Please try again.');
@@ -235,20 +240,27 @@ function Details({
         </Card>
 
         <Card title="Payment">
-          {codSetting.enabled ? (
+          {codSetting.enabled || card ? (
             <Choices
               label="How you pay"
-              value={cod ? 'cod' : 'momo'}
+              value={cod ? 'cod' : cardPay ? 'card' : 'momo'}
               onChange={setPayWith}
               options={[
                 { id: 'momo', label: 'Mobile Money', sub: 'Approve a prompt on your phone' },
-                { id: 'cod', label: 'Pay on delivery', sub: codBlocked ?? 'Pay cash to the rider. We call you to confirm first.', disabled: codBlocked !== null },
+                ...(card ? [{ id: 'card' as const, label: 'Card', sub: 'Visa or Mastercard, on our payment partner’s secure page' }] : []),
+                ...(codSetting.enabled
+                  ? [{ id: 'cod' as const, label: 'Pay on delivery', sub: codBlocked ?? 'Pay cash to the rider. We call you to confirm first.', disabled: codBlocked !== null }]
+                  : []),
               ]}
             />
           ) : null}
           {cod ? (
             <AppText size={13} color={colors.textMuted}>
               We’ll call you to confirm the order before we pack it. Have {total === null ? 'the total' : formatPrice(total)} in cash ready for the rider. Not available for items from independent stores.
+            </AppText>
+          ) : cardPay ? (
+            <AppText size={13} color={colors.textMuted}>
+              You’ll enter your card on our payment partner’s secure page. We never see or store your card details.
             </AppText>
           ) : (
             <>
@@ -272,7 +284,7 @@ function Details({
         {error && <Notice>{error}</Notice>}
       </ScrollView>
       <BottomBar>
-        <Button label={busy ? 'Placing your order…' : cod ? 'Place order, pay on delivery' : 'Place order and pay'} onPress={() => void submit()} disabled={!canPlace} busy={busy} />
+        <Button label={busy ? 'Placing your order…' : cod ? 'Place order, pay on delivery' : cardPay ? 'Place order and pay by card' : 'Place order and pay'} onPress={() => void submit()} disabled={!canPlace} busy={busy} />
       </BottomBar>
     </KeyboardAvoidingView>
   );
@@ -328,6 +340,16 @@ function Waiting({ placed, onRetryDetails }: { placed: Placed; onRetryDetails: (
     };
   }, [order.orderToken, clear]);
 
+  // With the payment partner's own page, the shopper pays there: open it once, and again on request.
+  const checkoutUrl = prompt.kind === 'requested' ? prompt.checkoutUrl : undefined;
+  const opened = useRef(false);
+  useEffect(() => {
+    if (checkoutUrl && !opened.current) {
+      opened.current = true;
+      void openPaymentPage(checkoutUrl);
+    }
+  }, [checkoutUrl]);
+
   const until = new Date(order.reservedUntil).toLocaleTimeString('en-GH', { hour: 'numeric', minute: '2-digit', timeZone: 'Africa/Accra' });
 
   return (
@@ -335,7 +357,7 @@ function Waiting({ placed, onRetryDetails }: { placed: Placed; onRetryDetails: (
       <View style={styles.titleRow}>
         <BackButton fallback="/bag" />
         <AppText weight="semibold" size={22} accessibilityRole="header">
-          {outcome === 'lapsed' ? 'Payment didn’t go through' : 'Approve the payment'}
+          {outcome === 'lapsed' ? 'Payment didn’t go through' : checkoutUrl ? 'Complete the payment' : 'Approve the payment'}
         </AppText>
       </View>
       <Card>
@@ -355,8 +377,11 @@ function Waiting({ placed, onRetryDetails }: { placed: Placed; onRetryDetails: (
             <AppText size={14} color={colors.textMuted}>
               {prompt.testMode
                 ? 'Test mode: no real prompt was sent. Complete the test payment on the server to continue.'
-                : 'Check your phone and approve the Mobile Money prompt. This screen updates by itself.'}
+                : checkoutUrl
+                  ? 'Finish paying on our payment partner’s page. This screen updates by itself once the payment goes through.'
+                  : 'Check your phone and approve the Mobile Money prompt. This screen updates by itself.'}
             </AppText>
+            {checkoutUrl ? <Button label="Open the payment page" onPress={() => void openPaymentPage(checkoutUrl)} /> : null}
             <AppText size={13} color={colors.textMuted}>
               We are holding your items until {until}.
             </AppText>

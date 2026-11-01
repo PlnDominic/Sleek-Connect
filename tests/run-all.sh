@@ -73,6 +73,7 @@ npx supabase db reset >/dev/null 2>&1; suite "database: mobile app push notifica
 npx supabase db reset >/dev/null 2>&1; suite "database: launch schema verification" db-schema-verify.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: pay on delivery" db-pay-on-delivery.cjs
 suite "email: Gmail sender (Nodemailer)" unit-email.cjs
+suite "payments: Hubtel provider" unit-hubtel.cjs
 
 if [ "$FAILED" = "0" ]; then echo "== all suites passed"; else echo "== some suites FAILED"; fi
 exit "$FAILED"

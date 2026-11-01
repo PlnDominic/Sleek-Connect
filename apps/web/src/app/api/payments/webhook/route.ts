@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   if (rawBody.length > 64 * 1024) return withRequestId(Response.json({ error: 'Webhook payload is too large.', requestId: id }, { status: 413 }), id);
   let notified;
   try {
-    notified = await provider.readWebhook(rawBody, request.headers);
+    notified = await provider.readWebhook(rawBody, request.headers, new URL(request.url));
   } catch (error) {
     if (error instanceof WebhookSignatureError) {
       logger.warn('payment_webhook_signature_rejected', { requestId: id, provider: provider.name });

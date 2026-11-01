@@ -20,7 +20,7 @@ import { Button, Card, Choices, Field, Notice } from '@/components/Form';
 import { EmptyState, ErrorState, Skeleton } from '@/components/States';
 import { TrackingBar } from '@/components/TrackingBar';
 import { BackButton, useScreenTop } from '@/components/ui';
-import { getDeliveryConfig, requestPayment } from '@/lib/checkout';
+import { getDeliveryConfig, getPaymentOptions, openPaymentPage, requestPayment } from '@/lib/checkout';
 import { cancelOrder, formatDate, formatDateTime, getOrder, rememberOrder, type CustomerOrder } from '@/lib/orders';
 import { pushAllowed, registerForPush } from '@/lib/push';
 import { useQuery } from '@/lib/query';
@@ -255,16 +255,26 @@ function PayAgain({ token, reservedUntil, onChanged }: { token: string; reserved
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
   const until = reservedUntil ? new Date(reservedUntil).toLocaleTimeString('en-GH', { hour: 'numeric', minute: '2-digit', timeZone: 'Africa/Accra' }) : null;
 
-  async function send() {
-    if (wallet.replace(/\D/g, '').length < 9) return setResult({ ok: false, text: 'Enter the Mobile Money number to charge.' });
+  const payments = useQuery('payment-options', getPaymentOptions, 60_000);
+
+  async function send(card = false) {
+    if (!card && wallet.replace(/\D/g, '').length < 9) return setResult({ ok: false, text: 'Enter the Mobile Money number to charge.' });
     setBusy(true);
-    const r = await requestPayment(token, { network, wallet: wallet.trim() });
+    const r = await requestPayment(token, card ? { card: true } : { network, wallet: wallet.trim() });
     setBusy(false);
     setResult(
       r.kind === 'requested'
-        ? { ok: true, text: r.testMode ? 'Test mode: no real prompt was sent.' : 'Check your phone and approve the prompt. This page updates by itself.' }
+        ? {
+            ok: true,
+            text: r.testMode
+              ? 'Test mode: no real prompt was sent.'
+              : r.checkoutUrl
+                ? 'Finish paying on our payment partner’s page. This page updates by itself.'
+                : 'Check your phone and approve the prompt. This page updates by itself.',
+          }
         : { ok: false, text: r.reason },
     );
+    if (r.kind === 'requested' && r.checkoutUrl) void openPaymentPage(r.checkoutUrl);
     onChanged();
   }
 
@@ -276,7 +286,8 @@ function PayAgain({ token, reservedUntil, onChanged }: { token: string; reserved
       <Choices label="Network" value={network} onChange={setNetwork} options={momoNetworks.map((n) => ({ id: n.id, label: n.label }))} />
       <Field label="Mobile Money number" value={wallet} onChangeText={setWallet} keyboardType="phone-pad" />
       {result ? <Notice tone={result.ok ? 'good' : 'warn'}>{result.text}</Notice> : null}
-      <Button label="Send the payment prompt" onPress={() => void send()} busy={busy} />
+      <Button label={payments.data?.hosted ? 'Pay with Mobile Money' : 'Send the payment prompt'} onPress={() => void send()} busy={busy} />
+      {payments.data?.card ? <Button label="Pay by card" kind="secondary" onPress={() => void send(true)} busy={busy} /> : null}
     </Card>
   );
 }

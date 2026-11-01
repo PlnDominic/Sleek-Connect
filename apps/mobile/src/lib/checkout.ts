@@ -1,3 +1,4 @@
+import * as WebBrowser from 'expo-web-browser';
 import type { DeliveryConfig, MomoNetwork } from '@sleek/shared';
 import { siteAddress, siteConfigured } from './site';
 import { supabase } from './supabase';
@@ -43,7 +44,7 @@ export async function getDeliveryConfig(): Promise<DeliveryConfig> {
 export interface PlaceOrderInput {
   customer: { name: string; phone: string; email?: string; area: string; ghanapostGps?: string; directions?: string };
   deliveryOption: string;
-  payment: { network: MomoNetwork; wallet: string } | { cod: true };
+  payment: { network: MomoNetwork; wallet: string } | { card: true } | { cod: true };
   items: { slug: string; size?: string; quantity: number }[];
   promoCode?: string;
   signedIn: boolean;
@@ -73,7 +74,12 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlacedOrder> {
         directions: input.customer.directions ?? null,
       },
       p_delivery_option: input.deliveryOption,
-      p_payment: 'cod' in input.payment ? { method: 'cod' } : { method: 'momo', network: input.payment.network, wallet: input.payment.wallet },
+      p_payment:
+        'cod' in input.payment
+          ? { method: 'cod' }
+          : 'card' in input.payment
+            ? { method: 'card' }
+            : { method: 'momo', network: input.payment.network, wallet: input.payment.wallet },
       p_items: input.items.map((i) => ({ slug: i.slug, size: i.size ?? null, quantity: i.quantity })),
       p_is_gift: false,
     })
@@ -126,16 +132,42 @@ export async function notifyCodOrder(orderToken: string): Promise<void> {
   }
 }
 
-export type PaymentRequest = { kind: 'requested'; testMode: boolean } | { kind: 'unavailable' | 'failed'; reason: string };
+export type PaymentRequest =
+  | { kind: 'requested'; testMode: boolean; /** The payment partner's page, when the shopper pays there. */ checkoutUrl?: string }
+  | { kind: 'unavailable' | 'failed'; reason: string };
+
+/** What online payment offers right now: whether it is on, takes cards, and uses the payment partner's own page. */
+export interface PaymentOptions {
+  online: boolean;
+  card: boolean;
+  hosted: boolean;
+}
+
+export async function getPaymentOptions(): Promise<PaymentOptions> {
+  const off = { online: false, card: false, hosted: false };
+  if (!siteConfigured) return off;
+  try {
+    const response = await fetch(siteAddress('/api/payments/options'));
+    const body = (await response.json()) as Partial<PaymentOptions>;
+    return { online: body.online === true, card: body.card === true, hosted: body.hosted === true };
+  } catch {
+    return off;
+  }
+}
+
+/** Opens the payment partner's page in the in-app browser. Resolves when the shopper closes it. */
+export async function openPaymentPage(url: string): Promise<void> {
+  await WebBrowser.openBrowserAsync(url);
+}
 
 /** Asks the website to send the Mobile Money prompt for an order that has been placed. */
-export async function requestPayment(orderToken: string, payment: { network: MomoNetwork; wallet: string }): Promise<PaymentRequest> {
+export async function requestPayment(orderToken: string, payment: { network: MomoNetwork; wallet: string } | { card: true }): Promise<PaymentRequest> {
   if (!siteConfigured) return { kind: 'unavailable', reason: 'Payment isn’t set up in this version of the app yet.' };
   try {
     const response = await fetch(siteAddress('/api/payments/start'), {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ orderToken, network: payment.network, wallet: payment.wallet }),
+      body: JSON.stringify('card' in payment ? { orderToken, method: 'card' } : { orderToken, method: 'momo', network: payment.network, wallet: payment.wallet }),
     });
     const body = (await response.json()) as PaymentRequest;
     if (body && typeof body === 'object' && 'kind' in body) return body;
