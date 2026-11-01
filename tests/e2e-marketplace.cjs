@@ -47,17 +47,29 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   const ama = await ctx(amaSession.cookies());
   await go(ama, BASE + '/vendor');
   assert(await ama.getByRole('heading', { name: 'Open your store' }).isVisible(), 'a signed-in shopper sees the application form');
+  assert(await ama.getByText('Step 1 of 5').isVisible(), 'the application is a five-step wizard');
   await ama.getByLabel('Store name').fill("Ama's Beauty Hub");
+  await ama.getByText(/is available/).waitFor({ timeout: 8000 });
+  assert(await ama.getByText(/your address will be \/store\/amas-beauty-hub/).isVisible(), 'the store name is checked as you type, and shows the address it would get');
+  await ama.getByRole('button', { name: 'Continue' }).click();
   await ama.getByLabel('Your full name').fill('Ama Owusu');
   await ama.getByLabel('Phone number').fill('024 123 4567');
+  await ama.getByRole('button', { name: 'Continue' }).click();
   await ama.getByLabel('ID type').selectOption('ghana_card');
   await ama.getByLabel('ID number').fill('GHA-123456789-0');
   await ama.getByLabel('Photo or scan of your ID').setInputFiles({ name: 'id.png', mimeType: 'image/png', buffer: Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360000002000154a24f5d0000000049454e44ae426082', 'hex') });
+  await ama.getByRole('button', { name: 'Continue' }).click();
+  await ama.getByLabel('Mobile Money number').fill('024 123 4567');
+  await ama.getByLabel('Name on that wallet').fill('Ama Owusu');
+  await ama.getByLabel(/Tax Identification Number/).fill('GHA-123456789-0');
+  await ama.getByRole('button', { name: 'Continue' }).click();
+  assert(await ama.getByText('Step 5 of 5').isVisible() && await ama.getByText('Ama Owusu', { exact: false }).first().isVisible(), 'the last step shows a summary to check');
   await ama.getByLabel(/I agree to the/).check();
   await ama.getByRole('button', { name: 'Send application' }).click();
   await ama.getByText(/Application sent/).waitFor({ timeout: 8000 });
   await go(ama, BASE + '/vendor');
   assert(await ama.getByRole('heading', { name: 'Application received' }).isVisible(), 'the vendor then sees that the application is being reviewed');
+  assert(await ama.getByText(/Set up your store/i).first().isVisible(), 'and a checklist to set the store up while they wait');
   await shot(ama, 'vendor-pending');
 
   // --- The owner approves and records the payment ------------------------------------------------
@@ -79,6 +91,12 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   await go(ama, BASE + '/vendor');
   assert(await ama.getByRole('link', { name: 'Add a product' }).first().isVisible(), 'once paid, the vendor can add products');
   await shot(ama, 'vendor-dashboard');
+  await go(ama, BASE + '/vendor/store');
+  assert(await ama.getByRole('heading', { name: 'Sections' }).isVisible() && await ama.getByRole('heading', { name: 'Vacation mode' }).isVisible(), 'the store page has sections and vacation mode');
+  await ama.getByLabel('Store announcement').fill('Free gift wrap this weekend');
+  await ama.getByLabel('Your story').fill('I started making shea butter in Tamale in 2019.');
+  await ama.getByRole('button', { name: 'Save store details' }).click();
+  await ama.getByText('Store details saved.').waitFor({ timeout: 8000 });
 
   // --- A product: reviewed, marked up, on sale ---------------------------------------------------
   const { data: saved, error } = await amaSession.client.rpc('vendor_save_product', { p: {

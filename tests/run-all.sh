@@ -74,12 +74,14 @@ npx supabase db reset >/dev/null 2>&1; suite "database: launch schema verificati
 npx supabase db reset >/dev/null 2>&1; suite "database: pay on delivery" db-pay-on-delivery.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: the 18+ rule at checkout" db-age-rule.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: bulk editing, reorder suggestions, size guides" db-catalogue-tools.cjs
+npx supabase db reset >/dev/null 2>&1; suite "database: store builder (name check, set up before live, sections, vacation mode)" db-store-builder.cjs
 suite "email: Gmail sender (Nodemailer)" unit-email.cjs
 suite "payments: Hubtel provider" unit-hubtel.cjs
 suite "privacy: what Sentry and PostHog may receive" unit-telemetry.cjs
 suite "privacy: no trackers, no cookies of our own" unit-privacy-guard.cjs
 suite "build: server action files export only async functions" unit-server-actions.cjs
 suite "admin: the settings page shows error reporting first" unit-admin-settings.cjs
+suite "vendors: the Set up your store checklist" unit-store-setup.cjs
 
 if [ "$FAILED" = "0" ]; then echo "== all suites passed"; else echo "== some suites FAILED"; fi
 exit "$FAILED"

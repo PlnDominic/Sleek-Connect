@@ -2,11 +2,11 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ProductCard } from '@/components/ProductCard';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SiteHeader } from '@/components/SiteHeader';
 import { Stars } from '@/components/Stars';
 import { getStorefront, getStoreSlugs } from '@/lib/catalog';
+import { StoreProducts } from './StoreProducts';
 import styles from './store.module.css';
 
 export async function generateStaticParams() {
@@ -34,6 +34,11 @@ export default async function StorePage({ params }: PageProps<'/store/[slug]'>) 
     <>
       <SiteHeader />
       <main>
+        {store.announcement && (
+          <p className={styles.announcement} role="note">
+            {store.announcement}
+          </p>
+        )}
         <section className={styles.hero}>
           {store.banner && <Image src={store.banner} alt="" fill sizes="100vw" className={styles.banner} priority />}
           <div className={`container ${styles.heroInner}`}>
@@ -59,6 +64,29 @@ export default async function StorePage({ params }: PageProps<'/store/[slug]'>) 
 
         <div className={`container ${styles.body}`}>
           {store.description && <p className={styles.about}>{store.description}</p>}
+          {(store.processingDays || store.instagram || store.website) && (
+            <ul className={styles.facts}>
+              {store.processingDays ? (
+                <li>
+                  Packs orders in {store.processingDays} working day{store.processingDays === 1 ? '' : 's'}
+                </li>
+              ) : null}
+              {store.instagram && (
+                <li>
+                  <a href={`https://instagram.com/${store.instagram}`} target="_blank" rel="noopener noreferrer nofollow">
+                    @{store.instagram} on Instagram
+                  </a>
+                </li>
+              )}
+              {store.website && (
+                <li>
+                  <a href={store.website} target="_blank" rel="noopener noreferrer nofollow">
+                    Website
+                  </a>
+                </li>
+              )}
+            </ul>
+          )}
           <h2 className={styles.count}>
             {store.products.length} {store.products.length === 1 ? 'product' : 'products'}
           </h2>
@@ -67,11 +95,16 @@ export default async function StorePage({ params }: PageProps<'/store/[slug]'>) 
               Nothing is on sale here yet. <Link href="/shop">Browse the shop</Link>.
             </p>
           ) : (
-            <div className={styles.grid}>
-              {store.products.map((p) => (
-                <ProductCard key={p.slug} product={p} />
-              ))}
-            </div>
+            <StoreProducts products={store.products} sections={store.sections} />
+          )}
+
+          {store.returnsPolicy && (
+            <section className={styles.policy} aria-labelledby="store-policy">
+              <h2 id="store-policy" className={styles.count}>
+                Returns and care
+              </h2>
+              <p>{store.returnsPolicy}</p>
+            </section>
           )}
 
           {store.reviews.length > 0 && (

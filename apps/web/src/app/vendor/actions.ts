@@ -11,6 +11,31 @@ import { vendorTermsVersion } from '@/lib/vendor-terms';
 import { createUserSupabase } from '@/lib/supabase/server';
 import { importLimit, readImport } from '@/lib/vendor-import';
 
+export type NameCheck = { ok: boolean; reason?: string; suggestion?: string; slug?: string };
+
+/** Live "is this store name free?" check for the opening wizard. It only says yes or no; it never lists other stores. */
+export async function checkStoreName(name: string): Promise<NameCheck> {
+  const trimmed = (name ?? '').slice(0, 80);
+  if (trimmed.trim().length < 2) return { ok: false, reason: 'Enter a name of at least 2 characters.' };
+  const supabase = await createUserSupabase();
+  const { data, error } = await supabase.rpc('vendor_name_available', { p_name: trimmed });
+  if (error || !data || typeof data !== 'object' || Array.isArray(data)) {
+    // Never block the shopper on this check: the application itself repeats every rule.
+    return { ok: true };
+  }
+  const r = data as Record<string, unknown>;
+  return {
+    ok: r.available === true,
+    reason: typeof r.reason === 'string' ? r.reason : undefined,
+    suggestion: typeof r.suggestion === 'string' ? r.suggestion : undefined,
+    slug: typeof r.slug === 'string' ? r.slug : undefined,
+  };
+}
+
+/**
+ * Opens the store: the application itself, then (best effort) the tax details and payout account that were filled in
+ * on the same form. Anything that doesn't save is left on the setup checklist for the vendor to finish.
+ */
 export async function applyForStore(_: ActionState, form: FormData): Promise<ActionState> {
   const supabase = await createUserSupabase();
   const { error } = await supabase.rpc('vendor_apply', {
@@ -27,19 +52,99 @@ export async function applyForStore(_: ActionState, form: FormData): Promise<Act
   // Keep which version of the seller terms they accepted (the database just checked the box was ticked).
   const { error: termsError } = await supabase.rpc('vendor_record_terms', { p_version: vendorTermsVersion });
   if (termsError) console.error('terms version not recorded', termsError.message);
+
+  const unsaved: string[] = [];
+  const tin = text(form, 'tin');
+  if (tin) {
+    const sellerType = text(form, 'seller_type') === 'company' ? 'company' : 'individual';
+    const { error: taxError } = await supabase.rpc('vendor_save_tax_info', {
+      p: {
+        business_type: sellerType,
+        legal_name: text(form, 'legal_name') || text(form, 'owner_name'),
+        tin,
+        business_registration: text(form, 'business_registration'),
+      },
+    });
+    if (taxError) unsaved.push('tax details');
+  }
+  const wallet = text(form, 'wallet');
+  if (wallet) {
+    const { error: payError } = await supabase.rpc('vendor_set_payout_account', {
+      p_network: text(form, 'network'),
+      p_wallet: wallet,
+      p_name: text(form, 'wallet_name') || text(form, 'owner_name'),
+    });
+    if (payError) unsaved.push('payout account');
+  }
   refresh();
-  return done('Application sent. We will review it and be in touch.');
+  return done(
+    unsaved.length
+      ? `Application sent. Your ${unsaved.join(' and ')} didn’t save; add ${unsaved.length > 1 ? 'them' : 'it'} from your setup checklist.`
+      : 'Application sent. We will review it and be in touch.',
+  );
 }
 
 export async function saveStore(_: ActionState, form: FormData): Promise<ActionState> {
   const supabase = await createUserSupabase();
   const { error } = await supabase.rpc('vendor_update_store', {
-    p: { name: text(form, 'name'), tagline: text(form, 'tagline'), description: text(form, 'description'), phone: text(form, 'phone') },
+    p: {
+      name: text(form, 'name'),
+      tagline: text(form, 'tagline'),
+      description: text(form, 'description'),
+      phone: text(form, 'phone'),
+      announcement: text(form, 'announcement'),
+      returns_policy: text(form, 'returns_policy'),
+      processing_days: text(form, 'processing_days') || '3',
+      instagram: text(form, 'instagram'),
+      website: text(form, 'website'),
+    },
   });
   if (error) return failed(error);
   updateTag('catalog');
   refresh();
   return done('Store details saved.');
+}
+
+/** Adds a section ("shelf") to the store, or renames one when `id` is given. */
+export async function saveSection(_: ActionState, form: FormData): Promise<ActionState> {
+  const supabase = await createUserSupabase();
+  const { error } = await supabase.rpc('vendor_save_section', {
+    p: { id: text(form, 'id'), name: text(form, 'name') },
+  });
+  if (error) return failed(error);
+  updateTag('catalog');
+  refresh();
+  return done('Section saved.');
+}
+
+export async function deleteSection(id: string): Promise<ActionState> {
+  const supabase = await createUserSupabase();
+  const { error } = await supabase.rpc('vendor_delete_section', { p_id: id });
+  if (error) return failed(error);
+  updateTag('catalog');
+  refresh();
+  return done('Section removed. Its products stay in your store.');
+}
+
+/** Puts a product in one of the store's sections (an empty section id takes it out). */
+export async function setProductSection(productId: string, _: ActionState, form: FormData): Promise<ActionState> {
+  const supabase = await createUserSupabase();
+  const section = text(form, 'section_id');
+  const { error } = await supabase.rpc('vendor_set_product_section', { p_product_id: productId, p_section_id: section || null });
+  if (error) return failed(error);
+  updateTag('catalog');
+  refresh();
+  return done('Section saved.');
+}
+
+/** Vacation mode: hides the store until it is resumed. Orders already placed still have to be packed. */
+export async function setStorePaused(paused: boolean, _: ActionState, form: FormData): Promise<ActionState> {
+  const supabase = await createUserSupabase();
+  const { error } = await supabase.rpc('vendor_set_paused', { p_paused: paused, p_note: text(form, 'note') || undefined });
+  if (error) return failed(error);
+  updateTag('catalog');
+  refresh();
+  return done(paused ? 'Your store is paused. Shoppers can’t see it until you resume.' : 'Your store is back open.');
 }
 
 /** Records a logo or banner the browser has just uploaded to Storage. */

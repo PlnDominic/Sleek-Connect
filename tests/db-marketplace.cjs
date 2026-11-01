@@ -76,7 +76,10 @@ const product = (extra = {}) => ({
   assert(sql(`select count(*) from public.vendor_decisions where vendor_id = '${vendorId}' and decision = 'active'`) === '1', 'the approval is kept on record with the checks');
   me = (await ama.rpc('vendor_me')).data;
   assert(me.status === 'active' && me.live === false && me.annual_fee_ghs > 0, 'approved but unpaid: not live, with the yearly fee shown');
-  assert((await errOf(ama.rpc('vendor_save_product', { p: product() })))?.message.includes('subscription'), 'an unpaid store cannot add products');
+  const draft = await ama.rpc('vendor_save_product', { p: product() });
+  assert(!draft.error && draft.data.id, 'an approved store that has not paid yet can prepare products as drafts');
+  assert((await anon.from('products').select('id').eq('id', draft.data.id)).data.length === 0, 'but a draft from an unpaid store is never on sale');
+  assert(!(await ama.rpc('vendor_delete_product', { p_product_id: draft.data.id })).error, 'and it can be removed again');
   assert((await anon.from('vendors').select('slug')).data.every((v) => v.slug !== 'amas-beauty-hub'), 'an unpaid store is not public');
 
   // --- Subscription ------------------------------------------------------------------------------

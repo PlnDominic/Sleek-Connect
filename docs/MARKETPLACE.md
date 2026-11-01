@@ -120,6 +120,8 @@ Vendor products still **cannot be bought** while "Shoppers can order vendor prod
 a real SMS provider (so vendors hear about orders), at least one rehearsal order through packing, collection, delivery,
 a return and a payout, and a decision on the payout schedule you will tell vendors.
 
+See `docs/STORE_BUILDER.md` for how a seller opens and sets up a store (the wizard, set up before live, sections, vacation mode).
+
 ## Things to know
 
 - Staff editing a vendor product in the admin console can't change its price directly: the price always follows the

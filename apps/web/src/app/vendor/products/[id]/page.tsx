@@ -3,8 +3,8 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { getAgeBands, getCategories } from '@/lib/catalog';
 import { photoUrl } from '@/lib/photos';
-import { getVendorSession, type VendorProduct } from '@/lib/vendor';
-import { deleteProduct } from '../../actions';
+import { getProductSections, getVendorSections, getVendorSession, type VendorProduct } from '@/lib/vendor';
+import { deleteProduct, setProductSection } from '../../actions';
 import { PhotoManager } from '../../PhotoManager';
 import { ProductForm } from '../../ProductForm';
 import { VendorForm } from '../../VendorForm';
@@ -20,7 +20,13 @@ export default async function EditProductPage({ params, searchParams }: PageProp
   if (error) throw error;
   const product = (data as unknown as VendorProduct[]).find((p) => p.id === id);
   if (!product) notFound();
-  const [categories, ageBands] = await Promise.all([getCategories(), getAgeBands()]);
+  const [categories, ageBands, sections, productSections] = await Promise.all([
+    getCategories(),
+    getAgeBands(),
+    getVendorSections(session, session.vendor.id),
+    getProductSections(session),
+  ]);
+  const currentSection = productSections.get(product.id) ?? '';
 
   return (
     <>
@@ -34,6 +40,29 @@ export default async function EditProductPage({ params, searchParams }: PageProp
       {product.problems.length > 0 && <p className={styles.warn}>Before this can go on sale it still needs: {product.problems.join(', ')}.</p>}
       <PhotoManager productId={product.id} photos={product.images.map((i) => ({ id: i.id, url: photoUrl(i.path) }))} />
       <ProductForm product={product} categories={categories} ageBands={ageBands} />
+      {sections.length > 0 && (
+        <section className={styles.panel}>
+          <h2>Store section</h2>
+          <VendorForm action={setProductSection.bind(null, product.id)}>
+            <label className={styles.field}>
+              <span>Show this product in</span>
+              <select name="section_id" defaultValue={currentSection}>
+                <option value="">No section</option>
+                {sections.map((section) => (
+                  <option key={section.id} value={section.id}>
+                    {section.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className={styles.buttons}>
+              <button type="submit" className={styles.secondary}>
+                Save section
+              </button>
+            </div>
+          </VendorForm>
+        </section>
+      )}
       <section className={styles.panel}>
         <h2>Remove this product</h2>
         <p className={styles.muted}>Products with past orders are taken off sale and kept for the records.</p>

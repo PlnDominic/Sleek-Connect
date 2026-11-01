@@ -2,10 +2,11 @@ import Link from 'next/link';
 import { formatPrice } from '@sleek/shared';
 import { momoNetworks } from '@sleek/shared';
 import { getPaymentProvider } from '@/lib/payments';
-import { getVendorSession, type VendorProduct } from '@/lib/vendor';
+import { getStoreSetup, getVendorSession, type VendorProduct } from '@/lib/vendor';
 import { payOnline, setStock } from './actions';
 import { vendorTermsVersion } from '@/lib/vendor-terms';
-import { ApplyForm } from './ApplyForm';
+import { SetupChecklist } from './SetupChecklist';
+import { StoreWizard } from './StoreWizard';
 import { VendorForm } from './VendorForm';
 import styles from './vendor.module.css';
 
@@ -60,125 +61,9 @@ function StatusCard({ title, children, mark }: { title: string; children: React.
   );
 }
 
-export default async function VendorHome() {
-  const session = await getVendorSession();
-
-  if (session.state === 'signed_out') {
-    return (
-      <StatusCard title="Sell on Sleek Connect" mark="→">
-        <p className={styles.muted}>Sign in to open your store.</p>
-        <Link href="/account?next=/vendor" className={styles.primary}>
-          Sign in to continue
-        </Link>
-        <Link href="/sell" className={styles.quiet}>
-          How selling works
-        </Link>
-      </StatusCard>
-    );
-  }
-
-  const { vendor } = session;
-  if (!vendor) {
-    return (
-      <StatusCard title="Open your store" mark="+">
-        <ApplyForm email={session.email ?? ''} />
-      </StatusCard>
-    );
-  }
-
-  if (vendor.status === 'pending') {
-    return (
-      <StatusCard title="Application received" mark="✓">
-        <p className={styles.muted}>We’ll review {vendor.name} and call you soon.</p>
-      </StatusCard>
-    );
-  }
-
-  if (vendor.status === 'rejected' || vendor.status === 'suspended') {
-    return (
-      <StatusCard title={vendor.status === 'rejected' ? 'Not approved' : 'Store paused'} mark="!">
-        {vendor.review_note && <p className={styles.muted}>{vendor.review_note}</p>}
-        <Link href="/help#contact" className={styles.quiet}>
-          Contact us
-        </Link>
-      </StatusCard>
-    );
-  }
-
-  const online = getPaymentProvider() !== null;
-  if (!vendor.live) {
-    const renewing = Boolean(vendor.paid_until);
-    return (
-      <StatusCard title={renewing ? 'Renew your subscription' : 'Pay to open your store'} mark="GH₵">
-        <p className={styles.statusFee}>{formatPrice(vendor.annual_fee_ghs)}</p>
-        <p className={styles.muted}>per year{renewing ? ` · ended ${dateText(vendor.paid_until!)}` : ''}</p>
-        {online && <PayOnline />}
-        {vendor.payment_instructions ? (
-          <p className={styles.instructions}>{vendor.payment_instructions}</p>
-        ) : (
-          !online && (
-            <Link href="/help#contact" className={styles.quiet}>
-              Contact us to pay
-            </Link>
-          )
-        )}
-      </StatusCard>
-    );
-  }
-
-  const [{ data: products, error }, { data: launchData }] = await Promise.all([
-    session.supabase.rpc('vendor_my_products'),
-    session.supabase.rpc('vendor_launch_state'),
-  ]);
-  if (error) throw error;
-  const launch = launchData as unknown as { terms_version: string | null; tin: string | null; tin_required: boolean; payout_account_set: boolean } | null;
-  const items = (products as unknown as VendorProduct[]) ?? [];
-  const closesSoon = vendor.paid_until ? Math.ceil((Date.parse(vendor.paid_until) - new Date().getTime()) / 864e5) : null;
-
+/** The vendor's products, with their review state and stock boxes. */
+function ProductsPanel({ items }: { items: VendorProduct[] }) {
   return (
-    <>
-      {launch && launch.terms_version !== vendorTermsVersion && (
-        <p className={styles.notice}>
-          The seller terms have been updated. <Link href="/vendor/help">Read and accept them</Link> to keep listing products.
-        </p>
-      )}
-      {launch && (!launch.payout_account_set || (launch.tin_required && !launch.tin)) && (
-        <p className={styles.notice}>
-          To be paid we need {[!launch.payout_account_set ? 'your Mobile Money account' : null, launch.tin_required && !launch.tin ? 'your tax details' : null].filter(Boolean).join(' and ')}.{' '}
-          <Link href="/vendor/earnings">Add them under Earnings</Link>.
-        </p>
-      )}
-      {closesSoon !== null && closesSoon <= 30 && (
-        <p className={styles.notice}>
-          Your subscription {closesSoon < 0 ? 'has ended' : `ends in ${closesSoon} day${closesSoon === 1 ? '' : 's'}`}. Pay the yearly fee of{' '}
-          {formatPrice(vendor.annual_fee_ghs)} to keep your store open. {online ? '' : (vendor.payment_instructions ?? '')}
-        </p>
-      )}
-      {online && closesSoon !== null && closesSoon <= 30 && (
-        <section className={styles.panel}>
-          <h2>Renew online</h2>
-          <PayOnline />
-        </section>
-      )}
-
-      <div className={styles.stats}>
-        <section className={styles.stat}>
-          <h2>Products</h2>
-          <strong>{items.length}</strong>
-          <span>{items.filter((p) => p.is_published).length} on sale</span>
-        </section>
-        <section className={styles.stat}>
-          <h2>Waiting for approval</h2>
-          <strong>{items.filter((p) => p.review_status === 'pending').length}</strong>
-          <span>We set the shopper price when we approve</span>
-        </section>
-        <section className={styles.stat}>
-          <h2>Subscription</h2>
-          <strong>{vendor.paid_until ? dateText(vendor.paid_until) : '–'}</strong>
-          <span>{closesSoon !== null ? (closesSoon < 0 ? 'Ended' : `${closesSoon} day${closesSoon === 1 ? '' : 's'} left`) : 'Paid until'}</span>
-        </section>
-      </div>
-
       <section className={styles.panel}>
         <div className={styles.panelHead}>
           <h2>Your products</h2>
@@ -226,7 +111,140 @@ export default async function VendorHome() {
           </ul>
         )}
       </section>
+  );
+}
 
+export default async function VendorHome() {
+  const session = await getVendorSession();
+
+  if (session.state === 'signed_out') {
+    return (
+      <StatusCard title="Sell on Sleek Connect" mark="→">
+        <p className={styles.muted}>Sign in to open your store.</p>
+        <Link href="/account?next=/vendor" className={styles.primary}>
+          Sign in to continue
+        </Link>
+        <Link href="/sell" className={styles.quiet}>
+          How selling works
+        </Link>
+      </StatusCard>
+    );
+  }
+
+  const { vendor } = session;
+  if (!vendor) {
+    return (
+      <StatusCard title="Open your store" mark="+">
+        <StoreWizard email={session.email ?? ''} />
+      </StatusCard>
+    );
+  }
+
+  if (vendor.status === 'pending') {
+    return (
+      <>
+        <StatusCard title="Application received" mark="✓">
+          <p className={styles.muted}>We’ll review {vendor.name} and call you soon. You can start setting up your store while you wait.</p>
+        </StatusCard>
+        <SetupChecklist setup={await getStoreSetup(session, vendor)} />
+      </>
+    );
+  }
+
+  if (vendor.status === 'rejected' || vendor.status === 'suspended') {
+    return (
+      <StatusCard title={vendor.status === 'rejected' ? 'Not approved' : 'Store paused'} mark="!">
+        {vendor.review_note && <p className={styles.muted}>{vendor.review_note}</p>}
+        <Link href="/help#contact" className={styles.quiet}>
+          Contact us
+        </Link>
+      </StatusCard>
+    );
+  }
+
+  const online = getPaymentProvider() !== null;
+  if (!vendor.live) {
+    const renewing = Boolean(vendor.paid_until);
+    const { data: draftData } = await session.supabase.rpc('vendor_my_products');
+    const drafts = (draftData as unknown as VendorProduct[]) ?? [];
+    return (
+      <>
+      <StatusCard title={renewing ? 'Renew your subscription' : 'Pay to open your store'} mark="GH₵">
+        <p className={styles.statusFee}>{formatPrice(vendor.annual_fee_ghs)}</p>
+        <p className={styles.muted}>per year{renewing ? ` · ended ${dateText(vendor.paid_until!)}` : ''}</p>
+        {online && <PayOnline />}
+        {vendor.payment_instructions ? (
+          <p className={styles.instructions}>{vendor.payment_instructions}</p>
+        ) : (
+          !online && (
+            <Link href="/help#contact" className={styles.quiet}>
+              Contact us to pay
+            </Link>
+          )
+        )}
+      </StatusCard>
+      <SetupChecklist setup={await getStoreSetup(session, vendor, drafts.length)} />
+      <ProductsPanel items={drafts} />
+      </>
+    );
+  }
+
+  const [{ data: products, error }, { data: launchData }] = await Promise.all([
+    session.supabase.rpc('vendor_my_products'),
+    session.supabase.rpc('vendor_launch_state'),
+  ]);
+  if (error) throw error;
+  const launch = launchData as unknown as { terms_version: string | null; tin: string | null; tin_required: boolean; payout_account_set: boolean } | null;
+  const items = (products as unknown as VendorProduct[]) ?? [];
+  const closesSoon = vendor.paid_until ? Math.ceil((Date.parse(vendor.paid_until) - new Date().getTime()) / 864e5) : null;
+
+  const setup = await getStoreSetup(session, vendor, items.length);
+  return (
+    <>
+      {setup.percent < 100 && <SetupChecklist setup={setup} />}
+      {launch && launch.terms_version !== vendorTermsVersion && (
+        <p className={styles.notice}>
+          The seller terms have been updated. <Link href="/vendor/help">Read and accept them</Link> to keep listing products.
+        </p>
+      )}
+      {launch && (!launch.payout_account_set || (launch.tin_required && !launch.tin)) && (
+        <p className={styles.notice}>
+          To be paid we need {[!launch.payout_account_set ? 'your Mobile Money account' : null, launch.tin_required && !launch.tin ? 'your tax details' : null].filter(Boolean).join(' and ')}.{' '}
+          <Link href="/vendor/earnings">Add them under Earnings</Link>.
+        </p>
+      )}
+      {closesSoon !== null && closesSoon <= 30 && (
+        <p className={styles.notice}>
+          Your subscription {closesSoon < 0 ? 'has ended' : `ends in ${closesSoon} day${closesSoon === 1 ? '' : 's'}`}. Pay the yearly fee of{' '}
+          {formatPrice(vendor.annual_fee_ghs)} to keep your store open. {online ? '' : (vendor.payment_instructions ?? '')}
+        </p>
+      )}
+      {online && closesSoon !== null && closesSoon <= 30 && (
+        <section className={styles.panel}>
+          <h2>Renew online</h2>
+          <PayOnline />
+        </section>
+      )}
+
+      <div className={styles.stats}>
+        <section className={styles.stat}>
+          <h2>Products</h2>
+          <strong>{items.length}</strong>
+          <span>{items.filter((p) => p.is_published).length} on sale</span>
+        </section>
+        <section className={styles.stat}>
+          <h2>Waiting for approval</h2>
+          <strong>{items.filter((p) => p.review_status === 'pending').length}</strong>
+          <span>We set the shopper price when we approve</span>
+        </section>
+        <section className={styles.stat}>
+          <h2>Subscription</h2>
+          <strong>{vendor.paid_until ? dateText(vendor.paid_until) : '–'}</strong>
+          <span>{closesSoon !== null ? (closesSoon < 0 ? 'Ended' : `${closesSoon} day${closesSoon === 1 ? '' : 's'} left`) : 'Paid until'}</span>
+        </section>
+      </div>
+
+      <ProductsPanel items={items} />
     </>
   );
 }

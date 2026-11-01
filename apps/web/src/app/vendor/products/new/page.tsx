@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: 'Add a product' };
 
 export default async function NewProductPage() {
   const session = await getVendorSession();
-  if (session.state !== 'ready' || !session.vendor?.live) redirect('/vendor');
+  if (session.state !== 'ready' || session.vendor?.status !== 'active') redirect('/vendor');
   const [categories, ageBands] = await Promise.all([getCategories(), getAgeBands()]);
   return (
     <>

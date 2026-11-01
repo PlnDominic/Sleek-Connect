@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: 'Add many products' };
 
 export default async function ImportProductsPage() {
   const session = await getVendorSession();
-  if (session.state !== 'ready' || !session.vendor?.live) redirect('/vendor');
+  if (session.state !== 'ready' || session.vendor?.status !== 'active') redirect('/vendor');
   return (
     <>
       <Link href="/vendor/products/new" className={styles.back}>

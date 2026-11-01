@@ -276,6 +276,15 @@ export interface Storefront {
   /** Average of the published reviews on this store's products (0 when there are none). */
   rating: { average: number; count: number };
   reviews: StoreReview[];
+  /** A short notice shown at the top of the page. */
+  announcement?: string;
+  returnsPolicy?: string;
+  /** Working days the store needs to pack an order. */
+  processingDays?: number;
+  instagram?: string;
+  website?: string;
+  /** The store's sections, with the slugs of the products in each (empty ones left out). */
+  sections: { id: string; name: string; productSlugs: string[] }[];
 }
 
 export interface StoreReview {
@@ -314,12 +323,33 @@ export async function getStorefront(slug: string): Promise<Storefront | null> {
     .maybeSingle();
   if (error) throw new Error(`Supabase query failed: ${error.message}`);
   if (!vendor) return null;
-  const [rows, rating, reviews] = await Promise.all([
+  const [rows, rating, reviews, profile, sectionRows] = await Promise.all([
     supabase.from('products').select(productColumns).eq('vendor_id', vendor.id).order('created_at', { ascending: false }).then(unwrap),
     supabase.rpc('store_rating', { p_slug: slug }).then((r) => orMissing(r, { average: 0, count: 0 })),
     supabase.rpc('store_reviews', { p_slug: slug, p_limit: 6 }).then((r) => orMissing<StoreReview[]>(r, [])),
+    // The store-builder details and sections are read apart, so the page still works before their migration has run.
+    supabase
+      .from('vendors')
+      .select('announcement, returns_policy, processing_days, instagram, website')
+      .eq('id', vendor.id)
+      .maybeSingle()
+      .then((r) => (r.error ? null : r.data)),
+    supabase
+      .from('vendor_sections')
+      .select('id, name, sort_order')
+      .eq('vendor_id', vendor.id)
+      .order('sort_order')
+      .then((r) => (r.error ? [] : (r.data ?? []))),
   ]);
   const stats = rating as { average: number; count: number };
+  const sectionOf = new Map<string, string>();
+  if (sectionRows.length > 0) {
+    const { data: placed } = await supabase.from('products').select('slug, section_id').eq('vendor_id', vendor.id).not('section_id', 'is', null);
+    for (const row of placed ?? []) if (row.section_id) sectionOf.set(row.slug, row.section_id);
+  }
+  const sections = sectionRows
+    .map((section) => ({ id: section.id, name: section.name, productSlugs: [...sectionOf].filter(([, id]) => id === section.id).map(([productSlug]) => productSlug) }))
+    .filter((section) => section.productSlugs.length > 0);
   return {
     name: vendor.name,
     slug: vendor.slug,
@@ -331,6 +361,12 @@ export async function getStorefront(slug: string): Promise<Storefront | null> {
     products: (rows as ProductRow[]).map(toProduct),
     rating: { average: Number(stats.average), count: stats.count },
     reviews,
+    announcement: profile?.announcement ?? undefined,
+    returnsPolicy: profile?.returns_policy ?? undefined,
+    processingDays: profile?.processing_days ?? undefined,
+    instagram: profile?.instagram ?? undefined,
+    website: profile?.website ?? undefined,
+    sections,
   };
 }
 

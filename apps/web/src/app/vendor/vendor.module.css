@@ -722,3 +722,166 @@
   gap: 4px;
   font-size: 13px;
 }
+
+/* Store setup checklist */
+.progress {
+  height: 8px;
+  margin: 4px 0 14px;
+  border-radius: 999px;
+  background: var(--c-surface, #f1f2f4);
+  overflow: hidden;
+}
+
+.progress > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--c-teal, #0f766e);
+  transition: width 0.3s ease;
+}
+
+.steps {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.steps li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--c-line, #e6e8eb);
+}
+
+.steps li:last-child {
+  border-bottom: 0;
+}
+
+.stepMark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-top: 1px;
+  border: 1.5px solid var(--c-line-strong, #c9ced4);
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.steps li[data-done] .stepMark {
+  border-color: var(--c-teal, #0f766e);
+  background: var(--c-teal, #0f766e);
+  color: #fff;
+}
+
+.steps li[data-locked]:not([data-done]) {
+  opacity: 0.55;
+}
+
+.stepText {
+  display: grid;
+  gap: 2px;
+}
+
+.stepText small {
+  color: var(--c-text-subtle, #6b7280);
+  font-size: 13px;
+}
+
+.steps li[data-done] .stepText > span {
+  text-decoration: line-through;
+  color: var(--c-text-subtle, #6b7280);
+}
+
+/* "Open your store" wizard */
+.wizardSteps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+
+.wizardSteps li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--c-text-muted, #6b7280);
+}
+
+.wizardSteps li span {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid var(--c-line-strong, #c9ced4);
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.wizardSteps li[data-current] {
+  color: var(--c-text, #111827);
+}
+
+.wizardSteps li[data-current] span {
+  border-color: var(--c-teal, #0f766e);
+  background: var(--c-teal, #0f766e);
+  color: #fff;
+}
+
+.wizardSteps li[data-done] span {
+  border-color: var(--c-teal, #0f766e);
+  color: var(--c-teal, #0f766e);
+}
+
+.wizardButtons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.nameStatus {
+  margin: 0;
+  font-size: 13px;
+  color: var(--c-text-muted, #6b7280);
+}
+
+.nameStatus[data-ok] {
+  color: var(--c-teal, #0f766e);
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  margin: 0;
+  font-size: 14px;
+}
+
+.summary dt {
+  color: var(--c-text-muted, #6b7280);
+}
+
+.summary dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.inlineForm {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.inlineForm input {
+  min-width: 0;
+}

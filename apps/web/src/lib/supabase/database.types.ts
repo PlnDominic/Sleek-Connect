@@ -533,14 +533,14 @@ isOneToOne: false
                   ]
                 },"products": {
                   Row: {
-                    "review_checks": Json,"size_guide_id": string | null,"review_previous": Json | null,"review_status": Database["public"]['Enums']["product_review_status"],"review_note": string | null,"publish_requested": boolean,"markup_percent": number,"vendor_id": string,"vendor_price_ghs": number | null,"vendor_was_price_ghs": number | null,"badge": string | null,"brand": string | null,"category_id": string | null,"collection": string | null,"country_of_origin": string | null,"created_at": string,"department": Database["public"]['Enums']["department"],"details": Json | null,"id": string,"image_key": string | null,"ingredients": string | null,"is_published": boolean,"kids_filter": Database["public"]['Enums']["kids_filter"] | null,"kind": Database["public"]['Enums']["product_kind"],"name": string,"period_after_opening": string | null,"price_ghs": number,"recall_reason": string | null,"recalled_at": string | null,"regulatory_reference": string | null,"return_note": string | null,"returnable": boolean,"shades": (string)[],"skin_types": (string)[],"slug": string,"summary": string,"tag": string,"tint": string,"updated_at": string,"warning_label": string | null,"was_price_ghs": number | null
+                    "review_checks": Json,"section_id": string | null,"size_guide_id": string | null,"review_previous": Json | null,"review_status": Database["public"]['Enums']["product_review_status"],"review_note": string | null,"publish_requested": boolean,"markup_percent": number,"vendor_id": string,"vendor_price_ghs": number | null,"vendor_was_price_ghs": number | null,"badge": string | null,"brand": string | null,"category_id": string | null,"collection": string | null,"country_of_origin": string | null,"created_at": string,"department": Database["public"]['Enums']["department"],"details": Json | null,"id": string,"image_key": string | null,"ingredients": string | null,"is_published": boolean,"kids_filter": Database["public"]['Enums']["kids_filter"] | null,"kind": Database["public"]['Enums']["product_kind"],"name": string,"period_after_opening": string | null,"price_ghs": number,"recall_reason": string | null,"recalled_at": string | null,"regulatory_reference": string | null,"return_note": string | null,"returnable": boolean,"shades": (string)[],"skin_types": (string)[],"slug": string,"summary": string,"tag": string,"tint": string,"updated_at": string,"warning_label": string | null,"was_price_ghs": number | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "review_checks"?: Json,"size_guide_id"?: string | null,"review_previous"?: Json | null,"review_status"?: Database["public"]['Enums']["product_review_status"],"review_note"?: string | null,"publish_requested"?: boolean,"markup_percent"?: number,"vendor_id"?: string,"vendor_price_ghs"?: number | null,"vendor_was_price_ghs"?: number | null,"badge"?: string | null,"brand"?: string | null,"category_id"?: string | null,"collection"?: string | null,"country_of_origin"?: string | null,"created_at"?: string,"department": Database["public"]['Enums']["department"],"details"?: Json | null,"id"?: string,"image_key"?: string | null,"ingredients"?: string | null,"is_published"?: boolean,"kids_filter"?: Database["public"]['Enums']["kids_filter"] | null,"kind": Database["public"]['Enums']["product_kind"],"name": string,"period_after_opening"?: string | null,"price_ghs": number,"recall_reason"?: string | null,"recalled_at"?: string | null,"regulatory_reference"?: string | null,"return_note"?: string | null,"returnable"?: boolean,"shades"?: (string)[],"skin_types"?: (string)[],"slug": string,"summary": string,"tag": string,"tint": string,"updated_at"?: string,"warning_label"?: string | null,"was_price_ghs"?: number | null
+                    "review_checks"?: Json,"section_id"?: string | null,"size_guide_id"?: string | null,"review_previous"?: Json | null,"review_status"?: Database["public"]['Enums']["product_review_status"],"review_note"?: string | null,"publish_requested"?: boolean,"markup_percent"?: number,"vendor_id"?: string,"vendor_price_ghs"?: number | null,"vendor_was_price_ghs"?: number | null,"badge"?: string | null,"brand"?: string | null,"category_id"?: string | null,"collection"?: string | null,"country_of_origin"?: string | null,"created_at"?: string,"department": Database["public"]['Enums']["department"],"details"?: Json | null,"id"?: string,"image_key"?: string | null,"ingredients"?: string | null,"is_published"?: boolean,"kids_filter"?: Database["public"]['Enums']["kids_filter"] | null,"kind": Database["public"]['Enums']["product_kind"],"name": string,"period_after_opening"?: string | null,"price_ghs": number,"recall_reason"?: string | null,"recalled_at"?: string | null,"regulatory_reference"?: string | null,"return_note"?: string | null,"returnable"?: boolean,"shades"?: (string)[],"skin_types"?: (string)[],"slug": string,"summary": string,"tag": string,"tint": string,"updated_at"?: string,"warning_label"?: string | null,"was_price_ghs"?: number | null
                   }
                   Update: {
-                    "review_checks"?: Json,"size_guide_id"?: string | null,"review_previous"?: Json | null,"review_status"?: Database["public"]['Enums']["product_review_status"],"review_note"?: string | null,"publish_requested"?: boolean,"markup_percent"?: number,"vendor_id"?: string,"vendor_price_ghs"?: number | null,"vendor_was_price_ghs"?: number | null,"badge"?: string | null,"brand"?: string | null,"category_id"?: string | null,"collection"?: string | null,"country_of_origin"?: string | null,"created_at"?: string,"department"?: Database["public"]['Enums']["department"],"details"?: Json | null,"id"?: string,"image_key"?: string | null,"ingredients"?: string | null,"is_published"?: boolean,"kids_filter"?: Database["public"]['Enums']["kids_filter"] | null,"kind"?: Database["public"]['Enums']["product_kind"],"name"?: string,"period_after_opening"?: string | null,"price_ghs"?: number,"recall_reason"?: string | null,"recalled_at"?: string | null,"regulatory_reference"?: string | null,"return_note"?: string | null,"returnable"?: boolean,"shades"?: (string)[],"skin_types"?: (string)[],"slug"?: string,"summary"?: string,"tag"?: string,"tint"?: string,"updated_at"?: string,"warning_label"?: string | null,"was_price_ghs"?: number | null
+                    "review_checks"?: Json,"section_id"?: string | null,"size_guide_id"?: string | null,"review_previous"?: Json | null,"review_status"?: Database["public"]['Enums']["product_review_status"],"review_note"?: string | null,"publish_requested"?: boolean,"markup_percent"?: number,"vendor_id"?: string,"vendor_price_ghs"?: number | null,"vendor_was_price_ghs"?: number | null,"badge"?: string | null,"brand"?: string | null,"category_id"?: string | null,"collection"?: string | null,"country_of_origin"?: string | null,"created_at"?: string,"department"?: Database["public"]['Enums']["department"],"details"?: Json | null,"id"?: string,"image_key"?: string | null,"ingredients"?: string | null,"is_published"?: boolean,"kids_filter"?: Database["public"]['Enums']["kids_filter"] | null,"kind"?: Database["public"]['Enums']["product_kind"],"name"?: string,"period_after_opening"?: string | null,"price_ghs"?: number,"recall_reason"?: string | null,"recalled_at"?: string | null,"regulatory_reference"?: string | null,"return_note"?: string | null,"returnable"?: boolean,"shades"?: (string)[],"skin_types"?: (string)[],"slug"?: string,"summary"?: string,"tag"?: string,"tint"?: string,"updated_at"?: string,"warning_label"?: string | null,"was_price_ghs"?: number | null
                   }
                   Relationships: [
                     {
@@ -712,6 +712,20 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"vendor_sections": {
+                  Row: {
+                    "created_at": string,"id": string,"name": string,"sort_order": number,"vendor_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"name": string,"sort_order"?: number,"vendor_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"name"?: string,"sort_order"?: number,"vendor_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"size_guides": {
                   Row: {
                     "columns": string[],"created_at": string,"id": string,"intro": string | null,"rows": Json,"title": string,"updated_at": string
@@ -762,14 +776,14 @@ isOneToOne: false
                   ]
                 },"vendors": {
                   Row: {
-                    "banner_path": string | null,"created_at": string,"description": string | null,"id": string,"is_house": boolean,"logo_path": string | null,"name": string,"owner_id": string | null,"slug": string,"status": Database["public"]['Enums']["vendor_status"],"tagline": string | null,"updated_at": string
+                    "announcement": string | null,"returns_policy": string | null,"processing_days": number,"instagram": string | null,"website": string | null,"paused_at": string | null,"paused_note": string | null,"banner_path": string | null,"created_at": string,"description": string | null,"id": string,"is_house": boolean,"logo_path": string | null,"name": string,"owner_id": string | null,"slug": string,"status": Database["public"]['Enums']["vendor_status"],"tagline": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "banner_path"?: string | null,"created_at"?: string,"description"?: string | null,"id"?: string,"is_house"?: boolean,"logo_path"?: string | null,"name": string,"owner_id"?: string | null,"slug": string,"status"?: Database["public"]['Enums']["vendor_status"],"tagline"?: string | null,"updated_at"?: string
+                    "announcement"?: string | null,"returns_policy"?: string | null,"processing_days"?: number,"instagram"?: string | null,"website"?: string | null,"paused_at"?: string | null,"paused_note"?: string | null,"banner_path"?: string | null,"created_at"?: string,"description"?: string | null,"id"?: string,"is_house"?: boolean,"logo_path"?: string | null,"name": string,"owner_id"?: string | null,"slug": string,"status"?: Database["public"]['Enums']["vendor_status"],"tagline"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "banner_path"?: string | null,"created_at"?: string,"description"?: string | null,"id"?: string,"is_house"?: boolean,"logo_path"?: string | null,"name"?: string,"owner_id"?: string | null,"slug"?: string,"status"?: Database["public"]['Enums']["vendor_status"],"tagline"?: string | null,"updated_at"?: string
+                    "announcement"?: string | null,"returns_policy"?: string | null,"processing_days"?: number,"instagram"?: string | null,"website"?: string | null,"paused_at"?: string | null,"paused_note"?: string | null,"banner_path"?: string | null,"created_at"?: string,"description"?: string | null,"id"?: string,"is_house"?: boolean,"logo_path"?: string | null,"name"?: string,"owner_id"?: string | null,"slug"?: string,"status"?: Database["public"]['Enums']["vendor_status"],"tagline"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -986,6 +1000,24 @@ isOneToOne: false
 
 "admin_record_subscription":
 { Args: { "p_amount_ghs": number,"p_method"?: string,"p_note"?: string,"p_reference"?: string,"p_vendor_id": string }; Returns: string
+                           },
+"vendor_delete_section":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"vendor_name_available":
+{ Args: { "p_name": string }; Returns: Json
+                           },
+"vendor_product_sections":
+{ Args: never; Returns: Json
+                           },
+"vendor_save_section":
+{ Args: { "p": Json }; Returns: string
+                           },
+"vendor_set_paused":
+{ Args: { "p_note"?: string,"p_paused": boolean }; Returns: undefined
+                           },
+"vendor_set_product_section":
+{ Args: { "p_product_id": string,"p_section_id": string | null }; Returns: undefined
                            },
 "admin_open_vendor_dispute":
 { Args: { "p_details": string,"p_kind": Database["public"]['Enums']["vendor_dispute_kind"],"p_order_number": string,"p_product_id": string }; Returns: string
