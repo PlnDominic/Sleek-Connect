@@ -220,7 +220,7 @@ const count = (page) => page.locator('#results-count:visible').first().textConte
 
   // --- Track an order --------------------------------------------------------------------------------
   const { data: order } = await anonDb.rpc('place_order', {
-    p_customer: { name: 'Efua Mensah', phone: '055 222 3333', area: 'Osu' },
+    p_customer: { adult_confirmed: true, name: 'Efua Mensah', phone: '055 222 3333', area: 'Osu' },
     p_delivery_option: 'same_day',
     p_payment: { method: 'momo', network: 'mtn', wallet: '055 222 3333' },
     p_items: [{ slug: 'wooden-stacking-blocks', quantity: 1 }, { slug: 'velvet-matte-lip-colour', quantity: 1 }],

@@ -100,6 +100,28 @@ export function Choices<T extends string>({
   );
 }
 
+/** A tick box with a sentence beside it. Pressing the sentence ticks it too. */
+export function Checkbox({ checked, onChange, children }: { checked: boolean; onChange: (checked: boolean) => void; children: ReactNode }) {
+  return (
+    <Pressable
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked }}
+      onPress={() => onChange(!checked)}
+      style={styles.checkbox}
+      hitSlop={6}
+    >
+      <View style={[styles.box, checked && styles.boxOn]}>
+        {checked ? (
+          <AppText weight="bold" size={14} color={colors.canvas}>
+            ✓
+          </AppText>
+        ) : null}
+      </View>
+      <View style={{ flex: 1 }}>{children}</View>
+    </Pressable>
+  );
+}
+
 /** A white card with a heading. */
 export function Card({ title, children }: { title?: string; children: ReactNode }) {
   return (
@@ -126,6 +148,9 @@ export function Notice({ children, tone = 'warn' }: { children: ReactNode; tone?
 }
 
 const styles = StyleSheet.create({
+  checkbox: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, minHeight: 44, paddingVertical: 4 },
+  box: { width: 24, height: 24, borderRadius: 6, borderWidth: 1.5, borderColor: colors.lineStrong, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.canvas },
+  boxOn: { backgroundColor: colors.ink, borderColor: colors.ink },
   field: { gap: 6 },
   input: {
     minHeight: 48,

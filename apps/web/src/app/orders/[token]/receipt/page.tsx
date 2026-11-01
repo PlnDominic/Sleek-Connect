@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { formatPrice, formatPriceOr } from '@sleek/shared';
 import { Logo } from '@/components/Logo';
+import { businessDetails } from '@/lib/legal';
 import { formatDateTime, paymentSummary } from '@/lib/orders';
 import { getCustomerOrder } from '../data';
 import { PrintButton } from './PrintButton';
@@ -27,6 +28,7 @@ export default function ReceiptPage({ params }: PageProps<'/orders/[token]/recei
 async function Receipt({ params }: { params: PageProps<'/orders/[token]/receipt'>['params'] }) {
   const { token } = await params;
   const order = await getCustomerOrder(token);
+  const seller = businessDetails();
   if (!order) notFound();
 
   if (!order.paid_at) {
@@ -51,7 +53,10 @@ async function Receipt({ params }: { params: PageProps<'/orders/[token]/receipt'
           <div className={styles.headerText}>
             <h1 id="receipt-title">Receipt</h1>
             <span>Order {order.order_number}</span>
-            <span>Paid {formatDateTime(order.paid_at)}</span>
+            <span>{order.payment_method === 'cod' ? 'Cash collected' : 'Paid'} {formatDateTime(order.paid_at)}</span>
+            {seller.name && <span>{seller.name}</span>}
+            {seller.address && <span>{seller.address}</span>}
+            {seller.taxNumber && <span>TIN {seller.taxNumber}</span>}
           </div>
         </header>
 

@@ -45,11 +45,14 @@ export default async function PrivacyPage() {
           <li>
             <strong>Your account.</strong> If you sign in with your phone: your phone number. If you sign in with Google: your email
             address, name and profile photo from Google. Either way, we record when you confirmed you are 18 or over and accepted our
-            terms. We never see your Google password.
+            terms. We never see your Google password. If you check out as a guest, we record on the order that you confirmed you are 18
+            or over and accepted the terms.
           </li>
           <li>
             <strong>Your orders.</strong> The name, phone number, email address (if you give one), area, GhanaPost GPS address and rider directions you give us for
-            delivery; what you bought and paid; the Mobile Money network and number you paid with; and the status history of the order.
+            delivery; what you bought and paid; how you paid (the Mobile Money network and number, or that you chose card or pay on
+            delivery, and the cash collected by the rider); and the status history of the order. Card details are entered on our payment
+            provider’s page and never reach us.
           </li>
           <li>
             <strong>What you save.</strong> Your bag, saved items, saved addresses, saved Mobile Money numbers and any reviews you write.
@@ -61,6 +64,11 @@ export default async function PrivacyPage() {
             <strong>The mobile app.</strong> Your sign-in is kept on your phone so you stay signed in. If you allow notifications, we
             keep a push token, which identifies your phone to the push service, and the order or account it belongs to, so we can tell
             you when an order is packed, on its way and delivered. You can turn this off in the app at any time.
+          </li>
+          <li>
+            <strong>If you sell on the store.</strong> Your store’s name and description, your contact details, a photo of your ID
+            document (kept privately and visible only to our authorised staff, to check your application), your products and prices,
+            and your sales, payouts and messages with us.
           </li>
           <li>
             <strong>Technical data.</strong> Standard information your browser sends (such as IP address and device type) and error
@@ -78,7 +86,7 @@ export default async function PrivacyPage() {
           <li><strong>To run your account</strong> (contract): keep your bag, addresses and orders across devices.</li>
           <li><strong>To keep you informed</strong> (contract): send order and delivery messages by SMS or email, and reply to support.</li>
           <li><strong>To keep the store safe and lawful</strong> (legitimate interest and legal duty): prevent fraud and misuse, keep accounting records, and answer legal requests.</li>
-          <li><strong>To improve the store</strong> (legitimate interest): fix errors and see which products customers value, using reviews and order totals rather than your identity.</li>
+          <li><strong>To improve the store</strong> (legitimate interest): fix errors and see which pages and products customers use, from anonymous visit statistics, error reports, reviews and order totals rather than your identity.</li>
         </ul>
       ),
     },
@@ -89,7 +97,10 @@ export default async function PrivacyPage() {
         <>
           <p>We don’t sell your data. We share only what is needed, with:</p>
           <ul>
-            <li>Our <strong>payment provider</strong>{business.paymentProvider ? ` (${business.paymentProvider})` : ''}, to take your Mobile Money payment and confirm it.</li>
+            <li>Our <strong>payment provider</strong>{business.paymentProvider ? ` (${business.paymentProvider})` : ''}, to take your Mobile Money or card payment and confirm it.</li>
+            <li><strong>Google</strong>, if you choose to sign in with Google.</li>
+            <li><strong>Independent stores</strong>, which see only the items to pack, never your name, phone number, address or delivery code.</li>
+            <li>Our <strong>error reporting and visit statistics providers</strong> (Sentry and PostHog), which receive anonymous technical data as described under “Visit statistics and error reports”.</li>
             <li>Our <strong>messaging providers</strong>, to send SMS and email about your order, and Expo&apos;s push service, to deliver app notifications.</li>
             <li><strong>Our riders</strong>, who see your name, phone number, address and directions for the delivery only.</li>
             <li>Our <strong>hosting and database providers</strong> (Supabase and Vercel), who store and serve the data for us under contract.</li>
@@ -156,8 +167,10 @@ export default async function PrivacyPage() {
       title: 'Cookies and storage on your device',
       body: (
         <p>
-          We use only what the store needs to work: a sign-in session if you sign in, and storage on your device for your bag, saved
-          items and recent searches. We don’t use advertising or cross-site tracking cookies.
+          We use only what the store needs to work: a sign-in session (a cookie) if you sign in, and storage on your device for
+          your bag, saved items, products you compared or viewed recently, recent searches and the orders you placed on this
+          device. None of it is used to track you. We don’t use advertising or cross-site tracking cookies. When you pay online you
+          are taken to our payment provider’s page, which sets its own cookies under its own notice.
         </p>
       ),
     },

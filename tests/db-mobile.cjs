@@ -10,7 +10,7 @@ const stamp = Date.now();
 const token = (name) => `ExponentPushToken[${name}${stamp}xxxxxxxx]`;
 
 const order = (client) => client.rpc('place_order', {
-  p_customer: { name: 'Kofi Mensah', phone: '024 123 4567', area: 'East Legon' },
+  p_customer: { adult_confirmed: true, name: 'Kofi Mensah', phone: '024 123 4567', area: 'East Legon' },
   p_delivery_option: 'standard', p_payment: { method: 'momo', network: 'mtn', wallet: '024 765 4321' },
   p_items: [{ slug: 'argan-hair-oil', quantity: 1 }], p_is_gift: false,
 }).single();
@@ -84,7 +84,7 @@ const pushes = (orderNumber) => sql(`select coalesce(string_agg(n.recipient || '
 
   // --- An optional email at checkout (mobile and web) -----------------------------------------------
   const withEmail = (email) => anon.rpc('place_order', {
-    p_customer: { name: 'Esi Mensah', phone: '024 123 4567', area: 'East Legon', email },
+    p_customer: { adult_confirmed: true, name: 'Esi Mensah', phone: '024 123 4567', area: 'East Legon', email },
     p_delivery_option: 'standard', p_payment: { method: 'momo', network: 'mtn', wallet: '024 765 4321' },
     p_items: [{ slug: 'argan-hair-oil', quantity: 1 }], p_is_gift: false,
   }).single();

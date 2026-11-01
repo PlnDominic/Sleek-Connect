@@ -7,7 +7,7 @@ const stamp = Date.now();
 
 async function placeAndPay(items, opts = {}) {
   const { data, error } = await anon.rpc('place_order', {
-    p_customer: { name: opts.name ?? 'Ama Owusu', phone: '024 123 4567', area: 'Osu' },
+    p_customer: { adult_confirmed: true, name: opts.name ?? 'Ama Owusu', phone: '024 123 4567', area: 'Osu' },
     p_delivery_option: 'same_day',
     p_payment: { method: 'momo', network: 'mtn', wallet: '024 765 4321' },
     p_items: items, p_is_gift: false,
@@ -172,7 +172,7 @@ const status = (id) => sql(`select status from public.orders where id = '${id}'`
   await S.ops.rpc('admin_cancel_order', { p_order_id: o4.id, p_reason: 'Duplicate order' });
   assert(stock('argan-hair-oil') === '25/0' && sql("select quantity from public.stock_batches b join public.products p on p.id = b.product_id where p.slug = 'argan-hair-oil'") === '25', 'cancelling a packed order puts units back in the batch');
   assert(sql(`select string_agg(template, ',') from public.notifications where order_id = '${o4.id}' and channel = 'sms'`).endsWith('order_cancelled'), 'customer told about the cancellation');
-  const { data: pend } = await anon.rpc('place_order', { p_customer: { name: 'Pending', phone: '0241234567', area: 'Osu' }, p_delivery_option: 'same_day', p_payment: { method: 'momo', network: 'mtn', wallet: '0241234567' }, p_items: [{ slug: 'argan-hair-oil', quantity: 1 }], p_is_gift: false }).single();
+  const { data: pend } = await anon.rpc('place_order', { p_customer: { adult_confirmed: true, name: 'Pending', phone: '0241234567', area: 'Osu' }, p_delivery_option: 'same_day', p_payment: { method: 'momo', network: 'mtn', wallet: '0241234567' }, p_items: [{ slug: 'argan-hair-oil', quantity: 1 }], p_is_gift: false }).single();
   const pendId = sql(`select id from public.orders where order_number = '${pend.order_number}'`);
   await S.ops.rpc('admin_cancel_order', { p_order_id: pendId, p_reason: 'Test order' });
   assert(status(pendId) === 'cancelled' && stock('argan-hair-oil') === '25/0' && sql(`select count(*) from public.notifications where order_id = '${pendId}'`) === '0', 'cancelling an unpaid order releases the hold without messaging');
@@ -223,7 +223,7 @@ const status = (id) => sql(`select status from public.orders where id = '${id}'`
   assert((await S.admin.from('orders').select('public_token').limit(1)).error?.code === '42501', 'staff cannot read order-page tokens');
   assert((await S.ops.from('notifications').select('payload').limit(1)).error?.code === '42501', 'staff cannot read message contents (they include the code)');
   assert((await S.ops.from('orders').select('order_number, refund_due').limit(1)).error === null, 'staff can read the other order columns');
-  const { data: shopperOrder } = await S.shopper.rpc('place_order', { p_customer: { name: 'Shopper', phone: '0241234567', area: 'Osu' }, p_delivery_option: 'same_day', p_payment: { method: 'momo', network: 'mtn', wallet: '0241234567' }, p_items: [{ slug: 'argan-hair-oil', quantity: 1 }], p_is_gift: false }).single();
+  const { data: shopperOrder } = await S.shopper.rpc('place_order', { p_customer: { adult_confirmed: true, name: 'Shopper', phone: '0241234567', area: 'Osu' }, p_delivery_option: 'same_day', p_payment: { method: 'momo', network: 'mtn', wallet: '0241234567' }, p_items: [{ slug: 'argan-hair-oil', quantity: 1 }], p_is_gift: false }).single();
   const { data: mine } = await S.shopper.rpc('my_orders');
   assert(mine.length === 1 && mine[0].order_token === shopperOrder.order_token && mine[0].item_count === 1, 'shoppers list their own orders with links');
   assert((await S.cat.rpc('my_orders')).data.length === 0, 'my_orders shows only the caller\'s orders, even for staff');

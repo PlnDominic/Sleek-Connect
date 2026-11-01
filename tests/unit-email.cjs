@@ -5,6 +5,7 @@ const nodemailer = require('nodemailer');
 const { gmailConfig, gmailMessage } = require('../apps/web/src/lib/notifications/gmail.ts');
 const { maskRecipient } = require('../apps/web/src/lib/notifications/mask.ts');
 const { renderMessage } = require('../apps/web/src/lib/notifications/templates.ts');
+const { normalizeSiteUrl } = require('../apps/web/src/lib/site.ts');
 const { buildEmailHtml, splitTrailingUrl, escapeHtml } = require('../apps/web/src/lib/notifications/email-html.ts');
 let failures = 0;
 const assert = (c, m) => { if (!c) { failures++; console.error('FAIL:', m); } else console.log('ok -', m); };
@@ -56,6 +57,11 @@ const assert = (c, m) => { if (!c) { failures++; console.error('FAIL:', m); } el
   assert(renderMessage('out_for_delivery', cod).text.includes('delivery code 4821 and pay GH₵ 150 in cash'), 'the "on the way" message repeats the amount');
   assert(!renderMessage('out_for_delivery', { ...cod, pay_on_delivery: false }).text.includes('cash'), 'online orders are unchanged');
   assert(renderMessage('order_received', { ...cod, pay_on_delivery: false }).text.includes('Mobile Money'), 'and still ask for the Mobile Money approval');
+
+  // The store's address as typed into SITE_URL: a missing https:// must not stop the site building (it once did).
+  assert(normalizeSiteUrl('sleekconnectstore.vercel.app') === 'https://sleekconnectstore.vercel.app', 'a site address without https:// gets it');
+  assert(normalizeSiteUrl(' https://shop.example/ ') === 'https://shop.example' && normalizeSiteUrl('localhost:3000') === 'http://localhost:3000', 'spaces and a trailing slash go; localhost stays http');
+  assert(normalizeSiteUrl('') === null && normalizeSiteUrl(undefined) === null && normalizeSiteUrl('not a url') === null, 'nothing usable gives null, and the default is used');
 
   console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll email checks passed');
   process.exit(failures ? 1 : 0);

@@ -20,7 +20,7 @@ const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAT0lEQVR
 
 async function placeOrder(items, { area = 'Osu', pay = true } = {}) {
   const { data: order, error } = await anonDb.rpc('place_order', {
-    p_customer: { name: 'Efua Mensah', phone: '055 222 3333', area },
+    p_customer: { adult_confirmed: true, name: 'Efua Mensah', phone: '055 222 3333', area },
     p_delivery_option: 'standard',
     p_payment: { method: 'momo', network: 'mtn', wallet: '055 222 3333' },
     p_items: items,

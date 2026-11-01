@@ -1,10 +1,10 @@
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { colors, defaultDeliveryArea, estimate, formatPrice, momoNetworks, quote, type DeliveryConfig, type MomoNetwork } from '@sleek/shared';
 import { useBag } from '@sleek/shared/bag';
 import { AppText } from '@/components/AppText';
-import { Button, Card, Choices, Field, Notice } from '@/components/Form';
+import { Button, Card, Checkbox, Choices, Field, Notice } from '@/components/Form';
 import { ProductImage } from '@/components/ProductImage';
 import { EmptyState, ErrorState, Skeleton } from '@/components/States';
 import { BackButton, BottomBar, useScreenTop } from '@/components/ui';
@@ -12,6 +12,7 @@ import { useAuth } from '@/lib/auth';
 import { getDeliveryConfig, getPaymentOptions, notifyCodOrder, openPaymentPage, placeOrder, requestPayment, type PaymentRequest, type PlacedOrder } from '@/lib/checkout';
 import { getOrderStatus, rememberOrder } from '@/lib/orders';
 import { registerForPush } from '@/lib/push';
+import { siteAddress } from '@/lib/site';
 import { useQuery } from '@/lib/query';
 import { supabase } from '@/lib/supabase';
 
@@ -91,7 +92,8 @@ function Details({
   onPlaced: (placed: Placed) => void;
 }) {
   const top = useScreenTop();
-  const { user } = useAuth();
+  const { user, consented } = useAuth();
+  const [adult, setAdult] = useState(false);
   const areas = delivery.areas.map((a) => a.name);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -161,12 +163,14 @@ function Details({
     setError(null);
     if (name.trim().length < 2) return setError('Enter the name of the person receiving the order.');
     if (phone.replace(/\D/g, '').length < 9) return setError('Enter a phone number we can call for delivery.');
+    // Shoppers who signed in confirmed this when they created their account; everyone else confirms it here.
+    if (!(user && consented) && !adult) return setError('Please confirm that you are 18 or older and accept the terms.');
     if (email.trim() && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) return setError('Check the email address, or leave it empty.');
     if (!cod && !cardPay && wallet.replace(/\D/g, '').length < 9) return setError('Enter the Mobile Money number you will pay from.');
     setBusy(true);
     try {
       const order = await placeOrder({
-        customer: { name: name.trim(), phone: phone.trim(), email: email.trim() || undefined, area, ghanapostGps: gps.trim() || undefined, directions: directions.trim() || undefined },
+        customer: { name: name.trim(), phone: phone.trim(), email: email.trim() || undefined, area, ghanapostGps: gps.trim() || undefined, directions: directions.trim() || undefined, adultConfirmed: !!(user && consented) || adult },
         deliveryOption: optionId,
         payment: cod ? { cod: true } : cardPay ? { card: true } : { network, wallet: wallet.trim() },
         items: items.map((i) => ({ slug: i.slug, size: i.sizeId, quantity: i.qty })),
@@ -270,6 +274,24 @@ function Details({
           )}
           <Field label="Promo code (optional)" value={promo} onChangeText={setPromo} autoCapitalize="characters" />
         </Card>
+
+        {!(user && consented) ? (
+          <Card>
+            <Checkbox checked={adult} onChange={setAdult}>
+              <AppText size={13}>
+                I’m 18 or older and I accept the{' '}
+                <AppText size={13} weight="semibold" onPress={() => void Linking.openURL(siteAddress('/terms'))}>
+                  Terms of Service
+                </AppText>{' '}
+                and{' '}
+                <AppText size={13} weight="semibold" onPress={() => void Linking.openURL(siteAddress('/privacy'))}>
+                  Privacy notice
+                </AppText>
+                .
+              </AppText>
+            </Checkbox>
+          </Card>
+        ) : null}
 
         <Card>
           <Row label="Subtotal" value={formatPrice(subtotal)} />

@@ -123,7 +123,7 @@ const product = (extra = {}) => ({
   sql("update public.delivery_options set fee_ghs = 20 where id = 'standard'");
   const line = [{ slug: saved.slug, size: '200ml', quantity: 2 }];
   const order = () => anon.rpc('place_order', {
-    p_customer: { name: 'Kofi Mensah', phone: '024 123 4567', area: 'Osu' },
+    p_customer: { adult_confirmed: true, name: 'Kofi Mensah', phone: '024 123 4567', area: 'Osu' },
     p_delivery_option: 'standard', p_payment: { method: 'momo', network: 'mtn', wallet: '024 765 4321' },
     p_items: line, p_is_gift: false,
   }).single();

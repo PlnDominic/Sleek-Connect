@@ -19,6 +19,7 @@ const stock = (slug, size = '') => sql(`select on_hand || '/' || reserved from p
 
 async function fillDetails(page, { option = 'Same day', email } = {}) {
   await page.getByLabel('Full name').fill('Ama Owusu');
+  { const age = page.getByRole('checkbox', { name: /18 or older/ }); if (await age.count()) await age.check(); }
   await page.getByLabel('Phone number').fill('024 123 4567');
   if (email) await page.getByLabel('Email (optional)').fill(email);
   await page.getByLabel('Area in Accra').selectOption('Osu');

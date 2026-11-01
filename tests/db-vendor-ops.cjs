@@ -52,7 +52,7 @@ const product = (extra = {}) => ({
 
   // --- A mixed order: one vendor line, one from our own range ----------------------------------
   const { data: order, error: orderError } = await anon.rpc('place_order', {
-    p_customer: { name: 'Kofi Mensah', phone: '024 123 4567', area: 'East Legon' },
+    p_customer: { adult_confirmed: true, name: 'Kofi Mensah', phone: '024 123 4567', area: 'East Legon' },
     p_delivery_option: 'standard', p_payment: { method: 'momo', network: 'mtn', wallet: '024 765 4321' },
     p_items: [{ slug: saved.slug, quantity: 2 }, { slug: 'argan-hair-oil', quantity: 1 }], p_is_gift: false,
   }).single();

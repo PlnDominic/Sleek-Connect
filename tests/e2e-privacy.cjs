@@ -19,7 +19,7 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
 const deliver = (number) => sql(`update public.orders set status = 'delivered', delivered_at = now() where order_number = '${number}'`);
 async function placeAndPay(client, slug, { deliverIt = true } = {}) {
   const { data: o, error } = await client.rpc('place_order', {
-    p_customer: { name: 'Ama Owusu', phone: '024 123 4567', area: 'Osu', directions: 'Blue gate' },
+    p_customer: { adult_confirmed: true, name: 'Ama Owusu', phone: '024 123 4567', area: 'Osu', directions: 'Blue gate' },
     p_delivery_option: 'standard',
     p_payment: { method: 'momo', network: 'mtn', wallet: '024 765 4321' },
     p_items: [{ slug, size: null, quantity: 1 }], p_is_gift: false,
@@ -89,6 +89,7 @@ async function placeAndPay(client, slug, { deliverIt = true } = {}) {
   await pe.getByRole('button', { name: 'Add to bag' }).click();
   await go(pe, BASE + '/checkout');
   await pe.getByLabel('Full name').fill('Esi Mensah');
+  { const age = pe.getByRole('checkbox', { name: /18 or older/ }); if (await age.count()) await age.check(); }
   await pe.getByLabel('Phone number').fill('024 555 0000');
   assert(await until(async () => (await pe.getByLabel('Wallet number').inputValue()) === '024 765 4321'), 'checkout fills in the default saved number');
   const picker = pe.getByLabel('Saved numbers');

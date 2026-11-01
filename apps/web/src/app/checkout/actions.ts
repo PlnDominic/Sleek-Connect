@@ -8,7 +8,7 @@ import { startOrderPayment, type PaymentStart } from '@/lib/payments/start';
 import { createUserSupabase } from '@/lib/supabase/server';
 
 export interface PlaceOrderInput {
-  customer: { name: string; phone: string; email?: string; area: string; ghanapostGps?: string; directions?: string };
+  customer: { name: string; phone: string; email?: string; area: string; ghanapostGps?: string; directions?: string; adultConfirmed: boolean };
   deliveryOption: string;
   payment: { method: 'momo'; network: MomoNetwork; wallet: string } | { method: 'card' } | { method: 'cod' };
   items: { slug: string; size?: string; quantity: number }[];
@@ -53,6 +53,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         area: input.customer.area,
         ghanapost_gps: input.customer.ghanapostGps ?? null,
         directions: input.customer.directions ?? null,
+        adult_confirmed: input.customer.adultConfirmed,
       },
       p_delivery_option: input.deliveryOption,
       p_payment:

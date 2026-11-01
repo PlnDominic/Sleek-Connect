@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { paymentMethodsLine } from '@sleek/shared';
+import { businessDetails } from '@/lib/legal';
 import { Logo } from './Logo';
 import styles from './chrome.module.css';
 
@@ -43,6 +44,9 @@ const columns = [
 ];
 
 export function SiteFooter() {
+  const business = businessDetails();
+  // Who runs the store, when the company details are set (the terms and privacy notice use the same ones).
+  const operator = [business.name, business.address].filter(Boolean).join(', ');
   return (
     <footer className={styles.footer}>
       <div className={`container ${styles.footerMain}`}>
@@ -72,7 +76,10 @@ export function SiteFooter() {
       </div>
       <div className={styles.footerBottom}>
         <div className={`container ${styles.footerBottomInner}`}>
-          <span className={styles.footerCopyright}>© 2026 Sleek Connect Store. All rights reserved.</span>
+          <span className={styles.footerCopyright}>
+            © 2026 Sleek Connect Store. All rights reserved.
+            {operator ? ` Operated by ${operator}.` : ''}
+          </span>
           <span className={styles.footerCredit}>
             Developed by:{' '}
             <a href="https://www.ecstasytechnologies.com" target="_blank" rel="noopener">

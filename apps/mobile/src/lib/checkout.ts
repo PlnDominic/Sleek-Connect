@@ -42,7 +42,7 @@ export async function getDeliveryConfig(): Promise<DeliveryConfig> {
 }
 
 export interface PlaceOrderInput {
-  customer: { name: string; phone: string; email?: string; area: string; ghanapostGps?: string; directions?: string };
+  customer: { name: string; phone: string; email?: string; area: string; ghanapostGps?: string; directions?: string; adultConfirmed: boolean };
   deliveryOption: string;
   payment: { network: MomoNetwork; wallet: string } | { card: true } | { cod: true };
   items: { slug: string; size?: string; quantity: number }[];
@@ -72,6 +72,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlacedOrder> {
         area: input.customer.area,
         ghanapost_gps: input.customer.ghanapostGps ?? null,
         directions: input.customer.directions ?? null,
+        adult_confirmed: input.customer.adultConfirmed,
       },
       p_delivery_option: input.deliveryOption,
       p_payment:

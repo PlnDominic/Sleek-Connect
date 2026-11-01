@@ -12,7 +12,7 @@ const png = Buffer.from('89504e470d0a1a0a0000000d4948445200000001000000010806000
 
 const order = (items, { area = 'Osu', option = 'standard', phone = '024 123 4567', client = anon } = {}) =>
   client.rpc('place_order', {
-    p_customer: { name: 'Ama Owusu', phone, area },
+    p_customer: { adult_confirmed: true, name: 'Ama Owusu', phone, area },
     p_delivery_option: option,
     p_payment: { method: 'momo', network: 'mtn', wallet: '024 765 4321' },
     p_items: items, p_is_gift: false,

@@ -23,7 +23,7 @@ const errOf = async (promise) => (await promise).error;
   sql("update public.delivery_areas set zone_id = 'launch-test' where name = 'Osu'");
   sql("insert into public.delivery_rates (zone_id, option_id, fee_ghs, is_available) values ('launch-test', 'same_day', 35, false)");
   const blocked = await anon.rpc('place_order', {
-    p_customer: { name: 'Launch Test', phone: '0241234567', area: 'Osu' },
+    p_customer: { adult_confirmed: true, name: 'Launch Test', phone: '0241234567', area: 'Osu' },
     p_delivery_option: 'same_day',
     p_payment: { method: 'momo', network: 'mtn', wallet: '0241234567' },
     p_items: [{ slug: 'argan-hair-oil', quantity: 1 }],
@@ -36,7 +36,7 @@ const errOf = async (promise) => (await promise).error;
 
   // Checkout/payment idempotency: provider references are unique and final confirmations are repeat-safe.
   const placed = await anon.rpc('place_order', {
-    p_customer: { name: 'Launch Test', phone: '0241234567', area: 'Osu' },
+    p_customer: { adult_confirmed: true, name: 'Launch Test', phone: '0241234567', area: 'Osu' },
     p_delivery_option: 'standard',
     p_payment: { method: 'momo', network: 'mtn', wallet: '0241234567' },
     p_items: [{ slug: 'argan-hair-oil', quantity: 1 }],
@@ -56,7 +56,7 @@ const errOf = async (promise) => (await promise).error;
   // Checkout integrity: concurrent and repeated submissions cannot oversell the last unit (item 12).
   const racePhone = `024${String(Date.now()).slice(-7)}`;
   const buy = () => anon.rpc('place_order', {
-    p_customer: { name: 'Race Test', phone: racePhone, area: 'Osu' },
+    p_customer: { adult_confirmed: true, name: 'Race Test', phone: racePhone, area: 'Osu' },
     p_delivery_option: 'standard',
     p_payment: { method: 'momo', network: 'mtn', wallet: racePhone },
     p_items: [{ slug: 'argan-hair-oil', quantity: 1 }],

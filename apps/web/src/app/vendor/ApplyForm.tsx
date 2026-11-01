@@ -103,7 +103,7 @@ export function ApplyForm({ email }: { email: string }) {
         <label className={styles.check}>
           <input type="checkbox" name="terms" required />
           <span>
-            I agree to the <Link href="/sell#terms">vendor terms</Link>
+            I’m 18 or older and I agree to the <Link href="/sell#terms">vendor terms</Link>
           </span>
         </label>
         <button type="submit" className={styles.primary}>

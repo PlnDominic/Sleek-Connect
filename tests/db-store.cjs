@@ -11,7 +11,7 @@ const png = Buffer.from('89504e470d0a1a0a0000000d4948445200000001000000010806000
 
 async function placeAndPay(items, phone = '024 123 4567') {
   const { data, error } = await anon.rpc('place_order', {
-    p_customer: { name: 'Ama Owusu', phone, area: 'Osu' },
+    p_customer: { adult_confirmed: true, name: 'Ama Owusu', phone, area: 'Osu' },
     p_delivery_option: 'same_day',
     p_payment: { method: 'momo', network: 'mtn', wallet: '024 765 4321' },
     p_items: items, p_is_gift: false,

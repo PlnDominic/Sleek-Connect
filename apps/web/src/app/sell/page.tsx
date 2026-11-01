@@ -50,6 +50,7 @@ export default async function SellPage() {
           <details id="terms" className={`${styles.card} ${styles.termsCard}`}>
             <summary>Vendor terms</summary>
             <ol>
+              <li>You must be 18 or older, and the owner of the store or authorised to act for its owner.</li>
               <li>Pay the yearly fee to open and keep your store open.</li>
               <li>You set your price; we add a markup. You are paid your own price.</li>
               <li>You pack and hand over every paid order on time.</li>

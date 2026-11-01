@@ -121,6 +121,7 @@ async function sessionCookies(email, password) {
   // --- Signed-in checkout links the order to the account --------------------------
   await go(pa, BASE + '/checkout');
   await pa.getByLabel('Full name').fill('Esi Mensah');
+  { const age = pa.getByRole('checkbox', { name: /18 or older/ }); if (await age.count()) await age.check(); }
   await pa.getByLabel('Phone number').fill('024 555 0000');
   await pa.getByRole('radio', { name: /Same day/ }).check();
   await pa.getByLabel('Wallet number').fill('024 555 0000');

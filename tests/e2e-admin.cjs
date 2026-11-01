@@ -108,6 +108,7 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   await shopper.getByRole('button', { name: 'Add to bag' }).click();
   await go(shopper, BASE + '/checkout');
   await shopper.getByLabel('Full name').fill('Ama Owusu');
+  { const age = shopper.getByRole('checkbox', { name: /18 or older/ }); if (await age.count()) await age.check(); }
   await shopper.getByLabel('Phone number').fill('024 123 4567');
   await shopper.getByLabel('Area in Accra').selectOption('Osu');
   await shopper.getByRole('radio', { name: /Same day/ }).check();
@@ -259,7 +260,7 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
 
   // --- Shopper's order history ---------------------------------------------------------------------------
   const buyerSession = await staffSession(`buyer+${stamp}@example.com`);
-  await buyerSession.client.rpc('place_order', { p_customer: { name: 'Buyer', phone: '0241234567', area: 'Osu' }, p_delivery_option: 'same_day', p_payment: { method: 'momo', network: 'mtn', wallet: '0241234567' }, p_items: [{ slug: 'argan-hair-oil', quantity: 2 }], p_is_gift: false });
+  await buyerSession.client.rpc('place_order', { p_customer: { adult_confirmed: true, name: 'Buyer', phone: '0241234567', area: 'Osu' }, p_delivery_option: 'same_day', p_payment: { method: 'momo', network: 'mtn', wallet: '0241234567' }, p_items: [{ slug: 'argan-hair-oil', quantity: 2 }], p_is_gift: false });
   const buyer = await ctx(buyerSession.cookies());
   await go(buyer, BASE + '/account/orders');
   const row = buyer.getByRole('list', { name: 'Orders, newest first' }).getByRole('link');

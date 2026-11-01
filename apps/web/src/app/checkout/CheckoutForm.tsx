@@ -65,6 +65,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
   const [wallet, setWallet] = useState('');
   const [methods, setMethods] = useState<SavedMethod[]>([]);
   const [saveWallet, setSaveWallet] = useState(true);
+  const [adult, setAdult] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cardNotice, setCardNotice] = useState(false);
   const [placed, setPlaced] = useState<PlacedOrder | null>(null);
@@ -185,6 +186,11 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
     const form = new FormData(event.currentTarget);
     const text = (name: string) => String(form.get(name) ?? '').trim();
     const orderedItems = bag.items;
+    // Signed-in shoppers confirmed this when they created their account; a guest confirms it here (the database insists).
+    if (!signedIn && !adult) {
+      setError('Please confirm that you are 18 or older and accept the terms.');
+      return;
+    }
     track('checkout_submitted', { payment_method: method, items: orderedItems.reduce((n, i) => n + i.qty, 0) });
 
     startPlacing(async () => {
@@ -196,6 +202,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
           area: text('area'),
           ghanapostGps: text('gps') || undefined,
           directions: text('directions') || undefined,
+          adultConfirmed: signedIn || adult,
         },
         deliveryOption: deliveryId,
         payment: method === 'momo' ? { method: 'momo', network, wallet } : { method },
@@ -451,6 +458,15 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
                   </span>
                 </label>
               </div>
+              {!signedIn && (
+                <label className={styles.saveWallet}>
+                  <input type="checkbox" checked={adult} onChange={(e) => setAdult(e.target.checked)} />
+                  <span>
+                    I’m 18 or older and I accept the <Link href="/terms" target="_blank">Terms of Service</Link> and{' '}
+                    <Link href="/privacy" target="_blank">Privacy notice</Link>
+                  </span>
+                </label>
+              )}
             </section>
           </div>
         </fieldset>

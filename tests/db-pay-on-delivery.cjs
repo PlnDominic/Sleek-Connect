@@ -10,7 +10,7 @@ const row = (id, cols) => sql(`select ${cols} from public.orders where id = '${i
 
 async function place(method, opts = {}) {
   const { data, error } = await anon.rpc('place_order', {
-    p_customer: { name: 'Esi Mensah', phone: opts.phone ?? '024 123 4567', area: 'East Legon', email: opts.email },
+    p_customer: { adult_confirmed: true, name: 'Esi Mensah', phone: opts.phone ?? '024 123 4567', area: 'East Legon', email: opts.email },
     p_delivery_option: opts.option ?? 'same_day',
     p_payment: method === 'cod' ? { method: 'cod' } : { method: 'momo', network: 'mtn', wallet: '024 765 4321' },
     p_items: [{ slug: SLUG, quantity: opts.qty ?? 1 }],

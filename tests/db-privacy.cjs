@@ -10,7 +10,7 @@ const png = Buffer.from('89504e470d0a1a0a0000000d4948445200000001000000010806000
 
 const order = (client, items, { name = 'Ama Owusu' } = {}) =>
   client.rpc('place_order', {
-    p_customer: { name, phone: '024 123 4567', area: 'Osu', ghanapost_gps: 'GA-123-4567', directions: 'Blue gate' },
+    p_customer: { adult_confirmed: true, name, phone: '024 123 4567', area: 'Osu', ghanapost_gps: 'GA-123-4567', directions: 'Blue gate' },
     p_delivery_option: 'standard',
     p_payment: { method: 'momo', network: 'mtn', wallet: '024 765 4321' },
     p_items: items, p_is_gift: false,

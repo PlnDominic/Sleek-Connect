@@ -76,8 +76,16 @@ export default async function HelpPage() {
           <Topic id="payment" title="Payment">
             <Faq q="How can I pay?">
               <p>
-                Mobile Money: {momoNetworks.map((n) => n.label).join(', ')}. You approve the payment on your phone with
-                your PIN. We never see or store your PIN. Card payments (Visa and Mastercard) are coming soon.
+                Mobile Money ({momoNetworks.map((n) => n.label).join(', ')}) or a Visa or Mastercard card, on our payment
+                partner’s secure page: you approve Mobile Money with your PIN or enter your card there, so we never see or store
+                either. You can also choose pay on delivery and pay the rider in cash (we don’t accept bank transfers).
+              </p>
+            </Faq>
+            <Faq q="How does pay on delivery work?">
+              <p>
+                We call you to confirm the order before we pack it, and the rider collects the cash when your order arrives. An
+                order we can’t confirm within a day is cancelled and its items go back on sale. It isn’t available for items from
+                independent stores or for orders over the limit shown at checkout.
               </p>
             </Faq>
             <Faq q="How long do you hold my items while I pay?">
