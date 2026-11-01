@@ -7,12 +7,20 @@ import type { Database, Json } from '@/lib/supabase/database.types';
 import { createUserSupabase } from '@/lib/supabase/server';
 
 const vendorDecisions: Database['public']['Enums']['vendor_status'][] = ['active', 'rejected', 'suspended'];
+export const onboardingChecks = ['id_matches', 'id_valid', 'phone_confirmed', 'products_allowed', 'address_confirmed', 'business_documents'] as const;
+export const productChecks = ['photos_ok', 'description_ok', 'claims_ok', 'ingredients_ok', 'expiry_ok', 'authentic_ok', 'regulatory_ok', 'safety_ok'] as const;
 const productDecisions: Database['public']['Enums']['product_review_status'][] = ['approved', 'rejected', 'pending'];
 
 export async function reviewVendor(vendorId: string, _: ActionState, form: FormData): Promise<ActionState> {
   const decision = vendorDecisions.find((d) => d === text(form, 'decision'));
   if (!decision) return { ok: false, message: 'Choose what to do with this vendor.' };
   const supabase = await createUserSupabase();
+  // The onboarding checklist is part of the same form: save what is ticked first, so approving sees it.
+  if (form.has('checks_form')) {
+    const checks = Object.fromEntries(onboardingChecks.map((c) => [c, form.get(`check_${c}`) === 'on']));
+    const { error: checkError } = await supabase.rpc('admin_save_vendor_checks', { p_vendor_id: vendorId, p_checks: checks });
+    if (checkError) return failed(checkError);
+  }
   const { error } = await supabase.rpc('admin_review_vendor', {
     p_vendor_id: vendorId,
     p_decision: decision,
@@ -50,11 +58,14 @@ export async function reviewProduct(productId: string, _: ActionState, form: For
     return { ok: false, message: 'Enter the markup percentage before approving.' };
   }
   const supabase = await createUserSupabase();
+  // Each check is answered Yes, Not applicable, or left unchecked.
+  const checks = Object.fromEntries(productChecks.map((c) => [c, text(form, `check_${c}`) === 'na' ? 'na' : text(form, `check_${c}`) === 'ok']));
   const { error } = await supabase.rpc('admin_review_product', {
     p_product_id: productId,
     p_decision: decision,
     p_markup_percent: markup === '' ? undefined : Number(markup),
     p_note: text(form, 'note') || undefined,
+    p_checks: checks,
   });
   if (error) return failed(error);
   updateTag('catalog');
@@ -64,7 +75,8 @@ export async function reviewProduct(productId: string, _: ActionState, form: For
 
 export async function saveMarketplaceSettings(_: ActionState, form: FormData): Promise<ActionState> {
   const p: Record<string, string | boolean> = { marketplace_orders_open: form.get('marketplace_orders_open') === 'on' };
-  for (const key of ['vendor_annual_fee_ghs', 'vendor_grace_days', 'default_markup_percent']) {
+  p.vendor_tin_required = form.get('vendor_tin_required') === 'on';
+  for (const key of ['vendor_annual_fee_ghs', 'vendor_grace_days', 'default_markup_percent', 'vendor_payout_hold_days', 'vendor_min_payout_ghs', 'vendor_support_reply_hours']) {
     if (text(form, key)) p[key] = text(form, key);
   }
   p.vendor_payment_instructions = text(form, 'vendor_payment_instructions');
@@ -84,6 +96,10 @@ export async function bulkReviewProducts(_: ActionState, form: FormData): Promis
   if (ids.length === 0) return { ok: false, message: 'Tick the products you want to review first.' };
   const markup = text(form, 'markup');
   if (markup !== '' && !Number.isFinite(Number(markup))) return { ok: false, message: 'The markup must be a number.' };
+  if (decision === 'approved' && form.get('all_checked') !== 'on') {
+    return { ok: false, message: 'Tick “I checked every ticked product against the product standards” to approve several at once.' };
+  }
+  const checks = Object.fromEntries(productChecks.map((c) => [c, true]));
   const supabase = await createUserSupabase();
   let succeeded = 0;
   const failures: string[] = [];
@@ -93,6 +109,7 @@ export async function bulkReviewProducts(_: ActionState, form: FormData): Promis
       p_decision: decision,
       p_markup_percent: decision === 'approved' && markup !== '' ? Number(markup) : undefined,
       p_note: text(form, 'note') || undefined,
+      p_checks: decision === 'approved' ? checks : undefined,
     });
     if (error) failures.push(error.code === '22023' || error.code === '42501' ? error.message : 'That didn’t work.');
     else succeeded++;
@@ -137,4 +154,59 @@ export async function replyToVendor(vendorId: string, _: ActionState, form: Form
   if (error) return failed(error);
   refresh();
   return done('Reply sent.');
+}
+
+/** Enters (or corrects) a vendor's tax details from their paperwork. They can also do it themselves. */
+export async function setVendorTax(vendorId: string, _: ActionState, form: FormData): Promise<ActionState> {
+  const supabase = await createUserSupabase();
+  const { error } = await supabase.rpc('admin_set_vendor_tax_info', {
+    p_vendor_id: vendorId,
+    p: {
+      business_type: text(form, 'business_type'),
+      legal_name: text(form, 'legal_name'),
+      tin: text(form, 'tin'),
+      business_registration: text(form, 'business_registration'),
+    },
+  });
+  if (error) return failed(error);
+  refresh();
+  return done('Tax details saved.');
+}
+
+const disputeKinds: Database['public']['Enums']['vendor_dispute_kind'][] = ['counterfeit', 'damaged', 'not_as_described', 'wrong_item', 'other'];
+const disputeOutcomes: Database['public']['Enums']['vendor_dispute_outcome'][] = ['upheld', 'partly_upheld', 'dismissed'];
+
+/** Opens a dispute from a shopper's report about an item from an independent store. */
+export async function openDispute(_: ActionState, form: FormData): Promise<ActionState> {
+  const kind = disputeKinds.find((k) => k === text(form, 'kind'));
+  if (!kind) return { ok: false, message: 'Choose what was reported.' };
+  const supabase = await createUserSupabase();
+  const { data, error } = await supabase.rpc('admin_open_vendor_dispute', {
+    p_order_number: text(form, 'order'),
+    p_product_id: text(form, 'product'),
+    p_kind: kind,
+    p_details: text(form, 'details'),
+  });
+  if (error) return failed(error);
+  refresh();
+  return done(`Case ${data} opened. The vendor has 48 hours to reply.`);
+}
+
+/** Decides a dispute. Returns a warning when the vendor has reached the counterfeit limit. */
+export async function resolveDispute(id: string, _: ActionState, form: FormData): Promise<ActionState> {
+  const outcome = disputeOutcomes.find((o) => o === text(form, 'outcome'));
+  if (!outcome) return { ok: false, message: 'Choose the outcome.' };
+  const charge = Number(text(form, 'charge') || 0);
+  if (!Number.isFinite(charge) || charge < 0) return { ok: false, message: 'Enter the charge as a number.' };
+  const supabase = await createUserSupabase();
+  const { data, error } = await supabase.rpc('admin_resolve_vendor_dispute', { p_id: id, p_outcome: outcome, p_charge_ghs: charge, p_note: text(form, 'note') });
+  if (error) return failed(error);
+  refresh();
+  return done(
+    data >= 2
+      ? `Decided. This vendor now has ${data} upheld counterfeit cases: under the seller terms, suspend the store.`
+      : outcome === 'dismissed'
+        ? 'Decided: dismissed.'
+        : `Decided. ${formatPrice(charge)} was charged to the vendor.`,
+  );
 }

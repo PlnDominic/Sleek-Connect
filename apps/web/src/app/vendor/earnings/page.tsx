@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { formatPrice, momoNetworks } from '@sleek/shared';
 import { getVendorSession } from '@/lib/vendor';
-import { savePayoutAccount } from '../actions';
+import { savePayoutAccount, saveTaxInfo } from '../actions';
 import { VendorForm } from '../VendorForm';
 import styles from '../vendor.module.css';
 
@@ -13,7 +13,9 @@ interface Statement {
   returned: number;
   paid: number;
   pending: number;
+  charged?: number;
   balance: number;
+  payable?: number;
   payout_account: { network: string | null; wallet: string | null; name: string | null } | null;
   deliveries: { order_number: string; delivered_at: string; amount_ghs: number }[];
   returns: { case_number: string; order_number: string; status: string; reason: string | null; amount_ghs: number }[];
@@ -29,17 +31,35 @@ export default async function VendorEarningsPage() {
   if (error) throw error;
   const s = data as unknown as Statement;
   const account = s.payout_account;
+  // The payout rules and the vendor's tax details (a database without them yet shows the older page).
+  const { data: launchData } = await session.supabase.rpc('vendor_launch_state');
+  const launch = launchData as unknown as {
+    business_type: 'individual' | 'company' | null;
+    legal_name: string | null;
+    business_registration: string | null;
+    tin: string | null;
+    payout_hold_days: number;
+    min_payout_ghs: number;
+    tin_required: boolean;
+  } | null;
 
   return (
     <>
       <p className={styles.lead}>
-        You earn your own price for each item once the order is delivered. If a shopper returns an item that you sold, that amount comes off. We pay what you are owed to your Mobile Money.
+        You earn your own price for each item once the order is delivered. If a shopper returns an item that you sold, or a dispute is decided against you, that amount comes off.
+        We pay what is payable to your Mobile Money{launch ? `, normally on Fridays. Earnings can be paid ${launch.payout_hold_days} days after delivery, so a return can still be asked for first, and the smallest payout is ${formatPrice(launch.min_payout_ghs)}` : ''}.
       </p>
+      {launch?.tin_required && !launch.tin && (
+        <p className={styles.notice}>Add your tax details below. We can’t pay you until we have your tax identification number.</p>
+      )}
       <div className={styles.stats}>
         <section className={styles.stat}>
           <h2>We owe you</h2>
           <strong>{formatPrice(s.balance)}</strong>
-          <span>After returns and payments</span>
+          <span>
+            {s.payable !== undefined ? `${formatPrice(s.payable)} can be paid now` : 'After returns and payments'}
+            {s.charged ? ` · disputes ${formatPrice(s.charged)}` : ''}
+          </span>
         </section>
         <section className={styles.stat}>
           <h2>Coming soon</h2>
@@ -86,6 +106,46 @@ export default async function VendorEarningsPage() {
           </div>
         </VendorForm>
       </section>
+
+      {launch && (
+        <section className={styles.panel}>
+          <h2>Tax details</h2>
+          <p className={styles.muted}>
+            We need these before we can pay you, and to report what we pay you to the tax authority. For an individual the TIN is your Ghana Card number.
+          </p>
+          <VendorForm action={saveTaxInfo}>
+            <div className={styles.row}>
+              <label className={styles.field}>
+                <span>You sell as</span>
+                <select name="business_type" defaultValue={launch.business_type ?? 'individual'}>
+                  <option value="individual">An individual</option>
+                  <option value="company">A registered business</option>
+                </select>
+              </label>
+              <label className={styles.field}>
+                <span>Legal name</span>
+                <input name="legal_name" required maxLength={120} defaultValue={launch.legal_name ?? ''} />
+                <small>Your name as on your ID, or the registered business name.</small>
+              </label>
+            </div>
+            <div className={styles.row}>
+              <label className={styles.field}>
+                <span>Tax identification number (TIN)</span>
+                <input name="tin" required maxLength={20} defaultValue={launch.tin ?? ''} />
+              </label>
+              <label className={styles.field}>
+                <span>Business registration number (if any)</span>
+                <input name="business_registration" maxLength={40} defaultValue={launch.business_registration ?? ''} />
+              </label>
+            </div>
+            <div className={styles.buttons}>
+              <button type="submit" className={styles.primary}>
+                Save tax details
+              </button>
+            </div>
+          </VendorForm>
+        </section>
+      )}
 
       <section className={styles.panel}>
         <h2>Payments to you</h2>

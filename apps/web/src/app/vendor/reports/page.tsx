@@ -9,8 +9,9 @@ export const metadata: Metadata = { title: 'Sales reports' };
 
 interface Report {
   days: { date: string; units: number; revenue: number; orders: number }[];
-  totals: { units: number; revenue: number; orders: number };
+  totals: { units: number; revenue: number; orders: number; views?: number };
   top_products: { name: string; units: number; revenue: number }[];
+  product_stats?: { name: string; views: number; orders: number; units: number; revenue: number; conversion: number | null }[];
 }
 
 const periods = [7, 30, 90] as const;
@@ -46,6 +47,15 @@ export default async function VendorReportsPage({ searchParams }: PageProps<'/ve
           <strong>{report.totals.units}</strong>
           <span>Across {report.totals.orders} order{report.totals.orders === 1 ? '' : 's'}</span>
         </section>
+        {report.totals.views !== undefined && (
+          <section className={styles.stat}>
+            <h2>Product views</h2>
+            <strong>{report.totals.views}</strong>
+            <span>
+              {report.totals.views > 0 ? `${((report.totals.orders * 100) / report.totals.views).toFixed(1)}% of views became an order` : 'Views of your product pages'}
+            </span>
+          </section>
+        )}
       </div>
 
       <section className={styles.panel}>
@@ -66,6 +76,27 @@ export default async function VendorReportsPage({ searchParams }: PageProps<'/ve
           <span>{report.days[report.days.length - 1]?.date}</span>
         </div>
       </section>
+
+      {report.product_stats && report.product_stats.length > 0 && (
+        <section className={styles.panel}>
+          <h2>Views and conversion by product</h2>
+          <p className={styles.muted}>Conversion is orders divided by views. A product with many views and few orders may need better photos, a clearer description or a different price.</p>
+          <ul className={styles.list}>
+            {report.product_stats.map((p) => (
+              <li key={p.name} className={styles.listRow}>
+                <span className={styles.listMain}>
+                  {p.name}
+                  <small>
+                    {p.views} view{p.views === 1 ? '' : 's'} · {p.orders} order{p.orders === 1 ? '' : 's'}
+                    {p.conversion !== null ? ` · ${p.conversion}% converted` : ''}
+                  </small>
+                </span>
+                <span className={styles.amount}>{formatPrice(p.revenue)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className={styles.panel}>
         <h2>Best sellers</h2>

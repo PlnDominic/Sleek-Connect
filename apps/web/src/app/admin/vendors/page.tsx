@@ -13,7 +13,10 @@ import {
   reviewProduct,
   reviewVendor,
   saveMarketplaceSettings,
+  setVendorTax,
 } from './actions';
+import { DisputesTab } from './DisputesTab';
+import { LaunchTab } from './LaunchTab';
 import styles from '../admin.module.css';
 
 export const metadata: Metadata = { title: 'Vendors' };
@@ -81,7 +84,10 @@ interface Balance {
   returned: number;
   paid: number;
   pending: number;
+  charged?: number;
   balance: number;
+  /** What can be paid now: delivered at least the hold days ago, less returns, charges and payouts. */
+  payable: number;
   payout_network: string | null;
   payout_wallet: string | null;
   payout_name: string | null;
@@ -112,8 +118,10 @@ const tabs = [
   { id: 'products', label: 'Products to review' },
   { id: 'pickups', label: 'Pickups' },
   { id: 'payouts', label: 'Payouts' },
+  { id: 'disputes', label: 'Disputes' },
   { id: 'messages', label: 'Messages' },
   { id: 'settings', label: 'Marketplace settings' },
+  { id: 'launch', label: 'Launch checklist' },
 ] as const;
 type Tab = (typeof tabs)[number]['id'];
 
@@ -151,12 +159,39 @@ export default async function VendorsPage({ searchParams }: PageProps<'/admin/ve
       {tab === 'pickups' && <PickupsTab staff={staff} />}
       {tab === 'payouts' && <PayoutsTab staff={staff} />}
       {tab === 'messages' && <MessagesTab staff={staff} vendor={typeof params.vendor === 'string' ? params.vendor : null} />}
+      {tab === 'disputes' && <DisputesTab staff={staff} order={typeof params.order === 'string' ? params.order : null} />}
       {tab === 'settings' && <SettingsTab staff={staff} />}
+      {tab === 'launch' && <LaunchTab staff={staff} />}
     </>
   );
 }
 
-type Staff = NonNullable<Awaited<ReturnType<typeof requireStaffPage>>>;
+export type Staff = NonNullable<Awaited<ReturnType<typeof requireStaffPage>>>;
+
+interface Onboarding {
+  checks: Record<string, boolean | string | null> | null;
+  terms_version: string | null;
+  terms_accepted_at: string | null;
+  business_type: 'individual' | 'company' | null;
+  legal_name: string | null;
+  business_registration: string | null;
+  tin: string | null;
+  tax_info_at: string | null;
+  payout_account_set: boolean;
+  decisions: { decision: string; note: string | null; by: string | null; at: string }[];
+}
+
+/** The checks behind approving a store: the first four are required. */
+const onboardingList = [
+  ['id_matches', 'The ID matches the person applying', true],
+  ['id_valid', 'The ID is valid and not expired', true],
+  ['phone_confirmed', 'I called the phone number and spoke to them', true],
+  ['products_allowed', 'What they plan to sell is allowed (seller terms)', true],
+  ['address_confirmed', 'Their business address is confirmed', false],
+  ['business_documents', 'Business registration documents seen', false],
+] as const;
+
+const decisionLabels: Record<string, string> = { active: 'Approved', rejected: 'Rejected', suspended: 'Suspended', pending: 'Sent back' };
 
 async function VendorsTab({ staff }: { staff: Staff }) {
   const [{ data, error }, { data: settings }] = await Promise.all([
@@ -180,10 +215,20 @@ async function VendorsTab({ staff }: { staff: Staff }) {
   }
   const fee = settings?.vendor_annual_fee_ghs ?? 0;
   const today = new Date().toISOString().slice(0, 10);
+  // Each vendor's onboarding record (checks, decisions, terms and tax details). A database without it yet shows none.
+  const onboarding = new Map<string, Onboarding>();
+  await Promise.all(
+    vendors.map(async (v) => {
+      const { data: record } = await staff.supabase.rpc('admin_vendor_onboarding', { p_vendor_id: v.id });
+      if (record) onboarding.set(v.id, record as unknown as Onboarding);
+    }),
+  );
 
   return (
     <>
-      {vendors.map((v) => (
+      {vendors.map((v) => {
+        const o = onboarding.get(v.id);
+        return (
         <section key={v.id} className={styles.panel}>
           <div className={styles.panelHead}>
             <h2>{v.name}</h2>
@@ -228,8 +273,23 @@ async function VendorsTab({ staff }: { staff: Staff }) {
           )}
 
           <ActionForm action={reviewVendor.bind(null, v.id)}>
+            {o && (v.status === 'pending' || v.status === 'rejected') && (
+              <fieldset className={styles.fieldset}>
+                <legend>
+                  <strong>Before you approve</strong> (the first four are required)
+                </legend>
+                <input type="hidden" name="checks_form" value="1" />
+                {onboardingList.map(([key, label, required]) => (
+                  <label key={key} className={styles.check}>
+                    <input type="checkbox" name={`check_${key}`} defaultChecked={o.checks?.[key] === true} />
+                    {label}
+                    {required ? '' : ' (optional)'}
+                  </label>
+                ))}
+              </fieldset>
+            )}
             <label className={styles.field}>
-              <span>Note to the vendor (optional)</span>
+              <span>Note to the vendor (needed to reject or suspend)</span>
               <input name="note" defaultValue={v.review_note ?? ''} maxLength={1000} />
             </label>
             <div className={styles.buttons}>
@@ -256,6 +316,69 @@ async function VendorsTab({ staff }: { staff: Staff }) {
               )}
             </div>
           </ActionForm>
+
+          {o && (
+            <details className={styles.inline}>
+              <summary>Onboarding record, terms and tax details</summary>
+              <dl className={styles.facts}>
+                <dt>Seller terms</dt>
+                <dd>{o.terms_version ? `Version ${o.terms_version}, accepted ${o.terms_accepted_at ? dateText(o.terms_accepted_at) : ''}` : o.terms_accepted_at ? `Accepted ${dateText(o.terms_accepted_at)} (before versions were recorded)` : 'Not accepted'}</dd>
+                <dt>Tax details</dt>
+                <dd>
+                  {o.tin
+                    ? `${o.business_type === 'company' ? 'Registered business' : 'Individual'} · ${o.legal_name} · TIN ${o.tin}${o.business_registration ? ` · reg. ${o.business_registration}` : ''}`
+                    : 'Not given yet. Needed before the first payout.'}
+                </dd>
+                <dt>Payout account</dt>
+                <dd>{o.payout_account_set ? 'Saved' : 'Not saved yet'}</dd>
+                <dt>Checks</dt>
+                <dd>
+                  {onboardingList.map(([key, label]) => `${o.checks?.[key] === true ? '✓' : '✗'} ${label}`).join(' · ')}
+                  {o.checks?.checked_by ? ` (by ${String(o.checks.checked_by)})` : ''}
+                </dd>
+              </dl>
+              {o.decisions.length > 0 && (
+                <>
+                  <h3>Decisions</h3>
+                  <ul>
+                    {o.decisions.map((d) => (
+                      <li key={d.at}>
+                        {dateText(d.at)} · {decisionLabels[d.decision] ?? d.decision} by {d.by ?? 'staff'}
+                        {d.note ? `: ${d.note}` : ''}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              <ActionForm action={setVendorTax.bind(null, v.id)}>
+                <h3>{o.tin ? 'Correct the tax details' : 'Enter the tax details from their paperwork'}</h3>
+                <div className={styles.row}>
+                  <label className={styles.field}>
+                    <span>Sells as</span>
+                    <select name="business_type" defaultValue={o.business_type ?? 'individual'}>
+                      <option value="individual">An individual</option>
+                      <option value="company">A registered business</option>
+                    </select>
+                  </label>
+                  <label className={styles.field}>
+                    <span>Legal name</span>
+                    <input name="legal_name" required maxLength={120} defaultValue={o.legal_name ?? v.owner_name ?? ''} />
+                  </label>
+                  <label className={styles.field}>
+                    <span>TIN</span>
+                    <input name="tin" required maxLength={20} defaultValue={o.tin ?? ''} />
+                  </label>
+                  <label className={styles.field}>
+                    <span>Registration number (optional)</span>
+                    <input name="business_registration" maxLength={40} defaultValue={o.business_registration ?? ''} />
+                  </label>
+                </div>
+                <button type="submit" className={styles.secondary}>
+                  Save tax details
+                </button>
+              </ActionForm>
+            </details>
+          )}
 
           {v.status === 'active' && (
             <ActionForm action={recordSubscription.bind(null, v.id)} resetOnSuccess>
@@ -287,7 +410,8 @@ async function VendorsTab({ staff }: { staff: Staff }) {
             </ActionForm>
           )}
         </section>
-      ))}
+        );
+      })}
     </>
   );
 }
@@ -308,6 +432,10 @@ async function ReviewTab({ staff }: { staff: Staff }) {
         <h2>Review several at once</h2>
         <p className={styles.muted}>Tick products below, then approve or reject them together.</p>
         <ActionForm action={bulkReviewProducts} id={BULK_FORM} className={styles.form}>
+          <label className={styles.check}>
+            <input type="checkbox" name="all_checked" />
+            I checked every ticked product against the <Link href="/sell/standards">product standards</Link> (needed to approve)
+          </label>
           <div className={styles.row}>
             <label className={styles.field}>
               <span>Markup for all ticked products (%)</span>
@@ -349,6 +477,23 @@ async function ReviewTab({ staff }: { staff: Staff }) {
           {p.problems.length > 0 && <p className={styles.error}>Missing: {p.problems.join(', ')}.</p>}
           {p.review_previous && <ChangedFields before={p.review_previous} after={p} />}
           <ActionForm action={reviewProduct.bind(null, p.id)}>
+            <details className={styles.inline} open>
+              <summary>
+                Checks against the <Link href="/sell/standards">product standards</Link> (all eight needed to approve)
+              </summary>
+              <div className={styles.row}>
+                {productCheckList.map(([key, label, canSkip]) => (
+                  <label key={key} className={styles.field}>
+                    <span>{label}</span>
+                    <select name={`check_${key}`} defaultValue="">
+                      <option value="">Not checked</option>
+                      <option value="ok">Yes</option>
+                      {canSkip && <option value="na">Not applicable</option>}
+                    </select>
+                  </label>
+                ))}
+              </div>
+            </details>
             <div className={styles.row}>
               <div className={styles.field}>
                 <span>Vendor’s price</span>
@@ -378,6 +523,18 @@ async function ReviewTab({ staff }: { staff: Staff }) {
     </>
   );
 }
+
+/** The eight checks behind approving a vendor product; the last flag says whether "not applicable" is allowed. */
+const productCheckList = [
+  ['photos_ok', 'Photos are clear and show the real product', false],
+  ['description_ok', 'Name and description are accurate', false],
+  ['claims_ok', 'No medical or “cure” claims', false],
+  ['ingredients_ok', 'Ingredients or materials are listed', true],
+  ['expiry_ok', 'Batch and expiry are fine', true],
+  ['authentic_ok', 'Genuine, from an authorised source', false],
+  ['regulatory_ok', 'Registration number (for example FDA) is present', true],
+  ['safety_ok', 'Safety warnings are present', false],
+] as const;
 
 const changeLabels: Record<string, string> = {
   name: 'Name',
@@ -463,10 +620,23 @@ async function PayoutsTab({ staff }: { staff: Staff }) {
   const owed = balances.data as unknown as Balance[];
   const history = payouts.data as unknown as Payout[];
   const totalOwed = owed.reduce((n, b) => n + Number(b.balance), 0);
+  const totalPayable = owed.reduce((n, b) => n + Number(b.payable ?? 0), 0);
+  const [{ data: rules }, tin] = await Promise.all([
+    staff.supabase.from('store_settings').select('vendor_payout_hold_days, vendor_min_payout_ghs, vendor_tin_required').single(),
+    Promise.all(
+      owed.map(async (b) => {
+        const { data } = await staff.supabase.rpc('admin_vendor_onboarding', { p_vendor_id: b.vendor_id });
+        return [b.vendor_id, ((data as unknown as Onboarding | null)?.tin ?? null)] as const;
+      }),
+    ).then((rows) => new Map(rows)),
+  ]);
   return (
     <>
       <p className={styles.muted}>
-        Vendors earn their own price once an order is delivered; returned items come off. Pay them by Mobile Money, then record it here. Owed in total: <strong>{formatPrice(totalOwed)}</strong>.
+        Vendors earn their own price once an order is delivered; returns and upheld disputes come off. Earnings can be paid {rules?.vendor_payout_hold_days ?? 7} days after
+        delivery (so a return can still be asked for), the smallest payout is {formatPrice(rules?.vendor_min_payout_ghs ?? 50)}, and a vendor needs their tax number on file
+        {rules?.vendor_tin_required === false ? ' (not enforced right now)' : ''}. Pay by Mobile Money, then record it here. The usual day is Friday. Owed in total:{' '}
+        <strong>{formatPrice(totalOwed)}</strong>; payable now: <strong>{formatPrice(totalPayable)}</strong>.
       </p>
       {owed.length === 0 && <p className={styles.empty}>No vendors yet.</p>}
       {owed.map((b) => (
@@ -476,17 +646,23 @@ async function PayoutsTab({ staff }: { staff: Staff }) {
             <strong>{formatPrice(b.balance)}</strong>
           </div>
           <p className={styles.muted}>
-            Earned {formatPrice(b.earned)} · returns {formatPrice(b.returned)} · paid {formatPrice(b.paid)} · {formatPrice(b.pending)} still to be delivered
+            Earned {formatPrice(b.earned)} · returns {formatPrice(b.returned)}
+            {b.charged ? ` · disputes ${formatPrice(b.charged)}` : ''} · paid {formatPrice(b.paid)} · {formatPrice(b.pending)} still to be delivered ·{' '}
+            <strong>{formatPrice(b.payable)} payable now</strong>
+            {b.balance > b.payable ? ` (${formatPrice(b.balance - b.payable)} on hold)` : ''}
           </p>
+          {!tin.get(b.vendor_id) && (
+            <p className={styles.error}>No tax number yet: payouts are blocked. Ask the vendor, or enter it on the Vendors tab (Onboarding record).</p>
+          )}
           <p className={styles.muted}>
             {b.payout_wallet ? `Pay to ${b.payout_network?.toUpperCase()} ${b.payout_wallet} (${b.payout_name})` : 'No payout account saved yet.'}
           </p>
-          {b.balance > 0 && (
+          {b.payable > 0 && (
             <ActionForm action={recordPayout.bind(null, b.vendor_id)} resetOnSuccess>
               <div className={styles.row}>
                 <label className={styles.field}>
                   <span>Amount paid (GH₵)</span>
-                  <input name="amount" type="number" min={0.01} max={b.balance} step="0.01" required defaultValue={b.balance} />
+                  <input name="amount" type="number" min={0.01} max={b.payable} step="0.01" required defaultValue={b.payable} />
                 </label>
                 <label className={styles.field}>
                   <span>Paid by</span>
@@ -538,13 +714,24 @@ async function MessagesTab({ staff, vendor }: { staff: Staff; vendor: string | n
     open = thread.data as unknown as typeof open;
   }
   if (threads.length === 0) return <p className={styles.empty}>No vendor has written to you yet.</p>;
+  // We promise vendors a reply within this many hours: a thread whose last word is theirs and is older than that is overdue.
+  const { data: promise } = await staff.supabase.from('store_settings').select('vendor_support_reply_hours').single();
+  const replyHours = promise?.vendor_support_reply_hours ?? 24;
+  const overdue = (t: Thread) => t.last_sender === 'vendor' && new Date().getTime() - new Date(t.last_at).getTime() > replyHours * 3_600_000;
+  const waiting = threads.filter(overdue).length;
   return (
     <>
+      {waiting > 0 && (
+        <p className={styles.error}>
+          {waiting} conversation{waiting === 1 ? ' has' : 's have'} been waiting longer than the {replyHours} hours we promise vendors.
+        </p>
+      )}
       <nav className={styles.tabs} aria-label="Conversations">
         {threads.map((t) => (
           <Link key={t.vendor_id} href={`/admin/vendors?tab=messages&vendor=${t.vendor_id}`} aria-current={t.vendor_id === vendor ? 'page' : undefined}>
             {t.vendor_name}
             {t.unread > 0 ? ` (${t.unread} new)` : ''}
+            {overdue(t) ? ' · overdue' : ''}
           </Link>
         ))}
       </nav>
@@ -622,7 +809,31 @@ async function SettingsTab({ staff }: { staff: Staff }) {
           <input type="checkbox" name="marketplace_orders_open" defaultChecked={s.marketplace_orders_open} />
           Shoppers can order vendor products
         </label>
-        <p className={styles.muted}>Keep this off until vendors can pack and hand over orders.</p>
+        <p className={styles.muted}>Keep this off until vendors can pack and hand over orders, and you have rehearsed one (see the Launch checklist).</p>
+      </section>
+      <section className={styles.panel}>
+        <h2>Payouts and support</h2>
+        <div className={styles.row}>
+          <label className={styles.field}>
+            <span>Hold after delivery (days)</span>
+            <input name="vendor_payout_hold_days" type="number" min={0} max={60} required defaultValue={s.vendor_payout_hold_days} />
+            <small>Earnings can be paid this long after delivery, so a return can still be asked for first.</small>
+          </label>
+          <label className={styles.field}>
+            <span>Smallest payout (GH₵)</span>
+            <input name="vendor_min_payout_ghs" type="number" min={0} step="0.01" required defaultValue={s.vendor_min_payout_ghs} />
+            <small>Unless it clears everything payable.</small>
+          </label>
+          <label className={styles.field}>
+            <span>We reply to vendors within (hours)</span>
+            <input name="vendor_support_reply_hours" type="number" min={1} max={168} required defaultValue={s.vendor_support_reply_hours} />
+            <small>Shown to vendors; messages older than this are flagged for you.</small>
+          </label>
+        </div>
+        <label className={styles.check}>
+          <input type="checkbox" name="vendor_tin_required" defaultChecked={s.vendor_tin_required} />
+          A vendor must have a tax number on file before they can be paid
+        </label>
         <div className={styles.buttons}>
           <button type="submit" className={styles.primary}>
             Save settings

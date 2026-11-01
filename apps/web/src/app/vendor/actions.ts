@@ -7,6 +7,7 @@ import type { Json } from '@/lib/supabase/database.types';
 import { momoNetworks, type MomoNetwork } from '@sleek/shared';
 import { getCategories } from '@/lib/catalog';
 import { startSubscriptionPayment } from '@/lib/payments/subscription';
+import { vendorTermsVersion } from '@/lib/vendor-terms';
 import { createUserSupabase } from '@/lib/supabase/server';
 import { importLimit, readImport } from '@/lib/vendor-import';
 
@@ -23,6 +24,9 @@ export async function applyForStore(_: ActionState, form: FormData): Promise<Act
     p_accept_terms: form.get('terms') === 'on',
   });
   if (error) return failed(error);
+  // Keep which version of the seller terms they accepted (the database just checked the box was ticked).
+  const { error: termsError } = await supabase.rpc('vendor_record_terms', { p_version: vendorTermsVersion });
+  if (termsError) console.error('terms version not recorded', termsError.message);
   refresh();
   return done('Application sent. We will review it and be in touch.');
 }
@@ -233,4 +237,39 @@ export async function payOnline(_: ActionState, form: FormData): Promise<ActionS
     );
   }
   return { ok: false, message: result.reason };
+}
+
+/** Accepts the current seller terms (asked again whenever they change). */
+export async function acceptTerms(_: ActionState, form: FormData): Promise<ActionState> {
+  if (form.get('accept') !== 'on') return { ok: false, message: 'Tick the box to accept the seller terms.' };
+  const supabase = await createUserSupabase();
+  const { error } = await supabase.rpc('vendor_record_terms', { p_version: vendorTermsVersion });
+  if (error) return failed(error);
+  refresh();
+  return done('Thank you. The seller terms are accepted.');
+}
+
+/** The vendor's legal name and tax number, needed before they can be paid. */
+export async function saveTaxInfo(_: ActionState, form: FormData): Promise<ActionState> {
+  const supabase = await createUserSupabase();
+  const { error } = await supabase.rpc('vendor_save_tax_info', {
+    p: {
+      business_type: text(form, 'business_type'),
+      legal_name: text(form, 'legal_name'),
+      tin: text(form, 'tin'),
+      business_registration: text(form, 'business_registration'),
+    },
+  });
+  if (error) return failed(error);
+  refresh();
+  return done('Tax details saved.');
+}
+
+/** The vendor's reply to a dispute about one of their products. */
+export async function respondToDispute(id: string, _: ActionState, form: FormData): Promise<ActionState> {
+  const supabase = await createUserSupabase();
+  const { error } = await supabase.rpc('vendor_respond_dispute', { p_id: id, p_response: text(form, 'response') });
+  if (error) return failed(error);
+  refresh();
+  return done('Your reply has been sent.');
 }

@@ -16,6 +16,8 @@ const links: { href: string; label: string; icon: IconName; match: (p: string) =
   { href: '/vendor/earnings', label: 'Earnings', icon: 'card', match: (p) => p === '/vendor/earnings' },
   { href: '/vendor/reports', label: 'Sales reports', icon: 'layers', match: (p) => p === '/vendor/reports' },
   { href: '/vendor/messages', label: 'Messages', icon: 'chat', match: (p) => p === '/vendor/messages', badge: 'messages' },
+  { href: '/vendor/disputes', label: 'Disputes', icon: 'shieldCheck', match: (p) => p === '/vendor/disputes' },
+  { href: '/vendor/help', label: 'Help and terms', icon: 'headset', match: (p) => p === '/vendor/help' },
   { href: '/vendor/store', label: 'Store page', icon: 'store', match: (p) => p === '/vendor/store' },
 ];
 

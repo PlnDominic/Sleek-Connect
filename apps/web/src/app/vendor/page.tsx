@@ -4,6 +4,7 @@ import { momoNetworks } from '@sleek/shared';
 import { getPaymentProvider } from '@/lib/payments';
 import { getVendorSession, type VendorProduct } from '@/lib/vendor';
 import { payOnline, setStock } from './actions';
+import { vendorTermsVersion } from '@/lib/vendor-terms';
 import { ApplyForm } from './ApplyForm';
 import { VendorForm } from './VendorForm';
 import styles from './vendor.module.css';
@@ -125,13 +126,28 @@ export default async function VendorHome() {
     );
   }
 
-  const [{ data: products, error }] = await Promise.all([session.supabase.rpc('vendor_my_products')]);
+  const [{ data: products, error }, { data: launchData }] = await Promise.all([
+    session.supabase.rpc('vendor_my_products'),
+    session.supabase.rpc('vendor_launch_state'),
+  ]);
   if (error) throw error;
+  const launch = launchData as unknown as { terms_version: string | null; tin: string | null; tin_required: boolean; payout_account_set: boolean } | null;
   const items = (products as unknown as VendorProduct[]) ?? [];
   const closesSoon = vendor.paid_until ? Math.ceil((Date.parse(vendor.paid_until) - new Date().getTime()) / 864e5) : null;
 
   return (
     <>
+      {launch && launch.terms_version !== vendorTermsVersion && (
+        <p className={styles.notice}>
+          The seller terms have been updated. <Link href="/vendor/help">Read and accept them</Link> to keep listing products.
+        </p>
+      )}
+      {launch && (!launch.payout_account_set || (launch.tin_required && !launch.tin)) && (
+        <p className={styles.notice}>
+          To be paid we need {[!launch.payout_account_set ? 'your Mobile Money account' : null, launch.tin_required && !launch.tin ? 'your tax details' : null].filter(Boolean).join(' and ')}.{' '}
+          <Link href="/vendor/earnings">Add them under Earnings</Link>.
+        </p>
+      )}
       {closesSoon !== null && closesSoon <= 30 && (
         <p className={styles.notice}>
           Your subscription {closesSoon < 0 ? 'has ended' : `ends in ${closesSoon} day${closesSoon === 1 ? '' : 's'}`}. Pay the yearly fee of{' '}

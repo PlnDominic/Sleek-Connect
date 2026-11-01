@@ -69,7 +69,11 @@ const product = (extra = {}) => ({
   assert(queue[0].owner_name === 'Ama Owusu' && queue[0].id_number === 'GHA-123456789-0' && queue[0].id_document_path === idPath, 'and the owner\'s name and ID details');
   assert((await boss.storage.from('vendor-ids').createSignedUrl(idPath, 60)).data?.signedUrl, 'the owner can open the ID document');
   assert((await kofi.storage.from('vendor-ids').createSignedUrl(idPath, 60)).error !== null, 'other shoppers cannot open it');
+  assert((await errOf(boss.rpc('admin_review_vendor', { p_vendor_id: vendorId, p_decision: 'active', p_note: 'Welcome' })))?.message.includes('Tick these checks'), 'a store can\'t be approved before the onboarding checks are ticked');
+  assert((await errOf(boss.rpc('admin_review_vendor', { p_vendor_id: vendorId, p_decision: 'rejected' })))?.message.includes('reason'), 'a rejection needs its reason');
+  await boss.rpc('admin_save_vendor_checks', { p_vendor_id: vendorId, p_checks: { id_matches: true, id_valid: true, phone_confirmed: true, products_allowed: true } });
   await boss.rpc('admin_review_vendor', { p_vendor_id: vendorId, p_decision: 'active', p_note: 'Welcome' });
+  assert(sql(`select count(*) from public.vendor_decisions where vendor_id = '${vendorId}' and decision = 'active'`) === '1', 'the approval is kept on record with the checks');
   me = (await ama.rpc('vendor_me')).data;
   assert(me.status === 'active' && me.live === false && me.annual_fee_ghs > 0, 'approved but unpaid: not live, with the yearly fee shown');
   assert((await errOf(ama.rpc('vendor_save_product', { p: product() })))?.message.includes('subscription'), 'an unpaid store cannot add products');
@@ -101,9 +105,10 @@ const product = (extra = {}) => ({
 
   const { data: pending } = await boss.rpc('admin_vendor_products', { p_status: 'pending' });
   assert(pending.length === 1 && pending[0].vendor_price_ghs === 100, 'the owner sees it in the review queue');
-  assert((await errOf(ama.rpc('admin_review_product', { p_product_id: productId, p_decision: 'approved', p_markup_percent: 15 })))?.code === '42501', 'vendors cannot approve their own products');
+  assert((await errOf(ama.rpc('admin_review_product', { p_product_id: productId, p_decision: 'approved', p_markup_percent: 15, p_checks: { photos_ok: true, description_ok: true, claims_ok: true, ingredients_ok: true, expiry_ok: 'na', authentic_ok: true, regulatory_ok: 'na', safety_ok: true } })))?.code === '42501', 'vendors cannot approve their own products');
   assert((await errOf(boss.rpc('admin_review_product', { p_product_id: productId, p_decision: 'approved', p_markup_percent: 500 })))?.message.includes('markup'), 'the markup is capped');
-  const { data: approved } = await boss.rpc('admin_review_product', { p_product_id: productId, p_decision: 'approved', p_markup_percent: 15 });
+  assert((await errOf(boss.rpc('admin_review_product', { p_product_id: productId, p_decision: 'approved', p_markup_percent: 15 })))?.message.includes('Tick these checks'), 'a product can\'t be approved before its checks are ticked');
+  const { data: approved } = await boss.rpc('admin_review_product', { p_product_id: productId, p_decision: 'approved', p_markup_percent: 15, p_checks: { photos_ok: true, description_ok: true, claims_ok: true, ingredients_ok: true, expiry_ok: 'na', authentic_ok: true, regulatory_ok: 'na', safety_ok: true } });
   assert(Number(approved.price_ghs) === 115 && approved.is_published === true, 'the shopper price is the vendor price plus the markup, and it goes on sale');
   const pub = (await anon.from('products').select('price_ghs').eq('id', productId)).data;
   assert(pub.length === 1 && Number(pub[0].price_ghs) === 115, 'the public sees the marked-up price');
@@ -117,7 +122,7 @@ const product = (extra = {}) => ({
   await ama.rpc('vendor_save_product', { p: product({ id: productId, name: 'Shea Body Butter Deluxe' }) });
   row = sql(`select review_status || '|' || is_published from public.products where id = '${productId}'`);
   assert(row === 'pending|f', 'renaming the product sends it back for review and takes it off sale');
-  await boss.rpc('admin_review_product', { p_product_id: productId, p_decision: 'approved', p_markup_percent: 20 });
+  await boss.rpc('admin_review_product', { p_product_id: productId, p_decision: 'approved', p_markup_percent: 20, p_checks: { photos_ok: true, description_ok: true, claims_ok: true, ingredients_ok: true, expiry_ok: 'na', authentic_ok: true, regulatory_ok: 'na', safety_ok: true } });
 
   // --- Orders from vendor stores stay closed until the owner opens them -------------------------
   sql("update public.delivery_options set fee_ghs = 20 where id = 'standard'");

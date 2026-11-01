@@ -49,6 +49,12 @@
   `vendor_balance`/`admin_record_payout` (finance, reference required, never above the balance). Subscription payments are
   confirmed only by `confirm_subscription_payment` from the webhook (references starting `SUB-`). Messages to vendors go
   through `queue_vendor_message`, never directly into `notifications`.
+  Launch rules (`docs/VENDOR_LAUNCH.md`): a store is approved only through `admin_review_vendor` after the four onboarding checks
+  (`admin_save_vendor_checks`), and every decision is kept in `vendor_decisions`; a vendor product is approved only with the
+  eight checks passed to `admin_review_product`. Payouts are limited to `vendor_balance(...)->>'payable'` (earnings older than
+  `vendor_payout_hold_days`), at least `vendor_min_payout_ghs`, and need the vendor's TIN. Disputes (`vendor_disputes`) are
+  reached only through their functions and charge the vendor's balance; vendors never see shopper details in them. Product
+  views are a daily count only (`record_product_view`): never store who viewed.
 - Online orders become paid only through `public.confirm_payment`, after the webhook has verified the provider's
   notification. Stock is reserved by `place_order` and released by `release_order_reservation`.
 - Pay on delivery (`payment_method = 'cod'`, cash to the rider, no bank option; see `docs/PAY_ON_DELIVERY.md`): `place_order`

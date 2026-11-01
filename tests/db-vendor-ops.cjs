@@ -39,6 +39,7 @@ const product = (extra = {}) => ({
   });
   assert(!applyError && vendorId, 'a vendor applies');
   assert(sql(`select count(*) from public.notifications where vendor_id = '${vendorId}' and template = 'vendor_application_received'`) === '2', 'the application is acknowledged by SMS and email');
+  await staff.boss.rpc('admin_save_vendor_checks', { p_vendor_id: vendorId, p_checks: { id_matches: true, id_valid: true, phone_confirmed: true, products_allowed: true } });
   await staff.boss.rpc('admin_review_vendor', { p_vendor_id: vendorId, p_decision: 'active', p_note: 'Welcome' });
   assert(sql(`select count(*) from public.notifications where vendor_id = '${vendorId}' and template = 'vendor_approved'`) === '2', 'approval is texted and emailed to the vendor');
   await staff.boss.rpc('admin_record_subscription', { p_vendor_id: vendorId, p_amount_ghs: 300, p_method: 'momo', p_reference: 'MM1' });
@@ -46,9 +47,11 @@ const product = (extra = {}) => ({
   const { data: saved } = await ama.rpc('vendor_save_product', { p: product() });
   const productId = saved.id;
   await ama.rpc('vendor_set_stock', { p_product_id: productId, p_size_code: '', p_quantity: 10 });
-  await staff.boss.rpc('admin_review_product', { p_product_id: productId, p_decision: 'approved', p_markup_percent: 20 });
+  await staff.boss.rpc('admin_review_product', { p_product_id: productId, p_decision: 'approved', p_markup_percent: 20, p_checks: { photos_ok: true, description_ok: true, claims_ok: true, ingredients_ok: true, expiry_ok: 'na', authentic_ok: true, regulatory_ok: 'na', safety_ok: true } });
   assert(sql(`select count(*) from public.notifications where vendor_id = '${vendorId}' and template = 'vendor_product_reviewed'`) === '2', 'a product decision is sent to the vendor');
   await staff.boss.rpc('admin_set_marketplace_settings', { p: { marketplace_orders_open: true } });
+  // The payout rules (hold, minimum, tax number) are tested further down; these are switched off for the earlier checks.
+  sql('update public.store_settings set vendor_payout_hold_days = 0, vendor_min_payout_ghs = 0, vendor_tin_required = false');
 
   // --- A mixed order: one vendor line, one from our own range ----------------------------------
   const { data: order, error: orderError } = await anon.rpc('place_order', {
@@ -119,7 +122,7 @@ const product = (extra = {}) => ({
   assert((await errOf(ama.rpc('admin_record_payout', { p_vendor_id: vendorId, p_amount_ghs: 10, p_method: 'momo', p_reference: 'X' })))?.code === '42501', 'vendors cannot pay themselves');
   assert((await errOf(staff.ops.rpc('admin_record_payout', { p_vendor_id: vendorId, p_amount_ghs: 10, p_method: 'momo', p_reference: 'X' })))?.code === '42501', 'only finance records payouts');
   assert((await errOf(staff.fin.rpc('admin_record_payout', { p_vendor_id: vendorId, p_amount_ghs: 50, p_method: 'momo' })))?.message.includes('reference'), 'a payout needs the transaction reference');
-  assert((await errOf(staff.fin.rpc('admin_record_payout', { p_vendor_id: vendorId, p_amount_ghs: 500, p_method: 'momo', p_reference: 'T1' })))?.message.includes('owed'), 'a payout cannot exceed what is owed');
+  assert((await errOf(staff.fin.rpc('admin_record_payout', { p_vendor_id: vendorId, p_amount_ghs: 500, p_method: 'momo', p_reference: 'T1' })))?.message.includes('can be paid now'), 'a payout cannot exceed what can be paid');
   const left = (await staff.fin.rpc('admin_record_payout', { p_vendor_id: vendorId, p_amount_ghs: 40, p_method: 'momo', p_reference: 'MM999' })).data;
   assert(Number(left) === 60, 'finance records a payment and sees what is still owed');
   assert(sql(`select count(*) from public.notifications where vendor_id = '${vendorId}' and template = 'vendor_payout_sent'`) === '2', 'the vendor is told they were paid');
@@ -128,6 +131,60 @@ const product = (extra = {}) => ({
   assert((await staff.fin.rpc('admin_vendor_payouts')).data.length === 1, 'and the payment history');
   assert((await rows(anon.from('vendor_payouts').select('id'))).length === 0 && (await rows(kofi.from('vendor_payouts').select('id'))).length === 0, 'payouts are private');
   assert((await errOf(staff.sup.rpc('admin_vendor_balances')))?.code === '42501', 'support cannot see what vendors are owed');
+
+  // --- Payout rules: hold, minimum, tax number ----------------------------------------------------
+  sql('update public.store_settings set vendor_payout_hold_days = 7, vendor_min_payout_ghs = 50, vendor_tin_required = true');
+  let stmt = (await ama.rpc('vendor_statement')).data;
+  assert(Number(stmt.payable) === 0 && Number(stmt.balance) === 60, 'earnings from a delivery just made are held for the return window before they can be paid');
+  sql(`update public.orders set delivered_at = now() - interval '10 days' where id = '${orderId}'`);
+  stmt = (await ama.rpc('vendor_statement')).data;
+  assert(Number(stmt.payable) === 60, 'once the hold has passed they are payable');
+  assert((await errOf(staff.fin.rpc('admin_record_payout', { p_vendor_id: vendorId, p_amount_ghs: 60, p_method: 'momo', p_reference: 'MM1000' })))?.message.includes('tax identification'), 'a payout needs the vendor\'s tax number on file');
+  assert((await errOf(ama.rpc('vendor_save_tax_info', { p: { business_type: 'individual', legal_name: 'Ama Owusu', tin: '12' } })))?.message.includes('TIN'), 'a tax number must look like one');
+  assert((await errOf(kofi.rpc('vendor_save_tax_info', { p: { business_type: 'individual', legal_name: 'Kofi', tin: 'GHA-123456789-0' } }))) !== null, 'only a vendor saves tax details');
+  assert(!(await errOf(ama.rpc('vendor_save_tax_info', { p: { business_type: 'individual', legal_name: 'Ama Owusu', tin: 'gha-123456789-0' } }))), 'a vendor saves their tax details');
+  const launch = (await ama.rpc('vendor_launch_state')).data;
+  assert(launch.tin === 'GHA-123456789-0' && launch.payout_hold_days === 7 && launch.support.reply_hours === 24, 'the vendor sees their tax number, the payout rules and when we reply');
+  assert(!JSON.stringify(sql(`select details from public.audit_log where action = 'vendor.tax_info_saved'`)).includes('123456789'), 'the tax number is not written to the audit log');
+  assert((await errOf(staff.fin.rpc('admin_record_payout', { p_vendor_id: vendorId, p_amount_ghs: 20, p_method: 'momo', p_reference: 'MM1001' })))?.message.includes('smallest payout'), 'a small payout is refused unless it clears everything payable');
+  assert(Number((await staff.fin.rpc('admin_record_payout', { p_vendor_id: vendorId, p_amount_ghs: 60, p_method: 'momo', p_reference: 'MM1002' })).data) === 0, 'paying the whole payable amount is allowed');
+  const tax = (await staff.fin.rpc('admin_vendor_tax_summary', { p_year: new Date().getUTCFullYear() })).data;
+  assert(tax.length === 1 && tax[0].tin === 'GHA-123456789-0' && Number(tax[0].total_paid_ghs) === 100 && tax[0].payouts === 2, 'finance gets the year\'s payouts with each vendor\'s tax details');
+  assert((await errOf(staff.sup.rpc('admin_vendor_tax_summary', { p_year: 2026 })))?.code === '42501', 'support cannot');
+
+  // --- Seller terms ---------------------------------------------------------------------------------
+  assert(!(await errOf(ama.rpc('vendor_record_terms', { p_version: '2026-11-03' }))), 'a vendor accepts the current seller terms');
+  assert((await ama.rpc('vendor_launch_state')).data.terms_version === '2026-11-03', 'and the version they accepted is kept');
+  assert((await errOf(ama.rpc('vendor_record_terms', { p_version: '' }))) !== null, 'a version is needed');
+
+  // --- Disputes -----------------------------------------------------------------------------------
+  const opened = await staff.sup.rpc('admin_open_vendor_dispute', { p_order_number: order.order_number, p_product_id: productId, p_kind: 'counterfeit', p_details: 'The shopper says the seal was broken and it smells off.' });
+  assert(/^VD-\d+$/.test(opened.data ?? ''), 'support opens a dispute from a shopper\'s report');
+  assert((await errOf(staff.sup.rpc('admin_open_vendor_dispute', { p_order_number: order.order_number, p_product_id: productId, p_kind: 'damaged', p_details: 'x' }))) !== null, 'it needs a description');
+  assert((await errOf(staff.sup.rpc('admin_open_vendor_dispute', { p_order_number: order.order_number, p_product_id: sql("select id from public.products where slug = 'argan-hair-oil'"), p_kind: 'damaged', p_details: 'Arrived broken.' })))?.message.includes('independent store'), 'and an item from an independent store in that order');
+  assert(sql(`select count(*) from public.notifications where vendor_id = '${vendorId}' and template = 'vendor_dispute_opened'`) === '2', 'the vendor is told by SMS and email');
+  const theirs = (await ama.rpc('vendor_disputes_list')).data;
+  assert(theirs.length === 1 && theirs[0].status === 'open' && !JSON.stringify(theirs).includes('Kofi') && !JSON.stringify(theirs).includes('024 123'), 'the vendor sees the case with no shopper details');
+  assert((await errOf(kofi.rpc('vendor_respond_dispute', { p_id: theirs[0].id, p_response: 'Not mine at all.' }))) !== null, 'only that vendor can reply');
+  assert(!(await errOf(ama.rpc('vendor_respond_dispute', { p_id: theirs[0].id, p_response: 'That batch was sealed when we packed it.' }))), 'the vendor replies');
+  assert((await staff.sup.rpc('admin_vendor_disputes')).data[0].status === 'vendor_replied', 'support sees the reply');
+  assert((await errOf(staff.sup.rpc('admin_resolve_vendor_dispute', { p_id: theirs[0].id, p_outcome: 'upheld', p_charge_ghs: 100, p_note: 'Seal was open in the photos.' })))?.code === '42501', 'only an admin decides');
+  assert((await errOf(staff.boss.rpc('admin_resolve_vendor_dispute', { p_id: theirs[0].id, p_outcome: 'upheld', p_charge_ghs: 100, p_note: '' })))?.message.includes('why'), 'a decision needs its reason');
+  assert((await errOf(staff.boss.rpc('admin_resolve_vendor_dispute', { p_id: theirs[0].id, p_outcome: 'upheld', p_charge_ghs: 5000, p_note: 'Seal was open.' })))?.message.includes('share'), 'a charge can\'t exceed the vendor\'s share of the item');
+  const strikes = (await staff.boss.rpc('admin_resolve_vendor_dispute', { p_id: theirs[0].id, p_outcome: 'upheld', p_charge_ghs: 100, p_note: 'Seal was open in the photos.' })).data;
+  assert(strikes === 1, 'an upheld counterfeit case counts as the vendor\'s first strike');
+  stmt = (await ama.rpc('vendor_statement')).data;
+  assert(Number(stmt.charged) === 100 && Number(stmt.balance) === -100 && Number(stmt.payable) === 0, 'the charge comes off the vendor\'s balance');
+  assert((await errOf(staff.boss.rpc('admin_resolve_vendor_dispute', { p_id: theirs[0].id, p_outcome: 'dismissed', p_charge_ghs: 0, p_note: 'again' })))?.message.includes('closed'), 'a closed case stays closed');
+
+  // --- Views and conversion -------------------------------------------------------------------------
+  await anon.rpc('record_product_view', { p_slug: saved.slug });
+  await anon.rpc('record_product_view', { p_slug: saved.slug });
+  await anon.rpc('record_product_view', { p_slug: 'does-not-exist' });
+  const viewsReport = (await ama.rpc('vendor_report', { p_days: 30 })).data;
+  const mineStats = viewsReport.product_stats.find((x) => x.views === 2);
+  assert(viewsReport.totals.views === 2 && mineStats?.views === 2, 'a vendor sees how often their products were viewed');
+  assert((await anon.from('product_views').select('views')).data === null || (await anon.from('product_views').select('views')).error !== null, 'view counts are not public');
 
   // --- Messages between vendor and owner ---------------------------------------------------------
   assert(!(await errOf(ama.rpc('vendor_send_message', { p_body: 'When do payouts happen?' }))), 'a vendor writes to the owner');
@@ -167,7 +224,7 @@ const product = (extra = {}) => ({
   await ama.rpc('vendor_save_product', { p: product({ id: productId, name: 'Shea Butter Deluxe' }) });
   const queued = (await staff.boss.rpc('admin_vendor_products', { p_status: 'pending' })).data;
   assert(queued.length === 1 && queued[0].review_previous?.name === 'Shea Butter' && queued[0].name === 'Shea Butter Deluxe', 'the owner can see what the vendor changed');
-  await staff.boss.rpc('admin_review_product', { p_product_id: productId, p_decision: 'approved', p_markup_percent: 20 });
+  await staff.boss.rpc('admin_review_product', { p_product_id: productId, p_decision: 'approved', p_markup_percent: 20, p_checks: { photos_ok: true, description_ok: true, claims_ok: true, ingredients_ok: true, expiry_ok: 'na', authentic_ok: true, regulatory_ok: 'na', safety_ok: true } });
   assert(sql(`select review_previous is null from public.products where id = '${productId}'`) === 't', 'the comparison is cleared once the owner decides');
 
   // --- Renewal reminders ---------------------------------------------------------------------------------

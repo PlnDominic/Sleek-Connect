@@ -464,6 +464,9 @@ catalogue as the website.
   notifications, and each order status change that sends an SMS or email also sends a push (`PUSH_PROVIDER=expo` on the
   server). Tapping a notification opens the order. Remote push can't be received in Expo Go on Android; use a development
   build. See [docs/MOBILE_RELEASE.md](docs/MOBILE_RELEASE.md) for building, credentials and the store listings.
+- **Marketplace launch pack:** onboarding and product approval checklists, seller terms and product standards, disputes,
+  payout rules (hold, minimum, tax number), vendor tax details and support, and views and conversion for vendors. See
+  [docs/VENDOR_LAUNCH.md](docs/VENDOR_LAUNCH.md) (including the three rehearsals to do before opening vendor orders).
 - **Legal and privacy:** terms, privacy notice and help match what the store does; guests confirm they are 18+ at checkout;
   company details come from environment variables. See [docs/LEGAL_AND_PRIVACY.md](docs/LEGAL_AND_PRIVACY.md) (including the
   questions for a lawyer).

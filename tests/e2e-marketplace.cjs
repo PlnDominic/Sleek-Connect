@@ -65,6 +65,8 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   await go(boss, BASE + '/admin/vendors');
   assert(await boss.getByRole('heading', { name: "Ama's Beauty Hub" }).isVisible(), 'the owner sees the application');
   assert(await boss.getByText('Ama Owusu').isVisible() && await boss.getByRole('link', { name: 'View ID document' }).isVisible(), 'with the owner\'s name and a link to the ID document');
+  assert(await boss.getByText('Before you approve').isVisible(), 'the application comes with a checklist to tick before approving');
+  for (const label of [/The ID matches/, /The ID is valid/, /I called the phone number/, /What they plan to sell/]) await boss.getByLabel(label).check();
   await boss.getByRole('button', { name: 'Approve', exact: true }).click();
   await boss.getByText('Vendor approved.').waitFor({ timeout: 8000 });
   await boss.getByRole('button', { name: /Record payment/ }).click();
@@ -90,6 +92,9 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   await go(boss, BASE + '/admin/vendors?tab=products');
   assert(await boss.getByRole('heading', { name: 'Shea Body Butter' }).isVisible(), 'it appears in the owner\'s review queue');
   await boss.getByLabel('Your markup (%)').fill('15');
+  for (const label of [/Photos are clear/, /Name and description are accurate/, /No medical or/, /Ingredients or materials/, /Batch and expiry/, /Genuine, from an authorised/, /Registration number/, /Safety warnings are present/]) {
+    await boss.getByLabel(label).selectOption('ok');
+  }
   await boss.getByRole('button', { name: 'Approve at this markup' }).click();
   await boss.getByText('Product approved.').waitFor({ timeout: 8000 });
 

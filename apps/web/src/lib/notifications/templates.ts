@@ -52,7 +52,7 @@ export interface VendorPayload {
   amount_ghs?: number;
   reference?: string;
   product_name?: string;
-  decision?: 'approved' | 'rejected';
+  decision?: string;
   price_ghs?: number | null;
 }
 
@@ -100,6 +100,18 @@ function renderVendorMessage(template: string, p: VendorPayload): Message | null
             subject: `${p.product_name} was not approved`,
             text: `${hi} we couldn't approve ${p.product_name}.${note} Fix it in your dashboard and send it again: ${dashboard}`,
           };
+    case 'vendor_dispute_opened':
+      return {
+        subject: `A shopper reported a problem: ${p.product_name}`,
+        text: `${hi} a shopper reported a problem with ${p.product_name} in order ${p.order_number}. Please reply within 48 hours with what you know: ${dashboard}/disputes`,
+      };
+    case 'vendor_dispute_resolved':
+      return {
+        subject: `Decision on the case about ${p.product_name}`,
+        text: `${hi} we have decided the case about ${p.product_name} (order ${p.order_number}): ${
+          p.decision === 'dismissed' ? 'dismissed, in your favour' : p.decision === 'partly_upheld' ? 'partly decided against you' : 'decided against you'
+        }.${p.amount_ghs ? ` ${formatPrice(p.amount_ghs)} comes off your earnings.` : ''}${note} ${dashboard}/disputes`,
+      };
     case 'vendor_new_order':
       return {
         subject: `New order ${p.order_number}`,
@@ -260,6 +272,8 @@ function renderCustomerMessage(template: string, p: NotificationPayload): Messag
 const ctaLabels: Record<string, string> = {
   order_received: 'Track your order',
   vendor_new_order: 'Open your orders',
+  vendor_dispute_opened: 'Reply to the case',
+  vendor_dispute_resolved: 'See the decision',
   vendor_order_cancelled: 'Open your orders',
   vendor_payout_sent: 'See your earnings',
   vendor_message_reply: 'Read the reply',

@@ -373,11 +373,20 @@ export async function getStoreSlugs(): Promise<string[]> {
 }
 
 /** What a prospective vendor needs to know before applying. */
-export async function getVendorTerms(): Promise<{ annualFee: number; graceDays: number }> {
+export async function getVendorTerms(): Promise<{ annualFee: number; graceDays: number; payoutHoldDays: number; minPayout: number; replyHours: number }> {
   'use cache';
   cacheLife('minutes');
   cacheTag('catalog');
-  const { data, error } = await createSupabase().from('store_settings').select('vendor_annual_fee_ghs, vendor_grace_days').single();
+  const supabase = createSupabase();
+  const { data, error } = await supabase.from('store_settings').select('vendor_annual_fee_ghs, vendor_grace_days').single();
   if (error) throw new Error(`Supabase query failed: ${error.message}`);
-  return { annualFee: data.vendor_annual_fee_ghs, graceDays: data.vendor_grace_days };
+  // The payout rules are read apart, so the page works (with the standard rules) before their migration has run.
+  const { data: rules } = await supabase.from('store_settings').select('vendor_payout_hold_days, vendor_min_payout_ghs, vendor_support_reply_hours').single();
+  return {
+    annualFee: data.vendor_annual_fee_ghs,
+    graceDays: data.vendor_grace_days,
+    payoutHoldDays: rules?.vendor_payout_hold_days ?? 7,
+    minPayout: rules?.vendor_min_payout_ghs ?? 50,
+    replyHours: rules?.vendor_support_reply_hours ?? 24,
+  };
 }

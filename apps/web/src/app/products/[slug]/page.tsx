@@ -13,6 +13,7 @@ import { getDeliveryConfig, getProduct, getRelatedProducts, getSizeGuide, getSto
 import { estimate } from '@/lib/delivery';
 import { getProductQuestions, getProductReviews } from '@/lib/reviews';
 import { defaultShareImage, siteName, siteUrl } from '@/lib/site';
+import { ProductViewBeacon } from './ProductViewBeacon';
 import { SizeGuideChart } from './SizeGuideChart';
 import { ProductGallery } from './ProductGallery';
 import { ProductInfoTabs } from './ProductInfoTabs';
@@ -172,6 +173,7 @@ export default async function ProductPage({ params, searchParams }: PageProps<'/
             ))}
           </div>
 
+          <ProductViewBeacon slug={product.slug} />
           {sizeGuide && <SizeGuideChart guide={sizeGuide} />}
           <PurchasePanel product={product} />
           {product.inStock === false && <RestockAlert slug={product.slug} />}
