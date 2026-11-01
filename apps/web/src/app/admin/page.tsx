@@ -299,6 +299,11 @@ export default async function Dashboard({ searchParams }: PageProps<'/admin'>) {
           )}
         </section>
       </div>
+      {can(staff.role, 'settings.edit') && (
+        <p className={styles.muted}>
+          Want to check that error reporting works? <Link href="/admin/settings#error-reporting">Send a test error from Settings →</Link>
+        </p>
+      )}
     </>
   );
 }

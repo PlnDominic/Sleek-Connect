@@ -79,6 +79,7 @@ suite "payments: Hubtel provider" unit-hubtel.cjs
 suite "privacy: what Sentry and PostHog may receive" unit-telemetry.cjs
 suite "privacy: no trackers, no cookies of our own" unit-privacy-guard.cjs
 suite "build: server action files export only async functions" unit-server-actions.cjs
+suite "admin: the settings page shows error reporting first" unit-admin-settings.cjs
 
 if [ "$FAILED" = "0" ]; then echo "== all suites passed"; else echo "== some suites FAILED"; fi
 exit "$FAILED"
