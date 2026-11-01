@@ -6,6 +6,7 @@ import { getStoreSetup, getVendorSession, type VendorProduct } from '@/lib/vendo
 import { payOnline, setStock } from './actions';
 import { vendorTermsVersion } from '@/lib/vendor-terms';
 import { SetupChecklist } from './SetupChecklist';
+import { StarSellerPanel, type StarStatus } from './StarSellerPanel';
 import { StoreWizard } from './StoreWizard';
 import { VendorForm } from './VendorForm';
 import styles from './vendor.module.css';
@@ -199,6 +200,9 @@ export default async function VendorHome() {
   const closesSoon = vendor.paid_until ? Math.ceil((Date.parse(vendor.paid_until) - new Date().getTime()) / 864e5) : null;
 
   const setup = await getStoreSetup(session, vendor, items.length);
+  // Tolerant of a database that hasn't run the Etsy-extras migration yet.
+  const { data: starData, error: starError } = await session.supabase.rpc('vendor_star_status');
+  const star = starError ? null : (starData as unknown as StarStatus | null);
   return (
     <>
       {setup.percent < 100 && <SetupChecklist setup={setup} />}
@@ -244,6 +248,7 @@ export default async function VendorHome() {
         </section>
       </div>
 
+      {star && <StarSellerPanel status={star} />}
       <ProductsPanel items={items} />
     </>
   );

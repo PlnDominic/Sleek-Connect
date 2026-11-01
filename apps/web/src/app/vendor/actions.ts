@@ -378,3 +378,14 @@ export async function respondToDispute(id: string, _: ActionState, form: FormDat
   refresh();
   return done('Your reply has been sent.');
 }
+
+/** The seller's public reply to a review of one of their products. An empty reply removes it. */
+export async function replyToReview(reviewId: string, _: ActionState, form: FormData): Promise<ActionState> {
+  const supabase = await createUserSupabase();
+  const reply = text(form, 'reply');
+  const { error } = await supabase.rpc('vendor_reply_to_review', { p_review_id: reviewId, p_reply: reply });
+  if (error) return failed(error);
+  updateTag('catalog');
+  refresh();
+  return done(reply ? 'Your reply is public.' : 'Reply removed.');
+}

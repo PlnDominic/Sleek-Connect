@@ -209,3 +209,97 @@
   color: var(--c-text-subtle);
   white-space: pre-line;
 }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--c-accent);
+  color: var(--c-canvas);
+  font-size: 12px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 6px;
+  color: var(--c-text-muted);
+  font-size: 14px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.follow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--c-text-muted);
+}
+
+.follow button,
+.shareButton {
+  padding: 8px 18px;
+  border: 1px solid var(--c-accent);
+  border-radius: 999px;
+  background: var(--c-canvas);
+  color: var(--c-accent);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.follow button[data-following] {
+  background: var(--c-accent);
+  color: var(--c-canvas);
+}
+
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.tools input,
+.tools select {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg, 10px);
+  background: var(--c-canvas);
+  font: inherit;
+  font-size: 14px;
+}
+
+.tools input {
+  flex: 1 1 220px;
+}
+
+.reply {
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  border-left: 3px solid var(--c-accent);
+  background: var(--c-surface);
+  border-radius: 0 var(--r-lg, 10px) var(--r-lg, 10px) 0;
+  font-size: 13px;
+}
+
+.reply strong {
+  display: block;
+  font-size: 12px;
+  color: var(--c-text-muted);
+}

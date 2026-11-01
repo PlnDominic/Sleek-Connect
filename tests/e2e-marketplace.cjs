@@ -91,6 +91,11 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   await go(ama, BASE + '/vendor');
   assert(await ama.getByRole('link', { name: 'Add a product' }).first().isVisible(), 'once paid, the vendor can add products');
   await shot(ama, 'vendor-dashboard');
+  await go(ama, BASE + '/vendor/reviews');
+  assert(await ama.getByText(/No reviews yet/).isVisible(), 'the seller has a Reviews page for replying to shoppers');
+  assert(await ama.getByRole('heading', { name: 'Become a Star Seller' }).isVisible() === false, 'the Star Seller panel lives on the overview, not the reviews page');
+  await go(ama, BASE + '/vendor');
+  assert(await ama.getByRole('heading', { name: 'Become a Star Seller' }).isVisible(), 'the overview shows progress towards Star Seller');
   await go(ama, BASE + '/vendor/store');
   assert(await ama.getByRole('heading', { name: 'Sections' }).isVisible() && await ama.getByRole('heading', { name: 'Vacation mode' }).isVisible(), 'the store page has sections and vacation mode');
   await ama.getByLabel('Store announcement').fill('Free gift wrap this weekend');
@@ -120,10 +125,12 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   await go(shopper, BASE + '/products/' + saved.slug);
   assert(await shopper.getByText('GH₵115.00').first().isVisible(), 'shoppers see the vendor price plus the markup');
   assert(await shopper.getByRole('link', { name: "Ama's Beauty Hub" }).isVisible(), 'the product page says who sells it');
+  assert(await shopper.getByText(/packs within 2 working days/).isVisible(), 'the product page says how long the seller takes to pack');
   await shot(shopper, 'product-sold-by');
   await shopper.getByRole('link', { name: "Ama's Beauty Hub" }).click();
   await shopper.waitForURL('**/store/amas-beauty-hub');
   assert(await shopper.getByRole('heading', { name: "Ama's Beauty Hub" }).isVisible() && await shopper.getByText('Shea Body Butter').first().isVisible(), 'the storefront lists the product');
+  assert(await shopper.getByRole('button', { name: "Follow Ama's Beauty Hub" }).isVisible() && await shopper.getByRole('button', { name: 'Share' }).isVisible(), 'the store page has Follow and Share buttons');
   await shot(shopper, 'storefront');
   await go(shopper, BASE + '/search?q=shea');
   assert(await shopper.getByText('Shea Body Butter').first().isVisible(), 'vendor products appear in the main search');

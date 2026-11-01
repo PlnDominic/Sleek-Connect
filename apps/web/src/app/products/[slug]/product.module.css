@@ -538,3 +538,8 @@
   letter-spacing: 0.04em;
   color: var(--c-text-muted, #5f6368);
 }
+
+.starSeller {
+  color: var(--c-accent);
+  font-weight: 700;
+}

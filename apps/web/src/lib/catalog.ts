@@ -283,6 +283,8 @@ export interface Storefront {
   processingDays?: number;
   instagram?: string;
   website?: string;
+  /** Counts shown on the store page; missing before the Etsy-extras migration has run. */
+  facts?: { ordersDelivered: number; joinedYear: number; followers: number; starSeller: boolean };
   /** The store's sections, with the slugs of the products in each (empty ones left out). */
   sections: { id: string; name: string; productSlugs: string[] }[];
 }
@@ -295,6 +297,7 @@ export interface StoreReview {
   created_at: string;
   product_name: string;
   product_slug: string;
+  seller_reply?: string | null;
 }
 
 export interface StoreListing {
@@ -323,7 +326,7 @@ export async function getStorefront(slug: string): Promise<Storefront | null> {
     .maybeSingle();
   if (error) throw new Error(`Supabase query failed: ${error.message}`);
   if (!vendor) return null;
-  const [rows, rating, reviews, profile, sectionRows] = await Promise.all([
+  const [rows, rating, reviews, profile, sectionRows, factsRow] = await Promise.all([
     supabase.from('products').select(productColumns).eq('vendor_id', vendor.id).order('created_at', { ascending: false }).then(unwrap),
     supabase.rpc('store_rating', { p_slug: slug }).then((r) => orMissing(r, { average: 0, count: 0 })),
     supabase.rpc('store_reviews', { p_slug: slug, p_limit: 6 }).then((r) => orMissing<StoreReview[]>(r, [])),
@@ -340,6 +343,7 @@ export async function getStorefront(slug: string): Promise<Storefront | null> {
       .eq('vendor_id', vendor.id)
       .order('sort_order')
       .then((r) => (r.error ? [] : (r.data ?? []))),
+    supabase.rpc('store_facts', { p_slug: slug }).then((r) => orMissing<Record<string, unknown> | null>(r, null)),
   ]);
   const stats = rating as { average: number; count: number };
   const sectionOf = new Map<string, string>();
@@ -366,6 +370,14 @@ export async function getStorefront(slug: string): Promise<Storefront | null> {
     processingDays: profile?.processing_days ?? undefined,
     instagram: profile?.instagram ?? undefined,
     website: profile?.website ?? undefined,
+    facts: factsRow
+      ? {
+          ordersDelivered: Number(factsRow.orders_delivered ?? 0),
+          joinedYear: Number(factsRow.joined_year ?? 0),
+          followers: Number(factsRow.followers ?? 0),
+          starSeller: factsRow.star_seller === true,
+        }
+      : undefined,
     sections,
   };
 }

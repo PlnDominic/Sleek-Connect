@@ -9,7 +9,7 @@ import { SaveButton } from '@/components/SaveButton';
 import { Stars } from '@/components/Stars';
 import { SiteFooter } from '@/components/SiteFooter';
 import { CompactHeader } from '@/components/SiteHeader';
-import { getDeliveryConfig, getProduct, getRelatedProducts, getSizeGuide, getStoreInfo, listProductSlugs } from '@/lib/catalog';
+import { getDeliveryConfig, getProduct, getRelatedProducts, getSizeGuide, getStorefront, getStoreInfo, listProductSlugs } from '@/lib/catalog';
 import { estimate } from '@/lib/delivery';
 import { getProductQuestions, getProductReviews } from '@/lib/reviews';
 import { defaultShareImage, siteName, siteUrl } from '@/lib/site';
@@ -59,6 +59,9 @@ export default async function ProductPage({ params, searchParams }: PageProps<'/
     getSizeGuide(slug),
   ]);
   if (!product) notFound();
+  // For a vendor's product: how long they take to pack it, and what else they sell.
+  const shop = product.vendor && !product.vendor.isHouse ? await getStorefront(product.vendor.slug) : null;
+  const moreFromShop = shop ? shop.products.filter((p) => p.slug !== product.slug).slice(0, 4) : [];
 
   const details = product.details;
   const highlights = details?.highlights ?? [product.tag];
@@ -154,6 +157,8 @@ export default async function ProductPage({ params, searchParams }: PageProps<'/
             {product.vendor && !product.vendor.isHouse && (
               <p className={styles.soldBy}>
                 Sold by <Link href={`/store/${product.vendor.slug}`}>{product.vendor.name}</Link>
+                {shop?.facts?.starSeller && <span className={styles.starSeller}> · ★ Star Seller</span>}
+                {shop?.processingDays ? ` · packs within ${shop.processingDays} working day${shop.processingDays === 1 ? '' : 's'}` : ''}
               </p>
             )}
             <p className={styles.description}>{details?.description ?? product.summary}</p>
@@ -224,6 +229,23 @@ export default async function ProductPage({ params, searchParams }: PageProps<'/
 
       <ProductReviews slug={product.slug} summary={summary} reviews={reviews} page={reviewPage} minRating={minRating} />
       <ProductQuestions slug={product.slug} questions={questions} />
+
+      {shop && moreFromShop.length > 0 && (
+        <section className={`container ${styles.relatedSection}`}>
+          <h2 className={styles.relatedTitle}>
+            More from <Link href={`/store/${shop.slug}`}>{shop.name}</Link>
+          </h2>
+          <div className={styles.relatedGrid}>
+            {moreFromShop.map((r) => (
+              <Link key={r.slug} href={`/products/${r.slug}`} className={styles.relatedCard}>
+                <ProductImage image={r.image} photo={r.photos?.[0]?.url} tint={r.tint} kind={r.kind} alt={r.name} sizes="(max-width: 600px) 50vw, 300px" className={styles.relatedImage} />
+                <strong className={styles.relatedName}>{r.name}</strong>
+                <span className={styles.relatedPrice}>{formatPrice(r.price)}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className={`container ${styles.relatedSection}`}>
         <h2 className={styles.relatedTitle}>You may also like</h2>

@@ -59,6 +59,10 @@
   logo/banner); approved but unpaid stores may prepare products through `vendor_require_approved()`, but nothing is public until
   `vendor_is_live` (approved, paid, not paused). Pausing goes through `vendor_set_paused`. Keep the store-builder columns out of the
   main storefront query's required fields so the site still works before the migration has run.
+- Following stores, seller replies and Star Seller (`docs/STORE_BUILDER.md`): `store_follows` is reached only through `follow_store` /
+  `unfollow_store` / `my_followed_stores` (sellers see a count, never who); sellers answer reviews only through
+  `vendor_reply_to_review` and staff can remove a reply; the Star Seller rules live in `vendor_star_check`, never in the pages. Anything that
+  changes replies must call `updateTag('catalog')`. New shopper data goes into `export_my_data`.
 - Online orders become paid only through `public.confirm_payment`, after the webhook has verified the provider's
   notification. Stock is reserved by `place_order` and released by `release_order_reservation`.
 - Pay on delivery (`payment_method = 'cod'`, cash to the rider, no bank option; see `docs/PAY_ON_DELIVERY.md`): `place_order`

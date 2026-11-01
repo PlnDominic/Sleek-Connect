@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import styles from '@/components/listing/listing.module.css';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SiteHeader } from '@/components/SiteHeader';
+import { FollowedStores } from './FollowedStores';
 import { SavedList } from './SavedList';
 
 export const metadata: Metadata = { title: 'Saved items', robots: { index: false, follow: true } };
@@ -18,6 +19,7 @@ export default function SavedPage() {
           </div>
         </div>
         <div className={`container ${styles.savedMain}`}>
+          <FollowedStores />
           <SavedList />
         </div>
       </main>

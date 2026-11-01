@@ -6,6 +6,8 @@ import { SiteFooter } from '@/components/SiteFooter';
 import { SiteHeader } from '@/components/SiteHeader';
 import { Stars } from '@/components/Stars';
 import { getStorefront, getStoreSlugs } from '@/lib/catalog';
+import { FollowButton } from './FollowButton';
+import { ShareStore } from './ShareStore';
 import { StoreProducts } from './StoreProducts';
 import styles from './store.module.css';
 
@@ -51,13 +53,34 @@ export default async function StorePage({ params }: PageProps<'/store/[slug]'>) 
             )}
             <div>
               <p className={styles.kicker}>{store.isHouse ? 'Our own range' : 'Vendor store'}</p>
-              <h1>{store.name}</h1>
+              <h1>
+                {store.name}
+                {store.facts?.starSeller && (
+                  <span className={styles.badge} title="Delivered 10+ orders, rated 4.7+ and no recent problems">
+                    ★ Star Seller
+                  </span>
+                )}
+              </h1>
               {store.tagline && <p className={styles.tagline}>{store.tagline}</p>}
               {store.rating.count > 0 && (
                 <p className={styles.rating}>
                   <Stars rating={store.rating.average} /> {store.rating.average.toFixed(1)} · {store.rating.count} review{store.rating.count === 1 ? '' : 's'}
                 </p>
               )}
+              {store.facts && (store.facts.ordersDelivered > 0 || store.facts.joinedYear > 0) && !store.isHouse && (
+                <p className={styles.meta}>
+                  {store.facts.ordersDelivered > 0 && (
+                    <span>
+                      {store.facts.ordersDelivered} {store.facts.ordersDelivered === 1 ? 'order' : 'orders'} delivered
+                    </span>
+                  )}
+                  {store.facts.joinedYear > 0 && <span>On Sleek Connect since {store.facts.joinedYear}</span>}
+                </p>
+              )}
+              <div className={styles.actions}>
+                <FollowButton slug={store.slug} name={store.name} followers={store.facts?.followers ?? 0} />
+                <ShareStore name={store.name} />
+              </div>
             </div>
           </div>
         </section>
@@ -118,6 +141,12 @@ export default async function StorePage({ params }: PageProps<'/store/[slug]'>) 
                     <Stars rating={r.rating} />
                     {r.title && <strong>{r.title}</strong>}
                     {r.body && <p>{r.body}</p>}
+                    {r.seller_reply && (
+                      <p className={styles.reply}>
+                        <strong>Reply from {store.name}</strong>
+                        {r.seller_reply}
+                      </p>
+                    )}
                     <small>
                       {r.display_name ?? 'A shopper'} on <Link href={`/products/${r.product_slug}`}>{r.product_name}</Link>
                     </small>

@@ -289,3 +289,50 @@
   font-size: 14px;
   color: var(--c-text-muted);
 }
+
+/* Stores the shopper follows (Saved page) */
+.followed {
+  margin-bottom: 28px;
+}
+
+.followed ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.followed a {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-xl);
+  background: var(--c-canvas);
+}
+
+.followed a > img,
+.followed a > span {
+  grid-row: 1 / span 2;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-lg, 10px);
+  object-fit: cover;
+  background: var(--c-accent);
+  color: var(--c-canvas);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+}
+
+.followed small {
+  color: var(--c-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

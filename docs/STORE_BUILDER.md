@@ -55,3 +55,24 @@ migration yet still shows the store.
 
 Run `supabase/migrations/20261104090000_store_builder.sql` in the Supabase SQL editor (or `npm run db:setup:generate` and run
 `supabase/setup.sql` on a new project). The web app works before and after it: the new pages simply show fewer fields until it runs.
+
+## More from Etsy (`20261105090000_etsy_extras.sql`)
+
+- **Follow a store.** A Follow button on the store page (the shopper's own state is read in the browser, because the page is cached
+  for everyone) and a "Stores you follow" list on the Saved page. `store_follows` has no table access: it goes through
+  `follow_store`, `unfollow_store`, `is_following_store` and `my_followed_stores`. Only open stores can be followed, never your own,
+  up to 200. Sellers see a count only (`vendor_star_status().followers`), never who. Account deletion removes the follows (cascade)
+  and the data export lists them.
+- **Seller replies to reviews.** `/vendor/reviews` lists the published reviews on the seller's products; `vendor_reply_to_review`
+  adds, changes or (with an empty reply) removes a public reply. Replies show on the product page and the store page. Staff can see
+  all replies and remove one (`admin_review_replies`, `admin_remove_review_reply`; Admin → Reviews). The shopper's export includes
+  the reply.
+- **Star Seller.** A badge on the store page and product page for stores with 10+ delivered orders, 5+ reviews averaging 4.7 or better,
+  and no dispute decided against them (or left unanswered past 48 hours) in 90 days. The rules live in `vendor_star_check`; sellers
+  see their progress on the overview (`vendor_star_status`) and the public sees only the badge and counts (`store_facts`).
+- **Store page extras.** Orders delivered and the year joined, Share (the phone's share sheet, or copy the link), and search and sort
+  inside a store once it has more than four products.
+- **Product page.** "Packs within N working days" (from the seller's packing time) and "More from this store".
+
+Not copied, on purpose: buyer-to-seller messages and custom or personalised orders (sellers never see shopper details here; the
+owner handles shopper contact), gift cards, seller-run coupons and sales (prices are the owner's markup), and Etsy Ads.

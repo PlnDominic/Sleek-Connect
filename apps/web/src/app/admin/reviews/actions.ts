@@ -15,3 +15,12 @@ export async function moderateReview(id: string, view: string, _: ActionState, f
   const message = decision === 'publish' ? 'Review published.' : 'Review rejected. The customer will see your reason.';
   redirect(`/admin/reviews?view=${encodeURIComponent(view)}&done=${encodeURIComponent(message)}`);
 }
+
+/** Removes a seller's public reply to a review (the review itself stays). */
+export async function removeReviewReply(id: string, view: string): Promise<ActionState> {
+  const supabase = await createUserSupabase();
+  const { error } = await supabase.rpc('admin_remove_review_reply', { p_review_id: id });
+  if (error) return failed(error);
+  updateTag('catalog');
+  redirect(`/admin/reviews?view=${encodeURIComponent(view)}&done=${encodeURIComponent('Seller reply removed.')}`);
+}

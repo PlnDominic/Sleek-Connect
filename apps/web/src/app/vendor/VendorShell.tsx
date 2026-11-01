@@ -18,6 +18,7 @@ const links: { href: string; label: string; icon: IconName; match: (p: string) =
   { href: '/vendor/earnings', label: 'Earnings', icon: 'card', match: (p) => p === '/vendor/earnings', from: 'approved' },
   { href: '/vendor/reports', label: 'Sales reports', icon: 'layers', match: (p) => p === '/vendor/reports', from: 'live' },
   { href: '/vendor/messages', label: 'Messages', icon: 'chat', match: (p) => p === '/vendor/messages', badge: 'messages', from: 'live' },
+  { href: '/vendor/reviews', label: 'Reviews', icon: 'star', match: (p) => p === '/vendor/reviews', from: 'live' },
   { href: '/vendor/disputes', label: 'Disputes', icon: 'shieldCheck', match: (p) => p === '/vendor/disputes', from: 'live' },
   { href: '/vendor/help', label: 'Help and terms', icon: 'headset', match: (p) => p === '/vendor/help', from: 'approved' },
   { href: '/vendor/store', label: 'Store page', icon: 'store', match: (p) => p === '/vendor/store' },
@@ -30,6 +31,7 @@ const titles = (path: string): [string, string] => {
   if (path === '/vendor/orders') return ['Orders', 'Pack what shoppers have paid for'];
   if (path === '/vendor/earnings') return ['Earnings', 'What you are owed and what we have paid'];
   if (path === '/vendor/reports') return ['Sales reports', 'How your products are selling'];
+  if (path === '/vendor/reviews') return ['Reviews', 'What shoppers say, and your replies'];
   if (path === '/vendor/messages') return ['Messages', 'Talk to the Sleek Connect team'];
   if (path === '/vendor/products/import') return ['Add many products', 'Upload a spreadsheet'];
   if (path === '/vendor/store') return ['Store page', 'Your name, logo, story, policies and sections'];

@@ -487,14 +487,14 @@ isOneToOne: false
                   ]
                 },"product_reviews": {
                   Row: {
-                    "body": string,"created_at": string,"display_name": string,"id": string,"moderated_at": string | null,"moderated_by": string | null,"moderation_note": string | null,"order_id": string | null,"product_id": string,"rating": number,"status": Database["public"]['Enums']["review_status"],"title": string | null,"updated_at": string,"user_id": string
+                    "body": string,"created_at": string,"display_name": string,"id": string,"moderated_at": string | null,"moderated_by": string | null,"moderation_note": string | null,"order_id": string | null,"product_id": string,"rating": number,"seller_reply": string | null,"seller_replied_at": string | null,"status": Database["public"]['Enums']["review_status"],"title": string | null,"updated_at": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "body": string,"created_at"?: string,"display_name": string,"id"?: string,"moderated_at"?: string | null,"moderated_by"?: string | null,"moderation_note"?: string | null,"order_id"?: string | null,"product_id": string,"rating": number,"status"?: Database["public"]['Enums']["review_status"],"title"?: string | null,"updated_at"?: string,"user_id"?: string
+                    "body": string,"created_at"?: string,"display_name": string,"id"?: string,"moderated_at"?: string | null,"moderated_by"?: string | null,"moderation_note"?: string | null,"order_id"?: string | null,"product_id": string,"rating": number,"seller_reply"?: string | null,"seller_replied_at"?: string | null,"status"?: Database["public"]['Enums']["review_status"],"title"?: string | null,"updated_at"?: string,"user_id"?: string
                   }
                   Update: {
-                    "body"?: string,"created_at"?: string,"display_name"?: string,"id"?: string,"moderated_at"?: string | null,"moderated_by"?: string | null,"moderation_note"?: string | null,"order_id"?: string | null,"product_id"?: string,"rating"?: number,"status"?: Database["public"]['Enums']["review_status"],"title"?: string | null,"updated_at"?: string,"user_id"?: string
+                    "body"?: string,"created_at"?: string,"display_name"?: string,"id"?: string,"moderated_at"?: string | null,"moderated_by"?: string | null,"moderation_note"?: string | null,"order_id"?: string | null,"product_id"?: string,"rating"?: number,"seller_reply"?: string | null,"seller_replied_at"?: string | null,"status"?: Database["public"]['Enums']["review_status"],"title"?: string | null,"updated_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -1003,6 +1003,38 @@ isOneToOne: false
                            },
 "vendor_delete_section":
 { Args: { "p_id": string }; Returns: undefined
+                           },
+"follow_store":
+{ Args: { "p_slug": string }; Returns: undefined
+                           },
+"unfollow_store":
+{ Args: { "p_slug": string }; Returns: undefined
+                           },
+"is_following_store":
+{ Args: { "p_slug": string }; Returns: boolean
+                           },
+"my_followed_stores":
+{ Args: never; Returns: Json
+                           },
+"vendor_star_status":
+{ Args: never; Returns: Json
+                           },
+"store_facts":
+{ Args: { "p_slug": string }; Returns: Json
+                           },
+"vendor_reviews":
+{ Args: never; Returns: Json
+                           },
+"vendor_reply_to_review":
+{ Args: { "p_review_id": string,"p_reply": string }; Returns: undefined
+                           },
+"admin_review_replies":
+{ Args: never; Returns: {
+              "review_id": string,"store_name": string,"seller_reply": string,"seller_replied_at": string
+            }[]
+                           },
+"admin_remove_review_reply":
+{ Args: { "p_review_id": string }; Returns: undefined
                            },
 "vendor_name_available":
 { Args: { "p_name": string }; Returns: Json
