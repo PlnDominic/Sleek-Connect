@@ -1,4 +1,5 @@
 import { after } from 'next/server';
+import { captureServerEvent } from '@/lib/analytics';
 import { dispatchNotifications } from '@/lib/notifications/dispatch';
 import { getPaymentProvider, WebhookSignatureError } from '@/lib/payments';
 import { subscriptionReferencePrefix } from '@/lib/payments/subscription';
@@ -68,6 +69,13 @@ export async function POST(request: Request) {
     return withRequestId(Response.json({ error: 'Could not record the payment.', requestId: id }, { status: 500 }), id);
   }
   after(() => dispatchNotifications());
+  after(() =>
+    captureServerEvent(verified.status === 'succeeded' ? 'payment_confirmed' : 'payment_failed', data.order_number, {
+      provider: provider.name,
+      amount_ghs: verified.amountGhs,
+      order_status: data.order_status,
+    }),
+  );
   logger.info('payment_webhook_recorded', { requestId: id, provider: provider.name, orderStatus: data.order_status, paymentStatus: data.payment_status });
   return withRequestId(Response.json({ received: true, orderStatus: data.order_status, paymentStatus: data.payment_status }), id);
 }

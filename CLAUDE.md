@@ -61,6 +61,10 @@
   and cards on Hubtel's hosted checkout, `test` for development; see `docs/HUBTEL.md`). A callback is never trusted on its
   own: Hubtel's has no signature, so its address carries a secret and `verify()` asks Hubtel's status API before
   `confirm_payment` runs. Keep `HUBTEL_API_KEY` server-only.
+- Sentry and PostHog (`docs/SENTRY_POSTHOG.md`) receive only what `lib/telemetry/scrub.ts` lets through: no order tokens
+  (`/orders/<token>` proves ownership), phone numbers, email addresses, cookies or request bodies, and no analytics from
+  `/admin` or `/vendor`. Send named events with labels and numbers only (`lib/analytics-client.ts`, `lib/analytics.ts`);
+  `logger.error` reports to Sentry.
 - The order token must not reach anything staff can read either. Return photos are stored under
   `public.return_photo_folder(token)` (a hash), not the token.
 - Shoppers can export and delete their own data only through `public.export_my_data` and `public.delete_my_account`

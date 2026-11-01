@@ -137,9 +137,11 @@ interface BagProviderProps {
   storage?: () => BagStorage | undefined;
   /** When set, the bag is merged with and saved to the shopper's account. Null when signed out. */
   remote?: BagRemote | null;
+  /** Called after a product is added (for analytics). */
+  onAdd?: (product: Product, sizeId: string | undefined, qty: number) => void;
 }
 
-export function BagProvider({ children, initialItems = [], storage, remote = null }: BagProviderProps) {
+export function BagProvider({ children, initialItems = [], storage, remote = null, onAdd }: BagProviderProps) {
   const [items, setItems] = useState<BagItem[]>(initialItems);
   // Nothing is saved until the stored bag has been read, so it is never overwritten.
   const [restored, setRestored] = useState(!storage);
@@ -149,6 +151,10 @@ export function BagProvider({ children, initialItems = [], storage, remote = nul
   const serverItemsRef = useRef<BagItem[] | null>(null);
   const itemsRef = useRef(items);
   const remoteRef = useRef(remote);
+  const onAddRef = useRef(onAdd);
+  useEffect(() => {
+    onAddRef.current = onAdd;
+  }, [onAdd]);
   useEffect(() => {
     itemsRef.current = items;
     remoteRef.current = remote;
@@ -255,14 +261,16 @@ export function BagProvider({ children, initialItems = [], storage, remote = nul
   const actions = useMemo(() => {
     const matches = (item: BagItem, slug: string, sizeId?: string) => item.slug === slug && item.sizeId === sizeId;
     return {
-      add: (product: Product, sizeId = product.defaultSize, qty = 1) =>
+      add: (product: Product, sizeId = product.defaultSize, qty = 1) => {
+        onAddRef.current?.(product, sizeId, qty);
         setItems((current) => {
           const existing = current.find((i) => matches(i, product.slug, sizeId));
           if (existing) {
             return current.map((i) => (i === existing ? { ...i, qty: clampQty(i.qty + qty) } : i));
           }
           return [...current, bagItemFrom(product, sizeId, qty)];
-        }),
+        });
+      },
       setQty: (slug: string, sizeId: string | undefined, qty: number) =>
         setItems((current) => current.map((i) => (matches(i, slug, sizeId) ? { ...i, qty: clampQty(qty) } : i))),
       remove: (slug: string, sizeId: string | undefined) =>

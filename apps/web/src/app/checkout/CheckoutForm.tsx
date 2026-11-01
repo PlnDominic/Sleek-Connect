@@ -8,6 +8,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { Icon } from '@/components/Icon';
 import { ProductImage } from '@/components/ProductImage';
 import { estimate, quote, type DeliveryConfig } from '@/lib/delivery';
+import { track } from '@/lib/analytics-client';
 import { createBrowserSupabase } from '@/lib/supabase/browser';
 import { placeOrder, type PlaceOrderResult } from './actions';
 import { useOrderStatus, type OrderStatus } from './useOrderStatus';
@@ -184,6 +185,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
     const form = new FormData(event.currentTarget);
     const text = (name: string) => String(form.get(name) ?? '').trim();
     const orderedItems = bag.items;
+    track('checkout_submitted', { payment_method: method, items: orderedItems.reduce((n, i) => n + i.qty, 0) });
 
     startPlacing(async () => {
       const result = await placeOrder({

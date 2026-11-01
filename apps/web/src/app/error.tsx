@@ -1,5 +1,6 @@
 'use client';
 
+import * as Sentry from '@sentry/nextjs';
 import { useEffect } from 'react';
 import Link from 'next/link';
 
@@ -10,6 +11,7 @@ type ErrorBoundaryProps = {
 
 export default function Error({ error, reset }: ErrorBoundaryProps) {
   useEffect(() => {
+    Sentry.captureException(error);
     // One structured line, shaped like the server logs (P0 item 6).
     console.error(
       JSON.stringify({

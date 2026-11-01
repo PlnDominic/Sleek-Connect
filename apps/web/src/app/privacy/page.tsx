@@ -162,6 +162,22 @@ export default async function PrivacyPage() {
       ),
     },
     {
+      id: 'analytics',
+      title: 'Visit statistics and error reports',
+      body: (
+        <>
+          <p>
+            To see which pages are used and to fix faults, we use PostHog (visit statistics) and Sentry (error reports). Both work
+            without cookies or any identifier stored on your device, so they can’t follow you from one visit to the next. They receive
+            the pages visited, the kind of device and browser, an approximate location from your network address, and which store
+            actions were taken (for example adding an item to your bag). They never receive your name, phone number, email address,
+            order links, delivery code or payment details, and we collect nothing from the admin console or vendor pages.
+          </p>
+          <p>We respect the “Do Not Track” setting of your browser.</p>
+        </>
+      ),
+    },
+    {
       id: 'children',
       title: 'Children',
       body: (

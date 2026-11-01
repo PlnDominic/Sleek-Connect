@@ -74,6 +74,7 @@ npx supabase db reset >/dev/null 2>&1; suite "database: launch schema verificati
 npx supabase db reset >/dev/null 2>&1; suite "database: pay on delivery" db-pay-on-delivery.cjs
 suite "email: Gmail sender (Nodemailer)" unit-email.cjs
 suite "payments: Hubtel provider" unit-hubtel.cjs
+suite "privacy: what Sentry and PostHog may receive" unit-telemetry.cjs
 
 if [ "$FAILED" = "0" ]; then echo "== all suites passed"; else echo "== some suites FAILED"; fi
 exit "$FAILED"

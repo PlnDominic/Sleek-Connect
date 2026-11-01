@@ -4,6 +4,7 @@ import { refresh, updateTag } from 'next/cache';
 import { after } from 'next/server';
 import { done, failed, text, type ActionState } from '@/lib/admin/action-state';
 import { flash } from '@/lib/admin/flash';
+import { captureServerEvent } from '@/lib/analytics';
 import { dispatchNotifications } from '@/lib/notifications/dispatch';
 import type { DeliveryFailureReason } from '@/lib/orders';
 import { createUserSupabase } from '@/lib/supabase/server';
@@ -78,6 +79,7 @@ export async function confirmCodOrder(orderId: string, orderNumber: string, _: A
   const { error } = await supabase.rpc('admin_confirm_cod_order', { p_order_id: orderId, p_note: text(form, 'note') || undefined });
   if (error) return failed(error);
   afterStatusChange();
+  after(() => captureServerEvent('cod_confirmed', orderNumber));
   flash(orderPage(orderNumber), 'Order confirmed. It is in the to-pack queue, and the customer has been told.');
 }
 
@@ -101,6 +103,7 @@ export async function markDelivered(orderId: string, orderNumber: string, _: Act
     };
   }
   afterStatusChange();
+  after(() => captureServerEvent('order_delivered', orderNumber, { cash_collected: form.get('cash_collected') === 'on' }));
   flash(orderPage(orderNumber), 'Marked as delivered.');
 }
 

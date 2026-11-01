@@ -1,6 +1,7 @@
 import 'server-only';
 import { formatPrice } from '@sleek/shared';
 import { siteUrl } from '@/lib/site';
+import { captureServerEvent } from '@/lib/analytics';
 import { logger } from '@/lib/observability';
 import { createAdminSupabase } from '@/lib/supabase/admin';
 import { emailProvider, pushProvider, smsProvider, toInternationalPhone, UnregisteredDeviceError } from './providers';
@@ -47,6 +48,14 @@ export async function alertStoreNewOrder(order: {
   // The app asks for a payment prompt more than once per order; alert once (per server instance, best effort).
   if (alertedOrders.has(order.orderNumber)) return;
   alertedOrders.add(order.orderNumber);
+  // The one place every new order passes (website or app, any payment), so it is also where the analytics event is sent.
+  await captureServerEvent('order_placed', order.orderNumber, {
+    total_ghs: order.total,
+    items: order.itemCount,
+    area: order.area,
+    source: order.source,
+    payment: order.payment,
+  });
   const target = storeAlertTarget('order_placed');
   if (!target) return;
   // Whether the database queued an "order received" email for the shopper (it does when they gave an address).

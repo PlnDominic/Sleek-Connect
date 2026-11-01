@@ -1,16 +1,27 @@
+import { withSentryConfig } from '@sentry/nextjs/config';
 import type { NextConfig } from 'next';
 
 // Product photos live in the public product-images bucket of the Supabase project.
 const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL) : null;
 const localSupabase = supabase !== null && ['127.0.0.1', 'localhost'].includes(supabase.hostname);
 const supabaseOrigin = supabase?.origin ?? '';
+// Sentry's browser SDK posts to the host in its DSN (https://<key>@<host>/<project>); that is the one extra place the
+// browser may connect to. PostHog goes through this site (the /ingest rewrite below), so it needs nothing here.
+const sentryOrigin = (() => {
+  try {
+    return process.env.NEXT_PUBLIC_SENTRY_DSN ? `https://${new URL(process.env.NEXT_PUBLIC_SENTRY_DSN).host}` : '';
+  } catch {
+    return '';
+  }
+})();
+const posthogRegion = process.env.NEXT_PUBLIC_POSTHOG_REGION === 'eu' ? 'eu' : 'us';
 const scriptSources = process.env.NODE_ENV === 'development' ? "'self' 'unsafe-inline' 'unsafe-eval'" : "'self' 'unsafe-inline'";
 const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src ${scriptSources}`,
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: ${supabaseOrigin}`,
-  `connect-src 'self' ${supabaseOrigin}`,
+  `connect-src 'self' ${supabaseOrigin} ${sentryOrigin}`.trim(),
   "font-src 'self' data:",
   "base-uri 'self'",
   "form-action 'self'",
@@ -29,6 +40,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // PostHog's endpoints end in a slash (/e/, /decide/), which must reach it as written.
+  skipTrailingSlashRedirect: true,
   cacheComponents: true,
   partialPrefetching: true,
   images: {
@@ -51,6 +64,14 @@ const nextConfig: NextConfig = {
       ...privateRoutes.map((source) => ({ source, headers: [...securityHeaders, ...noindex] })),
     ];
   },
+  // PostHog analytics are sent to this site and forwarded, so the browser only ever talks to us.
+  async rewrites() {
+    return [
+      { source: '/ingest/static/:path*', destination: `https://${posthogRegion}-assets.i.posthog.com/static/:path*` },
+      { source: '/ingest/array/:path*', destination: `https://${posthogRegion}-assets.i.posthog.com/array/:path*` },
+      { source: '/ingest/:path*', destination: `https://${posthogRegion}.i.posthog.com/:path*` },
+    ];
+  },
   async redirects() {
     return [
       // Shop by age opens on toddlers, the band the design shows by default.
@@ -59,4 +80,11 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Source maps are uploaded to Sentry (so errors show the real code) only when SENTRY_AUTH_TOKEN, SENTRY_ORG and
+// SENTRY_PROJECT are set for the build; without them this changes nothing.
+export default withSentryConfig(nextConfig, {
+  silent: true,
+  telemetry: false,
+  widenClientFileUpload: true,
+  sourcemaps: { deleteSourcemapsAfterUpload: true },
+});

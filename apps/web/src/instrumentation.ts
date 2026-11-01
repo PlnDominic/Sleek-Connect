@@ -5,6 +5,7 @@
  * any that are missing (never their values). `onRequestError` records every server-side failure — renders,
  * route handlers and server actions — as one structured line with the request id and enough context to find it.
  */
+import * as Sentry from '@sentry/nextjs';
 import type { Instrumentation } from 'next';
 
 const BUILD_PHASE = 'phase-production-build';
@@ -19,6 +20,8 @@ function context() {
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'edge') return;
   if (process.env.NEXT_PHASE === BUILD_PHASE) return;
+  // Error reporting starts first so a failure while starting up is reported too (does nothing without a DSN).
+  await import('./lib/telemetry/sentry-server');
   const { logger } = await import('./lib/observability');
   const { missingEnv } = await import('./lib/env');
   const missing = missingEnv();
@@ -42,7 +45,9 @@ export const onRequestError: Instrumentation.onRequestError = async (error, requ
     typeof error === 'object' && error !== null && 'digest' in error
       ? String((error as { digest?: unknown }).digest)
       : undefined;
-  logger.error('request_error', error, {
+  // Sentry gets this failure from captureRequestError (with the route's details), so the log line is not reported twice.
+  Sentry.captureRequestError(error, request, routeContext);
+  logger.errorLogged('request_error', error, {
     requestId: Array.isArray(header) ? header[0] : header,
     method: request.method,
     path: request.path,

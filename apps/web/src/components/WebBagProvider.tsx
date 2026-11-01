@@ -3,6 +3,7 @@
 import { useEffect, useMemo, type ReactNode } from 'react';
 import { asImageKey } from '@sleek/shared';
 import { BagProvider, useBag, type BagItem, type BagRemote, type BagStorage } from '@sleek/shared/bag';
+import { track } from '@/lib/analytics-client';
 import { photoUrl } from '@/lib/photos';
 import { createBrowserSupabase } from '@/lib/supabase/browser';
 import { useAuth } from './AuthProvider';
@@ -55,6 +56,10 @@ function RefreshOnFocus() {
   return null;
 }
 
+// A product slug and a number: nothing about the shopper.
+const onAdd = (product: { slug: string }, sizeId: string | undefined, qty: number) =>
+  track('added_to_bag', { product: product.slug, has_size: sizeId !== undefined, quantity: qty });
+
 /** The shopping bag: kept in localStorage, and saved to the account once the shopper signs in. */
 export function WebBagProvider({ children }: { children: ReactNode }) {
   const { user, consented } = useAuth();
@@ -62,7 +67,7 @@ export function WebBagProvider({ children }: { children: ReactNode }) {
   const remote = useMemo(() => (userId && consented ? accountBag(userId) : null), [userId, consented]);
 
   return (
-    <BagProvider storage={browserStorage} remote={remote}>
+    <BagProvider storage={browserStorage} remote={remote} onAdd={onAdd}>
       <RefreshOnFocus />
       {children}
     </BagProvider>
