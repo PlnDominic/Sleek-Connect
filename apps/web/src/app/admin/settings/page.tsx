@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import { can, requireStaffPage } from '@/lib/admin/session';
 import { businessDetails } from '@/lib/legal';
 import { ActionForm } from '../ActionForm';
-import { saveSettings, sendTestEmail } from './actions';
+import { saveSettings, sendTestEmail, sendTestServerError } from './actions';
+import { TestBrowserError } from './TestBrowserError';
 import styles from '../admin.module.css';
 
 export const metadata: Metadata = { title: 'Settings' };
@@ -174,6 +175,22 @@ export default async function SettingsPage() {
           </div>
         </section>
       </ActionForm>
+
+      <section className={styles.panel}>
+        <h2>Error reporting</h2>
+        <p className={styles.muted}>
+          Errors on the server and in shoppers’ browsers are sent to Sentry, without personal details. Send one deliberate test error from each side to
+          check it works: it should appear in Sentry → Issues within a minute, with your real file names in the details (not minified code).
+        </p>
+        <ActionForm action={sendTestServerError}>
+          <div className={styles.buttons}>
+            <button type="submit" className={styles.secondary}>
+              Send a server test error
+            </button>
+          </div>
+        </ActionForm>
+        <TestBrowserError />
+      </section>
     </>
   );
 }

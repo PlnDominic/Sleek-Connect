@@ -1,5 +1,6 @@
 'use server';
 
+import * as Sentry from '@sentry/nextjs';
 import { refresh, updateTag } from 'next/cache';
 import { done, failed, text, type ActionState } from '@/lib/admin/action-state';
 import { can, requireStaffPage } from '@/lib/admin/session';
@@ -77,4 +78,26 @@ export async function sendTestEmail(_: ActionState, form: FormData): Promise<Act
     };
   }
   return done(`Test email sent to ${to} through ${provider.name}. Check that inbox (and spam).`);
+}
+
+/**
+ * Sends one deliberate error from the server to Sentry, so an admin can see that error reporting works (and that stack traces show
+ * the real code). Admins only; a few tries a minute. It carries no personal data.
+ */
+export async function sendTestServerError(_: ActionState, form: FormData): Promise<ActionState> {
+  void form;
+  const staff = await requireStaffPage();
+  if (!staff || !can(staff.role, 'settings.edit')) return { ok: false, message: 'Only admins can send a test error.' };
+  if (!process.env.NEXT_PUBLIC_SENTRY_DSN) {
+    return { ok: false, message: 'Error reporting isn’t switched on: NEXT_PUBLIC_SENTRY_DSN is not set on the server. Add it in Vercel and redeploy.' };
+  }
+  if (!rateLimit({ key: `test-error:${staff.email}`, limit: 5, windowMs: 60_000 }).allowed) {
+    return { ok: false, message: 'That is a lot of test errors. Wait a minute and try again.' };
+  }
+  Sentry.captureException(new Error('Test error from the admin console (server). Safe to ignore.'), { tags: { test: 'true', side: 'server' } });
+  // A serverless function can stop right after replying, so wait for the report to leave first.
+  const sent = await Sentry.flush(3000);
+  return sent
+    ? done('Test error sent. It should appear in Sentry → Issues within a minute, titled “Test error from the admin console (server)”.')
+    : { ok: false, message: 'The report could not be sent to Sentry in time. Check the DSN, and that this server can reach sentry.io.' };
 }

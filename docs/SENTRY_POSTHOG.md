@@ -28,7 +28,9 @@ numbers and email addresses. Everything passes through `apps/web/src/lib/telemet
 3. Optional, so errors show your real code instead of minified code: in Sentry create an **organization auth token**, then
    add `SENTRY_AUTH_TOKEN` (Sensitive), `SENTRY_ORG` and `SENTRY_PROJECT` (the slugs) for the **build**. Source maps are
    uploaded during `next build` and removed from the deployment afterwards.
-4. Redeploy. Failures the server logs as errors (a notification that can't be sent, a payment that can't be verified, a page
+4. Redeploy, then in the admin console open **Settings → Error reporting** and press **Send a server test error** and **Send a browser test
+   error**. Each should appear in Sentry → Issues within a minute (open one and check the stack trace shows real file names, which
+   means the source maps work). Failures the server logs as errors (a notification that can't be sent, a payment that can't be verified, a page
    that crashes) now also appear in Sentry → Issues within a minute. If nothing has failed yet, Sentry's project setup page
    shows "waiting for first event" until one does.
 
