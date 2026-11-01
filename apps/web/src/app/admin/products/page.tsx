@@ -4,6 +4,7 @@ import { formatPrice } from '@sleek/shared';
 import Image from 'next/image';
 import { can, requireStaffPage } from '@/lib/admin/session';
 import { photoUrl } from '@/lib/photos';
+import { BulkBar } from './BulkBar';
 import styles from '../admin.module.css';
 
 export const metadata: Metadata = { title: 'Products' };
@@ -11,7 +12,7 @@ export const metadata: Metadata = { title: 'Products' };
 const filters = { all: 'All', live: 'On the store', draft: 'Drafts', incomplete: 'Missing details', recalled: 'Recalled' } as const;
 type Filter = keyof typeof filters;
 
-const PAGE_SIZE = 25;
+const PAGE_SIZES = [25, 100] as const;
 const sorts = { name: 'Product', category: 'Category', price: 'Price', available: 'Available', status: 'Status' } as const;
 type Sort = keyof typeof sorts;
 
@@ -46,9 +47,18 @@ export default async function ProductsPage({ searchParams }: PageProps<'/admin/p
     return dir === 'desc' ? -cmp : cmp;
   });
 
-  const pages = Math.max(1, Math.ceil(products.length / PAGE_SIZE));
+  const pageSize = Number(params.per) === 100 ? 100 : PAGE_SIZES[0];
+  const pages = Math.max(1, Math.ceil(products.length / pageSize));
   const page = Math.min(pages, Math.max(1, Number(params.page) || 1));
-  const shown = products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const shown = products.slice((page - 1) * pageSize, page * pageSize);
+
+  // For the bulk bar: where products can be moved, and the size guides they can be given.
+  const [categoryRows, guideRows] = edit
+    ? await Promise.all([
+        staff.supabase.from('categories').select('id, name').order('name'),
+        staff.supabase.from('size_guides').select('id, title').order('title'),
+      ])
+    : [null, null];
 
   // The main photo of each product on this page.
   const { data: photoRows } = shown.length
@@ -58,7 +68,7 @@ export default async function ProductsPage({ searchParams }: PageProps<'/admin/p
   for (const r of photoRows ?? []) if (!mainPhoto.has(r.product_id)) mainPhoto.set(r.product_id, r.path);
 
   const link = (over: Record<string, string | number>) => {
-    const next = new URLSearchParams({ show: filter, ...(q && { q }), sort, dir, page: String(page), ...Object.fromEntries(Object.entries(over).map(([k, v]) => [k, String(v)])) });
+    const next = new URLSearchParams({ show: filter, ...(q && { q }), sort, dir, page: String(page), per: String(pageSize), ...Object.fromEntries(Object.entries(over).map(([k, v]) => [k, String(v)])) });
     return `/admin/products?${next}`;
   };
   const header = (id: Sort, className?: string) => (
@@ -79,6 +89,7 @@ export default async function ProductsPage({ searchParams }: PageProps<'/admin/p
         </div>
         {edit && (
           <div className={styles.buttons}>
+            <Link href="/admin/products/size-guides" className={styles.secondary}>Size guides</Link>
             <Link href="/admin/products/import" className={styles.secondary}>Import CSV</Link>
             <Link href="/admin/products/new" className={styles.primary}>Add product</Link>
           </div>
@@ -103,6 +114,11 @@ export default async function ProductsPage({ searchParams }: PageProps<'/admin/p
           <table className={styles.table}>
             <thead>
               <tr>
+                {edit && (
+                  <th scope="col">
+                    <span className="visually-hidden">Select</span>
+                  </th>
+                )}
                 {header('name')}
                 {header('category')}
                 {header('price', styles.num)}
@@ -114,6 +130,11 @@ export default async function ProductsPage({ searchParams }: PageProps<'/admin/p
             <tbody>
               {shown.map((p) => (
                 <tr key={p.id}>
+                  {edit && (
+                    <td>
+                      <input type="checkbox" name="ids" value={p.id} form="bulk-products" aria-label={`Select ${p.name}`} />
+                    </td>
+                  )}
                   <td>
                     <div className={styles.productCell}>
                       {mainPhoto.has(p.id) ? (
@@ -146,6 +167,18 @@ export default async function ProductsPage({ searchParams }: PageProps<'/admin/p
           </table>
           {products.length === 0 && <p className={styles.empty}>No products match.</p>}
         </div>
+        {edit && categoryRows && guideRows && (
+          <BulkBar categories={categoryRows.data ?? []} guides={guideRows.data ?? []} />
+        )}
+        <p className={styles.muted}>
+          Per page:{' '}
+          {PAGE_SIZES.map((n, i) => (
+            <span key={n}>
+              {i > 0 && ' · '}
+              {n === pageSize ? <strong>{n}</strong> : <Link href={link({ per: n, page: 1 })}>{n}</Link>}
+            </span>
+          ))}
+        </p>
         {pages > 1 && (
           <nav className={styles.pager} aria-label="Pages">
             {page > 1 ? <Link href={link({ page: page - 1 })}>← Previous</Link> : <span />}

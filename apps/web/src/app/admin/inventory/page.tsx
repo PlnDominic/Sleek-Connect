@@ -40,6 +40,7 @@ export default async function InventoryPage({ searchParams }: PageProps<'/admin/
           <p className={styles.muted}>Available = on hand minus units held for unpaid orders.</p>
         </div>
         <div className={styles.buttons}>
+          <Link href="/admin/inventory/reorder" className={styles.secondary}>Reorder suggestions</Link>
           <Link href="/admin/inventory/movements" className={styles.secondary}>Stock movements</Link>
           <a href="/admin/inventory/export?type=alerts" className={styles.secondary} download>Export alerts (CSV)</a>
         </div>

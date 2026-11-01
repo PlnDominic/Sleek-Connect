@@ -533,14 +533,14 @@ isOneToOne: false
                   ]
                 },"products": {
                   Row: {
-                    "review_previous": Json | null,"review_status": Database["public"]['Enums']["product_review_status"],"review_note": string | null,"publish_requested": boolean,"markup_percent": number,"vendor_id": string,"vendor_price_ghs": number | null,"vendor_was_price_ghs": number | null,"badge": string | null,"brand": string | null,"category_id": string | null,"collection": string | null,"country_of_origin": string | null,"created_at": string,"department": Database["public"]['Enums']["department"],"details": Json | null,"id": string,"image_key": string | null,"ingredients": string | null,"is_published": boolean,"kids_filter": Database["public"]['Enums']["kids_filter"] | null,"kind": Database["public"]['Enums']["product_kind"],"name": string,"period_after_opening": string | null,"price_ghs": number,"recall_reason": string | null,"recalled_at": string | null,"regulatory_reference": string | null,"return_note": string | null,"returnable": boolean,"shades": (string)[],"skin_types": (string)[],"slug": string,"summary": string,"tag": string,"tint": string,"updated_at": string,"warning_label": string | null,"was_price_ghs": number | null
+                    "size_guide_id": string | null,"review_previous": Json | null,"review_status": Database["public"]['Enums']["product_review_status"],"review_note": string | null,"publish_requested": boolean,"markup_percent": number,"vendor_id": string,"vendor_price_ghs": number | null,"vendor_was_price_ghs": number | null,"badge": string | null,"brand": string | null,"category_id": string | null,"collection": string | null,"country_of_origin": string | null,"created_at": string,"department": Database["public"]['Enums']["department"],"details": Json | null,"id": string,"image_key": string | null,"ingredients": string | null,"is_published": boolean,"kids_filter": Database["public"]['Enums']["kids_filter"] | null,"kind": Database["public"]['Enums']["product_kind"],"name": string,"period_after_opening": string | null,"price_ghs": number,"recall_reason": string | null,"recalled_at": string | null,"regulatory_reference": string | null,"return_note": string | null,"returnable": boolean,"shades": (string)[],"skin_types": (string)[],"slug": string,"summary": string,"tag": string,"tint": string,"updated_at": string,"warning_label": string | null,"was_price_ghs": number | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "review_previous"?: Json | null,"review_status"?: Database["public"]['Enums']["product_review_status"],"review_note"?: string | null,"publish_requested"?: boolean,"markup_percent"?: number,"vendor_id"?: string,"vendor_price_ghs"?: number | null,"vendor_was_price_ghs"?: number | null,"badge"?: string | null,"brand"?: string | null,"category_id"?: string | null,"collection"?: string | null,"country_of_origin"?: string | null,"created_at"?: string,"department": Database["public"]['Enums']["department"],"details"?: Json | null,"id"?: string,"image_key"?: string | null,"ingredients"?: string | null,"is_published"?: boolean,"kids_filter"?: Database["public"]['Enums']["kids_filter"] | null,"kind": Database["public"]['Enums']["product_kind"],"name": string,"period_after_opening"?: string | null,"price_ghs": number,"recall_reason"?: string | null,"recalled_at"?: string | null,"regulatory_reference"?: string | null,"return_note"?: string | null,"returnable"?: boolean,"shades"?: (string)[],"skin_types"?: (string)[],"slug": string,"summary": string,"tag": string,"tint": string,"updated_at"?: string,"warning_label"?: string | null,"was_price_ghs"?: number | null
+                    "size_guide_id"?: string | null,"review_previous"?: Json | null,"review_status"?: Database["public"]['Enums']["product_review_status"],"review_note"?: string | null,"publish_requested"?: boolean,"markup_percent"?: number,"vendor_id"?: string,"vendor_price_ghs"?: number | null,"vendor_was_price_ghs"?: number | null,"badge"?: string | null,"brand"?: string | null,"category_id"?: string | null,"collection"?: string | null,"country_of_origin"?: string | null,"created_at"?: string,"department": Database["public"]['Enums']["department"],"details"?: Json | null,"id"?: string,"image_key"?: string | null,"ingredients"?: string | null,"is_published"?: boolean,"kids_filter"?: Database["public"]['Enums']["kids_filter"] | null,"kind": Database["public"]['Enums']["product_kind"],"name": string,"period_after_opening"?: string | null,"price_ghs": number,"recall_reason"?: string | null,"recalled_at"?: string | null,"regulatory_reference"?: string | null,"return_note"?: string | null,"returnable"?: boolean,"shades"?: (string)[],"skin_types"?: (string)[],"slug": string,"summary": string,"tag": string,"tint": string,"updated_at"?: string,"warning_label"?: string | null,"was_price_ghs"?: number | null
                   }
                   Update: {
-                    "review_previous"?: Json | null,"review_status"?: Database["public"]['Enums']["product_review_status"],"review_note"?: string | null,"publish_requested"?: boolean,"markup_percent"?: number,"vendor_id"?: string,"vendor_price_ghs"?: number | null,"vendor_was_price_ghs"?: number | null,"badge"?: string | null,"brand"?: string | null,"category_id"?: string | null,"collection"?: string | null,"country_of_origin"?: string | null,"created_at"?: string,"department"?: Database["public"]['Enums']["department"],"details"?: Json | null,"id"?: string,"image_key"?: string | null,"ingredients"?: string | null,"is_published"?: boolean,"kids_filter"?: Database["public"]['Enums']["kids_filter"] | null,"kind"?: Database["public"]['Enums']["product_kind"],"name"?: string,"period_after_opening"?: string | null,"price_ghs"?: number,"recall_reason"?: string | null,"recalled_at"?: string | null,"regulatory_reference"?: string | null,"return_note"?: string | null,"returnable"?: boolean,"shades"?: (string)[],"skin_types"?: (string)[],"slug"?: string,"summary"?: string,"tag"?: string,"tint"?: string,"updated_at"?: string,"warning_label"?: string | null,"was_price_ghs"?: number | null
+                    "size_guide_id"?: string | null,"review_previous"?: Json | null,"review_status"?: Database["public"]['Enums']["product_review_status"],"review_note"?: string | null,"publish_requested"?: boolean,"markup_percent"?: number,"vendor_id"?: string,"vendor_price_ghs"?: number | null,"vendor_was_price_ghs"?: number | null,"badge"?: string | null,"brand"?: string | null,"category_id"?: string | null,"collection"?: string | null,"country_of_origin"?: string | null,"created_at"?: string,"department"?: Database["public"]['Enums']["department"],"details"?: Json | null,"id"?: string,"image_key"?: string | null,"ingredients"?: string | null,"is_published"?: boolean,"kids_filter"?: Database["public"]['Enums']["kids_filter"] | null,"kind"?: Database["public"]['Enums']["product_kind"],"name"?: string,"period_after_opening"?: string | null,"price_ghs"?: number,"recall_reason"?: string | null,"recalled_at"?: string | null,"regulatory_reference"?: string | null,"return_note"?: string | null,"returnable"?: boolean,"shades"?: (string)[],"skin_types"?: (string)[],"slug"?: string,"summary"?: string,"tag"?: string,"tint"?: string,"updated_at"?: string,"warning_label"?: string | null,"was_price_ghs"?: number | null
                   }
                   Relationships: [
                     {
@@ -712,16 +712,30 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"store_settings": {
+                },"size_guides": {
                   Row: {
-                    "pay_on_delivery_enabled": boolean,"pay_on_delivery_hold_hours": number,"pay_on_delivery_max_ghs": number | null,"vendor_annual_fee_ghs": number,"vendor_grace_days": number,"default_markup_percent": number,"vendor_payment_instructions": string | null,"marketplace_orders_open": boolean,"expiry_alert_days": number,"free_delivery_threshold_ghs": number | null,"id": boolean,"low_stock_threshold": number,"max_delivery_attempts": number,"require_delivery_code": boolean,"reservation_minutes": number,"return_window_days": number,"support_email": string | null,"support_hours": string | null,"support_phone": string | null,"support_whatsapp": string | null
+                    "columns": string[],"created_at": string,"id": string,"intro": string | null,"rows": Json,"title": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "pay_on_delivery_enabled"?: boolean,"pay_on_delivery_hold_hours"?: number,"pay_on_delivery_max_ghs"?: number | null,"vendor_annual_fee_ghs"?: number,"vendor_grace_days"?: number,"default_markup_percent"?: number,"vendor_payment_instructions"?: string | null,"marketplace_orders_open"?: boolean,"expiry_alert_days"?: number,"free_delivery_threshold_ghs"?: number | null,"id"?: boolean,"low_stock_threshold"?: number,"max_delivery_attempts"?: number,"require_delivery_code"?: boolean,"reservation_minutes"?: number,"return_window_days"?: number,"support_email"?: string | null,"support_hours"?: string | null,"support_phone"?: string | null,"support_whatsapp"?: string | null
+                    "columns": string[],"created_at"?: string,"id": string,"intro"?: string | null,"rows": Json,"title": string,"updated_at"?: string
                   }
                   Update: {
-                    "pay_on_delivery_enabled"?: boolean,"pay_on_delivery_hold_hours"?: number,"pay_on_delivery_max_ghs"?: number | null,"vendor_annual_fee_ghs"?: number,"vendor_grace_days"?: number,"default_markup_percent"?: number,"vendor_payment_instructions"?: string | null,"marketplace_orders_open"?: boolean,"expiry_alert_days"?: number,"free_delivery_threshold_ghs"?: number | null,"id"?: boolean,"low_stock_threshold"?: number,"max_delivery_attempts"?: number,"require_delivery_code"?: boolean,"reservation_minutes"?: number,"return_window_days"?: number,"support_email"?: string | null,"support_hours"?: string | null,"support_phone"?: string | null,"support_whatsapp"?: string | null
+                    "columns"?: string[],"created_at"?: string,"id"?: string,"intro"?: string | null,"rows"?: Json,"title"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"store_settings": {
+                  Row: {
+                    "reorder_lead_days": number,"reorder_cover_days": number,"pay_on_delivery_enabled": boolean,"pay_on_delivery_hold_hours": number,"pay_on_delivery_max_ghs": number | null,"vendor_annual_fee_ghs": number,"vendor_grace_days": number,"default_markup_percent": number,"vendor_payment_instructions": string | null,"marketplace_orders_open": boolean,"expiry_alert_days": number,"free_delivery_threshold_ghs": number | null,"id": boolean,"low_stock_threshold": number,"max_delivery_attempts": number,"require_delivery_code": boolean,"reservation_minutes": number,"return_window_days": number,"support_email": string | null,"support_hours": string | null,"support_phone": string | null,"support_whatsapp": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "reorder_lead_days"?: number,"reorder_cover_days"?: number,"pay_on_delivery_enabled"?: boolean,"pay_on_delivery_hold_hours"?: number,"pay_on_delivery_max_ghs"?: number | null,"vendor_annual_fee_ghs"?: number,"vendor_grace_days"?: number,"default_markup_percent"?: number,"vendor_payment_instructions"?: string | null,"marketplace_orders_open"?: boolean,"expiry_alert_days"?: number,"free_delivery_threshold_ghs"?: number | null,"id"?: boolean,"low_stock_threshold"?: number,"max_delivery_attempts"?: number,"require_delivery_code"?: boolean,"reservation_minutes"?: number,"return_window_days"?: number,"support_email"?: string | null,"support_hours"?: string | null,"support_phone"?: string | null,"support_whatsapp"?: string | null
+                  }
+                  Update: {
+                    "reorder_lead_days"?: number,"reorder_cover_days"?: number,"pay_on_delivery_enabled"?: boolean,"pay_on_delivery_hold_hours"?: number,"pay_on_delivery_max_ghs"?: number | null,"vendor_annual_fee_ghs"?: number,"vendor_grace_days"?: number,"default_markup_percent"?: number,"vendor_payment_instructions"?: string | null,"marketplace_orders_open"?: boolean,"expiry_alert_days"?: number,"free_delivery_threshold_ghs"?: number | null,"id"?: boolean,"low_stock_threshold"?: number,"max_delivery_attempts"?: number,"require_delivery_code"?: boolean,"reservation_minutes"?: number,"return_window_days"?: number,"support_email"?: string | null,"support_hours"?: string | null,"support_phone"?: string | null,"support_whatsapp"?: string | null
                   }
                   Relationships: [
                     
@@ -1039,6 +1053,20 @@ isOneToOne: false
                            },
 "admin_arrange_product_images":
 { Args: { "p_photos": Json,"p_product_id": string }; Returns: undefined
+                           },
+"admin_bulk_update_products":
+{ Args: { "p_changes": Json,"p_ids": string[] }; Returns: Json
+                           },
+"admin_delete_size_guide":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"admin_reorder_suggestions":
+{ Args: never; Returns: {
+"available": number,"category_name": string,"daily_rate": number,"days_left": number | null,"is_published": boolean,"next_expiry": string | null,"product_id": string,"product_name": string,"size_code": string,"size_label": string | null,"slug": string,"sold_in_window": number,"suggested_qty": number,"urgency": string,"window_days": number
+}[]
+                           },
+"admin_save_size_guide":
+{ Args: { "p": Json }; Returns: string
                            },
 "admin_cancel_order":
 { Args: { "p_order_id": string,"p_reason": string }; Returns: undefined

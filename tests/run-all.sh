@@ -73,6 +73,7 @@ npx supabase db reset >/dev/null 2>&1; suite "database: mobile app push notifica
 npx supabase db reset >/dev/null 2>&1; suite "database: launch schema verification" db-schema-verify.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: pay on delivery" db-pay-on-delivery.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: the 18+ rule at checkout" db-age-rule.cjs
+npx supabase db reset >/dev/null 2>&1; suite "database: bulk editing, reorder suggestions, size guides" db-catalogue-tools.cjs
 suite "email: Gmail sender (Nodemailer)" unit-email.cjs
 suite "payments: Hubtel provider" unit-hubtel.cjs
 suite "privacy: what Sentry and PostHog may receive" unit-telemetry.cjs

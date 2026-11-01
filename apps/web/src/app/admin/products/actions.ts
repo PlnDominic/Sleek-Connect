@@ -66,6 +66,14 @@ export async function saveProduct(_: ActionState, form: FormData): Promise<Actio
   const { data, error } = await supabase.rpc('admin_save_product', { p: payload as unknown as Json });
   if (error) return failed(error);
   const result = data as unknown as SaveResult;
+  // The size guide is kept apart from the product's other details. A database without size guides yet just ignores it.
+  if (form.has('size_guide_id') && text(form, 'size_guide_id') !== text(form, 'size_guide_before')) {
+    const { error: guideError } = await supabase.rpc('admin_bulk_update_products', {
+      p_ids: [result.id],
+      p_changes: { size_guide_id: text(form, 'size_guide_id') || null },
+    });
+    if (guideError) console.error('size guide not saved', guideError.message);
+  }
   updateTag('catalog');
   const what = payload.id ? 'Saved' : 'Product created';
   flash(
@@ -190,4 +198,93 @@ export async function removeProductPhoto(photoId: string): Promise<PhotoResult> 
   updateTag('catalog');
   refresh();
   return { ok: true, message: 'Photo removed.' };
+}
+
+/**
+ * Changes the products ticked on the products page, all in one go: show or hide, prices, a sale, category, skin types or
+ * size guide. The database applies it product by product and says which it skipped and why.
+ */
+export async function bulkUpdateProducts(_: ActionState, form: FormData): Promise<ActionState> {
+  const ids = form.getAll('ids').map(String).filter(Boolean);
+  if (ids.length === 0) return { ok: false, message: 'Tick the products to change first.' };
+  const action = text(form, 'action');
+  const changes: Record<string, Json> = {};
+  const number = (name: string) => Number(text(form, name).replace(/,/g, ''));
+
+  switch (action) {
+    case 'publish':
+      changes.published = true;
+      break;
+    case 'unpublish':
+      changes.published = false;
+      break;
+    case 'price': {
+      const value = number('price_value');
+      if (!text(form, 'price_value') || Number.isNaN(value)) return { ok: false, message: 'Enter the price change as a number.' };
+      changes.price = { mode: text(form, 'price_mode') || 'percent', value };
+      break;
+    }
+    case 'sale': {
+      const value = number('sale_percent');
+      if (!text(form, 'sale_percent') || Number.isNaN(value)) return { ok: false, message: 'Enter how many percent to take off.' };
+      changes.price = { mode: 'sale_percent', value };
+      break;
+    }
+    case 'end_sale':
+      changes.price = { mode: 'end_sale' };
+      break;
+    case 'category':
+      if (!text(form, 'category_id')) return { ok: false, message: 'Choose a category.' };
+      changes.category_id = text(form, 'category_id');
+      break;
+    case 'skin_types':
+      changes.skin_types = { mode: text(form, 'skin_mode') || 'add', values: lines(text(form, 'skin_values')) };
+      break;
+    case 'size_guide':
+      changes.size_guide_id = text(form, 'size_guide_id') || null;
+      break;
+    default:
+      return { ok: false, message: 'Choose what to change.' };
+  }
+
+  const supabase = await createUserSupabase();
+  const { data, error } = await supabase.rpc('admin_bulk_update_products', { p_ids: ids, p_changes: changes as Json });
+  if (error) return failed(error);
+  const result = data as unknown as { updated: number; skipped: { name: string | null; reason: string }[] };
+  updateTag('catalog');
+  refresh();
+  const updated = `${result.updated} product${result.updated === 1 ? '' : 's'} updated.`;
+  if (result.skipped.length === 0) return done(updated);
+  const shown = result.skipped.slice(0, 3).map((x) => `${x.name ?? 'A product'}: ${x.reason}`).join(' ');
+  const more = result.skipped.length > 3 ? ` And ${result.skipped.length - 3} more.` : '';
+  return { ok: result.updated > 0, message: `${updated} ${result.skipped.length} skipped. ${shown}${more}` };
+}
+
+/** Parses the size guide editor's table text: the first line is the headings, then one line per row, cells split by "|". */
+function parseGuideTable(table: string): { columns: string[]; rows: string[][] } {
+  const rows = table.split('\n').map((line) => line.trim()).filter(Boolean).map((line) => line.split('|').map((cell) => cell.trim()));
+  const [columns = [], ...body] = rows;
+  return { columns, rows: body };
+}
+
+export async function saveSizeGuide(_: ActionState, form: FormData): Promise<ActionState> {
+  const { columns, rows } = parseGuideTable(text(form, 'table'));
+  const supabase = await createUserSupabase();
+  const { error } = await supabase.rpc('admin_save_size_guide', {
+    p: { id: text(form, 'id') || undefined, title: text(form, 'title'), intro: text(form, 'intro'), columns, rows } as unknown as Json,
+  });
+  if (error) return failed(error);
+  updateTag('catalog');
+  refresh();
+  return done('Size guide saved.');
+}
+
+export async function deleteSizeGuide(id: string, _: ActionState, form: FormData): Promise<ActionState> {
+  void form;
+  const supabase = await createUserSupabase();
+  const { error } = await supabase.rpc('admin_delete_size_guide', { p_id: id });
+  if (error) return failed(error);
+  updateTag('catalog');
+  refresh();
+  return done('Size guide deleted.');
 }

@@ -19,13 +19,16 @@ interface ProductFormProps {
   categories: Option[];
   ageBands: Option[];
   imageKeys: string[];
+  /** The size guides a product can be given, and the one it has now. */
+  sizeGuides?: Option[];
+  sizeGuideId?: string | null;
   problems: string[];
   canEdit: boolean;
 }
 
 const blankSize: SizePayload = { code: '', label: '', price_ghs: '' };
 
-export function ProductForm({ product, categories, ageBands, imageKeys, problems, canEdit }: ProductFormProps) {
+export function ProductForm({ product, categories, ageBands, imageKeys, sizeGuides = [], sizeGuideId, problems, canEdit }: ProductFormProps) {
   const [state, action, pending] = useActionState<ActionState, FormData>(saveProduct, null);
   const [, startTransition] = useTransition();
   // Submit through a transition so a refused save keeps everything that was typed.
@@ -249,6 +252,23 @@ export function ProductForm({ product, categories, ageBands, imageKeys, problems
                 'Shown above “Add to bag”. Leave empty if none.',
               )}
               {field('how_to_use', 'How to use', <textarea name="how_to_use" defaultValue={product?.how_to_use} />)}
+              {sizeGuides.length > 0 &&
+                field(
+                  'size_guide_id',
+                  'Size guide',
+                  <>
+                    <input type="hidden" name="size_guide_before" value={sizeGuideId ?? ''} />
+                    <select name="size_guide_id" defaultValue={sizeGuideId ?? ''}>
+                      <option value="">None</option>
+                      {sizeGuides.map((g) => (
+                        <option key={g.id} value={g.id}>
+                          {g.name}
+                        </option>
+                      ))}
+                    </select>
+                  </>,
+                  'Shows a “Size guide” chart on the product page. Edit the charts under Products → Size guides.',
+                )}
               {field('period_after_opening', 'Use within after opening', <input name="period_after_opening" defaultValue={product?.period_after_opening} placeholder="e.g. 12M" />)}
               {cosmetic && (
                 <div className={styles.row}>

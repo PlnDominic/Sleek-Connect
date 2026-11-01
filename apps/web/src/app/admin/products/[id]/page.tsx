@@ -22,12 +22,15 @@ export default async function EditProductPage({ params, searchParams }: PageProp
   if (!UUID_PATTERN.test(id)) notFound();
   const query = await searchParams;
 
-  const [{ data: row }, { data: problems }, options, { data: photos }] = await Promise.all([
+  const [{ data: row }, { data: problems }, options, { data: photos }, { data: guideRow }] = await Promise.all([
     staff.supabase.from('products').select(productRowColumns).eq('id', id).maybeSingle(),
     staff.supabase.rpc('product_publish_problems', { p_product_id: id }),
     productFormOptions(staff.supabase),
     staff.supabase.from('product_images').select('id, path, alt').eq('product_id', id).order('sort_order').order('created_at'),
+    // Read apart so the page still opens on a database without size guides yet.
+    staff.supabase.from('products').select('size_guide_id').eq('id', id).maybeSingle(),
   ]);
+  const sizeGuideId = guideRow?.size_guide_id ?? null;
   if (!row) notFound();
   const product = row as unknown as ProductRow & { recalled_at: string | null; recall_reason: string | null };
 
@@ -69,6 +72,7 @@ export default async function EditProductPage({ params, searchParams }: PageProp
       />
       <ProductForm
         {...options}
+        sizeGuideId={sizeGuideId}
         product={rowToPayload(product)}
         problems={(problems ?? []).filter((p) => p !== 'recall lifted')}
         canEdit={can(staff.role, 'catalogue.edit')}

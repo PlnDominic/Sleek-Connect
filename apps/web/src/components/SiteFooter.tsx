@@ -9,6 +9,7 @@ const columns = [
     title: 'Shop',
     links: [
       { label: 'Beauty', href: '/shop/beauty' },
+      { label: 'Skin type finder', href: '/skin-finder' },
       { label: 'Baby & Kids', href: '/shop/kids' },
       { label: 'Home & Groceries', href: '/shop/home' },
       { label: 'Fashion & Accessories', href: '/shop/fashion' },

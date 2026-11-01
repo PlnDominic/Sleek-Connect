@@ -112,6 +112,32 @@ export async function getRelatedProducts(excludeSlug: string): Promise<Product[]
   return [...selected.values()].slice(0, 6);
 }
 
+/** A chart of sizes against measurements, shown on a product page. */
+export interface SizeGuide {
+  id: string;
+  title: string;
+  intro: string | null;
+  columns: string[];
+  rows: string[][];
+}
+
+/**
+ * The size guide a product has, or null. Read apart from the product itself, so a store whose database doesn't have size
+ * guides yet (the migration hasn't run) shows no guide instead of failing.
+ */
+export async function getSizeGuide(slug: string): Promise<SizeGuide | null> {
+  'use cache';
+  cacheLife('minutes');
+  cacheTag('catalog');
+
+  const supabase = createSupabase();
+  const { data: product, error } = await supabase.from('products').select('size_guide_id').eq('slug', slug).maybeSingle();
+  if (error || !product?.size_guide_id) return null;
+  const { data: guide } = await supabase.from('size_guides').select('id, title, intro, columns, rows').eq('id', product.size_guide_id).maybeSingle();
+  if (!guide || !Array.isArray(guide.rows)) return null;
+  return { id: guide.id, title: guide.title, intro: guide.intro, columns: guide.columns, rows: (guide.rows as unknown[]).map((r) => (Array.isArray(r) ? r.map(String) : [])) };
+}
+
 export async function listProductSlugs(): Promise<string[]> {
   'use cache';
   cacheLife('minutes');

@@ -492,3 +492,49 @@
   color: var(--c-accent);
   font-weight: 600;
 }
+
+/* Size guide: a chart folded under "Size guide" */
+.sizeGuide {
+  margin: 4px 0 12px;
+  border: 1px solid var(--c-line, #e6e1da);
+  border-radius: 12px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+
+.sizeGuide summary {
+  cursor: pointer;
+  padding: 12px 0;
+  font-weight: 600;
+}
+
+.sizeGuideIntro {
+  margin: 0 0 12px;
+  color: var(--c-text-muted, #5f6368);
+  line-height: 1.5;
+}
+
+.sizeGuideTable {
+  overflow-x: auto;
+  padding-bottom: 14px;
+}
+
+.sizeGuideTable table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+
+.sizeGuideTable th,
+.sizeGuideTable td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--c-line, #e6e1da);
+  text-align: left;
+}
+
+.sizeGuideTable thead th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--c-text-muted, #5f6368);
+}

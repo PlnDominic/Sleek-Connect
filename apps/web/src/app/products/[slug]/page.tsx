@@ -9,10 +9,11 @@ import { SaveButton } from '@/components/SaveButton';
 import { Stars } from '@/components/Stars';
 import { SiteFooter } from '@/components/SiteFooter';
 import { CompactHeader } from '@/components/SiteHeader';
-import { getDeliveryConfig, getProduct, getRelatedProducts, getStoreInfo, listProductSlugs } from '@/lib/catalog';
+import { getDeliveryConfig, getProduct, getRelatedProducts, getSizeGuide, getStoreInfo, listProductSlugs } from '@/lib/catalog';
 import { estimate } from '@/lib/delivery';
 import { getProductQuestions, getProductReviews } from '@/lib/reviews';
 import { defaultShareImage, siteName, siteUrl } from '@/lib/site';
+import { SizeGuideChart } from './SizeGuideChart';
 import { ProductGallery } from './ProductGallery';
 import { ProductInfoTabs } from './ProductInfoTabs';
 import { ProductReviews } from './ProductReviews';
@@ -47,13 +48,14 @@ export default async function ProductPage({ params, searchParams }: PageProps<'/
   const query = await searchParams;
   const reviewPage = Math.max(1, Number(query.reviews) || 1);
   const minRating = Math.min(5, Math.max(0, Number(query.rating) || 0));
-  const [product, related, store, delivery, { summary, reviews }, questions] = await Promise.all([
+  const [product, related, store, delivery, { summary, reviews }, questions, sizeGuide] = await Promise.all([
     getProduct(slug),
     getRelatedProducts(slug),
     getStoreInfo(),
     getDeliveryConfig(),
     getProductReviews(slug, reviewPage, minRating),
     getProductQuestions(slug),
+    getSizeGuide(slug),
   ]);
   if (!product) notFound();
 
@@ -170,6 +172,7 @@ export default async function ProductPage({ params, searchParams }: PageProps<'/
             ))}
           </div>
 
+          {sizeGuide && <SizeGuideChart guide={sizeGuide} />}
           <PurchasePanel product={product} />
           {product.inStock === false && <RestockAlert slug={product.slug} />}
 

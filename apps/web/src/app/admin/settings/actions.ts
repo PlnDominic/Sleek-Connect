@@ -10,7 +10,7 @@ import { rateLimit } from '@/lib/rate-limit';
 import type { Json } from '@/lib/supabase/database.types';
 import { createUserSupabase } from '@/lib/supabase/server';
 
-const numbers = ['return_window_days', 'reservation_minutes', 'pay_on_delivery_hold_hours', 'low_stock_threshold', 'expiry_alert_days', 'max_delivery_attempts'];
+const numbers = ['return_window_days', 'reservation_minutes', 'pay_on_delivery_hold_hours', 'reorder_lead_days', 'reorder_cover_days', 'low_stock_threshold', 'expiry_alert_days', 'max_delivery_attempts'];
 const texts = ['support_phone', 'support_whatsapp', 'support_email', 'support_hours'];
 
 export async function saveSettings(_: ActionState, form: FormData): Promise<ActionState> {

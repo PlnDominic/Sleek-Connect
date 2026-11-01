@@ -1,0 +1,94 @@
+.page {
+  padding-block: 32px 64px;
+}
+
+.lead {
+  max-width: 62ch;
+  color: var(--c-text-muted, #5f6368);
+  line-height: 1.6;
+}
+
+.form {
+  display: grid;
+  gap: 20px;
+  margin-top: 24px;
+  max-width: 760px;
+}
+
+.form fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.form legend {
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.choice {
+  position: relative;
+}
+
+.choice input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  cursor: pointer;
+}
+
+.choice span {
+  display: inline-block;
+  min-height: 44px;
+  padding: 11px 18px;
+  border: 1px solid var(--c-line, #d8d2ca);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 15px;
+}
+
+.choice input:checked + span {
+  border-color: var(--c-ink, #202124);
+  background: var(--c-ink, #202124);
+  color: #fff;
+}
+
+.choice input:focus-visible + span {
+  outline: 2px solid var(--c-accent, #8b5e3c);
+  outline-offset: 2px;
+}
+
+.submit {
+  justify-self: start;
+  min-height: 48px;
+  padding: 12px 28px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--c-ink, #202124);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.results {
+  margin-top: 40px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.empty {
+  color: var(--c-text-muted, #5f6368);
+}

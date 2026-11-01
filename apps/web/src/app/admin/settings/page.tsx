@@ -139,6 +139,18 @@ export default async function SettingsPage() {
               <small>Flag batches expiring within this many days.</small>
             </label>
           </div>
+          <div className={styles.row}>
+            <label className={styles.field}>
+              <span>Supplier lead time (days)</span>
+              <input name="reorder_lead_days" type="number" min={0} max={90} required defaultValue={s.reorder_lead_days} />
+              <small>How long a new order takes to arrive. Used by the reorder suggestions.</small>
+            </label>
+            <label className={styles.field}>
+              <span>Days of sales to cover</span>
+              <input name="reorder_cover_days" type="number" min={1} max={180} required defaultValue={s.reorder_cover_days} />
+              <small>How many days of sales one order should last, after it arrives.</small>
+            </label>
+          </div>
           <div className={styles.buttons}>
             <button type="submit" className={styles.primary}>
               Save settings

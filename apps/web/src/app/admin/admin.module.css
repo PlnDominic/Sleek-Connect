@@ -895,3 +895,14 @@ details.panel > summary {
 .sectionNav {
   background: var(--c-surface);
 }
+
+/* The bulk-change bar under the products table */
+.bulkBar {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--line, #e3e5e8);
+  border-radius: 12px;
+  background: var(--surface-muted, #f7f8fa);
+}
