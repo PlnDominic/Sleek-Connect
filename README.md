@@ -464,6 +464,9 @@ catalogue as the website.
   notifications, and each order status change that sends an SMS or email also sends a push (`PUSH_PROVIDER=expo` on the
   server). Tapping a notification opens the order. Remote push can't be received in Expo Go on Android; use a development
   build. See [docs/MOBILE_RELEASE.md](docs/MOBILE_RELEASE.md) for building, credentials and the store listings.
+- **Legal and privacy:** terms, privacy notice and help match what the store does; guests confirm they are 18+ at checkout;
+  company details come from environment variables. See [docs/LEGAL_AND_PRIVACY.md](docs/LEGAL_AND_PRIVACY.md) (including the
+  questions for a lawyer).
 - **Monitoring and analytics:** Sentry error reports and PostHog visit statistics, both off until their keys are set, with
   order links, phone numbers and emails scrubbed first. See [docs/SENTRY_POSTHOG.md](docs/SENTRY_POSTHOG.md).
 - **Online payment (Hubtel):** Mobile Money and cards on Hubtel's secure checkout page, on the website and in the app, with

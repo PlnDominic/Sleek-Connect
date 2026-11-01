@@ -76,6 +76,7 @@ npx supabase db reset >/dev/null 2>&1; suite "database: the 18+ rule at checkout
 suite "email: Gmail sender (Nodemailer)" unit-email.cjs
 suite "payments: Hubtel provider" unit-hubtel.cjs
 suite "privacy: what Sentry and PostHog may receive" unit-telemetry.cjs
+suite "privacy: no trackers, no cookies of our own" unit-privacy-guard.cjs
 
 if [ "$FAILED" = "0" ]; then echo "== all suites passed"; else echo "== some suites FAILED"; fi
 exit "$FAILED"
