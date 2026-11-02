@@ -1098,9 +1098,9 @@ main.centered .panel {
 
 .sideNav {
   position: sticky;
-  /* Below the sticky site header (about 76px tall), with a little air. */
-  top: 100px;
-  max-height: calc(100vh - 116px);
+  /* Below the sticky site header (two rows, about 110px tall), with a little air. */
+  top: 132px;
+  max-height: calc(100vh - 148px);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -1602,5 +1602,30 @@ main.guestPage {
   .seeDetails {
     width: 100%;
     justify-content: center;
+  }
+}
+
+/* The page padding and the soft grey canvas. `main.` outranks the global .container rule (which would reset the padding),
+   and the grey runs the full width of the screen, not just the container. */
+main.shell,
+main.guestPage,
+main.centered {
+  padding-top: 32px;
+  padding-bottom: 72px;
+  background: #f4f6f9;
+  box-shadow: 0 0 0 100vmax #f4f6f9;
+  clip-path: inset(0 -100vmax);
+}
+
+main.shell {
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+@media (max-width: 900px) {
+  main.shell {
+    padding-top: 16px;
+    padding-left: 16px;
+    padding-right: 16px;
   }
 }
