@@ -16,7 +16,7 @@ interface FollowedStore {
 }
 
 /** The stores the signed-in shopper follows. Shown on the Saved page; nothing is shown to signed-out visitors or when there are none. */
-export function FollowedStores() {
+export function FollowedStores({ emptyText }: { emptyText?: string } = {}) {
   const { user } = useAuth();
   const userId = user?.id;
   const [loaded, setLoaded] = useState<{ userId: string; stores: FollowedStore[] } | null>(null);
@@ -34,7 +34,8 @@ export function FollowedStores() {
     };
   }, [userId]);
 
-  if (!userId || loaded?.userId !== userId || loaded.stores.length === 0) return null;
+  if (!userId || loaded?.userId !== userId) return null;
+  if (loaded.stores.length === 0) return emptyText ? <p className={styles.note}>{emptyText}</p> : null;
   return (
     <section aria-labelledby="followed-stores" className={styles.followed}>
       <h2 id="followed-stores" className={styles.count}>

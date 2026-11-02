@@ -3,8 +3,6 @@ import Link from 'next/link';
 import { connection } from 'next/server';
 import { Suspense } from 'react';
 import { formatPriceOr } from '@sleek/shared';
-import { SiteFooter } from '@/components/SiteFooter';
-import { SiteHeader } from '@/components/SiteHeader';
 import { formatDate, statusShort } from '@/lib/orders';
 import { createUserSupabase } from '@/lib/supabase/server';
 import { TrackingBar } from '@/components/TrackingBar';
@@ -15,23 +13,31 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function OrdersPage() {
+export default function OrdersPage({ searchParams }: PageProps<'/account/orders'>) {
   return (
     <>
-      <SiteHeader />
-      <main className={`container ${styles.main}`}>
+      <div className={styles.page}>
         <h1>Your orders</h1>
         <Suspense fallback={<p className={styles.muted}>Loading your orders…</p>}>
-          <OrderList />
+          <OrderList searchParams={searchParams} />
         </Suspense>
-      </main>
-      <SiteFooter />
+      </div>
     </>
   );
 }
 
-async function OrderList() {
+const tabs = [
+  { id: 'all', label: 'All orders' },
+  { id: 'ongoing', label: 'Ongoing' },
+  { id: 'delivered', label: 'Delivered' },
+  { id: 'cancelled', label: 'Cancelled or returned' },
+] as const;
+const closed = ['cancelled', 'returned', 'delivery_failed'];
+
+async function OrderList({ searchParams }: { searchParams: PageProps<'/account/orders'>['searchParams'] }) {
   await connection();
+  const query = await searchParams;
+  const tab = tabs.find((t) => t.id === query.show)?.id ?? 'all';
   const supabase = await createUserSupabase();
   const {
     data: { user },
@@ -45,10 +51,23 @@ async function OrderList() {
     );
   }
 
-  const { data: orders, error } = await supabase.rpc('my_orders');
+  const { data: all, error } = await supabase.rpc('my_orders');
   if (error) throw error;
+  const orders = all.filter((o) =>
+    tab === 'delivered' ? o.status === 'delivered' : tab === 'cancelled' ? closed.includes(o.status) : tab === 'ongoing' ? o.status !== 'delivered' && !closed.includes(o.status) : true,
+  );
 
-  if (orders.length === 0) {
+  const tabBar = (
+    <nav className={styles.tabs} aria-label="Filter orders">
+      {tabs.map((t) => (
+        <Link key={t.id} href={t.id === 'all' ? '/account/orders' : `/account/orders?show=${t.id}`} aria-current={t.id === tab ? 'page' : undefined}>
+          {t.label}
+        </Link>
+      ))}
+    </nav>
+  );
+
+  if (all.length === 0) {
     return (
       <p className={styles.muted}>
         You haven’t placed any orders with this account yet. <Link href="/">Start shopping</Link>
@@ -56,7 +75,18 @@ async function OrderList() {
     );
   }
 
+  if (orders.length === 0) {
+    return (
+      <>
+        {tabBar}
+        <p className={styles.muted}>No orders in this list.</p>
+      </>
+    );
+  }
+
   return (
+    <>
+    {tabBar}
     <ul className={styles.orders} aria-label="Orders, newest first">
       {orders.map((order) => {
         const count = order.item_count;
@@ -83,5 +113,6 @@ async function OrderList() {
         );
       })}
     </ul>
+    </>
   );
 }

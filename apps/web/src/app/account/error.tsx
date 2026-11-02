@@ -18,7 +18,7 @@ export default function AccountError({ error, reset }: { error: Error & { digest
   }, [error]);
 
   return (
-    <main style={{ margin: '0 auto', maxWidth: 720, padding: '72px 24px', textAlign: 'center' }}>
+    <div style={{ margin: '0 auto', maxWidth: 720, padding: '72px 24px', textAlign: 'center' }}>
       <p style={{ color: '#8b5e3c', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Your account</p>
       <h1>We could not load your account</h1>
       <p style={{ color: '#5f6368', lineHeight: 1.7 }}>Nothing was changed. Try again, or return to the store.</p>
@@ -34,6 +34,6 @@ export default function AccountError({ error, reset }: { error: Error & { digest
           Back to store
         </Link>
       </div>
-    </main>
+    </div>
   );
 }

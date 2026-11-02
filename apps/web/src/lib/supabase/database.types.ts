@@ -1004,6 +1004,9 @@ isOneToOne: false
 "vendor_delete_section":
 { Args: { "p_id": string }; Returns: undefined
                            },
+"my_pending_reviews":
+{ Args: never; Returns: Json
+                           },
 "follow_store":
 { Args: { "p_slug": string }; Returns: undefined
                            },

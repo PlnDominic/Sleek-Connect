@@ -1,6 +1,6 @@
 export default function AccountLoading() {
   return (
-    <main
+    <div
       aria-busy="true"
       aria-live="polite"
       style={{ margin: '0 auto', maxWidth: 720, padding: '72px 24px', textAlign: 'center' }}
@@ -9,6 +9,6 @@ export default function AccountLoading() {
         Your account
       </p>
       <p style={{ color: '#5f6368', marginTop: 20 }}>Loading your account…</p>
-    </main>
+    </div>
   );
 }

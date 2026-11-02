@@ -1080,3 +1080,356 @@ main.centered .panel {
     border-radius: 16px;
   }
 }
+
+/* ==========================================================================================================
+ * The account frame: menu on the left, page on the right (a scrolling row of tabs on phones).
+ * ========================================================================================================== */
+
+.shell {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  align-items: start;
+  gap: 32px;
+  padding-top: 32px;
+  padding-bottom: 72px;
+  background: #f4f6f9;
+  max-width: none;
+}
+
+.sideNav {
+  position: sticky;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 18px 12px;
+  border: 1px solid rgb(11 31 58 / 0.08);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.navGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.navTitle {
+  padding: 0 12px 6px;
+  color: var(--c-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 10px;
+  color: var(--c-text-subtle);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.navLink:hover {
+  background: #f4f6f9;
+  color: var(--c-ink);
+}
+
+.navLink[aria-current='page'] {
+  background: #e7f6f3;
+  color: #0b5d57;
+  font-weight: 650;
+}
+
+.navLink:focus-visible,
+.navLogout:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+.navLogout {
+  min-height: 40px;
+  margin-top: 4px;
+  padding: 0 12px;
+  border: 0;
+  border-top: 1px solid #eef1f5;
+  border-radius: 0 0 10px 10px;
+  background: none;
+  color: #b42318;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.content h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.content .dash,
+.content .orders {
+  max-width: none;
+}
+
+/* Overview cards */
+.overviewGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.infoCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 22px;
+  border: 1px solid rgb(11 31 58 / 0.08);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(11 31 58 / 0.04);
+}
+
+.infoHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eef1f5;
+}
+
+.infoHead h2 {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+.infoHead a {
+  color: var(--c-accent);
+  font-size: 13.5px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.infoHead a:hover {
+  text-decoration: underline;
+}
+
+.infoBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+
+.infoBody strong {
+  font-size: 15.5px;
+}
+
+.infoBody span {
+  color: var(--c-text-muted);
+}
+
+.recent {
+  grid-column: 1 / -1;
+}
+
+.emptyCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 28px;
+  border: 1px solid rgb(11 31 58 / 0.08);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.emptyCard strong {
+  font-size: 16px;
+}
+
+.emptyCard a {
+  color: var(--c-accent);
+  font-weight: 650;
+}
+
+.pendingList {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid rgb(11 31 58 / 0.08);
+  border-radius: 16px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.pendingList li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eef1f5;
+}
+
+.pendingList li:last-child {
+  border-bottom: 0;
+}
+
+.pendingList small {
+  display: block;
+  color: var(--c-text-muted);
+  font-size: 13px;
+}
+
+.pendingList .rate {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 10px;
+  background: #0f766e;
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: #e9edf2;
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.tabs a {
+  padding: 8px 16px;
+  border-radius: 9px;
+  color: var(--c-text-subtle);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.tabs a[aria-current='page'] {
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(11 31 58 / 0.12);
+  color: var(--c-ink);
+}
+
+@media (max-width: 900px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    padding-top: 16px;
+  }
+
+  .sideNav {
+    position: static;
+    flex-direction: row;
+    gap: 6px;
+    padding: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .navGroup {
+    flex-direction: row;
+    gap: 4px;
+  }
+
+  .navTitle {
+    display: none;
+  }
+
+  .navLink {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  .navLogout {
+    flex: none;
+    margin: 0;
+    border: 0;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 640px) {
+  .overviewGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .content h1 {
+    font-size: 22px;
+  }
+}
+
+.recentOrders {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recentOrders li {
+  border-bottom: 1px solid #eef1f5;
+}
+
+.recentOrders li:last-child {
+  border-bottom: 0;
+}
+
+.recentOrders a {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 12px 0;
+  color: var(--c-ink);
+  text-decoration: none;
+}
+
+.recentOrders a > span:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recentOrders a:hover strong:first-child {
+  text-decoration: underline;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}

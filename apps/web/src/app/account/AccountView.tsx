@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { useBag } from '@sleek/shared/bag';
 import { useAuth } from '@/components/AuthProvider';
+import { AccountSummary } from './AccountSummary';
 import styles from './account.module.css';
 
 /** Where to go after signing in: a same-site path only. */
@@ -19,7 +20,7 @@ function normalizeGhanaPhone(value: string): string | null {
   return null;
 }
 
-export function AccountView() {
+export function AccountView({ mode = 'overview' }: { mode?: 'overview' | 'details' }) {
   const params = useSearchParams();
   const next = safeNext(params.get('next'));
   const { user, loading, consented, signInWithGoogle, sendPhoneOtp, verifyPhoneOtp, recordConsent, signOut, signOutEverywhere, updateProfile, updateNotificationPreferences } = useAuth();
@@ -220,24 +221,15 @@ export function AccountView() {
   }
 
   const initial = (name ?? user.email ?? '?').trim().charAt(0).toUpperCase();
-  const tiles: { href: string; title: string; text: string }[] = [
-    { href: '/account/orders', title: 'Your orders', text: 'Track and review past orders' },
-    { href: '/account/addresses', title: 'Your addresses', text: 'Delivery addresses you have saved' },
-    { href: '/account/payment-methods', title: 'Mobile Money numbers', text: 'The numbers you pay with' },
-    { href: '/saved', title: 'Saved items', text: 'Products you want to come back to' },
-    { href: '/bag', title: 'Your bag', text: count > 0 ? `${count} ${count === 1 ? 'item' : 'items'} waiting` : 'Nothing in your bag yet' },
-    { href: '/account/privacy', title: 'Privacy and your data', text: 'Download or delete your data' },
-  ];
-
   return (
     <div className={styles.dash} role="region" aria-labelledby="signed-in-title">
-      <header className={styles.dashHead}>
+      {mode === 'overview' && <header className={styles.dashHead}>
         <span className={styles.avatar} aria-hidden="true">{initial}</span>
         <div className={styles.dashWho}>
           <h2 id="signed-in-title">{name ? `Hello, ${name}` : 'Signed in'}</h2>
           {user.email && <p className={styles.muted}>{user.email}</p>}
         </div>
-      </header>
+      </header>}
 
       {!consented && (
         <div className={styles.confirm}>
@@ -255,20 +247,11 @@ export function AccountView() {
         </div>
       )}
 
-      <nav className={styles.tiles} aria-label="Account">
-        {tiles.map((tile) => (
-          <Link key={tile.href} href={tile.href} className={styles.tile}>
-            <strong>{tile.title}</strong>
-            <span>{tile.text}</span>
-          </Link>
-        ))}
-      </nav>
+      {mode === 'overview' && <AccountSummary name={name} email={user.email ?? ''} userId={user.id} marketingSms={Boolean(user.user_metadata.marketing_sms_opted_in)} marketingEmail={Boolean(user.user_metadata.marketing_email_opted_in)} bagCount={count} />}
 
-      {consented && (
-        <p className={styles.saved}>Your bag is saved to this account, so it follows you to any device.</p>
-      )}
+      {mode === 'overview' && consented && <p className={styles.saved}>Your bag is saved to this account, so it follows you to any device.</p>}
 
-      <div className={styles.dashGrid}>
+      {mode === 'details' && <><div className={styles.dashGrid}>
         <form className={styles.card} onSubmit={saveProfile}>
           <h3>Profile</h3>
           <label className={styles.field}>
@@ -334,7 +317,7 @@ export function AccountView() {
             Sign out everywhere
           </button>
         </div>
-      </section>
+      </section></>}
 
       {error && (
         <p role="alert" className={styles.error}>

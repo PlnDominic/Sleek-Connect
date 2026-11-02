@@ -2,8 +2,6 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { connection } from 'next/server';
 import { Suspense } from 'react';
-import { SiteFooter } from '@/components/SiteFooter';
-import { SiteHeader } from '@/components/SiteHeader';
 import { getDeliveryConfig } from '@/lib/catalog';
 import { createUserSupabase } from '@/lib/supabase/server';
 import { AddressCard } from './AddressCard';
@@ -15,17 +13,12 @@ export const metadata: Metadata = { title: 'Your addresses', robots: { index: fa
 export default function AddressesPage() {
   return (
     <>
-      <SiteHeader />
-      <main className={`container ${styles.main}`}>
-        <p className={styles.muted}>
-          <Link href="/account">Account</Link>
-        </p>
+      <div className={styles.page}>
         <h1>Your addresses</h1>
         <Suspense fallback={<p className={styles.muted}>Loading your addresses…</p>}>
           <Addresses />
         </Suspense>
-      </main>
-      <SiteFooter />
+      </div>
     </>
   );
 }

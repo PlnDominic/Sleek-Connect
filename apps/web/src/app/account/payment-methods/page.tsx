@@ -2,8 +2,6 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { connection } from 'next/server';
 import { Suspense } from 'react';
-import { SiteFooter } from '@/components/SiteFooter';
-import { SiteHeader } from '@/components/SiteHeader';
 import { createUserSupabase } from '@/lib/supabase/server';
 import styles from '../addresses/addresses.module.css';
 import { MethodCard } from './MethodCard';
@@ -14,17 +12,12 @@ export const metadata: Metadata = { title: 'Your Mobile Money numbers', robots: 
 export default function PaymentMethodsPage() {
   return (
     <>
-      <SiteHeader />
-      <main className={`container ${styles.main}`}>
-        <p className={styles.muted}>
-          <Link href="/account">Account</Link>
-        </p>
+      <div className={styles.page}>
         <h1>Your Mobile Money numbers</h1>
         <Suspense fallback={<p className={styles.muted}>Loading your numbers…</p>}>
           <Methods />
         </Suspense>
-      </main>
-      <SiteFooter />
+      </div>
     </>
   );
 }

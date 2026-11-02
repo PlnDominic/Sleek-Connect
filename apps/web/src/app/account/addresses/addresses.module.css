@@ -161,3 +161,10 @@
   color: var(--c-accent-deep);
   font-size: 14px;
 }
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 860px;
+}

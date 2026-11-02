@@ -105,6 +105,10 @@ const product = () => ({
   assert((await errOf(kofi.rpc('vendor_star_status')))?.message.includes('vendor'), 'only sellers have a Star Seller status');
   assert((await errOf(anon.rpc('vendor_star_check', { p_vendor_id: vendorId }))) !== null, 'the check itself is not callable from outside');
 
+  // --- Pending reviews (account page) -------------------------------------------------------------
+  assert((await errOf(anon.rpc('my_pending_reviews')))?.code !== undefined, 'guests have no pending reviews list');
+  assert((await kofi.rpc('my_pending_reviews')).data.length === 0, 'a shopper with no delivered orders has nothing to review');
+
   console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll Etsy extras checks passed');
   process.exit(failures ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(1); });

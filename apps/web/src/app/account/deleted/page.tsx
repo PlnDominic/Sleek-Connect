@@ -1,7 +1,5 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { SiteFooter } from '@/components/SiteFooter';
-import { SiteHeader } from '@/components/SiteHeader';
 import styles from '../addresses/addresses.module.css';
 
 export const metadata: Metadata = { title: 'Account deleted', robots: { index: false, follow: false } };
@@ -9,8 +7,7 @@ export const metadata: Metadata = { title: 'Account deleted', robots: { index: f
 export default function AccountDeletedPage() {
   return (
     <>
-      <SiteHeader />
-      <main className={`container ${styles.main}`}>
+      <div className={styles.page}>
         <h1>Your account has been deleted</h1>
         <p className={styles.muted}>
           Your sign-in and saved details are gone, and your name, phone number and address have been removed from your past
@@ -19,8 +16,7 @@ export default function AccountDeletedPage() {
         <p>
           <Link href="/shop">Continue shopping</Link>
         </p>
-      </main>
-      <SiteFooter />
+      </div>
     </>
   );
 }

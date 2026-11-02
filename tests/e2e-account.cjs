@@ -81,13 +81,15 @@ async function sessionCookies(email, password) {
   await pa.getByRole('button', { name: 'Add to bag' }).click();
   await go(pa, BASE + '/account');
   await pa.getByRole('heading', { name: 'Hello, Esi Mensah' }).waitFor();
-  assert(await pa.getByText(email, { exact: true }).isVisible(), 'account shows the signed-in email');
+  assert(await pa.getByText(email, { exact: true }).first().isVisible(), 'account shows the signed-in email');
   const confirm = pa.getByRole('button', { name: 'Confirm' });
   assert(await confirm.isDisabled(), 'confirm disabled until consent ticked');
   assert(savedBag(userId) === '', 'nothing saved to the account before consent');
   await pa.getByLabel(/18 or older/).check();
   await confirm.click();
   await pa.getByText('Your bag is saved to this account').waitFor();
+  assert(await pa.getByRole('link', { name: 'Pending reviews' }).isVisible() && await pa.getByRole('link', { name: 'Address book' }).first().isVisible(), 'the account has a menu on the left, like a marketplace');
+  assert(await pa.getByRole('heading', { name: 'Recent orders' }).isVisible(), 'the overview shows recent orders');
   assert(sql(`select (confirmed_adult_at is not null and accepted_terms_at is not null)::text from public.profiles where id = '${userId}'`) === 'true', 'consent recorded in profiles');
   assert(await until(() => savedBag(userId) === 'vitamin-c-brightening-serum:30x1'), `device bag uploaded after consent (${savedBag(userId)})`);
   await pa.screenshot({ path: OUT + '/account-signed-in.png' });
