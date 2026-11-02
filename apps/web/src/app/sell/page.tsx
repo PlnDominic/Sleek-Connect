@@ -44,8 +44,9 @@ export default async function SellPage() {
             </div>
           ))}
           <div className={`${styles.card} ${styles.priceCard}`}>
-            <span>Yearly fee</span>
-            <strong>{formatPrice(terms.annualFee)}</strong>
+            <span>Open your store for</span>
+            <strong>GH₵{(terms.annualFee / 365).toFixed(2)} a day</strong>
+            <span>Billed once a year: {formatPrice(terms.annualFee)}</span>
           </div>
           <details id="terms" className={`${styles.card} ${styles.termsCard}`}>
             <summary>Vendor terms</summary>

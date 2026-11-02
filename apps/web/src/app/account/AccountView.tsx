@@ -4,9 +4,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { useBag } from '@sleek/shared/bag';
-import type { IconName } from '@sleek/shared';
 import { useAuth } from '@/components/AuthProvider';
-import { Icon } from '@/components/Icon';
 import styles from './account.module.css';
 
 /** Where to go after signing in: a same-site path only. */
@@ -222,13 +220,13 @@ export function AccountView() {
   }
 
   const initial = (name ?? user.email ?? '?').trim().charAt(0).toUpperCase();
-  const tiles: { href: string; title: string; text: string; icon: IconName }[] = [
-    { href: '/account/orders', title: 'Your orders', text: 'Track and review past orders', icon: 'truck' },
-    { href: '/account/addresses', title: 'Your addresses', text: 'Delivery addresses you have saved', icon: 'pin' },
-    { href: '/account/payment-methods', title: 'Mobile Money numbers', text: 'The numbers you pay with', icon: 'card' },
-    { href: '/saved', title: 'Saved items', text: 'Products you want to come back to', icon: 'heart' },
-    { href: '/bag', title: 'Your bag', text: count > 0 ? `${count} ${count === 1 ? 'item' : 'items'} waiting` : 'Nothing in your bag yet', icon: 'bag' },
-    { href: '/account/privacy', title: 'Privacy and your data', text: 'Download or delete your data', icon: 'lock' },
+  const tiles: { href: string; title: string; text: string }[] = [
+    { href: '/account/orders', title: 'Your orders', text: 'Track and review past orders' },
+    { href: '/account/addresses', title: 'Your addresses', text: 'Delivery addresses you have saved' },
+    { href: '/account/payment-methods', title: 'Mobile Money numbers', text: 'The numbers you pay with' },
+    { href: '/saved', title: 'Saved items', text: 'Products you want to come back to' },
+    { href: '/bag', title: 'Your bag', text: count > 0 ? `${count} ${count === 1 ? 'item' : 'items'} waiting` : 'Nothing in your bag yet' },
+    { href: '/account/privacy', title: 'Privacy and your data', text: 'Download or delete your data' },
   ];
 
   return (
@@ -260,9 +258,6 @@ export function AccountView() {
       <nav className={styles.tiles} aria-label="Account">
         {tiles.map((tile) => (
           <Link key={tile.href} href={tile.href} className={styles.tile}>
-            <span className={styles.tileIcon} aria-hidden="true">
-              <Icon name={tile.icon} size={18} strokeWidth={1.9} />
-            </span>
             <strong>{tile.title}</strong>
             <span>{tile.text}</span>
           </Link>

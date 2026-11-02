@@ -2,10 +2,12 @@ import Link from 'next/link';
 import { formatPrice } from '@sleek/shared';
 import { momoNetworks } from '@sleek/shared';
 import { Icon } from '@/components/Icon';
+import { getVendorTerms } from '@/lib/catalog';
 import { getPaymentProvider } from '@/lib/payments';
 import { getStoreSetup, getVendorSession, type VendorProduct } from '@/lib/vendor';
 import { payOnline, setStock } from './actions';
 import { vendorTermsVersion } from '@/lib/vendor-terms';
+import { dailyFee } from '@/lib/subscription-price';
 import { Onboarding } from './Onboarding';
 import { SetupChecklist } from './SetupChecklist';
 import { StarSellerPanel, type StarStatus } from './StarSellerPanel';
@@ -23,7 +25,7 @@ const reviewLabels = {
 } as const;
 
 /** Asks for a Mobile Money number and sends the prompt for the yearly fee. */
-function PayOnline() {
+function PayOnline({ amount }: { amount: string }) {
   return (
     <VendorForm action={payOnline}>
       <div className={styles.row}>
@@ -44,7 +46,7 @@ function PayOnline() {
       </div>
       <div className={styles.buttons}>
         <button type="submit" className={styles.primary}>
-          Pay online
+          Pay {amount} with Hubtel
         </button>
       </div>
     </VendorForm>
@@ -136,7 +138,7 @@ export default async function VendorHome() {
   if (!vendor) {
     return (
       <Onboarding title="Open your store" lead="Five short steps. You can set up your shop while we review your application.">
-        <StoreWizard email={session.email ?? ''} />
+        <StoreWizard email={session.email ?? ''} annualFee={(await getVendorTerms().catch(() => null))?.annualFee} />
       </Onboarding>
     );
   }
@@ -171,9 +173,20 @@ export default async function VendorHome() {
     return (
       <>
       <StatusCard title={renewing ? 'Renew your subscription' : 'Pay to open your store'} mark="GH₵">
-        <p className={styles.statusFee}>{formatPrice(vendor.annual_fee_ghs)}</p>
-        <p className={styles.muted}>per year{renewing ? ` · ended ${dateText(vendor.paid_until!)}` : ''}</p>
-        {online && <PayOnline />}
+        <p className={styles.statusFee}>
+          GH₵{dailyFee(vendor.annual_fee_ghs)}
+          <span> a day</span>
+        </p>
+        <p className={styles.muted}>
+          Billed once a year: {formatPrice(vendor.annual_fee_ghs)}
+          {renewing ? ` · your last year ended ${dateText(vendor.paid_until!)}` : ''}
+        </p>
+        <ul className={styles.feeIncludes}>
+          <li>Your store and every approved product go on sale</li>
+          <li>We take the payment and deliver your orders</li>
+          <li>No listing fees; pay by Mobile Money or card through Hubtel</li>
+        </ul>
+        {online && <PayOnline amount={formatPrice(vendor.annual_fee_ghs)} />}
         {vendor.payment_instructions ? (
           <p className={styles.instructions}>{vendor.payment_instructions}</p>
         ) : (
@@ -246,7 +259,7 @@ export default async function VendorHome() {
       {online && closesSoon !== null && closesSoon <= 30 && (
         <section className={styles.panel}>
           <h2>Renew online</h2>
-          <PayOnline />
+          <PayOnline amount={formatPrice(vendor.annual_fee_ghs)} />
         </section>
       )}
 

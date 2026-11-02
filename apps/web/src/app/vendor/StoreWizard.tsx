@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useActionState, useEffect, useRef, useState, useTransition, type FormEvent } from 'react';
 import type { ActionState } from '@/lib/admin/action-state';
 import { momoNetworks } from '@sleek/shared';
+import { dailyFee } from '@/lib/subscription-price';
 import { createBrowserSupabase } from '@/lib/supabase/browser';
 import { applyForStore, checkStoreName, type NameCheck } from './actions';
 import styles from './vendor.module.css';
@@ -33,7 +34,7 @@ type Availability = { state: 'idle' | 'checking' } | ({ state: 'done' } & NameCh
  * steps live in one form; only the current one is shown, and each is checked before moving on. The ID file goes straight
  * from the browser to a private bucket; only its path is sent with the form.
  */
-export function StoreWizard({ email }: { email: string }) {
+export function StoreWizard({ email, annualFee }: { email: string; annualFee?: number }) {
   const [state, action, pending] = useActionState<ActionState, FormData>(applyForStore, null);
   const [, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
@@ -323,8 +324,9 @@ export function StoreWizard({ email }: { email: string }) {
             <dd>{summary.tin}</dd>
           </dl>
           <p className={styles.muted}>
-            After you send this, we review your application. Meanwhile you can set up your store, add products as drafts and write your story. Your store
-            goes live once we approve it and the yearly fee is paid.
+            After you send this, we check your details and call you. Meanwhile you can set up your store, add products as drafts and write
+            your story. Once we approve you, you open your store with Hubtel
+            {annualFee ? ` for GH₵${dailyFee(annualFee)} a day (GH₵${annualFee} billed once a year)` : ' by paying the yearly fee'}. You pay nothing today.
           </p>
           <label className={styles.check}>
             <input type="checkbox" name="terms" required />

@@ -649,15 +649,16 @@ main.centered .panel {
 .tile {
   position: relative;
   gap: 4px;
-  padding: 18px 20px;
+  padding: 18px 44px 18px 20px;
   border-radius: 16px;
 }
 
 .tile::after {
   content: '→';
   position: absolute;
-  top: 18px;
+  top: 50%;
   right: 18px;
+  transform: translateY(-50%);
   color: #c3ccd9;
   font-size: 16px;
   transition:
@@ -671,9 +672,324 @@ main.centered .panel {
   color: var(--c-ink);
 }
 
+
 .tile:hover::after {
   color: #0f766e;
-  transform: translateX(2px);
+  transform: translate(2px, -50%);
+}
+
+.tile strong {
+  font-size: 15px;
+}
+
+.tile span {
+  color: var(--c-text-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.dashGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-xl);
+  background: var(--c-canvas);
+}
+
+.card h3 {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.card .primary {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+.sessionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--c-line);
+}
+
+.sessionRow .muted {
+  max-width: 52ch;
+}
+
+.sessionRow .secondary {
+  flex: none;
+}
+
+@media (max-width: 760px) {
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .tile {
+    padding: 14px;
+  }
+
+  .dashHead {
+    padding: 18px;
+  }
+
+  .sessionRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sessionRow .secondary {
+    align-self: stretch;
+  }
+}
+
+.orderRow {
+  flex-wrap: wrap;
+}
+
+.orderTrack {
+  flex: 1 0 100%;
+  max-width: 360px;
+}
+
+/* ==========================================================================================================
+ * Account refresh: a soft canvas, white rounded cards, modern inputs and buttons, tiles with icons.
+ * Flat colours only.
+ * ========================================================================================================== */
+
+main.centered {
+  background: #f4f6f9;
+  max-width: none;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.main h1 {
+  margin-bottom: 20px;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.panel,
+.dashHead,
+.card,
+.tile {
+  border: 1px solid rgb(11 31 58 / 0.08);
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(11 31 58 / 0.04);
+}
+
+.panel {
+  gap: 18px;
+  padding: 32px;
+  border-radius: 20px;
+}
+
+main.centered .panel {
+  max-width: 460px;
+}
+
+.panel h2 {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.field {
+  gap: 7px;
+  font-size: 13px;
+}
+
+.input {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid #d5dce6;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgb(11 31 58 / 0.04);
+  font-size: 15px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.input:hover {
+  border-color: #b6c1cf;
+}
+
+.input:focus-visible {
+  outline: none;
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 4px rgb(15 118 110 / 0.14);
+}
+
+.google,
+.primary,
+.secondary {
+  height: 48px;
+  border-radius: 10px;
+  font-size: 14.5px;
+  font-weight: 650;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.primary {
+  background: #0f766e;
+}
+
+.primary:hover:not(:disabled) {
+  background: #0b5d57;
+}
+
+.google,
+.secondary {
+  border: 1px solid #d5dce6;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(11 31 58 / 0.05);
+}
+
+.google:hover:not(:disabled),
+.secondary:hover:not(:disabled) {
+  border-color: #b6c1cf;
+  background: #f8fafc;
+}
+
+.secondary {
+  height: 42px;
+}
+
+.consent {
+  padding: 14px 16px;
+  border: 1px solid #e4e9f0;
+  border-radius: 12px;
+  background: #fafbfc;
+  font-size: 13.5px;
+}
+
+.consent a {
+  color: var(--c-accent);
+  font-weight: 600;
+}
+
+.divider {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.textButton {
+  color: var(--c-accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.textButton:hover {
+  text-decoration: underline;
+}
+
+.error {
+  padding: 12px 14px;
+  border: 1px solid #f6d0cb;
+  border-radius: 10px;
+  background: #fef6f5;
+  color: #912018;
+  font-weight: 500;
+}
+
+.saved {
+  border: 1px solid #b9e1da;
+  border-radius: 10px;
+  background: #f0faf8;
+  color: #0b4f49;
+  font-size: 14px;
+}
+
+.confirm {
+  border: 1px solid #b9e1da;
+  border-radius: 16px;
+  background: #f0faf8;
+}
+
+/* Signed in */
+.dash {
+  gap: 16px;
+}
+
+.dashHead {
+  gap: 18px;
+  padding: 24px 28px;
+  border-radius: 20px;
+}
+
+.avatar {
+  width: 60px;
+  height: 60px;
+  background: #0f766e;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.dashWho h2 {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.tiles {
+  gap: 12px;
+}
+
+.tile {
+  position: relative;
+  gap: 4px;
+  padding: 18px 44px 18px 20px;
+  border-radius: 16px;
+}
+
+.tile::after {
+  content: '→';
+  position: absolute;
+  top: 50%;
+  right: 18px;
+  transform: translateY(-50%);
+  color: #c3ccd9;
+  font-size: 16px;
+  transition:
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.tile:hover {
+  border-color: rgb(15 118 110 / 0.4);
+  box-shadow: 0 10px 28px -18px rgb(11 31 58 / 0.4);
+  color: var(--c-ink);
+}
+
+
+.tile:hover::after {
+  color: #0f766e;
+  transform: translate(2px, -50%);
 }
 
 .tileIcon {

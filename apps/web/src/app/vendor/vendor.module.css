@@ -2575,3 +2575,47 @@
     grid-template-columns: minmax(0, 1fr) 110px;
   }
 }
+
+/* The yearly fee shown as a daily price (the full yearly amount is always stated next to it). */
+.priceTag {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 16px;
+  padding: 12px 16px;
+  border: 1px solid #b9e1da;
+  border-radius: 12px;
+  background: #f0faf8;
+  color: #0b4f49;
+  font-size: 14px;
+}
+
+.priceTag strong {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.statusFee span {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--c-text-muted);
+}
+
+.feeIncludes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 4px 0 8px;
+  padding: 16px 18px 16px 34px;
+  border-radius: 12px;
+  background: #f4f6f9;
+  color: var(--c-text-subtle);
+  font-size: 13.5px;
+  line-height: 1.45;
+  text-align: left;
+}
