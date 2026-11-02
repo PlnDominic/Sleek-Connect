@@ -82,6 +82,24 @@ const errOf = async (promise) => (await promise).error;
   const cleared = await admin.rpc('product_publish_problems', { p_product_id: argan });
   assert(Array.isArray(cleared.data) && cleared.data.length === 0, `the product passes the compliance validator once its fields are complete (${JSON.stringify(cleared.data)})`);
 
+  // Promo codes: they work, and only one can be applied to an order.
+  sql("insert into public.promotions (code, label, kind, value) values ('TEST-TEN', 'Ten percent', 'percent', 10), ('TEST-SHIP', 'Free delivery', 'free_delivery', 0) on conflict (code) do nothing");
+  const promoOrder = await anon.rpc('place_order', {
+    p_customer: { adult_confirmed: true, name: 'Promo Test', phone: '0241234567', area: 'Osu' },
+    p_delivery_option: 'standard',
+    p_payment: { method: 'momo', network: 'mtn', wallet: '0241234567' },
+    p_items: [{ slug: 'argan-hair-oil', quantity: 1 }],
+    p_is_gift: false,
+  });
+  const promoToken = promoOrder.data?.[0]?.order_token;
+  const first = await anon.rpc('apply_order_promotion', { p_order_token: promoToken, p_code: 'test-ship' });
+  assert(!first.error && Number(first.data?.[0]?.delivery_fee_ghs) === 0 && first.data?.[0]?.promo_code === 'TEST-SHIP', `a promo code can be applied to an order (${first.error?.message ?? 'ok'})`);
+  const second = await anon.rpc('apply_order_promotion', { p_order_token: promoToken, p_code: 'TEST-TEN' });
+  assert(second.error?.message.includes('already applied'), 'a second code cannot be stacked on the same order');
+  const again = await anon.rpc('apply_order_promotion', { p_order_token: promoToken, p_code: 'TEST-SHIP' });
+  assert(again.error?.message.includes('already applied'), 'the same code cannot be applied twice');
+  assert(sql("select used_count from public.promotions where code = 'TEST-SHIP'") === '1', 'a code is counted once per order');
+
   console.log(failures ? `\\n${failures} FAILED` : '\\nALL PASSED');
   process.exit(failures ? 1 : 0);
 })().catch((error) => { console.error(error); process.exit(1); });
