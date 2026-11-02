@@ -1954,102 +1954,17 @@
   letter-spacing: -0.02em;
 }
 
-.onboardAside {
-  position: sticky;
-  top: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-  padding: 28px;
-  border: 1px solid rgb(11 31 58 / 0.08);
-  border-radius: 20px;
-  background: #fff;
-}
 
-.onboardAside h2 {
-  font-size: 17px;
-  font-weight: 750;
-  letter-spacing: -0.015em;
-}
 
-.onboardAside a {
-  color: #0f766e;
-  font-weight: 600;
-}
 
-.journey {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
 
-.journey::before {
-  content: '';
-  position: absolute;
-  top: 14px;
-  bottom: 14px;
-  left: 13px;
-  width: 2px;
-  background: #e4e9f0;
-}
 
-.journey li {
-  position: relative;
-  display: flex;
-  gap: 14px;
-}
 
-.journey li > span {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border: 2px solid #fff;
-  border-radius: 50%;
-  background: #e7f6f3;
-  color: #0f766e;
-  font-size: 13px;
-  font-weight: 800;
-}
 
-.journey strong {
-  font-size: 14.5px;
-}
 
-.journey p {
-  margin-top: 2px;
-  color: var(--c-text-muted);
-  font-size: 13.5px;
-  line-height: 1.5;
-}
 
-.needs {
-  padding: 16px 18px;
-  border-radius: 14px;
-  background: #f4f6f9;
-}
 
-.needs h3 {
-  margin-bottom: 8px;
-  font-size: 13.5px;
-  font-weight: 700;
-}
 
-.needs ul {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 0;
-  padding-left: 18px;
-  color: var(--c-text-subtle);
-  font-size: 13.5px;
-  line-height: 1.45;
-}
 
 /* The wizard inside the card: a numbered stepper, a clear heading per step, Back on the left and Continue on the right. */
 .onboardCard .wizardSteps {
@@ -2193,9 +2108,6 @@
     padding-top: 8px;
   }
 
-  .onboardAside {
-    position: static;
-  }
 }
 
 @media (max-width: 640px) {
@@ -2213,10 +2125,6 @@
     border-radius: 16px;
   }
 
-  .onboardAside {
-    padding: 20px;
-    border-radius: 16px;
-  }
 
   .stepHead h2 {
     font-size: 21px;
@@ -2234,4 +2142,12 @@
   .onboardCard > .primary {
     align-self: stretch;
   }
+}
+
+/* Opening a store: one centred column (no side panel). */
+.onboard {
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
 }
