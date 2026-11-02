@@ -31,9 +31,9 @@ export function ImageUploader({ vendorId, kind, url }: { vendorId: string; kind:
   };
 
   return (
-    <div className={styles.uploader}>
+    <div className={styles.uploader} data-kind={kind}>
       {url ? (
-        <Image src={url} alt={`Your store ${kind}`} width={kind === 'logo' ? 80 : 240} height={80} className={styles.preview} />
+        <Image src={url} alt={`Your store ${kind}`} width={kind === 'logo' ? 240 : 1200} height={kind === 'logo' ? 240 : 300} className={styles.preview} />
       ) : (
         <span className={styles.previewEmpty}>No {kind} yet</span>
       )}

@@ -99,7 +99,7 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   await go(ama, BASE + '/vendor/store');
   assert(await ama.getByRole('heading', { name: 'Sections' }).isVisible() && await ama.getByRole('heading', { name: 'Vacation mode' }).isVisible(), 'the store page has sections and vacation mode');
   await ama.getByLabel('Store announcement').fill('Free gift wrap this weekend');
-  await ama.getByLabel('Your story').fill('I started making shea butter in Tamale in 2019.');
+  await ama.getByLabel('About your store').fill('I started making shea butter in Tamale in 2019.');
   await ama.getByRole('button', { name: 'Save store details' }).click();
   await ama.getByText('Store details saved.').waitFor({ timeout: 8000 });
 

@@ -2151,3 +2151,228 @@
   max-width: 720px;
   margin: 0 auto;
 }
+
+/* ==========================================================================================================
+ * Store page editor: branding tiles, settings in labelled groups, a save bar, tidy sections and vacation mode.
+ * ========================================================================================================== */
+
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.editor .panelHead {
+  align-items: flex-start;
+}
+
+.editor .panelHead > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 64ch;
+}
+
+.brandGrid {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 24px;
+}
+
+.brandGrid h3 {
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.uploader .preview,
+.uploader .previewEmpty {
+  width: 100%;
+  border: 1px solid #e4e9f0;
+  border-radius: 14px;
+  background: #f4f6f9;
+  object-fit: cover;
+}
+
+.uploader[data-kind='logo'] .preview,
+.uploader[data-kind='logo'] .previewEmpty {
+  width: 160px;
+  height: 160px;
+}
+
+.uploader[data-kind='banner'] .preview,
+.uploader[data-kind='banner'] .previewEmpty {
+  height: auto;
+  aspect-ratio: 4 / 1;
+  min-height: 120px;
+}
+
+.uploader .previewEmpty {
+  border: 1.5px dashed #c3ccd9;
+  color: var(--c-text-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.uploader .buttons .secondary {
+  min-height: 38px;
+  padding: 0 14px;
+  font-size: 13.5px;
+}
+
+/* Settings: what the group is on the left, its fields on the right. */
+.settingsGroup {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 32px;
+  padding: 24px 0;
+  border-top: 1px solid #eef1f5;
+}
+
+.settingsGroup:first-of-type {
+  padding-top: 8px;
+  border-top: 0;
+}
+
+.settingsIntro h3 {
+  margin-bottom: 4px;
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.settingsIntro p {
+  color: var(--c-text-muted);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.settingsFields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.field input.short {
+  max-width: 140px;
+}
+
+.saveBar {
+  position: sticky;
+  bottom: 16px;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 14px 16px 14px 20px;
+  border: 1px solid #e4e9f0;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 24px -16px rgb(11 31 58 / 0.35);
+}
+
+.saveBar span {
+  color: var(--c-text-muted);
+  font-size: 13.5px;
+}
+
+/* One-line forms (rename a section, add one, pause with a note). */
+.inlineForm > .fieldset {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.inlineForm input:not([type='hidden']) {
+  flex: 1;
+  min-width: 0;
+}
+
+.inlineForm button {
+  flex: none;
+  min-height: 44px;
+}
+
+.sectionList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sectionList li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid #eef1f5;
+  border-radius: 12px;
+  background: #fafbfc;
+}
+
+.sectionList li > form:first-child {
+  flex: 1;
+}
+
+.sectionList input:not([type='hidden']) {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  font-weight: 600;
+}
+
+.sectionList input:not([type='hidden']):hover {
+  border-color: #d5dce6;
+  background: #fff;
+}
+
+.sectionList button {
+  min-height: 38px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+@media (max-width: 860px) {
+  .settingsGroup {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .brandGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .uploader[data-kind='logo'] .preview,
+  .uploader[data-kind='logo'] .previewEmpty {
+    width: 120px;
+    height: 120px;
+  }
+
+  .saveBar {
+    bottom: 8px;
+  }
+
+  .saveBar span {
+    display: none;
+  }
+
+  .saveBar .primary {
+    flex: 1;
+  }
+
+  .inlineForm > .fieldset {
+    flex-wrap: wrap;
+  }
+
+  .sectionList li {
+    flex-wrap: wrap;
+  }
+}
