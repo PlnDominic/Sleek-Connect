@@ -6,6 +6,7 @@ import { getPaymentProvider } from '@/lib/payments';
 import { getStoreSetup, getVendorSession, type VendorProduct } from '@/lib/vendor';
 import { payOnline, setStock } from './actions';
 import { vendorTermsVersion } from '@/lib/vendor-terms';
+import { Onboarding } from './Onboarding';
 import { SetupChecklist } from './SetupChecklist';
 import { StarSellerPanel, type StarStatus } from './StarSellerPanel';
 import { StoreWizard } from './StoreWizard';
@@ -121,24 +122,22 @@ export default async function VendorHome() {
 
   if (session.state === 'signed_out') {
     return (
-      <StatusCard title="Sell on Sleek Connect" mark="→">
-        <p className={styles.muted}>Sign in to open your store.</p>
+      <Onboarding title="Open your store" lead="Reach shoppers across Accra. You make and pack; we take the payment and deliver.">
+        <h2 className={styles.onboardCardTitle}>Sign in to get started</h2>
+        <p className={styles.muted}>Your store is linked to your Sleek Connect account, so you can manage it from any device.</p>
         <Link href="/account?next=/vendor" className={styles.primary}>
           Sign in to continue
         </Link>
-        <Link href="/sell" className={styles.quiet}>
-          How selling works
-        </Link>
-      </StatusCard>
+      </Onboarding>
     );
   }
 
   const { vendor } = session;
   if (!vendor) {
     return (
-      <StatusCard title="Open your store" mark="+">
+      <Onboarding title="Open your store" lead="Five short steps. You can set up your shop while we review your application.">
         <StoreWizard email={session.email ?? ''} />
-      </StatusCard>
+      </Onboarding>
     );
   }
 

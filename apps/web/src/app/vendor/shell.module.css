@@ -24,7 +24,7 @@
   width: 252px;
   height: 100vh;
   overflow-y: auto;
-  background: linear-gradient(180deg, var(--hub-side) 0%, var(--hub-side-2) 100%);
+  background: var(--hub-side);
   color: #fff;
   scrollbar-width: thin;
   scrollbar-color: rgb(255 255 255 / 0.15) transparent;
@@ -55,8 +55,7 @@
   width: 38px;
   height: 38px;
   border-radius: 11px;
-  background: linear-gradient(135deg, #2bb3a6 0%, #0f766e 100%);
-  box-shadow: 0 6px 16px -6px rgb(43 179 166 / 0.7);
+  background: #0f766e;
   color: #fff;
   font-size: 16px;
   font-weight: 800;
@@ -319,9 +318,7 @@
 /* Everything before approval: a simple centred page on the same soft canvas. */
 .plain {
   min-height: 100vh;
-  background:
-    radial-gradient(900px 420px at 50% -120px, rgb(43 179 166 / 0.16), transparent 70%),
-    #f4f6f9;
+  background: #f4f6f9;
   color: var(--c-ink);
 }
 
@@ -332,6 +329,8 @@
   gap: 16px;
   min-height: 68px;
   padding: 0 32px;
+  border-bottom: 1px solid var(--c-line);
+  background: #fff;
 }
 
 .plainBar a:last-child {
@@ -344,9 +343,9 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
-  max-width: 680px;
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 32px 20px 72px;
+  padding: 24px 32px 72px;
 }
 
 @media (max-width: 1000px) {
@@ -389,6 +388,10 @@
 
   .plainBar {
     padding: 0 16px;
+  }
+
+  .plainMain {
+    padding: 20px 16px 56px;
   }
 }
 

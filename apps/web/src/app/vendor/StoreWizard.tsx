@@ -156,12 +156,17 @@ export function StoreWizard({ email }: { email: string }) {
           <li key={s.id} data-current={i === step || undefined} data-done={i < step || undefined}>
             <span aria-hidden="true">{i < step ? '✓' : i + 1}</span>
             <b>{s.title}</b>
+            {i === step && <span className="visually-hidden">(current step)</span>}
           </li>
         ))}
       </ol>
-      <p className={styles.muted} aria-live="polite">
-        Step {step + 1} of {steps.length}: {current.hint}
-      </p>
+      <div className={styles.stepHead} aria-live="polite">
+        <span>
+          Step {step + 1} of {steps.length}
+        </span>
+        <h2>{current.title}</h2>
+        <p>{current.hint}</p>
+      </div>
 
       <fieldset disabled={busy} className={styles.fieldset}>
         <div data-step="name" hidden={current.id !== 'name'} className={styles.fieldset}>
