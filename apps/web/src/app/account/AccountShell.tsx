@@ -37,7 +37,8 @@ export function AccountShell({ children }: { children: ReactNode }) {
   const { user, loading, signOut } = useAuth();
   const pathname = usePathname();
   if (loading || !user) {
-    return <main className={`container ${styles.main} ${styles.centered}`}>{children}</main>;
+    // A guest's saved items (kept on this device) get a normal wide page; the sign-in card is centred.
+    return <main className={`container ${styles.main} ${pathname.startsWith('/saved') ? styles.guestPage : styles.centered}`}>{children}</main>;
   }
   return (
     <main className={`container ${styles.shell}`}>

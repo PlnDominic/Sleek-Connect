@@ -1270,8 +1270,21 @@ main.centered .panel {
 }
 
 .emptyCard a {
-  color: var(--c-accent);
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: 10px;
+  background: #0f766e;
+  color: #fff;
+  font-size: 14px;
   font-weight: 650;
+  text-decoration: none;
+}
+
+.emptyCard a:hover {
+  background: #0b5d57;
+  color: #fff;
 }
 
 .pendingList {
@@ -1435,4 +1448,29 @@ main.centered .panel {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* Saved items for a guest: a wide page on the soft canvas. */
+main.guestPage {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 70vh;
+  padding-top: 32px;
+  padding-bottom: 72px;
+  background: #f4f6f9;
+  max-width: none;
+}
+
+.guestPage h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+/* Saved items and followed stores, in the same card style as the rest of the account. */
+.content :global(h2),
+.guestPage :global(h2) {
+  margin: 0;
 }

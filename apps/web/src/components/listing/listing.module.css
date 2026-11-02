@@ -336,3 +336,25 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Saved items inside the account frame. */
+.followed {
+  margin-bottom: 8px;
+}
+
+.followed a {
+  border: 1px solid rgb(11 31 58 / 0.08);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgb(11 31 58 / 0.04);
+  text-decoration: none;
+}
+
+.followed a:hover {
+  border-color: rgb(15 118 110 / 0.4);
+}
+
+.followed a > img,
+.followed a > span {
+  border-radius: 12px;
+  background: #0f766e;
+}

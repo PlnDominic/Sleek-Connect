@@ -7,6 +7,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { ProductCard } from '@/components/ProductCard';
 import { useWishlist } from '@/components/WishlistProvider';
 import styles from '@/components/listing/listing.module.css';
+import accountStyles from '../account/account.module.css';
 import { loadSavedProducts } from './actions';
 
 export function SavedList() {
@@ -34,8 +35,9 @@ export function SavedList() {
         {loaded === null ? 'Loading…' : `${products.length} saved ${products.length === 1 ? 'product' : 'products'}`}
       </h2>
       {loaded !== null && products.length === 0 && (
-        <div className={styles.empty}>
-          <p>Nothing saved yet. Tap the heart on any product to keep it here.</p>
+        <div className={accountStyles.emptyCard}>
+          <strong>Nothing saved yet</strong>
+          <span className={accountStyles.muted}>Tap the heart on any product to keep it here.</span>
           <Link href="/shop">Browse the shop</Link>
         </div>
       )}

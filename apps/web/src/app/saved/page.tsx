@@ -1,7 +1,5 @@
 import type { Metadata } from 'next';
-import styles from '@/components/listing/listing.module.css';
-import { SiteFooter } from '@/components/SiteFooter';
-import { SiteHeader } from '@/components/SiteHeader';
+import accountStyles from '../account/account.module.css';
 import { FollowedStores } from './FollowedStores';
 import { SavedList } from './SavedList';
 
@@ -10,20 +8,10 @@ export const metadata: Metadata = { title: 'Saved items', robots: { index: false
 export default function SavedPage() {
   return (
     <>
-      <SiteHeader />
-      <main>
-        <div className={styles.hero}>
-          <div className="container">
-            <h1>Saved items</h1>
-            <p>Products you’ve saved for later.</p>
-          </div>
-        </div>
-        <div className={`container ${styles.savedMain}`}>
-          <FollowedStores />
-          <SavedList />
-        </div>
-      </main>
-      <SiteFooter />
+      <h1>Saved items</h1>
+      <p className={accountStyles.muted}>Products you’ve saved for later.</p>
+      <FollowedStores />
+      <SavedList />
     </>
   );
 }
