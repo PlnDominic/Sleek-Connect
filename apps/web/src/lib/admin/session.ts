@@ -55,6 +55,7 @@ const permissions = {
   'orders.cancel': ['operations', 'support'],
   'orders.review': ['operations', 'support'],
   'orders.refund': ['finance', 'operations'],
+  'promotions.manage': ['finance'],
   'riders.edit': ['operations'],
   'content.edit': ['catalogue'],
   'returns.decide': ['support', 'operations'],

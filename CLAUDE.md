@@ -67,6 +67,9 @@
   `unfollow_store` / `my_followed_stores` (sellers see a count, never who); sellers answer reviews only through
   `vendor_reply_to_review` and staff can remove a reply; the Star Seller rules live in `vendor_star_check`, never in the pages. Anything that
   changes replies must call `updateTag('catalog')`. New shopper data goes into `export_my_data`.
+- Promo codes: the `promotions` table has no direct grants. Staff (admin and finance) manage codes only through `admin_list_promotions` /
+  `admin_save_promotion` / `admin_set_promotion_active` / `admin_delete_promotion` (Admin → Promotions, audited); shoppers get a code applied
+  only by `apply_order_promotion`, one code per order.
 - Online orders become paid only through `public.confirm_payment`, after the webhook has verified the provider's
   notification. Stock is reserved by `place_order` and released by `release_order_reservation`.
 - Pay on delivery (`payment_method = 'cod'`, cash to the rider, no bank option; see `docs/PAY_ON_DELIVERY.md`): `place_order`

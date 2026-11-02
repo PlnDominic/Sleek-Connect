@@ -1004,6 +1004,18 @@ isOneToOne: false
 "vendor_delete_section":
 { Args: { "p_id": string }; Returns: undefined
                            },
+"admin_list_promotions":
+{ Args: never; Returns: Json
+                           },
+"admin_save_promotion":
+{ Args: { "p": Json }; Returns: string
+                           },
+"admin_set_promotion_active":
+{ Args: { "p_active": boolean,"p_id": string }; Returns: undefined
+                           },
+"admin_delete_promotion":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
 "my_order_items":
 { Args: never; Returns: Json
                            },
