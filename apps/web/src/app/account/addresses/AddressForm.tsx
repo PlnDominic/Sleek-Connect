@@ -9,7 +9,7 @@ export interface AddressValues {
   label: string | null;
   recipient_name: string;
   phone: string;
-  area: string;
+  area: string | null;
   ghanapost_gps: string | null;
   directions: string | null;
   is_default: boolean;
@@ -48,14 +48,6 @@ export function AddressForm({ address, areas, onDone }: { address?: AddressValue
           <label className={styles.field}>
             Phone number
             <input name="phone" type="tel" required autoComplete="tel" defaultValue={address?.phone} />
-          </label>
-          <label className={styles.field}>
-            Area
-            <select name="area" required defaultValue={address?.area ?? areas[0]}>
-              {areas.map((a) => (
-                <option key={a}>{a}</option>
-              ))}
-            </select>
           </label>
           <label className={styles.field}>
             GhanaPost GPS address <span className={styles.optional}>(optional)</span>

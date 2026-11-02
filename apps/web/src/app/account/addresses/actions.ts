@@ -15,7 +15,8 @@ export async function saveAddress(id: string | null, _: AddressState, form: Form
       label: text(form, 'label'),
       recipient_name: text(form, 'recipient_name'),
       phone: text(form, 'phone'),
-      area: text(form, 'area'),
+      // The area is picked at checkout; it is only sent if a form still has the field.
+      ...(form.has('area') ? { area: text(form, 'area') } : {}),
       ghanapost_gps: text(form, 'ghanapost_gps'),
       directions: text(form, 'directions'),
       is_default: form.get('is_default') === 'on',

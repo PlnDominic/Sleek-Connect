@@ -29,7 +29,7 @@ interface SavedAddress {
   label: string | null;
   recipient_name: string;
   phone: string;
-  area: string;
+  area: string | null;
   ghanapost_gps: string | null;
   directions: string | null;
   is_default: boolean;
@@ -102,7 +102,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
     set('phone', a.phone);
     set('gps', a.ghanapost_gps);
     set('directions', a.directions);
-    if (areas.includes(a.area)) setArea(a.area);
+    if (a.area && areas.includes(a.area)) setArea(a.area);
     setSaveAddress(false);
   };
 

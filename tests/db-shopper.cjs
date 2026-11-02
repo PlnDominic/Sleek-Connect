@@ -46,6 +46,9 @@ const status = (number) => sql(`select status from public.orders where order_num
   const addr = { recipient_name: 'Ama Owusu', phone: '024 123 4567', area: 'Osu', ghanapost_gps: 'ga-123-4567', directions: 'Blue gate', label: 'Home' };
   assert((await errOf(anon.rpc('save_address', { p: addr })))?.code !== undefined, 'guests cannot save addresses');
   assert((await errOf(ama.rpc('save_address', { p: { ...addr, area: 'Kumasi' } })))?.message.includes('areas we deliver'), 'address must be in a delivery area');
+  const noArea = await ama.rpc('save_address', { p: { ...addr, label: 'No area', area: '' } });
+  assert(!noArea.error, 'an address can be saved without an area (it is chosen at checkout)');
+  if (noArea.data) await ama.rpc('delete_address', { p_id: noArea.data });
   assert((await errOf(ama.rpc('save_address', { p: { ...addr, phone: '12' } })))?.message.includes('phone'), 'address needs a valid phone');
   assert((await errOf(ama.rpc('save_address', { p: { ...addr, ghanapost_gps: 'not a code' } })))?.message.includes('GA-123-4567'), 'GhanaPost GPS format checked');
   const { data: home } = await ama.rpc('save_address', { p: addr });

@@ -101,14 +101,14 @@ isOneToOne: false
                   ]
                 },"customer_addresses": {
                   Row: {
-                    "area": string,"created_at": string,"directions": string | null,"ghanapost_gps": string | null,"id": string,"is_default": boolean,"label": string | null,"phone": string,"recipient_name": string,"updated_at": string,"user_id": string
+                    "area": string | null,"created_at": string,"directions": string | null,"ghanapost_gps": string | null,"id": string,"is_default": boolean,"label": string | null,"phone": string,"recipient_name": string,"updated_at": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "area": string,"created_at"?: string,"directions"?: string | null,"ghanapost_gps"?: string | null,"id"?: string,"is_default"?: boolean,"label"?: string | null,"phone": string,"recipient_name": string,"updated_at"?: string,"user_id"?: string
+                    "area": string | null,"created_at"?: string,"directions"?: string | null,"ghanapost_gps"?: string | null,"id"?: string,"is_default"?: boolean,"label"?: string | null,"phone": string,"recipient_name": string,"updated_at"?: string,"user_id"?: string
                   }
                   Update: {
-                    "area"?: string,"created_at"?: string,"directions"?: string | null,"ghanapost_gps"?: string | null,"id"?: string,"is_default"?: boolean,"label"?: string | null,"phone"?: string,"recipient_name"?: string,"updated_at"?: string,"user_id"?: string
+                    "area"?: string | null,"created_at"?: string,"directions"?: string | null,"ghanapost_gps"?: string | null,"id"?: string,"is_default"?: boolean,"label"?: string | null,"phone"?: string,"recipient_name"?: string,"updated_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     

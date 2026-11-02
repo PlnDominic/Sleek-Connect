@@ -8,7 +8,7 @@ import { formatDate, statusShort } from '@/lib/orders';
 import styles from './account.module.css';
 
 interface Summary {
-  address: { label: string | null; recipient_name: string; phone: string; area: string } | null;
+  address: { label: string | null; recipient_name: string; phone: string; area: string | null } | null;
   addressCount: number;
   momo: { network: string; wallet_number: string; label: string | null } | null;
   orders: { order_number: string; order_token: string; created_at: string; status: keyof typeof statusShort; total_ghs: number; item_count: number }[];
@@ -73,7 +73,7 @@ export function AccountSummary({ name, email, userId, marketingSms, marketingEma
               <>
                 <strong>{summary.address.recipient_name}</strong>
                 <span>
-                  {summary.address.area} · {summary.address.phone}
+                  {[summary.address.area, summary.address.phone].filter(Boolean).join(' · ')}
                 </span>
                 {summary.addressCount > 1 && <span>+ {summary.addressCount - 1} more saved</span>}
               </>

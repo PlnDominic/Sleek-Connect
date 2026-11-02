@@ -169,7 +169,7 @@ async function placeOrder(items, { area = 'Osu', pay = true } = {}) {
   await add.getByLabel(/Name for this address/).fill('Home');
   await add.getByLabel('Recipient’s name').fill('Esi Mensah');
   await add.getByLabel('Phone number').fill('024 555 0101');
-  await add.getByLabel('Area', { exact: true }).selectOption('East Legon');
+  assert(await add.getByLabel('Area', { exact: true }).count() === 0, 'the account address form has no area field (it is chosen at checkout)');
   await add.getByLabel(/GhanaPost GPS/).fill('ga-123-4567');
   await add.getByRole('button', { name: 'Save address' }).click();
   await add.getByRole('status').filter({ hasText: 'Address saved.' }).waitFor();
@@ -187,7 +187,7 @@ async function placeOrder(items, { area = 'Osu', pay = true } = {}) {
   await go(guest, BASE + '/checkout');
   await guest.getByLabel('Saved addresses').waitFor();
   assert(await until(async () => (await guest.getByLabel('Full name').inputValue()) === 'Esi Mensah'), 'checkout fills in the default address');
-  assert(await guest.getByLabel('Area', { exact: true }).inputValue() === 'East Legon' && await guest.getByLabel('Phone number').inputValue() === '024 555 0101', 'area and phone filled in too');
+  assert(await guest.getByLabel('Phone number').inputValue() === '024 555 0101' && (await guest.getByLabel('Area', { exact: true }).inputValue()) !== '', 'phone filled in too, and the area is still chosen at checkout');
 
   // --- Customer cancels (FR-052) -----------------------------------------------------------------------------
   const paid = await placeOrder([{ slug: 'velvet-matte-lip-colour', quantity: 1 }]);
