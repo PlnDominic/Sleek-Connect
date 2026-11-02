@@ -11,17 +11,40 @@ type Badge = 'orders' | 'messages';
 /** How far along the store is: being reviewed, approved (setting up), or open for orders. */
 export type Stage = 'pending' | 'approved' | 'live';
 
-const links: { href: string; label: string; icon: IconName; match: (p: string) => boolean; badge?: Badge; from?: Stage }[] = [
-  { href: '/vendor', label: 'Overview', icon: 'grid', match: (p) => p === '/vendor' },
-  { href: '/vendor/orders', label: 'Orders', icon: 'truck', match: (p) => p === '/vendor/orders', badge: 'orders', from: 'live' },
-  { href: '/vendor/products/new', label: 'Add a product', icon: 'plus', match: (p) => p === '/vendor/products/new' || p === '/vendor/products/import', from: 'approved' },
-  { href: '/vendor/earnings', label: 'Earnings', icon: 'card', match: (p) => p === '/vendor/earnings', from: 'approved' },
-  { href: '/vendor/reports', label: 'Sales reports', icon: 'layers', match: (p) => p === '/vendor/reports', from: 'live' },
-  { href: '/vendor/messages', label: 'Messages', icon: 'chat', match: (p) => p === '/vendor/messages', badge: 'messages', from: 'live' },
-  { href: '/vendor/reviews', label: 'Reviews', icon: 'star', match: (p) => p === '/vendor/reviews', from: 'live' },
-  { href: '/vendor/disputes', label: 'Disputes', icon: 'shieldCheck', match: (p) => p === '/vendor/disputes', from: 'live' },
-  { href: '/vendor/help', label: 'Help and terms', icon: 'headset', match: (p) => p === '/vendor/help', from: 'approved' },
-  { href: '/vendor/store', label: 'Store page', icon: 'store', match: (p) => p === '/vendor/store' },
+type NavLink = { href: string; label: string; icon: IconName; match: (p: string) => boolean; badge?: Badge; from?: Stage };
+
+// Grouped like a modern seller hub: selling day to day, money, the shop front, and getting help.
+const groups: { title: string; links: NavLink[] }[] = [
+  {
+    title: 'Sell',
+    links: [
+      { href: '/vendor', label: 'Overview', icon: 'grid', match: (p) => p === '/vendor' },
+      { href: '/vendor/orders', label: 'Orders', icon: 'truck', match: (p) => p === '/vendor/orders', badge: 'orders', from: 'live' },
+      { href: '/vendor/products/new', label: 'Add a product', icon: 'plus', match: (p) => p === '/vendor/products/new' || p === '/vendor/products/import', from: 'approved' },
+    ],
+  },
+  {
+    title: 'Money',
+    links: [
+      { href: '/vendor/earnings', label: 'Earnings', icon: 'card', match: (p) => p === '/vendor/earnings', from: 'approved' },
+      { href: '/vendor/reports', label: 'Sales reports', icon: 'layers', match: (p) => p === '/vendor/reports', from: 'live' },
+    ],
+  },
+  {
+    title: 'Your shop',
+    links: [
+      { href: '/vendor/store', label: 'Store page', icon: 'store', match: (p) => p === '/vendor/store' },
+      { href: '/vendor/reviews', label: 'Reviews', icon: 'star', match: (p) => p === '/vendor/reviews', from: 'live' },
+    ],
+  },
+  {
+    title: 'Support',
+    links: [
+      { href: '/vendor/messages', label: 'Messages', icon: 'chat', match: (p) => p === '/vendor/messages', badge: 'messages', from: 'live' },
+      { href: '/vendor/disputes', label: 'Disputes', icon: 'shieldCheck', match: (p) => p === '/vendor/disputes', from: 'live' },
+      { href: '/vendor/help', label: 'Help and terms', icon: 'headset', match: (p) => p === '/vendor/help', from: 'approved' },
+    ],
+  },
 ];
 
 const rank: Record<Stage, number> = { pending: 0, approved: 1, live: 2 };
@@ -70,37 +93,44 @@ export function VendorShell({
           </span>
           <span className={shell.brandText}>
             <strong>{store}</strong>
-            <span>Vendor dashboard</span>
+            <span>Seller hub</span>
           </span>
         </Link>
         <nav aria-label="Vendor" className={shell.nav}>
-          {links.filter((l) => rank[stage] >= rank[l.from ?? 'pending']).map((l) => (
-            <Link key={l.href} href={l.href} className={shell.item} aria-current={l.match(pathname) ? 'page' : undefined}>
-              <Icon name={l.icon} size={18} strokeWidth={1.7} />
-              {l.label}
-              {l.badge && badges[l.badge] > 0 && (
-                <span className={shell.count} aria-label={`${badges[l.badge]} waiting`}>
-                  {badges[l.badge]}
-                </span>
-              )}
-            </Link>
-          ))}
-          {stage !== 'pending' && (
-            <Link href="/vendor" className={shell.item} aria-current={pathname.startsWith('/vendor/products/') && pathname !== '/vendor/products/new' ? 'page' : undefined}>
-              <Icon name="box" size={18} strokeWidth={1.7} />
-              Products
-            </Link>
-          )}
+          {groups.map((group) => {
+            const visible = group.links.filter((l) => rank[stage] >= rank[l.from ?? 'pending']);
+            if (visible.length === 0) return null;
+            return (
+              <div key={group.title} className={shell.group}>
+                <span className={shell.groupTitle}>{group.title}</span>
+                {visible.map((l) => (
+                  <Link key={l.href} href={l.href} className={shell.item} aria-current={l.match(pathname) ? 'page' : undefined}>
+                    <Icon name={l.icon} size={18} strokeWidth={1.8} />
+                    {l.label}
+                    {l.badge && badges[l.badge] > 0 && (
+                      <span className={shell.count} aria-label={`${badges[l.badge]} waiting`}>
+                        {badges[l.badge]}
+                      </span>
+                    )}
+                  </Link>
+                ))}
+                {group.title === 'Sell' && stage !== 'pending' && (
+                  <Link
+                    href="/vendor"
+                    className={shell.item}
+                    aria-current={pathname.startsWith('/vendor/products/') && pathname !== '/vendor/products/new' && pathname !== '/vendor/products/import' ? 'page' : undefined}
+                  >
+                    <Icon name="box" size={18} strokeWidth={1.8} />
+                    Products
+                  </Link>
+                )}
+              </div>
+            );
+          })}
         </nav>
         <div className={shell.sideFoot}>
-          {stage === 'live' && (
-            <Link href={`/store/${slug}`} className={shell.item} target="_blank">
-              <Icon name="arrowRight" size={18} strokeWidth={1.7} />
-              View my storefront
-            </Link>
-          )}
           <Link href="/" className={shell.item}>
-            <Icon name="home" size={18} strokeWidth={1.7} />
+            <Icon name="home" size={18} strokeWidth={1.8} />
             Back to the shop
           </Link>
         </div>
@@ -116,8 +146,15 @@ export function VendorShell({
             {subtitle && <span>{subtitle}</span>}
           </div>
           <span className={shell.status} data-tone={status.tone}>
+            <i aria-hidden="true" />
             {status.label}
           </span>
+          {stage === 'live' && (
+            <Link href={`/store/${slug}`} className={shell.storefront} target="_blank">
+              View my storefront
+              <Icon name="arrowRight" size={16} strokeWidth={2} />
+            </Link>
+          )}
         </header>
         <main id="main" className={shell.content}>
           {children}

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { formatPrice } from '@sleek/shared';
 import { momoNetworks } from '@sleek/shared';
+import { Icon } from '@/components/Icon';
 import { getPaymentProvider } from '@/lib/payments';
 import { getStoreSetup, getVendorSession, type VendorProduct } from '@/lib/vendor';
 import { payOnline, setStock } from './actions';
@@ -203,8 +204,28 @@ export default async function VendorHome() {
   // Tolerant of a database that hasn't run the Etsy-extras migration yet.
   const { data: starData, error: starError } = await session.supabase.rpc('vendor_star_status');
   const star = starError ? null : (starData as unknown as StarStatus | null);
+  const onSale = items.filter((p) => p.is_published).length;
+  const waiting = items.filter((p) => p.review_status === 'pending').length;
   return (
     <>
+      <section className={styles.hero}>
+        <div>
+          <p className={styles.heroKicker}>Welcome back</p>
+          <h1 className={styles.heroTitle}>{vendor.name}</h1>
+          <p className={styles.heroText}>
+            {onSale > 0 ? `${onSale} ${onSale === 1 ? 'product is' : 'products are'} on sale right now.` : 'Add products and they go on sale once we approve them.'}
+          </p>
+        </div>
+        <div className={styles.heroActions}>
+          <Link href="/vendor/products/new" className={styles.heroPrimary}>
+            <Icon name="plus" size={16} strokeWidth={2.2} />
+            Add a product
+          </Link>
+          <Link href={`/store/${vendor.slug}`} className={styles.heroSecondary} target="_blank">
+            View storefront
+          </Link>
+        </div>
+      </section>
       {setup.percent < 100 && <SetupChecklist setup={setup} />}
       {launch && launch.terms_version !== vendorTermsVersion && (
         <p className={styles.notice}>
@@ -232,16 +253,25 @@ export default async function VendorHome() {
 
       <div className={styles.stats}>
         <section className={styles.stat}>
+          <span className={styles.statIcon} aria-hidden="true">
+            <Icon name="box" size={18} strokeWidth={1.9} />
+          </span>
           <h2>Products</h2>
           <strong>{items.length}</strong>
-          <span>{items.filter((p) => p.is_published).length} on sale</span>
+          <span>{onSale} on sale</span>
         </section>
         <section className={styles.stat}>
+          <span className={styles.statIcon} data-tone="warn" aria-hidden="true">
+            <Icon name="shieldCheck" size={18} strokeWidth={1.9} />
+          </span>
           <h2>Waiting for approval</h2>
-          <strong>{items.filter((p) => p.review_status === 'pending').length}</strong>
+          <strong>{waiting}</strong>
           <span>We set the shopper price when we approve</span>
         </section>
         <section className={styles.stat}>
+          <span className={styles.statIcon} data-tone="ink" aria-hidden="true">
+            <Icon name="calendar" size={18} strokeWidth={1.9} />
+          </span>
           <h2>Subscription</h2>
           <strong>{vendor.paid_until ? dateText(vendor.paid_until) : '–'}</strong>
           <span>{closesSoon !== null ? (closesSoon < 0 ? 'Ended' : `${closesSoon} day${closesSoon === 1 ? '' : 's'} left`) : 'Paid until'}</span>

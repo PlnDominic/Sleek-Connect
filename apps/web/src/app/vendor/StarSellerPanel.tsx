@@ -23,23 +23,24 @@ export function StarSellerPanel({ status }: { status: StarStatus }) {
     <section className={styles.panel} aria-labelledby="star-title">
       <div className={styles.panelHead}>
         <h2 id="star-title">{status.star ? '★ You are a Star Seller' : 'Become a Star Seller'}</h2>
-        <strong>
+        <strong className={styles.followers}>
           {status.followers} {status.followers === 1 ? 'follower' : 'followers'}
         </strong>
       </div>
       <p className={styles.muted}>
         {status.star ? 'Shoppers see the badge on your store and products. Keep it up.' : 'Stores that meet all three rules get a badge on their store page and products.'}
       </p>
-      <ul className={styles.steps}>
+      <ul className={styles.rules}>
         {rules.map((r) => (
-          <li key={r.text} data-done={r.ok || undefined}>
-            <span className={styles.stepMark} aria-hidden="true">
+          <li key={r.text} data-met={r.ok || undefined}>
+            <span className={styles.ruleMark} aria-hidden="true">
               {r.ok ? '✓' : ''}
             </span>
             <span className={styles.stepText}>
               <span>{r.text}</span>
               <small>{r.now}</small>
             </span>
+            <span className="visually-hidden">{r.ok ? 'Met' : 'Not met yet'}</span>
           </li>
         ))}
       </ul>

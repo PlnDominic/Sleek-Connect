@@ -885,3 +885,951 @@
 .inlineForm input {
   min-width: 0;
 }
+
+/* ==========================================================================================================
+ * Seller hub refresh (2026): calmer cards, crisper type, modern inputs and buttons. These rules come last on
+ * purpose, so they restyle every vendor page without touching its markup.
+ * ========================================================================================================== */
+
+.panel,
+.stat,
+.statusCard {
+  border: 1px solid rgb(11 31 58 / 0.07);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow:
+    0 1px 2px rgb(11 31 58 / 0.04),
+    0 2px 8px -2px rgb(11 31 58 / 0.04);
+}
+
+.panel {
+  gap: 16px;
+  padding: 24px;
+}
+
+.panel h2 {
+  font-size: 16.5px;
+  font-weight: 700;
+  letter-spacing: -0.012em;
+}
+
+.panelHead {
+  padding-bottom: 4px;
+}
+
+.muted {
+  color: var(--c-text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.lead {
+  color: var(--c-text-subtle);
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--c-text-muted);
+  font-size: 13.5px;
+  text-decoration: none;
+}
+
+.back:hover {
+  color: var(--c-accent);
+}
+
+/* Buttons: squarer, lighter, with a soft lift on the main one. */
+.primary,
+.secondary,
+.danger {
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: -0.005em;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.05s ease;
+}
+
+.primary {
+  background: linear-gradient(180deg, #13877e 0%, #0f766e 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.15),
+    0 1px 2px rgb(11 31 58 / 0.12),
+    0 6px 16px -8px rgb(15 118 110 / 0.7);
+  color: #fff;
+}
+
+.primary:hover {
+  background: linear-gradient(180deg, #0f766e 0%, #0b5d57 100%);
+  color: #fff;
+}
+
+.secondary {
+  border-color: var(--c-line-strong);
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(11 31 58 / 0.05);
+}
+
+.secondary:hover {
+  border-color: #b6c1cf;
+  background: #f8fafc;
+  color: var(--c-ink);
+}
+
+.danger {
+  border-color: #f1c4bf;
+  background: #fff;
+  color: #b42318;
+}
+
+.danger:hover {
+  border-color: #b42318;
+  background: #fef3f2;
+}
+
+.primary:active,
+.secondary:active,
+.danger:active {
+  transform: translateY(1px);
+}
+
+.primary:focus-visible,
+.secondary:focus-visible,
+.danger:focus-visible,
+.linkButton:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+.linkButton {
+  text-decoration: none;
+}
+
+.linkButton:hover {
+  text-decoration: underline;
+}
+
+/* Inputs: taller, rounder, with a soft teal focus ring instead of a hard outline. */
+.field {
+  gap: 7px;
+}
+
+.field > span,
+.sizes legend,
+.checks legend {
+  color: var(--c-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.field small {
+  color: var(--c-text-muted);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.field input,
+.field select,
+.field textarea,
+.stock input,
+.inlineForm input {
+  min-height: 44px;
+  padding: 10px 13px;
+  border: 1px solid #d5dce6;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(11 31 58 / 0.04);
+  font-size: 14.5px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.field textarea {
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--c-text-placeholder);
+}
+
+.field input:hover,
+.field select:hover,
+.field textarea:hover,
+.stock input:hover {
+  border-color: #b6c1cf;
+}
+
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible,
+.stock input:focus-visible,
+.inlineForm input:focus-visible {
+  outline: none;
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 4px rgb(15 118 110 / 0.14);
+}
+
+.field input[type='file'] {
+  padding: 8px;
+  border-style: dashed;
+  background: #f8fafc;
+}
+
+.check {
+  align-items: center;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.check input,
+.checks input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--c-accent);
+}
+
+/* Messages: soft tinted bars with a coloured edge. */
+.success,
+.error,
+.warn,
+.notice {
+  padding: 12px 14px 12px 16px;
+  border: 1px solid transparent;
+  border-left-width: 4px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.success {
+  border-color: #b9e1da;
+  border-left-color: #0f766e;
+  background: #f0faf8;
+  color: #0b4f49;
+}
+
+.error,
+.warn {
+  border-color: #f6d0cb;
+  border-left-color: #d92d20;
+  background: #fef6f5;
+  color: #912018;
+}
+
+.notice {
+  border-color: #f5e0b3;
+  border-left-color: #f2b53a;
+  background: #fffaf0;
+  color: #6b4700;
+}
+
+.notice a,
+.warn a {
+  color: inherit;
+  font-weight: 600;
+}
+
+.instructions {
+  border: 1px dashed var(--c-line-strong);
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+/* Status chips with a dot. */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 8px;
+  border-radius: 999px;
+  background: #eef1f5;
+  color: var(--c-text-subtle);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.8;
+}
+
+.badge[data-tone='good'] {
+  background: #e7f6f3;
+  color: #0b5d57;
+}
+
+.badge[data-tone='warn'] {
+  background: #fff4dc;
+  color: #855a00;
+}
+
+.badge[data-tone='bad'] {
+  background: #fdecea;
+  color: #a1261b;
+}
+
+/* Overview hero. */
+.hero {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 28px 30px;
+  overflow: hidden;
+  border-radius: 20px;
+  background:
+    radial-gradient(520px 260px at 100% 0%, rgb(43 179 166 / 0.45), transparent 70%),
+    radial-gradient(420px 220px at 0% 120%, rgb(95 194 184 / 0.25), transparent 70%),
+    linear-gradient(135deg, #0b1f3a 0%, #103a4f 55%, #0f5f5a 100%);
+  box-shadow: 0 18px 40px -24px rgb(11 31 58 / 0.6);
+  color: #fff;
+}
+
+.heroKicker {
+  color: rgb(255 255 255 / 0.7);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.heroTitle {
+  margin-top: 4px;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.heroText {
+  margin-top: 8px;
+  max-width: 52ch;
+  color: rgb(255 255 255 / 0.8);
+  font-size: 14.5px;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.heroPrimary,
+.heroSecondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+  transition:
+    background 0.15s ease,
+    transform 0.05s ease;
+}
+
+.heroPrimary {
+  background: #fff;
+  color: #0b1f3a;
+  box-shadow: 0 8px 20px -10px rgb(0 0 0 / 0.5);
+}
+
+.heroPrimary:hover {
+  background: #e9f6f3;
+  color: #0b1f3a;
+}
+
+.heroSecondary {
+  border: 1px solid rgb(255 255 255 / 0.28);
+  background: rgb(255 255 255 / 0.08);
+  color: #fff;
+}
+
+.heroSecondary:hover {
+  background: rgb(255 255 255 / 0.16);
+  color: #fff;
+}
+
+/* Numbers. */
+.stats {
+  gap: 16px;
+}
+
+.stat {
+  position: relative;
+  gap: 4px;
+  padding: 20px 22px;
+}
+
+.statIcon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  background: #e7f6f3;
+  color: var(--c-accent);
+}
+
+.statIcon[data-tone='warn'] {
+  background: #fff4dc;
+  color: #b07800;
+}
+
+.statIcon[data-tone='ink'] {
+  background: #eaeef5;
+  color: var(--c-ink);
+}
+
+.stat h2 {
+  color: var(--c-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.stat strong {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.stat span:last-child {
+  color: var(--c-text-muted);
+  font-size: 12.5px;
+}
+
+/* Product cards. */
+.productGrid {
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+  gap: 14px;
+}
+
+.productCard {
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid rgb(11 31 58 / 0.08);
+  border-radius: 14px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.productCard:hover {
+  border-color: rgb(15 118 110 / 0.3);
+  box-shadow: 0 10px 28px -18px rgb(11 31 58 / 0.4);
+}
+
+.productName {
+  font-size: 15px;
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+.productName:hover {
+  color: var(--c-accent);
+}
+
+.productCard .price {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.productCard .price span {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.stocks {
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--c-line);
+}
+
+.stock label {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.stock input {
+  width: 84px;
+  min-height: 38px;
+  padding: 6px 10px;
+}
+
+.stock .secondary {
+  min-height: 38px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+/* Lists, orders, chart, messages. */
+.listRow {
+  padding: 14px 0;
+  border-top-color: var(--c-line-soft);
+}
+
+.orderCard {
+  border: 1px solid rgb(11 31 58 / 0.08);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgb(11 31 58 / 0.04);
+}
+
+.bar {
+  border-radius: 6px 6px 2px 2px;
+  background: linear-gradient(180deg, #2bb3a6 0%, #0f766e 100%);
+  opacity: 1;
+}
+
+.periods {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: #eef1f5;
+}
+
+.periods a {
+  border: 0;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.periods a[aria-current='page'] {
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(11 31 58 / 0.12);
+  color: var(--c-ink);
+}
+
+.bubble {
+  border-radius: 16px 16px 16px 4px;
+  background: #f1f4f8;
+}
+
+.bubble[data-from='vendor'] {
+  border-radius: 16px 16px 4px 16px;
+  background: #0f766e;
+  color: #fff;
+}
+
+.bubble[data-from='vendor'] small {
+  color: rgb(255 255 255 / 0.75);
+}
+
+/* Logo, banner and photo uploads. */
+.preview,
+.photo {
+  border-radius: 12px;
+}
+
+.previewEmpty {
+  height: 96px;
+  border: 1.5px dashed #c3ccd9;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+/* Setup checklist: ring, next step, the steps still to do as cards, finished ones folded away. */
+.setup {
+  gap: 20px;
+}
+
+.setupHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+}
+
+.setupIntro {
+  flex: 1 1 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ring {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: conic-gradient(#0f766e var(--pct), #e4e9f0 0);
+}
+
+.ring span {
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.todo {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.todo li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px;
+  border: 1px solid rgb(11 31 58 / 0.08);
+  border-radius: 12px;
+  background: #fbfcfd;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.todo li:hover {
+  border-color: rgb(15 118 110 / 0.35);
+  background: #fff;
+}
+
+.todo li[data-next] {
+  border-color: rgb(15 118 110 / 0.45);
+  background: #f0faf8;
+}
+
+.todo li[data-locked] {
+  opacity: 0.6;
+}
+
+.todo a {
+  color: var(--c-ink);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.todo a::after {
+  content: ' →';
+  color: var(--c-accent);
+}
+
+.todo li > .stepMark {
+  margin-top: 1px;
+  border-style: dashed;
+}
+
+.stepText > span,
+.stepText > a {
+  font-size: 14px;
+}
+
+.stepText small {
+  line-height: 1.45;
+}
+
+.doneSteps summary {
+  width: fit-content;
+  color: var(--c-text-muted);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.doneSteps summary:hover {
+  color: var(--c-accent);
+}
+
+.doneSteps .steps {
+  margin-top: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+  gap: 0 18px;
+}
+
+.doneSteps .steps li {
+  padding: 8px 0;
+  font-size: 13.5px;
+}
+
+.doneSteps .stepMark {
+  width: 20px;
+  height: 20px;
+  font-size: 11px;
+}
+
+/* Waiting, applying and paying: one focused card. */
+.statusCard {
+  gap: 14px;
+  padding: 40px 36px 36px;
+  border-radius: 20px;
+  box-shadow:
+    0 1px 2px rgb(11 31 58 / 0.04),
+    0 24px 48px -28px rgb(11 31 58 / 0.35);
+}
+
+.statusMark {
+  width: 56px;
+  min-width: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #2bb3a6 0%, #0f766e 100%);
+  box-shadow: 0 10px 24px -10px rgb(15 118 110 / 0.8);
+  color: #fff;
+}
+
+.statusTitle {
+  font-size: 26px;
+  letter-spacing: -0.025em;
+}
+
+/* Wizard steps as a segmented progress track. */
+.wizardSteps {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.wizardSteps li {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.wizardSteps li::before {
+  content: '';
+  order: -1;
+  width: 100%;
+  height: 4px;
+  border-radius: 4px;
+  background: #e4e9f0;
+}
+
+.wizardSteps li[data-done]::before,
+.wizardSteps li[data-current]::before {
+  background: #0f766e;
+}
+
+.wizardSteps li span {
+  display: none;
+}
+
+.wizardSteps li b {
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.summary {
+  padding: 16px;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+@media (max-width: 640px) {
+  .panel {
+    padding: 18px;
+    border-radius: 14px;
+  }
+
+  .hero {
+    padding: 22px 20px;
+    border-radius: 16px;
+  }
+
+  .heroTitle {
+    font-size: 24px;
+  }
+
+  .statusCard {
+    padding: 28px 20px 24px;
+  }
+
+  .wizardSteps li b {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primary,
+  .secondary,
+  .danger,
+  .productCard,
+  .todo li {
+    transition: none;
+  }
+}
+
+/* Stat cards: icon in the corner, numbers first. */
+.stat {
+  padding: 20px 22px 18px;
+}
+
+.statIcon {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  margin: 0;
+}
+
+/* Star Seller rules as three small cards. */
+.rules {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rules li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px;
+  border: 1px solid rgb(11 31 58 / 0.08);
+  border-radius: 12px;
+  background: #fbfcfd;
+}
+
+.rules li[data-met] {
+  border-color: rgb(15 118 110 / 0.3);
+  background: #f0faf8;
+}
+
+.ruleMark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1.5px dashed #c3ccd9;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.rules li[data-met] .ruleMark {
+  border: 0;
+  background: #0f766e;
+}
+
+.followers {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #eef1f5;
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .setupHead {
+    gap: 14px;
+  }
+
+  .ring {
+    width: 56px;
+    height: 56px;
+  }
+
+  .ring span {
+    width: 44px;
+    height: 44px;
+    font-size: 13px;
+  }
+
+  .setupIntro {
+    flex: 1 1 160px;
+  }
+
+  .setupHead .primary {
+    width: 100%;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .stats .stat:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .stat {
+    padding: 16px;
+  }
+
+  .statIcon {
+    top: 14px;
+    right: 14px;
+    width: 30px;
+    height: 30px;
+  }
+
+  .stat strong {
+    font-size: 24px;
+  }
+
+  .heroActions {
+    width: 100%;
+  }
+
+  .heroPrimary,
+  .heroSecondary {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+.stat h2 {
+  padding-right: 44px;
+}
+
+.heroPrimary,
+.heroSecondary {
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .heroPrimary,
+  .heroSecondary {
+    padding: 0 12px;
+  }
+}
+
+/* A step of the store wizard that isn't the current one. Without this, `.fieldset { display: flex }` wins over [hidden]. */
+.fieldset[hidden] {
+  display: none;
+}
