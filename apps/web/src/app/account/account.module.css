@@ -1098,7 +1098,10 @@ main.centered .panel {
 
 .sideNav {
   position: sticky;
-  top: 16px;
+  /* Below the sticky site header (about 76px tall), with a little air. */
+  top: 100px;
+  max-height: calc(100vh - 116px);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 18px;
