@@ -92,12 +92,12 @@ const errOf = async (promise) => (await promise).error;
     p_is_gift: false,
   });
   const promoToken = promoOrder.data?.[0]?.order_token;
-  const first = await anon.rpc('apply_order_promotion', { p_order_token: promoToken, p_code: 'test-ship' });
-  assert(!first.error && Number(first.data?.[0]?.delivery_fee_ghs) === 0 && first.data?.[0]?.promo_code === 'TEST-SHIP', `a promo code can be applied to an order (${first.error?.message ?? 'ok'})`);
-  const second = await anon.rpc('apply_order_promotion', { p_order_token: promoToken, p_code: 'TEST-TEN' });
-  assert(second.error?.message.includes('already applied'), 'a second code cannot be stacked on the same order');
-  const again = await anon.rpc('apply_order_promotion', { p_order_token: promoToken, p_code: 'TEST-SHIP' });
-  assert(again.error?.message.includes('already applied'), 'the same code cannot be applied twice');
+  const promoFirst = await anon.rpc('apply_order_promotion', { p_order_token: promoToken, p_code: 'test-ship' });
+  assert(!promoFirst.error && Number(promoFirst.data?.[0]?.delivery_fee_ghs) === 0 && promoFirst.data?.[0]?.promo_code === 'TEST-SHIP', `a promo code can be applied to an order (${promoFirst.error?.message ?? 'ok'})`);
+  const promoSecond = await anon.rpc('apply_order_promotion', { p_order_token: promoToken, p_code: 'TEST-TEN' });
+  assert(promoSecond.error?.message.includes('already applied'), 'a second code cannot be stacked on the same order');
+  const promoAgain = await anon.rpc('apply_order_promotion', { p_order_token: promoToken, p_code: 'TEST-SHIP' });
+  assert(promoAgain.error?.message.includes('already applied'), 'the same code cannot be applied twice');
   assert(sql("select used_count from public.promotions where code = 'TEST-SHIP'") === '1', 'a code is counted once per order');
 
   console.log(failures ? `\\n${failures} FAILED` : '\\nALL PASSED');
