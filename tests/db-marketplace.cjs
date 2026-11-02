@@ -115,6 +115,11 @@ const product = (extra = {}) => ({
   assert(Number(approved.price_ghs) === 115 && approved.is_published === true, 'the shopper price is the vendor price plus the markup, and it goes on sale');
   const pub = (await anon.from('products').select('price_ghs').eq('id', productId)).data;
   assert(pub.length === 1 && Number(pub[0].price_ghs) === 115, 'the public sees the marked-up price');
+  for (const [table, column] of [['products', 'vendor_price_ghs'], ['products', 'markup_percent'], ['products', 'review_note'], ['product_sizes', 'vendor_price_ghs'], ['order_items', 'vendor_unit_price_ghs'], ['order_items', 'markup_unit_ghs']]) {
+    assert((await anon.from(table).select(column).limit(1)).error !== null, `the public cannot read ${table}.${column}`);
+    assert((await kofi.from(table).select(column).limit(1)).error !== null, `a signed-in shopper cannot read ${table}.${column} either`);
+  }
+  assert((await anon.from('products').select('*').limit(1)).error !== null, 'a select-everything on products is refused (columns are granted one by one)');
   const sizes = (await anon.from('product_sizes').select('code, price_ghs').eq('product_id', productId)).data;
   assert(Number(sizes.find((s) => s.code === '400ml').price_ghs) === 207, 'size prices carry the markup too');
 

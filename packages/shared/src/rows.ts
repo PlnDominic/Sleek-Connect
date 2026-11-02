@@ -14,8 +14,10 @@ import {
 } from './catalog';
 
 /** The columns to select for a product, with the tables it needs to be shown (sizes, age bands, stock, photos). */
+// Listed column by column: the vendor's own price, the markup and the review notes on `products` are not readable by the shop (see
+// migration 20261109090000). A new column the shop needs must be added here and granted with `grant select (col) on public.products`.
 export const productSelect =
-  '*, product_sizes(code, label, price_ghs, is_default, sort_order), product_age_bands(age_band_id), inventory_levels(size_code, in_stock), product_images(path, alt, sort_order), vendors(slug, name, is_house)';
+  'id, slug, name, brand, department, category_id, kids_filter, collection, price_ghs, was_price_ghs, badge, tag, summary, image_key, tint, kind, details, is_published, created_at, updated_at, ingredients, country_of_origin, regulatory_reference, period_after_opening, recalled_at, recall_reason, skin_types, shades, warning_label, returnable, return_note, vendor_id, size_guide_id, section_id, product_sizes(code, label, price_ghs, is_default, sort_order), product_age_bands(age_band_id), inventory_levels(size_code, in_stock), product_images(path, alt, sort_order), vendors(slug, name, is_house)';
 
 /** A `products` row as `productSelect` returns it. */
 export interface ProductRowLike {

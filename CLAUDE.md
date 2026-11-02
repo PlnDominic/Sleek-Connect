@@ -55,6 +55,10 @@
   `vendor_payout_hold_days`), at least `vendor_min_payout_ghs`, and need the vendor's TIN. Disputes (`vendor_disputes`) are
   reached only through their functions and charge the vendor's balance; vendors never see shopper details in them. Product
   views are a daily count only (`record_product_view`): never store who viewed.
+- `products`, `product_sizes` and `order_items` are readable **column by column** (migration `20261109090000`): the vendor's own price,
+  the owner's markup and the review notes are never granted to `anon` or `authenticated`. The shop reads products with the explicit
+  `productSelect` in `packages/shared/src/rows.ts` (never `select('*')`). When you add a column to one of these tables that the shop
+  needs, add it to `productSelect` and `grant select (col) on public.<table> to anon, authenticated`.
 - Store builder (`docs/STORE_BUILDER.md`): a pending or approved store can edit its profile (`vendor_update_store`, sections,
   logo/banner); approved but unpaid stores may prepare products through `vendor_require_approved()`, but nothing is public until
   `vendor_is_live` (approved, paid, not paused). Pausing goes through `vendor_set_paused`. Keep the store-builder columns out of the
