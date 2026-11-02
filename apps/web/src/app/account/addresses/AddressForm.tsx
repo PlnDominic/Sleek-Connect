@@ -15,7 +15,7 @@ export interface AddressValues {
   is_default: boolean;
 }
 
-export function AddressForm({ address, areas, onDone }: { address?: AddressValues; areas: string[]; onDone?: () => void }) {
+export function AddressForm({ address, onDone }: { address?: AddressValues; onDone?: () => void }) {
   const [state, action, pending] = useActionState<AddressState, FormData>(saveAddress.bind(null, address?.id ?? null), null);
   const [, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);

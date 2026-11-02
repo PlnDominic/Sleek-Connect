@@ -5,7 +5,7 @@ import { deleteAddress, makeDefault } from './actions';
 import { AddressForm, type AddressValues } from './AddressForm';
 import styles from './addresses.module.css';
 
-export function AddressCard({ address, areas }: { address: AddressValues; areas: string[] }) {
+export function AddressCard({ address }: { address: AddressValues }) {
   const [editing, setEditing] = useState(false);
   const [pending, startTransition] = useTransition();
   const close = useCallback(() => setEditing(false), []);
@@ -25,7 +25,7 @@ export function AddressCard({ address, areas }: { address: AddressValues; areas:
         {address.directions && ` · ${address.directions}`}
       </span>
       {editing ? (
-        <AddressForm address={address} areas={areas} onDone={close} />
+        <AddressForm address={address} onDone={close} />
       ) : (
         <div className={styles.actions}>
           <button type="button" className={styles.link} onClick={() => setEditing(true)}>

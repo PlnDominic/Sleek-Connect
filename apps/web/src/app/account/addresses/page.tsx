@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { connection } from 'next/server';
 import { Suspense } from 'react';
-import { getDeliveryConfig } from '@/lib/catalog';
 import { createUserSupabase } from '@/lib/supabase/server';
 import { AddressCard } from './AddressCard';
 import { AddressForm } from './AddressForm';
@@ -37,16 +36,12 @@ async function Addresses() {
       </p>
     );
   }
-  const [{ data: addresses, error }, delivery] = await Promise.all([
-    supabase
-      .from('customer_addresses')
-      .select('id, label, recipient_name, phone, area, ghanapost_gps, directions, is_default')
-      .order('is_default', { ascending: false })
-      .order('created_at'),
-    getDeliveryConfig(),
-  ]);
+  const { data: addresses, error } = await supabase
+    .from('customer_addresses')
+    .select('id, label, recipient_name, phone, area, ghanapost_gps, directions, is_default')
+    .order('is_default', { ascending: false })
+    .order('created_at');
   if (error) throw error;
-  const areas = delivery.areas.map((a) => a.name);
 
   return (
     <>
@@ -54,14 +49,14 @@ async function Addresses() {
       {addresses.length > 0 && (
         <ul className={styles.list} aria-label="Saved addresses">
           {addresses.map((a) => (
-            <AddressCard key={a.id} address={a} areas={areas} />
+            <AddressCard key={a.id} address={a} />
           ))}
         </ul>
       )}
       {addresses.length < 10 && (
         <section className={styles.panel} aria-labelledby="add-title">
           <h2 id="add-title">Add an address</h2>
-          <AddressForm areas={areas} />
+          <AddressForm />
         </section>
       )}
     </>
