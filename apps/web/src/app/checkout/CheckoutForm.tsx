@@ -287,7 +287,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
                   />
                   <small id="em-hint">We’ll email your order updates as well as texting them.</small>
                 </Field>
-                <Field id="area" label="Area in Accra">
+                <Field id="area" label="Area">
                   <select id="area" name="area" required value={area} onChange={(e) => setArea(e.target.value)}>
                     {areas.map((area) => (
                       <option key={area}>{area}</option>

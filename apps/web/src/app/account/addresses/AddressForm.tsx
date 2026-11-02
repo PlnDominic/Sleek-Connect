@@ -50,7 +50,7 @@ export function AddressForm({ address, areas, onDone }: { address?: AddressValue
             <input name="phone" type="tel" required autoComplete="tel" defaultValue={address?.phone} />
           </label>
           <label className={styles.field}>
-            Area in Accra
+            Area
             <select name="area" required defaultValue={address?.area ?? areas[0]}>
               {areas.map((a) => (
                 <option key={a}>{a}</option>

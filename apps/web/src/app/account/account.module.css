@@ -1474,3 +1474,133 @@ main.guestPage {
 .guestPage :global(h2) {
   margin: 0;
 }
+
+/* Orders: one card per order, like a marketplace's "My orders". */
+.orderCards {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.orderCard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 22px;
+  border: 1px solid rgb(11 31 58 / 0.08);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(11 31 58 / 0.04);
+}
+
+.orderTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #eef1f5;
+}
+
+.orderTop > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.orderTop strong {
+  font-size: 16px;
+}
+
+.orderLines {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14.5px;
+}
+
+.orderLines li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.orderLines li > span:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.orderLines a {
+  color: var(--c-ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.orderLines a:hover {
+  color: var(--c-accent);
+  text-decoration: underline;
+}
+
+.orderLines small {
+  color: var(--c-text-muted);
+  font-size: 12.5px;
+}
+
+.orderCard .orderTrack {
+  max-width: 420px;
+}
+
+.orderBottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding-top: 14px;
+  border-top: 1px solid #eef1f5;
+  font-size: 14.5px;
+}
+
+.orderBottom strong {
+  font-size: 16px;
+}
+
+.seeDetails {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid #0f766e;
+  border-radius: 10px;
+  color: #0f766e;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.seeDetails:hover {
+  background: #0f766e;
+  color: #fff;
+}
+
+@media (max-width: 520px) {
+  .orderCard {
+    padding: 16px;
+  }
+
+  .seeDetails {
+    width: 100%;
+    justify-content: center;
+  }
+}

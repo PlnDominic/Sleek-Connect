@@ -109,6 +109,9 @@ const product = () => ({
   assert((await errOf(anon.rpc('my_pending_reviews')))?.code !== undefined, 'guests have no pending reviews list');
   assert((await kofi.rpc('my_pending_reviews')).data.length === 0, 'a shopper with no delivered orders has nothing to review');
 
+  assert((await errOf(anon.rpc('my_order_items')))?.code !== undefined, 'guests cannot read order items');
+  assert(Object.keys((await kofi.rpc('my_order_items')).data).length === 0, 'a shopper with no orders has no order items');
+
   console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll Etsy extras checks passed');
   process.exit(failures ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(1); });

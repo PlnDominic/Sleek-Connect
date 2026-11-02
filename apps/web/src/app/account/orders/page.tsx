@@ -84,35 +84,58 @@ async function OrderList({ searchParams }: { searchParams: PageProps<'/account/o
     );
   }
 
+  // What is in each order. Read apart so the list still works before the order-items function exists.
+  const { data: itemData } = await supabase.rpc('my_order_items');
+  const itemsByOrder = (itemData ?? {}) as unknown as Record<string, { name: string; size: string | null; quantity: number; slug: string | null }[]>;
+
   return (
     <>
-    {tabBar}
-    <ul className={styles.orders} aria-label="Orders, newest first">
-      {orders.map((order) => {
-        const count = order.item_count;
-        return (
-          <li key={order.order_number}>
-            <Link href={`/orders/${order.order_token}`} className={styles.orderRow}>
-              <span>
-                <strong>Order {order.order_number}</strong>
-                <span className={styles.muted}>
-                  {formatDate(order.created_at)} · {count} {count === 1 ? 'item' : 'items'}
-                </span>
-              </span>
-              <span className={styles.orderMeta}>
+      {tabBar}
+      <ul className={styles.orderCards} aria-label="Orders, newest first">
+        {orders.map((order) => {
+          const items = itemsByOrder[order.order_number] ?? [];
+          const shown = items.slice(0, 3);
+          return (
+            <li key={order.order_number} className={styles.orderCard}>
+              <div className={styles.orderTop}>
+                <div>
+                  <strong>Order {order.order_number}</strong>
+                  <span className={styles.muted}>Placed on {formatDate(order.created_at)}</span>
+                </div>
                 <span className={styles.status} data-status={order.status}>
                   {statusShort[order.status]}
                 </span>
-                <strong>{formatPriceOr(order.total_ghs as number | null, 'To be confirmed')}</strong>
-              </span>
-              <span className={styles.orderTrack}>
+              </div>
+              {shown.length > 0 && (
+                <ul className={styles.orderLines}>
+                  {shown.map((item, i) => (
+                    <li key={`${item.name}-${i}`}>
+                      <span>
+                        {item.slug ? <Link href={`/products/${item.slug}`}>{item.name}</Link> : item.name}
+                        {item.size ? <small>{item.size}</small> : null}
+                      </span>
+                      <span className={styles.muted}>Qty: {item.quantity}</span>
+                    </li>
+                  ))}
+                  {items.length > shown.length && <li className={styles.muted}>+ {items.length - shown.length} more {items.length - shown.length === 1 ? 'item' : 'items'}</li>}
+                </ul>
+              )}
+              <div className={styles.orderTrack}>
                 <TrackingBar status={order.status} compact />
-              </span>
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
+              </div>
+              <div className={styles.orderBottom}>
+                <span>
+                  <span className={styles.muted}>{order.item_count} {order.item_count === 1 ? 'item' : 'items'} · Total</span>{' '}
+                  <strong>{formatPriceOr(order.total_ghs as number | null, 'To be confirmed')}</strong>
+                </span>
+                <Link href={`/orders/${order.order_token}`} className={styles.seeDetails}>
+                  See details
+                </Link>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </>
   );
 }
