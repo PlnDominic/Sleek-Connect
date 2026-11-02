@@ -44,7 +44,7 @@ export function PhotoManager({ productId, photos }: { productId: string; photos:
       {photos.length > 0 && (
         <ul className={styles.photos}>
           {photos.map((p, i) => (
-            <li key={p.id}>
+            <li key={p.id} data-main={i === 0 || undefined}>
               <Image src={p.url} alt={`Photo ${i + 1}`} width={110} height={110} className={styles.photo} />
               <button
                 type="button"
@@ -62,8 +62,9 @@ export function PhotoManager({ productId, photos }: { productId: string; photos:
         </ul>
       )}
       {photos.length < MAX_PHOTOS && (
-        <label className={styles.secondary}>
-          {busy ? 'Working…' : 'Upload photos'}
+        <label className={styles.dropzone}>
+          <strong>{busy ? 'Working…' : 'Upload photos'}</strong>
+          <span>JPEG, PNG or WebP, up to 5 MB each</span>
           <input type="file" accept={TYPES.join(',')} multiple hidden disabled={busy} onChange={upload} />
         </label>
       )}

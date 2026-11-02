@@ -26,9 +26,10 @@ export function ProductForm({ product, categories, ageBands }: { product?: Vendo
   const sizes = product?.sizes ?? [];
   const d = product?.details ?? {};
   return (
-    <VendorForm action={saveProduct.bind(null, product?.id ?? null)}>
+    <VendorForm action={saveProduct.bind(null, product?.id ?? null)} className={styles.productForm}>
       <section className={styles.panel}>
         <h2>About the product</h2>
+        <p className={styles.muted}>The name, brand and where it sits in the shop.</p>
         <div className={styles.row}>
           <label className={styles.field}>
             <span>Product name</span>
@@ -114,7 +115,7 @@ export function ProductForm({ product, categories, ageBands }: { product?: Vendo
           </label>
         </div>
         <fieldset className={styles.sizes}>
-          <legend>Sizes (up to 4)</legend>
+          <legend>Sizes (up to 4, optional)</legend>
           {[0, 1, 2, 3].map((i) => (
             <div key={i} className={styles.row}>
               <label className={styles.field}>
@@ -132,6 +133,7 @@ export function ProductForm({ product, categories, ageBands }: { product?: Vendo
 
       <section className={styles.panel}>
         <h2>Details shoppers and regulators expect</h2>
+        <p className={styles.muted}>Clear, honest details build trust, and some are required by law.</p>
         <label className={styles.field}>
           <span>Ingredients or materials</span>
           <textarea name="ingredients" rows={2} required defaultValue={product?.ingredients ?? ''} placeholder="e.g. Shea butter, coconut oil" />
@@ -163,6 +165,7 @@ export function ProductForm({ product, categories, ageBands }: { product?: Vendo
 
       <section className={styles.panel}>
         <h2>Baby and kids products</h2>
+        <p className={styles.muted}>Only if this product is for babies or children.</p>
         <div className={styles.row}>
           <label className={styles.field}>
             <span>Kids section</span>
@@ -190,8 +193,9 @@ export function ProductForm({ product, categories, ageBands }: { product?: Vendo
         </fieldset>
       </section>
 
-      <section className={styles.panel}>
+      <section className={`${styles.panel} ${styles.publishPanel}`}>
         <h2>Returns and publishing</h2>
+        <p className={styles.muted}>We review every product before it goes on sale, and set the shopper price when we approve it.</p>
         <label className={styles.check}>
           <input type="checkbox" name="returnable" defaultChecked={product?.returnable ?? true} />
           Shoppers can return this product if they change their mind
