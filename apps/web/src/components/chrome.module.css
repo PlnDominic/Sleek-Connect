@@ -55,10 +55,6 @@
   gap: 8px;
 }
 
-.star {
-  color: var(--c-gold);
-}
-
 /* Header icon buttons (also used by the saved-items and bag links) */
 .iconButton {
   position: relative;
@@ -107,31 +103,6 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 16px 32px;
-}
-
-.search {
-  flex: 1 1 320px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--c-surface);
-  border-radius: var(--r-pill);
-  padding: 0 18px;
-  height: 48px;
-}
-
-.search label {
-  display: flex;
-  color: var(--c-text-muted);
-}
-
-.search input {
-  flex: 1;
-  min-width: 0;
-  border: 0;
-  background: transparent;
-  font-size: 15px;
-  outline: none;
 }
 
 /* Footer */

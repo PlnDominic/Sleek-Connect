@@ -277,13 +277,6 @@
 }
 
 /* Saved items page */
-.savedMain {
-  padding-top: 28px;
-  padding-bottom: 64px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
 
 .note {
   font-size: 14px;

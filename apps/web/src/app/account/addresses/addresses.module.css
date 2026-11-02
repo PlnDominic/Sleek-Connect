@@ -1,17 +1,4 @@
-.main {
-  padding-top: 32px;
-  padding-bottom: 64px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  max-width: 860px;
-}
 
-.main h1 {
-  font-size: 32px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
 
 .muted {
   color: var(--c-text-muted);

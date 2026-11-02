@@ -1,11 +1,11 @@
 'use server';
 
 import { refresh } from 'next/cache';
+import { text, type ActionState } from '@/lib/admin/action-state';
 import { createUserSupabase } from '@/lib/supabase/server';
 
-export type AddressState = { ok: boolean; message: string } | null;
+export type AddressState = ActionState;
 
-const text = (form: FormData, name: string) => String(form.get(name) ?? '').trim();
 
 export async function saveAddress(id: string | null, _: AddressState, form: FormData): Promise<AddressState> {
   const supabase = await createUserSupabase();

@@ -26,7 +26,7 @@ export function AccountSummary({ name, email, userId, marketingSms, marketingEma
     Promise.all([
       supabase.from('customer_addresses').select('label, recipient_name, phone, area').order('is_default', { ascending: false }).order('created_at'),
       supabase.from('saved_payment_methods').select('network, wallet_number, label').order('is_default', { ascending: false }).order('created_at').limit(1),
-      supabase.rpc('my_orders'),
+      supabase.rpc('my_orders').limit(3),
     ]).then(([addresses, methods, orders]) => {
       if (cancelled) return;
       setData({
@@ -35,7 +35,7 @@ export function AccountSummary({ name, email, userId, marketingSms, marketingEma
           address: addresses.data?.[0] ?? null,
           addressCount: addresses.data?.length ?? 0,
           momo: methods.data?.[0] ?? null,
-          orders: ((orders.data ?? []) as unknown as Summary['orders']).slice(0, 3),
+          orders: (orders.data ?? []) as unknown as Summary['orders'],
         },
       });
     });

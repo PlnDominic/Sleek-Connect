@@ -168,7 +168,10 @@ export default async function VendorHome() {
   const online = getPaymentProvider() !== null;
   if (!vendor.live) {
     const renewing = Boolean(vendor.paid_until);
-    const { data: draftData } = await session.supabase.rpc('vendor_my_products');
+    const [{ data: draftData }, { data: draftLaunch }] = await Promise.all([
+      session.supabase.rpc('vendor_my_products'),
+      session.supabase.rpc('vendor_launch_state'),
+    ]);
     const drafts = (draftData as unknown as VendorProduct[]) ?? [];
     return (
       <>
@@ -197,24 +200,24 @@ export default async function VendorHome() {
           )
         )}
       </StatusCard>
-      <SetupChecklist setup={await getStoreSetup(session, vendor, drafts.length)} />
+      <SetupChecklist setup={await getStoreSetup(session, vendor, drafts.length, draftLaunch)} />
       <ProductsPanel items={drafts} />
       </>
     );
   }
 
-  const [{ data: products, error }, { data: launchData }] = await Promise.all([
+  const [{ data: products, error }, { data: launchData }, { data: starData, error: starError }] = await Promise.all([
     session.supabase.rpc('vendor_my_products'),
     session.supabase.rpc('vendor_launch_state'),
+    // Tolerant of a database that hasn't run the Etsy-extras migration yet.
+    session.supabase.rpc('vendor_star_status'),
   ]);
   if (error) throw error;
   const launch = launchData as unknown as { terms_version: string | null; tin: string | null; tin_required: boolean; payout_account_set: boolean } | null;
   const items = (products as unknown as VendorProduct[]) ?? [];
   const closesSoon = vendor.paid_until ? Math.ceil((Date.parse(vendor.paid_until) - new Date().getTime()) / 864e5) : null;
 
-  const setup = await getStoreSetup(session, vendor, items.length);
-  // Tolerant of a database that hasn't run the Etsy-extras migration yet.
-  const { data: starData, error: starError } = await session.supabase.rpc('vendor_star_status');
+  const setup = await getStoreSetup(session, vendor, items.length, launchData);
   const star = starError ? null : (starData as unknown as StarStatus | null);
   const onSale = items.filter((p) => p.is_published).length;
   const waiting = items.filter((p) => p.review_status === 'pending').length;

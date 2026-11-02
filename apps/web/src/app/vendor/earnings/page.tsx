@@ -27,12 +27,11 @@ const dateText = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { da
 export default async function VendorEarningsPage() {
   const session = await getVendorSession();
   if (session.state !== 'ready' || !session.vendor?.live) redirect('/vendor');
-  const { data, error } = await session.supabase.rpc('vendor_statement');
+  // The statement, and the payout rules and tax details (a database without them yet shows the older page).
+  const [{ data, error }, { data: launchData }] = await Promise.all([session.supabase.rpc('vendor_statement'), session.supabase.rpc('vendor_launch_state')]);
   if (error) throw error;
   const s = data as unknown as Statement;
   const account = s.payout_account;
-  // The payout rules and the vendor's tax details (a database without them yet shows the older page).
-  const { data: launchData } = await session.supabase.rpc('vendor_launch_state');
   const launch = launchData as unknown as {
     business_type: 'individual' | 'company' | null;
     legal_name: string | null;

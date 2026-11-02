@@ -35,23 +35,6 @@
   line-height: 1.5;
 }
 
-.quickLinks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 18px;
-}
-
-.quickLinks a {
-  padding: 8px 14px;
-  border-radius: var(--r-pill);
-  background: var(--c-canvas);
-  border: 1px solid var(--c-line);
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 14px;
-}
-
 .main {
   padding-top: 32px;
   padding-bottom: 64px;

@@ -51,7 +51,8 @@ async function OrderList({ searchParams }: { searchParams: PageProps<'/account/o
     );
   }
 
-  const { data: all, error } = await supabase.rpc('my_orders');
+  // What is in each order is read alongside the list (apart, so the list still works before that function exists).
+  const [{ data: all, error }, { data: itemData }] = await Promise.all([supabase.rpc('my_orders'), supabase.rpc('my_order_items')]);
   if (error) throw error;
   const orders = all.filter((o) =>
     tab === 'delivered' ? o.status === 'delivered' : tab === 'cancelled' ? closed.includes(o.status) : tab === 'ongoing' ? o.status !== 'delivered' && !closed.includes(o.status) : true,
@@ -84,8 +85,6 @@ async function OrderList({ searchParams }: { searchParams: PageProps<'/account/o
     );
   }
 
-  // What is in each order. Read apart so the list still works before the order-items function exists.
-  const { data: itemData } = await supabase.rpc('my_order_items');
   const itemsByOrder = (itemData ?? {}) as unknown as Record<string, { name: string; size: string | null; quantity: number; slug: string | null }[]>;
 
   return (

@@ -16,16 +16,16 @@ export default async function EditProductPage({ params, searchParams }: PageProp
   const [{ id }, { created }] = await Promise.all([params, searchParams]);
   const session = await getVendorSession();
   if (session.state !== 'ready' || !session.vendor) redirect('/vendor');
-  const { data, error } = await session.supabase.rpc('vendor_my_products');
-  if (error) throw error;
-  const product = (data as unknown as VendorProduct[]).find((p) => p.id === id);
-  if (!product) notFound();
-  const [categories, ageBands, sections, productSections] = await Promise.all([
+  const [{ data, error }, categories, ageBands, sections, productSections] = await Promise.all([
+    session.supabase.rpc('vendor_my_products'),
     getCategories(),
     getAgeBands(),
     getVendorSections(session, session.vendor.id),
     getProductSections(session),
   ]);
+  if (error) throw error;
+  const product = (data as unknown as VendorProduct[]).find((p) => p.id === id);
+  if (!product) notFound();
   const currentSection = productSections.get(product.id) ?? '';
 
   return (

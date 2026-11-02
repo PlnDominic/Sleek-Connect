@@ -94,10 +94,16 @@ export const getVendorSession = cache(async (): Promise<VendorSession> => {
  * tax number, terms accepted, how many products) and works out each step. A database without the launch pack yet just counts
  * those steps as not done.
  */
-export async function getStoreSetup(session: Extract<VendorSession, { state: 'ready' }>, vendor: VendorMe, productCount?: number) {
+export async function getStoreSetup(
+  session: Extract<VendorSession, { state: 'ready' }>,
+  vendor: VendorMe,
+  productCount?: number,
+  /** The result of `vendor_launch_state` when the caller already has it (saves a second call). */
+  launchState?: unknown,
+) {
   const { storeSetup } = await import('./store-setup');
   const { vendorTermsVersion } = await import('./vendor-terms');
-  const { data } = await session.supabase.rpc('vendor_launch_state');
+  const data = launchState !== undefined ? launchState : (await session.supabase.rpc('vendor_launch_state')).data;
   const launch = data as unknown as { terms_version: string | null; tin: string | null; payout_account_set: boolean } | null;
   let products = productCount;
   if (products === undefined && vendor.status === 'active') {
