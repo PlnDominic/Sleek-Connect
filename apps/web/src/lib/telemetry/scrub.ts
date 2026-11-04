@@ -4,7 +4,7 @@
  * This store's order page address (`/orders/<token>`) is the shopper's proof of ownership of the order, and its forms hold
  * names, phone numbers and email addresses. None of that may reach a third party. Every event passes through these
  * functions before it is sent: addresses lose their tokens and sensitive query values, free text loses anything shaped like
- * a token, email address or phone number, and the private areas (admin console, vendor dashboard) send no analytics at all.
+ * a token, email address or phone number, and the private areas (admin console) send no analytics at all.
  *
  * Pure functions with no imports, so they run in the browser, on the server and in tests.
  */
@@ -43,7 +43,7 @@ export function scrubUrl(url: string): string {
 
 /** The areas that are not the public store: no analytics is collected there. */
 export function isPrivatePath(pathname: string): boolean {
-  return /^\/(admin|vendor|auth|ingest|monitoring)(\/|$)/.test(pathname);
+  return /^\/(admin|auth|ingest|monitoring)(\/|$)/.test(pathname);
 }
 
 const pathOf = (url: unknown): string => {

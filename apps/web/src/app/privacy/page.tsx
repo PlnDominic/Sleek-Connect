@@ -184,11 +184,7 @@ export default async function PrivacyPage() {
             without cookies or any identifier stored on your device, so they can’t follow you from one visit to the next. They receive
             the pages visited, the kind of device and browser, an approximate location from your network address, and which store
             actions were taken (for example adding an item to your bag). They never receive your name, phone number, email address,
-            order links, delivery code or payment details, and we collect nothing from the admin console or vendor pages.
-          </p>
-          <p>
-            We also keep a count of how many times each product page is opened each day, so sellers can see how their products are doing. It
-            is a number only: no address, device or visitor is kept with it. We respect the “Do Not Track” setting of your browser.
+            order links, delivery code or payment details, and we collect nothing from the admin console.
           </p>
         </>
       ),

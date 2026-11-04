@@ -17,7 +17,7 @@ export default async function AdminSearchPage({ searchParams }: PageProps<'/admi
 
   let orders: { order_number: string; customer_name: string; status: string; total_ghs: number | null; created_at: string }[] = [];
   let products: { id: string; name: string; brand: string; slug: string; is_published: boolean }[] = [];
-  let vendors: { id: string; name: string; slug: string; status: string }[] = [];
+  let suppliers: { id: string; name: string; phone: string | null }[] = [];
 
   if (q.length >= 2) {
     const db = staff.supabase;
@@ -30,24 +30,24 @@ export default async function AdminSearchPage({ searchParams }: PageProps<'/admi
         .order('created_at', { ascending: false })
         .limit(10),
       db.rpc('admin_products'),
-      can(staff.role, 'vendors.manage') ? db.rpc('admin_vendors') : Promise.resolve({ data: [] }),
+      can(staff.role, 'suppliers.manage') ? db.rpc('admin_list_suppliers') : Promise.resolve({ data: [] }),
     ]);
     orders = o.data ?? [];
     products = (p.data ?? []).filter((x) => `${x.name} ${x.brand ?? ''} ${x.slug}`.toLowerCase().includes(needle)).slice(0, 10);
-    vendors = ((v.data ?? []) as unknown as typeof vendors).filter((x) => `${x.name} ${x.slug}`.toLowerCase().includes(needle)).slice(0, 10);
+    suppliers = ((v.data ?? []) as unknown as typeof suppliers).filter((x) => `${x.name} ${x.phone ?? ''}`.toLowerCase().includes(needle)).slice(0, 10);
   }
-  const none = orders.length + products.length + vendors.length === 0;
+  const none = orders.length + products.length + suppliers.length === 0;
 
   return (
     <>
       <div className={styles.pageHead}>
         <div>
           <h1>Search</h1>
-          <p className={styles.muted}>Orders, products and vendors.</p>
+          <p className={styles.muted}>Orders, products and suppliers.</p>
         </div>
       </div>
       <form className={styles.search} role="search">
-        <input name="q" type="search" defaultValue={q} placeholder="Order number, customer, product or vendor" aria-label="Search the admin" autoFocus />
+        <input name="q" type="search" defaultValue={q} placeholder="Order number, customer, product or supplier" aria-label="Search the admin" autoFocus />
         <button type="submit" className={styles.primary}>
           Search
         </button>
@@ -99,19 +99,16 @@ export default async function AdminSearchPage({ searchParams }: PageProps<'/admi
           </table>
         </section>
       )}
-      {vendors.length > 0 && (
-        <section className={styles.panel} aria-labelledby="s-vendors">
-          <h2 id="s-vendors">Vendors</h2>
+      {suppliers.length > 0 && (
+        <section className={styles.panel} aria-labelledby="s-suppliers">
+          <h2 id="s-suppliers">Suppliers</h2>
           <table className={styles.table}>
             <tbody>
-              {vendors.map((v) => (
+              {suppliers.map((v) => (
                 <tr key={v.id}>
                   <td>
-                    <Link href="/admin/vendors">{v.name}</Link>
-                    <div className={styles.muted}>/store/{v.slug}</div>
-                  </td>
-                  <td>
-                    <span className={styles.badge}>{v.status}</span>
+                    <Link href="/admin/suppliers">{v.name}</Link>
+                    <div className={styles.muted}>{v.phone ?? ''}</div>
                   </td>
                 </tr>
               ))}

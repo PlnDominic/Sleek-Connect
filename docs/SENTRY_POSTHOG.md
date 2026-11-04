@@ -15,7 +15,7 @@ numbers and email addresses. Everything passes through `apps/web/src/lib/telemet
 - order tokens and order numbers in addresses and messages are replaced; phone numbers and email addresses in messages too;
 - query values that could identify a person or order (`order`, `phone`, `email`, `token`, …) are removed;
 - cookies, request headers, request bodies, query strings and the signed-in person are never attached to an error;
-- **no analytics at all** from the admin console, the vendor dashboard and sign-in callbacks;
+- **no analytics at all** from the admin console and sign-in callbacks;
 - PostHog uses no cookie or stored identifier (`persistence: 'memory'`), records no clicks or typed text (autocapture off),
   no session replay, and respects Do Not Track. The privacy notice says so (Privacy → Visit statistics and error reports).
 

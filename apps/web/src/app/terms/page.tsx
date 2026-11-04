@@ -135,19 +135,14 @@ export default async function TermsPage() {
       ),
     },
     {
-      id: 'stores',
-      title: 'Independent suppliers',
+      id: 'suppliers',
+      title: 'Where our products come from',
       body: (
         <>
           <p>
-            Some products come from independent suppliers, named on the product page (“From”). We buy them from the supplier and
-            sell them to you, so you deal only with us: we take your payment, collect the items, deliver them and handle returns
-            and refunds. We check each supplier’s products before they appear, and the supplier is responsible to us for them being
-            genuine, lawful and as described.
-          </p>
-          <p>
-            Suppliers never receive your name, phone number, address or delivery code. If something is wrong with an item from an
-            independent supplier, tell us and we will put it right with you. These items are paid for online (not pay on delivery).
+            Sleek Connect Store buys its products from suppliers and sells them to you, so you deal only with us: we take your
+            payment, deliver your order and handle returns and refunds. We check what we buy for authenticity and expiry before it is
+            sold. Our suppliers never receive your name, phone number, address or delivery code.
           </p>
         </>
       ),

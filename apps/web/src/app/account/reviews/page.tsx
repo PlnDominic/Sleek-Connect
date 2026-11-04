@@ -20,7 +20,7 @@ export default function PendingReviewsPage() {
   return (
     <>
       <h1>Pending reviews</h1>
-      <p className={styles.muted}>Products you have received and haven’t reviewed yet. Your review helps other shoppers, and helps sellers improve.</p>
+      <p className={styles.muted}>Products you have received and haven’t reviewed yet. Your review helps other shoppers, and helps us improve.</p>
       <Suspense fallback={<p className={styles.muted}>Loading…</p>}>
         <PendingList />
       </Suspense>

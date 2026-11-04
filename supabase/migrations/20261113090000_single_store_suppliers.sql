@@ -307,6 +307,9 @@ revoke all on function public.admin_supplier_history(uuid) from public, anon;
 grant execute on function public.admin_supplier_history(uuid) to authenticated;
 
 -- Receives stock into a batch (as admin_receive_stock does: expiry rules, batch ledger, audit) and records who it came from and what it cost.
+alter table public.stock_batches add column supplier_id uuid references public.suppliers (id) on delete set null;
+alter table public.stock_batches add column unit_cost_ghs numeric(10, 2) check (unit_cost_ghs is null or unit_cost_ghs >= 0);
+
 create function public.admin_receive_stock_from(
   p_product_id uuid,
   p_size_code text,
@@ -347,9 +350,6 @@ $$;
 
 revoke all on function public.admin_receive_stock_from(uuid, text, text, date, integer, uuid, numeric, text) from public, anon;
 grant execute on function public.admin_receive_stock_from(uuid, text, text, date, integer, uuid, numeric, text) to authenticated;
-
-alter table public.stock_batches add column supplier_id uuid references public.suppliers (id) on delete set null;
-alter table public.stock_batches add column unit_cost_ghs numeric(10, 2) check (unit_cost_ghs is null or unit_cost_ghs >= 0);
 
 -- ---------------------------------------------------------------------------
 -- The marketplace is switched off: its functions are no longer callable. (Nothing is deleted; to bring a feature back, grant execute on its

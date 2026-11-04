@@ -15,7 +15,7 @@ Tick products (or "Tick all on this page"; use "Per page: 100" for more), choose
 | Move to a category / set skin types / set the size guide | As named. Skin types can be added to, replaced or cleared. |
 
 Each product succeeds or is skipped with its reason, so one bad product never blocks the rest. A product is never left half
-changed. Products sold by independent stores are skipped: their prices come from the vendor and your markup. Every price
+changed. Every price
 change is in the audit log (marked "bulk"). Only catalogue staff (and admins) can do it. Up to 200 products at a time.
 
 ## Reorder suggestions (Admin → Inventory → Reorder suggestions)
@@ -27,7 +27,7 @@ available now. Statuses: **sold out** (selling but none left), **order now** (ru
 
 Set the two numbers in Settings → Stock alerts (supplier lead time, default 7 days; days of sales to cover, default 21).
 It only knows past sales and current stock: it does not know about a coming promotion, a season, or an order already on the way,
-so treat it as a starting point. Independent stores' products are not listed (vendors manage their own stock).
+so treat it as a starting point.
 
 ## Size guides (Admin → Products → Size guides)
 

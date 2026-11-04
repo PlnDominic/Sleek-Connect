@@ -15,11 +15,13 @@ export default async function InventoryPage({ searchParams }: PageProps<'/admin/
   const params = await searchParams;
   const filter: Filter = typeof params.show === 'string' && params.show in filters ? (params.show as Filter) : 'all';
 
-  const [{ data: levels, error }, { data: expiring }, { data: products }] = await Promise.all([
+  const [{ data: levels, error }, { data: expiring }, { data: products }, { data: supplierRows }] = await Promise.all([
     staff.supabase.rpc('admin_stock_overview'),
     staff.supabase.rpc('admin_expiring_batches'),
     staff.supabase.from('products').select('id, department, kids_filter'),
+    staff.supabase.rpc('admin_supplier_options'),
   ]);
+  const suppliers = (supplierRows ?? []) as unknown as { id: string; name: string }[];
   if (error) throw error;
   const cosmetic = new Set((products ?? []).filter((p) => p.department === 'beauty' || p.kids_filter === 'bath').map((p) => p.id));
 
@@ -41,6 +43,7 @@ export default async function InventoryPage({ searchParams }: PageProps<'/admin/
         </div>
         <div className={styles.buttons}>
           <Link href="/admin/inventory/reorder" className={styles.secondary}>Reorder suggestions</Link>
+          <Link href="/admin/suppliers" className={styles.secondary}>Suppliers</Link>
           <Link href="/admin/inventory/movements" className={styles.secondary}>Stock movements</Link>
           <a href="/admin/inventory/export?type=alerts" className={styles.secondary} download>Export alerts (CSV)</a>
         </div>
@@ -49,7 +52,7 @@ export default async function InventoryPage({ searchParams }: PageProps<'/admin/
       {can(staff.role, 'stock.edit') && (
         <details className={styles.panel}>
           <summary><strong>Receive stock</strong></summary>
-          <ReceiveForm skus={skus} />
+          <ReceiveForm skus={skus} suppliers={suppliers} />
         </details>
       )}
 

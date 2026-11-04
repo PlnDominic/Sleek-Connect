@@ -29,7 +29,7 @@ async function main() {
       const info = await transport.sendMail(
         gmailMessage(config, to, {
           subject: 'Sleek Connect Store: test email',
-          text: 'This is a test message from Sleek Connect Store. If you can read it, order and vendor emails will reach people.',
+          text: 'This is a test message from Sleek Connect Store. If you can read it, order emails will reach people.',
         }),
       );
       console.log(`Sent a test email to ${to} (${info.messageId}).`);

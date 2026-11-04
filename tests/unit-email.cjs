@@ -63,12 +63,6 @@ const assert = (c, m) => { if (!c) { failures++; console.error('FAIL:', m); } el
   assert(normalizeSiteUrl(' https://shop.example/ ') === 'https://shop.example' && normalizeSiteUrl('localhost:3000') === 'http://localhost:3000', 'spaces and a trailing slash go; localhost stays http');
   assert(normalizeSiteUrl('') === null && normalizeSiteUrl(undefined) === null && normalizeSiteUrl('not a url') === null, 'nothing usable gives null, and the default is used');
 
-  // Dispute messages to vendors name the product and the deadline, and carry no shopper details.
-  const dispute = renderMessage('vendor_dispute_opened', { vendor_name: 'Ama Hub', owner_name: 'Ama Owusu', vendor_slug: 'ama-hub', order_number: 'SC-1007', product_name: 'Shea Butter' });
-  assert(dispute.text.includes('Shea Butter') && dispute.text.includes('48 hours') && dispute.text.includes('/vendor/disputes'), 'a vendor is told which product, the 48-hour reply time, and where to reply');
-  const decided = renderMessage('vendor_dispute_resolved', { vendor_name: 'Ama Hub', owner_name: 'Ama Owusu', vendor_slug: 'ama-hub', order_number: 'SC-1007', product_name: 'Shea Butter', decision: 'upheld', amount_ghs: 100, note: 'Seal was open.' });
-  assert(decided.text.includes('decided against you') && decided.text.includes('GH₵ 100') && decided.text.includes('Seal was open.'), 'and what was decided, the charge and the reason');
-
   console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll email checks passed');
   process.exit(failures ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(1); });

@@ -1004,29 +1004,26 @@ isOneToOne: false
 "vendor_delete_section":
 { Args: { "p_id": string }; Returns: undefined
                            },
-"admin_create_supplier":
+"admin_save_supplier":
 { Args: { "p": Json }; Returns: string
-                           },
-"admin_update_supplier":
-{ Args: { "p": Json,"p_vendor_id": string }; Returns: undefined
                            },
 "admin_list_suppliers":
 { Args: never; Returns: Json
                            },
-"admin_supplier_products":
-{ Args: { "p_vendor_id": string }; Returns: Json
+"admin_supplier_options":
+{ Args: never; Returns: Json
                            },
-"admin_save_supplier_product":
-{ Args: { "p": Json,"p_vendor_id": string }; Returns: Json
+"admin_set_supplier_active":
+{ Args: { "p_active": boolean,"p_id": string }; Returns: undefined
                            },
-"admin_set_supplier_stock":
-{ Args: { "p_product_id": string,"p_quantity": number,"p_size_code": string,"p_vendor_id": string }; Returns: undefined
+"admin_delete_supplier":
+{ Args: { "p_id": string }; Returns: undefined
                            },
-"admin_delete_supplier_product":
-{ Args: { "p_product_id": string,"p_vendor_id": string }; Returns: undefined
+"admin_supplier_history":
+{ Args: { "p_id": string }; Returns: Json
                            },
-"admin_set_vendor_accounts_open":
-{ Args: { "p_open": boolean }; Returns: undefined
+"admin_receive_stock_from":
+{ Args: { "p_batch_code": string,"p_expires_on": string,"p_product_id": string,"p_quantity": number,"p_reference"?: string,"p_size_code": string,"p_supplier_id"?: string,"p_unit_cost"?: number }; Returns: string
                            },
 "admin_list_promotions":
 { Args: never; Returns: Json

@@ -3,7 +3,7 @@
  *
  * Both tools are off until their keys are set (NEXT_PUBLIC_SENTRY_DSN, NEXT_PUBLIC_POSTHOG_KEY), and everything they send
  * passes through `lib/telemetry/scrub.ts` first: no order tokens, phone numbers, email addresses, cookies or request
- * bodies, and no analytics from the admin console or vendor dashboard. See docs/SENTRY_POSTHOG.md.
+ * bodies, and no analytics from the admin console. See docs/SENTRY_POSTHOG.md.
  */
 import * as Sentry from '@sentry/nextjs';
 import posthog from 'posthog-js';

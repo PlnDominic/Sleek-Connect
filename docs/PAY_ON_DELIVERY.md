@@ -21,7 +21,7 @@ rider hands the order over, and cancelling or failing a delivery never flags a r
 - **Hold for confirmation (hours)**, 1 to 168.
 - **Largest order (GH₵)**, or empty for no limit. Bigger orders must be paid online.
 - At most three unconfirmed pay-on-delivery orders per phone number at a time (so it can't be used to lock up stock).
-- Not offered for items sold by independent stores (they are paid for online), or while the delivery fee is unknown.
+- Not offered while the delivery fee is unknown.
 
 ## For developers
 

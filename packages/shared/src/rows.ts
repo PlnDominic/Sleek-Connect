@@ -14,10 +14,10 @@ import {
 } from './catalog';
 
 /** The columns to select for a product, with the tables it needs to be shown (sizes, age bands, stock, photos). */
-// Listed column by column: the vendor's own price, the markup and the review notes on `products` are not readable by the shop (see
+// Listed column by column: the supplier cost and the review notes on `products` are not readable by the shop (see
 // migration 20261109090000). A new column the shop needs must be added here and granted with `grant select (col) on public.products`.
 export const productSelect =
-  'id, slug, name, brand, department, category_id, kids_filter, collection, price_ghs, was_price_ghs, badge, tag, summary, image_key, tint, kind, details, is_published, created_at, updated_at, ingredients, country_of_origin, regulatory_reference, period_after_opening, recalled_at, recall_reason, skin_types, shades, warning_label, returnable, return_note, vendor_id, size_guide_id, section_id, product_sizes(code, label, price_ghs, is_default, sort_order), product_age_bands(age_band_id), inventory_levels(size_code, in_stock), product_images(path, alt, sort_order), vendors(slug, name, is_house)';
+  'id, slug, name, brand, department, category_id, kids_filter, collection, price_ghs, was_price_ghs, badge, tag, summary, image_key, tint, kind, details, is_published, created_at, updated_at, ingredients, country_of_origin, regulatory_reference, period_after_opening, recalled_at, recall_reason, skin_types, shades, warning_label, returnable, return_note, size_guide_id, product_sizes(code, label, price_ghs, is_default, sort_order), product_age_bands(age_band_id), inventory_levels(size_code, in_stock), product_images(path, alt, sort_order)';
 
 /** A `products` row as `productSelect` returns it. */
 export interface ProductRowLike {
@@ -52,7 +52,6 @@ export interface ProductRowLike {
   inventory_levels: { size_code: string; in_stock: boolean | null }[];
   product_images: { path: string; alt: string | null; sort_order: number }[];
   /** Who sells it; missing when the query didn't ask for it. */
-  vendors?: { slug: string; name: string; is_house: boolean } | null;
 }
 
 /** `photoUrl` turns an uploaded photo's storage path into its public address. */
@@ -92,7 +91,6 @@ export function productFromRow(row: ProductRowLike, photoUrl: (path: string) => 
     skinTypes: row.skin_types.length ? row.skin_types : undefined,
     shades: row.shades.length ? row.shades : undefined,
     createdAt: row.created_at,
-    vendor: row.vendors ? { slug: row.vendors.slug, name: row.vendors.name, isHouse: row.vendors.is_house } : undefined,
     compliance: {
       ingredients: row.ingredients ?? undefined,
       countryOfOrigin: row.country_of_origin ?? undefined,

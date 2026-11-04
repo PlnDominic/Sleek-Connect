@@ -36,7 +36,7 @@ export async function saveSettings(_: ActionState, form: FormData): Promise<Acti
 
 /**
  * Sends one message through the email provider the store is set up with (Gmail, when EMAIL_PROVIDER=gmail), so an admin
- * can see that order and vendor emails will really reach people. Admins only; a few tries a minute.
+ * can see that order emails will really reach people. Admins only; a few tries a minute.
  */
 export async function sendTestEmail(_: ActionState, form: FormData): Promise<ActionState> {
   const staff = await requireStaffPage();
@@ -52,13 +52,13 @@ export async function sendTestEmail(_: ActionState, form: FormData): Promise<Act
   }
   try {
     const subject = 'Sleek Connect Store: test email';
-    const text = `This is a test message from Sleek Connect Store, sent by ${staff.email ?? 'an admin'}. If you can read it, order and vendor emails will reach people.`;
+    const text = `This is a test message from Sleek Connect Store, sent by ${staff.email ?? 'an admin'}. If you can read it, order emails will reach people.`;
     await provider.send(to, {
       subject,
       text,
       html: buildEmailHtml({
         subject,
-        body: 'This is a test message. If you can read it, order and vendor emails will reach people.',
+        body: 'This is a test message. If you can read it, order emails will reach people.',
         facts: [
           ['Sent by', staff.email ?? 'an admin'],
           ['Sent through', provider.name],

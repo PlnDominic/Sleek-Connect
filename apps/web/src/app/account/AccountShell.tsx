@@ -14,7 +14,6 @@ const groups: { title: string; links: { href: string; label: string; match?: (p:
       { href: '/account/orders', label: 'Orders' },
       { href: '/account/reviews', label: 'Pending reviews' },
       { href: '/saved', label: 'Saved items' },
-      { href: '/account/stores', label: 'Followed stores' },
       { href: '/account/recently-viewed', label: 'Recently viewed' },
     ],
   },

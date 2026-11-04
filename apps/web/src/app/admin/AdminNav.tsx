@@ -46,6 +46,7 @@ const groups: NavGroup[] = [
     links: [
       { href: '/admin/products', label: 'Products' },
       { href: '/admin/inventory', label: 'Inventory' },
+      { href: '/admin/suppliers', label: 'Suppliers' },
       { href: '/admin/content', label: 'Content' },
     ],
   },
@@ -55,11 +56,6 @@ const groups: NavGroup[] = [
     links: [
       { href: '/admin/riders', label: 'Riders' },
       { href: '/admin/delivery', label: 'Areas and fees' },
-    ],
-  },
-  { label: 'Marketplace', icon: 'store', adminOnly: true, links: [
-      { href: '/admin/suppliers', label: 'Suppliers' },
-      { href: '/admin/vendors', label: 'Vendors' },
     ],
   },
   {

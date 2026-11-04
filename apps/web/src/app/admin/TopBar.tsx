@@ -19,11 +19,11 @@ const titles: Record<string, [string, string]> = {
   content: ['Content', 'Home page banners and featured products'],
   riders: ['Riders', 'Who delivers your orders'],
   delivery: ['Delivery', 'Areas, fees and delivery times'],
-  vendors: ['Vendors', 'Marketplace stores and their products'],
+  suppliers: ['Suppliers', 'Who we buy from, and what they delivered'],
   settings: ['Settings', 'Store-wide rules'],
   staff: ['Staff', 'Who can use the admin'],
   audit: ['Audit log', 'Every sensitive change'],
-  search: ['Search', 'Orders, products and vendors'],
+  search: ['Search', 'Orders, products and suppliers'],
 };
 
 /**

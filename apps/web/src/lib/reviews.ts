@@ -1,9 +1,9 @@
 import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
 import { createSupabase } from './supabase/server';
-export interface Review { id: string; rating: number; title: string | null; body: string; displayName: string; createdAt: string; sellerReply?: string | null; sellerRepliedAt?: string | null; }
-type ReviewRow = { id: string; rating: number; title: string | null; body: string; display_name: string; created_at: string; seller_reply?: string | null; seller_replied_at?: string | null };
-const toReview = (r: ReviewRow): Review => ({ id: r.id, rating: r.rating, title: r.title, body: r.body, displayName: r.display_name, createdAt: r.created_at, sellerReply: r.seller_reply ?? null, sellerRepliedAt: r.seller_replied_at ?? null });
+export interface Review { id: string; rating: number; title: string | null; body: string; displayName: string; createdAt: string; }
+type ReviewRow = { id: string; rating: number; title: string | null; body: string; display_name: string; created_at: string };
+const toReview = (r: ReviewRow): Review => ({ id: r.id, rating: r.rating, title: r.title, body: r.body, displayName: r.display_name, createdAt: r.created_at });
 export interface ReviewSummary { count: number; average: number; stars: [number, number, number, number, number]; }
 export interface ProductQuestion { id: string; question: string; answer: string | null; createdAt: string; }
 export async function getProductQuestions(slug: string): Promise<ProductQuestion[]> {

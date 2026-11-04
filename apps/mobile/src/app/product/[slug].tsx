@@ -104,20 +104,6 @@ function ProductView({ product }: { product: Product }) {
             <AppText weight="semibold" size={22} style={styles.title} accessibilityRole="header">
               {product.name}
             </AppText>
-            {product.vendor && (
-              <Pressable
-                accessibilityRole="link"
-                accessibilityLabel={`From ${product.vendor.name}`}
-                onPress={() => router.push({ pathname: '/store/[slug]', params: { slug: product.vendor!.slug } })}
-              >
-                <AppText size={13} color={colors.textMuted}>
-                  From 
-                  <AppText weight="semibold" size={13} color={colors.accent}>
-                    {product.vendor.name}
-                  </AppText>
-                </AppText>
-              </Pressable>
-            )}
             <View style={styles.chips}>
               {highlights.map((h) => (
                 <TrustChip key={h} label={h} />

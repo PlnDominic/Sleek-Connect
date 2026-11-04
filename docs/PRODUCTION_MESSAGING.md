@@ -18,7 +18,7 @@ Sleek Connect sends customer notifications through the provider adapters in `app
 
 1. In the Google account: turn on 2-Step Verification, then Security → App passwords, and create one for "Sleek Connect".
 2. In Vercel (Production and Preview): `EMAIL_PROVIDER=gmail`, `GMAIL_USER=<the address>`, `GMAIL_APP_PASSWORD=<the 16 characters>`.
-   Optional: `EMAIL_FROM_NAME`, `EMAIL_REPLY_TO`, and `STORE_ALERT_EMAIL` (a copy of every order and vendor event, for the
+   Optional: `EMAIL_FROM_NAME`, `EMAIL_REPLY_TO`, and `STORE_ALERT_EMAIL` (a copy of every order event, for the
    store's own inbox; delivery codes and order links are left out).
 3. Locally, put the same values in `apps/web/.env.local` and run `npm run email:test -- you@example.com`. It signs in to
    Gmail and sends one message, and says what is wrong if Gmail refuses.

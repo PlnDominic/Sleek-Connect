@@ -482,17 +482,6 @@
   color: var(--c-ink);
 }
 
-.soldBy {
-  margin-top: 6px;
-  font-size: 14px;
-  color: var(--c-text-muted);
-}
-
-.soldBy a {
-  color: var(--c-accent);
-  font-weight: 600;
-}
-
 /* Size guide: a chart folded under "Size guide" */
 .sizeGuide {
   margin: 4px 0 12px;
@@ -539,7 +528,3 @@
   color: var(--c-text-muted, #5f6368);
 }
 
-.starSeller {
-  color: var(--c-accent);
-  font-weight: 700;
-}

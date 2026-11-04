@@ -5,7 +5,7 @@ import { can, requireStaffPage } from '@/lib/admin/session';
 import { formatDateTime } from '@/lib/orders';
 import { ActionForm } from '../ActionForm';
 import { Flash } from '../Flash';
-import { moderateReview, removeReviewReply } from './actions';
+import { moderateReview } from './actions';
 import styles from '../admin.module.css';
 
 export const metadata: Metadata = { title: 'Reviews' };
@@ -30,14 +30,11 @@ export default async function ReviewsPage({ searchParams }: PageProps<'/admin/re
     );
   }
 
-  const [{ data: reviews, error }, { data: counts }, replyRows] = await Promise.all([
+  const [{ data: reviews, error }, { data: counts }] = await Promise.all([
     staff.supabase.rpc('admin_list_reviews', { p_status: view }),
     staff.supabase.rpc('admin_review_counts').maybeSingle(),
-    // Read apart so the page still works before the seller-replies migration has run.
-    staff.supabase.rpc('admin_review_replies'),
   ]);
   if (error) throw error;
-  const replies = new Map((replyRows.error ? [] : (replyRows.data ?? [])).map((r) => [r.review_id, r]));
 
   return (
     <>
@@ -78,20 +75,6 @@ export default async function ReviewsPage({ searchParams }: PageProps<'/admin/re
               {r.moderated_by && ` · ${view === 'published' ? 'approved' : 'rejected'} by ${r.moderated_by}`}
             </p>
             {r.moderation_note && <p className={styles.muted}>Reason given: {r.moderation_note}</p>}
-            {replies.get(r.id) && (
-              <>
-                <p>
-                  <strong>Reply from {replies.get(r.id)!.store_name}:</strong> {replies.get(r.id)!.seller_reply}
-                </p>
-                <ActionForm action={removeReviewReply.bind(null, r.id, view)} confirm="Remove this reply from the store's public page?">
-                  <div className={styles.buttons}>
-                    <button type="submit" className={styles.secondary}>
-                      Remove seller reply
-                    </button>
-                  </div>
-                </ActionForm>
-              </>
-            )}
             <ActionForm action={moderateReview.bind(null, r.id, view)}>
               <label className={styles.field}>
                 <span>Reason (needed to reject; the customer sees it)</span>

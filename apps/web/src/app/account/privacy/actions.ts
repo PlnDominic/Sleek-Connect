@@ -27,7 +27,7 @@ export async function deleteAccount(_: DeleteState, form: FormData): Promise<Del
     }
   }
 
-  // A vendor applicant's ID file is removed through the Storage API too.
+  // A former seller applicant's ID file is removed through the Storage API too.
   const {
     data: { user },
   } = await supabase.auth.getUser();

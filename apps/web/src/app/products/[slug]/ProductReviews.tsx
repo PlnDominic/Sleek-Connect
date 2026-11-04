@@ -56,12 +56,6 @@ export function ProductReviews({ slug, summary, reviews, page = 1, minRating = 0
                 {r.title && <strong>{r.title}</strong>}
               </div>
               <p className={styles.body}>{r.body}</p>
-              {r.sellerReply && (
-                <p className={styles.sellerReply}>
-                  <strong>Reply from the seller</strong>
-                  {r.sellerReply}
-                </p>
-              )}
               <span className={styles.muted}>
                 {r.displayName} · Verified purchase · {date.format(new Date(r.createdAt))} · <ReviewReport reviewId={r.id} />
               </span>

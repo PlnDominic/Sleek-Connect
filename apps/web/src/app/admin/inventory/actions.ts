@@ -19,13 +19,16 @@ export async function receiveStock(_: ActionState, form: FormData): Promise<Acti
   const [productId, size = ''] = text(form, 'sku').split('|');
   const quantity = Number(text(form, 'quantity'));
   const supabase = await createUserSupabase();
-  const { error } = await supabase.rpc('admin_receive_stock', {
+  const cost = text(form, 'unit_cost');
+  const { error } = await supabase.rpc('admin_receive_stock_from', {
     p_product_id: productId ?? '',
     p_size_code: size,
     p_batch_code: text(form, 'batch'),
     p_expires_on: text(form, 'expires_on') || (null as unknown as string),
     p_quantity: Number.isInteger(quantity) ? quantity : 0,
-    p_note: text(form, 'note') || undefined,
+    p_supplier_id: text(form, 'supplier') || undefined,
+    p_unit_cost: cost === '' ? undefined : Number(cost),
+    p_reference: text(form, 'note') || undefined,
   });
   if (error) return failed(error);
   changed();

@@ -22,7 +22,8 @@ const families = {
   delivery: 'Delivery',
   rider: 'Riders',
   settings: 'Settings',
-  vendor: 'Vendors',
+  vendor: 'Vendors (former)',
+  supplier: 'Suppliers',
   marketplace: 'Marketplace',
   staff: 'Staff',
 } as const;

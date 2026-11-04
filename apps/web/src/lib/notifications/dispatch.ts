@@ -7,10 +7,10 @@ import { createAdminSupabase } from '@/lib/supabase/admin';
 import { emailProvider, pushProvider, smsProvider, toInternationalPhone, UnregisteredDeviceError } from './providers';
 import { buildEmailHtml } from './email-html';
 import { maskRecipient } from './mask';
-import { renderEmail, renderMessage, type NotificationPayload, type VendorPayload } from './templates';
+import { renderEmail, renderMessage, type NotificationPayload } from './templates';
 
 /**
- * A copy of what happened, for the store's own inbox (STORE_ALERT_EMAIL). Every customer order or vendor event queues one
+ * A copy of what happened, for the store's own inbox (STORE_ALERT_EMAIL). Every customer order event queues one
  * SMS row, so alerting from those rows reaches the store even for shoppers who gave no email. It is sent once, on the
  * first attempt, and never retried, so a failed alert can't hold up or duplicate the customer's message. The delivery
  * code and the order link are left out: they are the shopper's proof of delivery and must not sit in an inbox.
@@ -101,7 +101,7 @@ async function alertStore(n: { template: string; recipient: string; payload: unk
   if (!target) return;
   const { to, provider } = target;
   const payload = { ...(n.payload as Record<string, unknown>), delivery_code: '(hidden)', order_token: undefined };
-  const message = renderEmail(n.template, payload as unknown as NotificationPayload | VendorPayload, { sentTo: n.recipient });
+  const message = renderEmail(n.template, payload as unknown as NotificationPayload, { sentTo: n.recipient });
   if (!message) return;
   try {
     const result = await provider.send(to, {
@@ -149,7 +149,7 @@ export async function dispatchNotifications(limit = 20): Promise<{ sent: number;
     // The "order received" step has its own alert (alertStoreNewOrder), so only the later messages are copied here.
     if (n.attempts === 1 && n.channel === 'sms') await alertStore(n);
 
-    const content = n.payload as unknown as NotificationPayload | VendorPayload;
+    const content = n.payload as unknown as NotificationPayload;
     const message = n.channel === 'email' ? renderEmail(n.template, content) : renderMessage(n.template, content);
     const provider = n.channel === 'sms' ? smsProvider() : n.channel === 'push' ? pushProvider() : emailProvider();
     if (!message || !provider) {

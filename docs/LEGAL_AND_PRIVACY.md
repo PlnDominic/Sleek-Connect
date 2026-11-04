@@ -57,7 +57,6 @@ banner that asks first and a way to change the choice. The mobile app is separat
   (`place_order`). A signed-in shopper who confirmed at sign-up isn't asked again. The moment is stored on the order
   (`orders.adult_confirmed_at`), is part of the shopper's data export, and stays on the anonymised order if the account is
   deleted, as proof the rule was applied.
-- Vendors tick "I'm 18 or older" when applying, and the vendor terms say it.
 - This is a confirmation by tick box, not identity or age verification. It is the usual standard for a shop selling to adults
   that is not selling age-restricted goods (alcohol, tobacco, medicines). If you ever stock such products, ask a lawyer what
   verification is required.
@@ -65,29 +64,25 @@ banner that asks first and a way to change the choice. The mobile app is separat
 ## 40. Terms and privacy: what changed, and what a lawyer must check
 
 Brought up to date on 1 November 2026: payment by card on the payment provider's page, **pay on delivery** (cash, confirmation
-call, limits, cash refunds paid to Mobile Money), **independent stores** (who is the seller, who handles returns, what stores can
-see), the 18+ confirmation at checkout, vendor data (including ID documents), Google sign-in, error reporting and visit
+call, limits, cash refunds paid to Mobile Money), **suppliers** (we are the seller and buy from suppliers who never see shopper details), the 18+ confirmation at checkout, Google sign-in, error reporting and visit
 statistics, and what is stored on the device. The help centre's payment answers match.
 
 **Questions for your Ghanaian lawyer** (please confirm the law yourself; the names below are the ones to ask about):
 
-1. **Marketplace structure.** The terms say we take payment and handle returns for items from independent stores while the store
-   is "responsible for the product". Are you a seller, an agent or a platform, and how should liability, refunds and warranties be
-   worded? This also decides the vendor agreement.
-2. **Vendor agreement.** The vendor terms on `/sell` are five lines. A full seller agreement should cover commission or markup,
-   payout timing, prohibited products, counterfeit handling, suspension, indemnity and data handling.
-3. **Consumer protection and returns.** Is the return window (set in Settings), the "opened cosmetics can't be returned"
+1. **Supplier relationships.** We buy from suppliers and resell, so we are the seller. Should supplier agreements cover warranties on
+   authenticity, recalls, expiry and returns of faulty stock?
+2. **Consumer protection and returns.** Is the return window (set in Settings), the "opened cosmetics can't be returned"
    rule, and the cancellation and refund wording enough for Ghana's current consumer protection rules?
-4. **Electronic commerce disclosures.** Does the Electronic Transactions Act, 2008 (Act 772) require anything more on the site or
+3. **Electronic commerce disclosures.** Does the Electronic Transactions Act, 2008 (Act 772) require anything more on the site or
    in order confirmations (seller identity, price and tax breakdown, a way to correct mistakes before ordering)?
-5. **Data Protection Act, 2012 (Act 843).** Registration as a data controller; the lawful basis wording; retention periods;
+4. **Data Protection Act, 2012 (Act 843).** Registration as a data controller; the lawful basis wording; retention periods;
    what to tell people about **processing abroad** (Supabase, Vercel, Sentry and PostHog are hosted outside Ghana); and breach
    notification timing.
-6. **Payments.** Hubtel is the licensed payment service provider (Payment Systems and Services Act, 2019, Act 987). Does your
+5. **Payments.** Hubtel is the licensed payment service provider (Payment Systems and Services Act, 2019, Act 987). Does your
    merchant agreement with Hubtel add terms you must pass on, and how should cash on delivery be treated for records?
-7. **Tax.** VAT and other levies on sales and on vendor markup; what a valid receipt or invoice must show (the receipt now
+6. **Tax.** VAT and other levies on sales; what a valid receipt or invoice must show (the receipt now
    prints name, address and TIN when set).
-8. **Regulated products.** Cosmetics, baby and kids' products and any food: Food and Drugs Authority registration and labelling
+7. **Regulated products.** Cosmetics, baby and kids' products and any food: Food and Drugs Authority registration and labelling
    (Public Health Act, 2012, Act 851), and what you must be able to show for each product.
 9. **Reviews and user content.** Wording on moderation and liability for what shoppers post.
 10. **Limitation of liability and governing law.** Whether the limits in the terms are enforceable as written.

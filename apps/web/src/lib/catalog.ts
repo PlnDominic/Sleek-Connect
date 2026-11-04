@@ -2,7 +2,7 @@ import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
 import { categoryFromRow, productFromRow, productSelect, type AgeBand, type AgeBandId, type Category, type Product } from '@sleek/shared';
 import type { DeliveryConfig } from './delivery';
-import { photoUrl, vendorAssetUrl } from './photos';
+import { photoUrl } from './photos';
 import { createSupabase } from './supabase/server';
 import type { Database } from './supabase/database.types';
 
@@ -12,22 +12,11 @@ type ProductRow = Tables['products']['Row'] & {
   product_age_bands: Pick<Tables['product_age_bands']['Row'], 'age_band_id'>[];
   inventory_levels: { size_code: string; in_stock: boolean | null }[];
   product_images: Pick<Tables['product_images']['Row'], 'path' | 'alt' | 'sort_order'>[];
-  vendors: Pick<Tables['vendors']['Row'], 'slug' | 'name' | 'is_house'> | null;
 };
 
 const productColumns = productSelect;
 
 function unwrap<T>({ data, error }: { data: T | null; error: { message: string } | null }): T {
-  if (error) throw new Error(`Supabase query failed: ${error.message}`);
-  return data as T;
-}
-
-/**
- * Ratings and the stores page came with a later migration. Until it has been run on a database, those reads return
- * `fallback` instead of failing the whole page (or the build); any other error is still thrown.
- */
-function orMissing<T>({ data, error }: { data: unknown; error: { code?: string; message: string } | null }, fallback: T): T {
-  if (error && (error.code === 'PGRST202' || error.code === '42883')) return fallback;
   if (error) throw new Error(`Supabase query failed: ${error.message}`);
   return data as T;
 }
@@ -262,188 +251,4 @@ export async function getAgeBandProducts(band: string): Promise<Product[]> {
       .order('name'),
   );
   return rows.map((r) => toProduct(r as unknown as ProductRow));
-}
-
-export interface Storefront {
-  name: string;
-  slug: string;
-  tagline?: string;
-  description?: string;
-  logo?: string;
-  banner?: string;
-  isHouse: boolean;
-  products: Product[];
-  /** Average of the published reviews on this store's products (0 when there are none). */
-  rating: { average: number; count: number };
-  reviews: StoreReview[];
-  /** A short notice shown at the top of the page. */
-  announcement?: string;
-  returnsPolicy?: string;
-  /** Working days the store needs to pack an order. */
-  processingDays?: number;
-  instagram?: string;
-  website?: string;
-  /** Counts shown on the store page; missing before the Etsy-extras migration has run. */
-  facts?: { ordersDelivered: number; joinedYear: number; followers: number; starSeller: boolean };
-  /** The store's sections, with the slugs of the products in each (empty ones left out). */
-  sections: { id: string; name: string; productSlugs: string[] }[];
-}
-
-export interface StoreReview {
-  rating: number;
-  title: string | null;
-  body: string | null;
-  display_name: string | null;
-  created_at: string;
-  product_name: string;
-  product_slug: string;
-  seller_reply?: string | null;
-}
-
-export interface StoreListing {
-  slug: string;
-  name: string;
-  tagline?: string;
-  logo?: string;
-  banner?: string;
-  productCount: number;
-  rating: number;
-  reviewCount: number;
-}
-
-/** A vendor's public store with the products on sale, or null when the store doesn't exist or isn't open. */
-export async function getStorefront(slug: string): Promise<Storefront | null> {
-  'use cache';
-  cacheLife('minutes');
-  cacheTag('catalog');
-
-  const supabase = createSupabase();
-  // Row level security only returns stores that are approved and paid up.
-  const { data: vendor, error } = await supabase
-    .from('vendors')
-    .select('id, slug, name, tagline, description, logo_path, banner_path, is_house')
-    .eq('slug', slug)
-    .maybeSingle();
-  if (error) throw new Error(`Supabase query failed: ${error.message}`);
-  if (!vendor) return null;
-  const [rows, rating, reviews, profile, sectionRows, factsRow] = await Promise.all([
-    supabase.from('products').select(productColumns).eq('vendor_id', vendor.id).order('created_at', { ascending: false }).then(unwrap),
-    supabase.rpc('store_rating', { p_slug: slug }).then((r) => orMissing(r, { average: 0, count: 0 })),
-    supabase.rpc('store_reviews', { p_slug: slug, p_limit: 6 }).then((r) => orMissing<StoreReview[]>(r, [])),
-    // The store-builder details and sections are read apart, so the page still works before their migration has run.
-    supabase
-      .from('vendors')
-      .select('announcement, returns_policy, processing_days, instagram, website')
-      .eq('id', vendor.id)
-      .maybeSingle()
-      .then((r) => (r.error ? null : r.data)),
-    supabase
-      .from('vendor_sections')
-      .select('id, name, sort_order')
-      .eq('vendor_id', vendor.id)
-      .order('sort_order')
-      .then((r) => (r.error ? [] : (r.data ?? []))),
-    supabase.rpc('store_facts', { p_slug: slug }).then((r) => orMissing<Record<string, unknown> | null>(r, null)),
-  ]);
-  const stats = rating as { average: number; count: number };
-  const sectionOf = new Map<string, string>();
-  if (sectionRows.length > 0) {
-    const { data: placed } = await supabase.from('products').select('slug, section_id').eq('vendor_id', vendor.id).not('section_id', 'is', null);
-    for (const row of placed ?? []) if (row.section_id) sectionOf.set(row.slug, row.section_id);
-  }
-  const sections = sectionRows
-    .map((section) => ({ id: section.id, name: section.name, productSlugs: [...sectionOf].filter(([, id]) => id === section.id).map(([productSlug]) => productSlug) }))
-    .filter((section) => section.productSlugs.length > 0);
-  return {
-    name: vendor.name,
-    slug: vendor.slug,
-    tagline: vendor.tagline ?? undefined,
-    description: vendor.description ?? undefined,
-    logo: vendorAssetUrl(vendor.logo_path),
-    banner: vendorAssetUrl(vendor.banner_path),
-    isHouse: vendor.is_house,
-    products: (rows as ProductRow[]).map(toProduct),
-    rating: { average: Number(stats.average), count: stats.count },
-    reviews,
-    announcement: profile?.announcement ?? undefined,
-    returnsPolicy: profile?.returns_policy ?? undefined,
-    processingDays: profile?.processing_days ?? undefined,
-    instagram: profile?.instagram ?? undefined,
-    website: profile?.website ?? undefined,
-    facts: factsRow
-      ? {
-          ordersDelivered: Number(factsRow.orders_delivered ?? 0),
-          joinedYear: Number(factsRow.joined_year ?? 0),
-          followers: Number(factsRow.followers ?? 0),
-          starSeller: factsRow.star_seller === true,
-        }
-      : undefined,
-    sections,
-  };
-}
-
-/** The open vendor stores that have something on sale, for the stores page. */
-export async function getStoreDirectory(): Promise<StoreListing[]> {
-  'use cache';
-  cacheLife('minutes');
-  cacheTag('catalog');
-  const rows = orMissing<
-    {
-      slug: string;
-      name: string;
-      tagline: string | null;
-      logo_path: string | null;
-      banner_path: string | null;
-      product_count: number;
-      rating: number;
-      review_count: number;
-    }[]
-  >(await createSupabase().rpc('store_directory'), []);
-  return rows.map((r) => ({
-    slug: r.slug,
-    name: r.name,
-    tagline: r.tagline ?? undefined,
-    logo: vendorAssetUrl(r.logo_path),
-    banner: vendorAssetUrl(r.banner_path),
-    productCount: r.product_count,
-    rating: Number(r.rating),
-    reviewCount: r.review_count,
-  }));
-}
-
-/** Slugs of the open stores, ours included, for the sitemap and pre-built store pages. */
-export async function getStoreSlugs(): Promise<string[]> {
-  'use cache';
-  cacheLife('minutes');
-  cacheTag('catalog');
-  const rows = unwrap(await createSupabase().from('vendors').select('slug'));
-  return rows.map((r) => r.slug);
-}
-
-/** Whether sellers can open their own stores (off: the owner adds suppliers instead). A database without the setting yet counts as open. */
-export async function getVendorAccountsOpen(): Promise<boolean> {
-  'use cache';
-  cacheLife('minutes');
-  cacheTag('catalog');
-  const { data, error } = await createSupabase().from('store_settings').select('vendor_accounts_open').single();
-  return error ? true : data.vendor_accounts_open === true;
-}
-
-/** What a prospective vendor needs to know before applying. */
-export async function getVendorTerms(): Promise<{ annualFee: number; graceDays: number; payoutHoldDays: number; minPayout: number; replyHours: number }> {
-  'use cache';
-  cacheLife('minutes');
-  cacheTag('catalog');
-  const supabase = createSupabase();
-  const { data, error } = await supabase.from('store_settings').select('vendor_annual_fee_ghs, vendor_grace_days').single();
-  if (error) throw new Error(`Supabase query failed: ${error.message}`);
-  // The payout rules are read apart, so the page works (with the standard rules) before their migration has run.
-  const { data: rules } = await supabase.from('store_settings').select('vendor_payout_hold_days, vendor_min_payout_ghs, vendor_support_reply_hours').single();
-  return {
-    annualFee: data.vendor_annual_fee_ghs,
-    graceDays: data.vendor_grace_days,
-    payoutHoldDays: rules?.vendor_payout_hold_days ?? 7,
-    minPayout: rules?.vendor_min_payout_ghs ?? 50,
-    replyHours: rules?.vendor_support_reply_hours ?? 24,
-  };
 }

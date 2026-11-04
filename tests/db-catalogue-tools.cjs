@@ -60,13 +60,6 @@ const sizePrices = (slug) => sql(`select string_agg(price_ghs::text, ',' order b
   ({ data } = await bulk(S.cat, [oil], { published: true }));
   assert(data.skipped[0]?.reason.includes('Missing:') || data.updated === 1, 'and shown again only when complete (otherwise the reason is given)');
 
-  // --- Independent stores are never touched ---------------------------------------
-  const vendorProduct = sql(`select id from public.products where vendor_id <> (select id from public.vendors where is_house) limit 1`);
-  if (vendorProduct) {
-    ({ data } = await bulk(S.cat, [vendorProduct], { price: { mode: 'percent', value: 10 } }));
-    assert(data.updated === 0 && data.skipped[0].reason.includes('independent store'), 'products sold by independent stores are skipped');
-  }
-
   // --- Size guides -----------------------------------------------------------------------
   assert(Number(sql('select count(*) from public.size_guides')) >= 3, 'starter size guides exist');
   const guide = { title: 'Men\'s shirts', columns: ['Size', 'Chest (cm)'], rows: [['M', '96–101'], ['L', '101–106']] };

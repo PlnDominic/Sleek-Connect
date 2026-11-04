@@ -52,18 +52,6 @@ export default async function Dashboard({ searchParams }: PageProps<'/admin'>) {
   ]);
   const low = (stock.data ?? []).filter((l) => l.is_low);
   const expiringCount = (expiring.data ?? []).length;
-  const vendorRows = can(staff.role, 'vendors.manage')
-    ? (((await db.rpc('admin_vendors')).data as unknown as { status: string; pending_products: number }[] | null) ?? [])
-    : null;
-  const vendorsWaiting = vendorRows?.filter((v) => v.status === 'pending').length ?? 0;
-  const vendorProductsWaiting = vendorRows?.reduce((n, v) => n + Number(v.pending_products), 0) ?? 0;
-  const canVendors = vendorRows !== null;
-  const [shipmentsRes, threadsRes, balancesRes] = canVendors
-    ? await Promise.all([db.rpc('admin_vendor_shipments'), db.rpc('admin_vendor_threads'), db.rpc('admin_vendor_balances')])
-    : [null, null, null];
-  const pickupsWaiting = ((shipmentsRes?.data ?? []) as unknown as { status: string }[]).filter((x) => x.status === 'packed').length;
-  const vendorMessages = ((threadsRes?.data ?? []) as unknown as { unread: number }[]).reduce((n, t) => n + Number(t.unread), 0);
-  const vendorsOwedTo = ((balancesRes?.data ?? []) as unknown as { balance: number }[]).filter((b) => Number(b.balance) > 0).length;
   const reviewsPending = can(staff.role, 'reviews.moderate') ? ((await db.rpc('admin_review_counts').maybeSingle()).data?.pending ?? 0) : null;
 
   // Sales per day.
@@ -100,15 +88,6 @@ export default async function Dashboard({ searchParams }: PageProps<'/admin'>) {
     { label: 'Returns to review', value: returnsToReview, href: '/admin/returns' },
     { label: 'Open support cases', value: openCases, href: '/admin/support' },
     ...(reviewsPending === null ? [] : [{ label: 'Reviews to check', value: reviewsPending, href: '/admin/reviews' }]),
-    ...(vendorRows === null
-      ? []
-      : [
-          { label: 'Vendors to approve', value: vendorsWaiting, href: '/admin/vendors' },
-          { label: 'Vendor products to review', value: vendorProductsWaiting, href: '/admin/vendors?tab=products' },
-          { label: 'Vendor pickups', value: pickupsWaiting, href: '/admin/vendors?tab=pickups' },
-          { label: 'Vendors to pay', value: vendorsOwedTo, href: '/admin/vendors?tab=payouts' },
-          { label: 'Vendor messages', value: vendorMessages, href: '/admin/vendors?tab=messages' },
-        ]),
     { label: 'Low stock', value: low.length, href: '/admin/inventory?show=low' },
     { label: 'Expiry alerts', value: expiringCount, href: '/admin/inventory' },
   ];

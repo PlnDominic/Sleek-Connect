@@ -179,7 +179,7 @@ export default async function SettingsPage() {
       <ActionForm action={sendTestEmail}>
         <section className={styles.panel}>
           <h2>Email</h2>
-          <p className={styles.muted}>Order and vendor emails are sent by the server. Send one test message to check it works.</p>
+          <p className={styles.muted}>Order emails are sent by the server. Send one test message to check it works.</p>
           <label className={styles.field}>
             <span>Send a test email to</span>
             <input name="to" type="email" required defaultValue={staff.email ?? ''} />

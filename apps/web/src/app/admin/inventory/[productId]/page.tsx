@@ -22,12 +22,14 @@ export default async function ProductStockPage({ params, searchParams }: PagePro
   const { done } = await searchParams;
   const db = staff.supabase;
 
-  const [{ data: product }, { data: levels }, { data: batches }, { data: movements }] = await Promise.all([
+  const [{ data: product }, { data: levels }, { data: batches }, { data: movements }, { data: supplierRows }] = await Promise.all([
     db.from('products').select('id, name, department, kids_filter, product_sizes(code, label, sort_order)').eq('id', productId).maybeSingle(),
     db.rpc('admin_stock_overview'),
     db.from('stock_batches').select('id, size_code, batch_code, expires_on, quantity, status, received_at, note').eq('product_id', productId).order('expires_on', { nullsFirst: false }),
     db.from('stock_movements').select('id, at, size_code, batch_id, reason, quantity, sellable_change, actor_email, note, orders(order_number)').eq('product_id', productId).order('at', { ascending: false }).limit(100),
+    db.rpc('admin_supplier_options'),
   ]);
+  const suppliers = (supplierRows ?? []) as unknown as { id: string; name: string }[];
   if (!product) notFound();
 
   const sizeLabel = (code: string) => product.product_sizes.find((s) => s.code === code)?.label ?? 'One size';
@@ -65,6 +67,7 @@ export default async function ProductStockPage({ params, searchParams }: PagePro
         <details className={styles.panel}>
           <summary><strong>Receive stock</strong></summary>
           <ReceiveForm
+            suppliers={suppliers}
             skus={mine.map((l) => ({
               value: `${l.product_id}|${l.size_code}`,
               label: `${product.name}${l.size_label ? `, ${l.size_label}` : ''}`,

@@ -10,7 +10,7 @@ export interface PaymentRequest {
   /** Mobile Money only. Providers with a hosted payment page use these to pre-fill it. */
   network?: MomoNetwork;
   wallet?: string;
-  /** Where the shopper (or vendor) should land after paying or cancelling, as a path on this site. */
+  /** Where the shopper should land after paying or cancelling, as a path on this site. */
   returnPath: string;
 }
 

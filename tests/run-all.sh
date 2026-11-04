@@ -57,7 +57,6 @@ if [ "$ONLY" != "db" ]; then
   fresh; start; suite "shop pages, search, content, returns, help" e2e-store.cjs; server_errors
   fresh; start; suite "delivery, photos, wishlist, addresses, cancel, buy again" e2e-shopper.cjs; server_errors
   fresh; start; suite "terms, saved numbers, reviews, data export and deletion" e2e-privacy.cjs; server_errors
-  fresh; start; suite "vendors: apply, approve, pay, review, storefront, orders, earnings, messages, import" e2e-marketplace.cjs; server_errors
   fresh; start; suite "mobile app: payment prompt endpoint" e2e-mobile-api.cjs; server_errors
   stop
 fi
@@ -67,24 +66,20 @@ npx supabase db reset >/dev/null 2>&1; suite "database: storefront, returns, sup
 npx supabase db reset >/dev/null 2>&1; suite "database: addresses, photos, delivery, cancel, wishlist" db-shopper.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: saved numbers, reviews, data export and deletion" db-privacy.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: launch security, checkout and delivery hardening" db-launch.cjs
-npx supabase db reset >/dev/null 2>&1; suite "database: vendors, subscriptions, review and markup" db-marketplace.cjs
-npx supabase db reset >/dev/null 2>&1; suite "database: vendor orders, payouts, messages, ratings, online subscription" db-vendor-ops.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: mobile app push notifications" db-mobile.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: launch schema verification" db-schema-verify.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: pay on delivery" db-pay-on-delivery.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: the 18+ rule at checkout" db-age-rule.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: bulk editing, reorder suggestions, size guides" db-catalogue-tools.cjs
-npx supabase db reset >/dev/null 2>&1; suite "database: follow stores, seller replies, Star Seller" db-etsy-extras.cjs
+npx supabase db reset >/dev/null 2>&1; suite "database: account pages, and the seller side switched off" db-account-extras.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: promo code management" db-promotions.cjs
-npx supabase db reset >/dev/null 2>&1; suite "database: suppliers (admin-created vendors, no sign-in)" db-suppliers.cjs
-npx supabase db reset >/dev/null 2>&1; suite "database: store builder (name check, set up before live, sections, vacation mode)" db-store-builder.cjs
+npx supabase db reset >/dev/null 2>&1; suite "database: supplier register and stock receipts" db-suppliers.cjs
 suite "email: Gmail sender (Nodemailer)" unit-email.cjs
 suite "payments: Hubtel provider" unit-hubtel.cjs
 suite "privacy: what Sentry and PostHog may receive" unit-telemetry.cjs
 suite "privacy: no trackers, no cookies of our own" unit-privacy-guard.cjs
 suite "build: server action files export only async functions" unit-server-actions.cjs
 suite "admin: the settings page shows error reporting first" unit-admin-settings.cjs
-suite "vendors: the Set up your store checklist" unit-store-setup.cjs
 
 if [ "$FAILED" = "0" ]; then echo "== all suites passed"; else echo "== some suites FAILED"; fi
 exit "$FAILED"

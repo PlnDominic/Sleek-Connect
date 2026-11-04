@@ -46,10 +46,7 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   images: {
     remotePatterns: supabase
-      ? [
-          new URL(`${supabase.origin}/storage/v1/object/public/product-images/**`),
-          new URL(`${supabase.origin}/storage/v1/object/public/vendor-assets/**`),
-        ]
+      ? [new URL(`${supabase.origin}/storage/v1/object/public/product-images/**`)]
       : [],
     // The local Supabase stack runs on 127.0.0.1, which Next.js refuses to fetch from by default. Only that exact
     // path is allowed above, and hosted projects never take this branch.
@@ -58,7 +55,7 @@ const nextConfig: NextConfig = {
   // Private pages never belong in search results (robots.txt alone doesn't stop a linked page from being listed).
   async headers() {
     const noindex = [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }];
-    const privateRoutes = ['/admin/:path*', '/account/:path*', '/bag', '/checkout', '/orders/:path*', '/saved', '/track', '/vendor/:path*', '/auth/:path*', '/api/:path*'];
+    const privateRoutes = ['/admin/:path*', '/account/:path*', '/bag', '/checkout', '/orders/:path*', '/saved', '/track', '/auth/:path*', '/api/:path*'];
     return [
       { source: '/:path*', headers: securityHeaders },
       ...privateRoutes.map((source) => ({ source, headers: [...securityHeaders, ...noindex] })),

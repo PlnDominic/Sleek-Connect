@@ -96,7 +96,6 @@ Use these as a starting point.
 > • Every product is checked for authenticity, with batch and expiry details on your receipt.
 > • Pay with MTN MoMo, Telecel Cash or AT Money, approved on your phone.
 > • Follow your order from packing to the rider at your door, and get a notification at each step.
-> • Shop from independent stores on the marketplace.
 > • Delivery Monday to Saturday.
 >
 > You don't need an account to order. Sign in with your phone number or Google to see your orders on every device.

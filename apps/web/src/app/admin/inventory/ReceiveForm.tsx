@@ -11,7 +11,12 @@ export interface SkuOption {
 }
 
 /** Records a delivery from a supplier into a batch (PRD FR-102). */
-export function ReceiveForm({ skus, defaultSku }: { skus: SkuOption[]; defaultSku?: string }) {
+export interface SupplierOption {
+  id: string;
+  name: string;
+}
+
+export function ReceiveForm({ skus, suppliers, defaultSku }: { skus: SkuOption[]; suppliers: SupplierOption[]; defaultSku?: string }) {
   return (
     <ActionForm action={receiveStock} resetOnSuccess>
       <div className={styles.row}>
@@ -43,10 +48,28 @@ export function ReceiveForm({ skus, defaultSku }: { skus: SkuOption[]; defaultSk
           <input name="quantity" type="number" min={1} max={100000} required />
         </label>
       </div>
-      <label className={styles.field}>
-        <span>Supplier or invoice reference</span>
-        <input name="note" />
-      </label>
+      <div className={styles.row}>
+        <label className={styles.field}>
+          <span>Supplier</span>
+          <select name="supplier" defaultValue="">
+            <option value="">Not recorded</option>
+            {suppliers.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+          <small>Add suppliers under Inventory → Suppliers</small>
+        </label>
+        <label className={styles.field}>
+          <span>Cost per unit (GH₵)</span>
+          <input name="unit_cost" type="number" min={0} step="0.01" inputMode="decimal" />
+        </label>
+        <label className={styles.field}>
+          <span>Invoice or delivery reference</span>
+          <input name="note" maxLength={120} />
+        </label>
+      </div>
       <div className={styles.buttons}>
         <button type="submit" className={styles.primary}>Receive stock</button>
       </div>

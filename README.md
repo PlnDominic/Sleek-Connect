@@ -139,12 +139,11 @@ The build reads the catalogue from Supabase, so the Supabase variables must be s
 - To change the starter catalogue, edit `packages/shared/src/catalog.ts` and run `npm run db:seed:generate`.
 - After adding a migration or regenerating the seed, run `npm run db:setup:generate` to refresh `supabase/setup.sql`.
 
-## Marketplace
+## Suppliers and stock
 
-Vendors can open their own storefronts (`/sell`, `/vendor`, `/store/<slug>`) after the owner approves them and records a
-yearly subscription payment. Vendors list their own products; the owner reviews each one and sets a markup
-(**Admin → Vendors**), and shoppers pay the vendor's price plus the markup. Ordering from vendor stores stays off until
-fulfilment and payouts are built. See [docs/MARKETPLACE.md](docs/MARKETPLACE.md).
+Sleek Connect is one store: it buys from suppliers, keeps stock, and sells to shoppers. **Admin → Suppliers** is the internal
+supplier register (contacts, tax and payment details for finance, deliveries received and what they cost); receiving stock under
+**Inventory** records the supplier, cost per unit and invoice reference. See [docs/SUPPLIERS.md](docs/SUPPLIERS.md).
 
 ## Admin console
 
@@ -316,7 +315,7 @@ doubles as the delivery log. Failed sends are retried up to five times.
 - **Email through Gmail:** set `EMAIL_PROVIDER=gmail`, `GMAIL_USER` (the Gmail or Google Workspace address that sends) and
   `GMAIL_APP_PASSWORD` (Google Account → Security → turn on 2-Step Verification → App passwords; never the normal password).
   Optional: `EMAIL_FROM_NAME`, `EMAIL_REPLY_TO`, and `STORE_ALERT_EMAIL`, an inbox that receives a copy of every order and
-  vendor event as it happens (without delivery codes or order links), including for shoppers who gave no email. Check the
+  event as it happens (without delivery codes or order links), including for shoppers who gave no email. Check the
   settings with `npm run email:test -- you@example.com`. Gmail allows about 500 messages a day on a personal account
   (about 2,000 on Workspace) and always sends from the signed-in address. Customer order emails go to the address typed in
   the optional **Email** field at checkout (web and app), or else to the signed-in account's email (Google sign-in);
@@ -464,9 +463,6 @@ catalogue as the website.
   notifications, and each order status change that sends an SMS or email also sends a push (`PUSH_PROVIDER=expo` on the
   server). Tapping a notification opens the order. Remote push can't be received in Expo Go on Android; use a development
   build. See [docs/MOBILE_RELEASE.md](docs/MOBILE_RELEASE.md) for building, credentials and the store listings.
-- **Marketplace launch pack:** onboarding and product approval checklists, seller terms and product standards, disputes,
-  payout rules (hold, minimum, tax number), vendor tax details and support, and views and conversion for vendors. See
-  [docs/VENDOR_LAUNCH.md](docs/VENDOR_LAUNCH.md) (including the three rehearsals to do before opening vendor orders).
 - **Legal and privacy:** terms, privacy notice and help match what the store does; guests confirm they are 18+ at checkout;
   company details come from environment variables. See [docs/LEGAL_AND_PRIVACY.md](docs/LEGAL_AND_PRIVACY.md) (including the
   questions for a lawyer).
@@ -476,8 +472,7 @@ catalogue as the website.
   every payment confirmed against Hubtel before an order is marked paid. See [docs/HUBTEL.md](docs/HUBTEL.md).
 - **Pay on delivery:** checkout offers cash to the rider as well as Mobile Money (no bank option). Staff confirm the order by
   phone, and the rider's cash is recorded at delivery. See [docs/PAY_ON_DELIVERY.md](docs/PAY_ON_DELIVERY.md).
-- **Still on the website:** returns, receipts, wishlists sync, saved addresses and Mobile Money number management, and
-  vendor tools.
+- **Still on the website:** returns, receipts, wishlists sync, saved addresses and Mobile Money number management.
 - **Speed:** product photos are cached on the phone, lists are virtualised, data is cached between screens and refreshed in
   the background, and searching waits for a short pause in typing.
 

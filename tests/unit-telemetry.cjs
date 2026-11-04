@@ -1,5 +1,5 @@
 // What may leave the site for Sentry and PostHog: order tokens, phone numbers, email addresses, cookies and request bodies
-// are removed, and nothing is collected in the admin console or vendor dashboard.
+// are removed, and nothing is collected in the admin console.
 process.env.TSX_TSCONFIG_PATH ??= require('path').resolve(__dirname, '../apps/web/tsconfig.json');
 require('tsx/cjs');
 const { redactText, scrubUrl, isPrivatePath, scrubAnalyticsEvent, scrubMonitoringEvent } = require('../apps/web/src/lib/telemetry/scrub.ts');
@@ -14,10 +14,10 @@ assert(scrubUrl('https://shop.example/products/serum?utm_source=fb') === 'https:
 assert(scrubUrl('/help/report?order=' + TOKEN) === '/help/report?order=%5Bremoved%5D', 'including the order link on the report page');
 assert(redactText(`Call 024 123 4567 or ama@example.com about SC-1006 (${TOKEN})`) === 'Call [number] or [email] about [order] ([token])', 'free text loses numbers, emails, order numbers and tokens');
 assert(redactText('Product slug vitamin-c-serum, GH₵ 150, 2 items') === 'Product slug vitamin-c-serum, GH₵ 150, 2 items', 'and everything else is left alone');
-assert(isPrivatePath('/admin/orders') && isPrivatePath('/vendor') && isPrivatePath('/auth/callback') && !isPrivatePath('/products/x') && !isPrivatePath('/account'), 'the admin console, vendor pages and sign-in callbacks are private; the store is not');
+assert(isPrivatePath('/admin/orders') && isPrivatePath('/auth/callback') && !isPrivatePath('/products/x') && !isPrivatePath('/account'), 'the admin console and sign-in callbacks are private; the store is not');
 
 const page = (url, extra = {}) => ({ event: '$pageview', properties: { $current_url: url, $pathname: new URL(url).pathname, $referrer: `https://shop.example/orders/${TOKEN}`, ...extra } });
-assert(scrubAnalyticsEvent(page('https://shop.example/admin/orders')) === null && scrubAnalyticsEvent(page('https://shop.example/vendor/orders')) === null, 'nothing is recorded in the admin console or vendor dashboard');
+assert(scrubAnalyticsEvent(page('https://shop.example/admin/orders')) === null, 'nothing is recorded in the admin console');
 const sent = scrubAnalyticsEvent(page(`https://shop.example/orders/${TOKEN}`));
 assert(sent.properties.$current_url === 'https://shop.example/orders/:token' && sent.properties.$pathname === '/orders/:token' && sent.properties.$referrer === 'https://shop.example/orders/:token', 'a page view of an order carries no token, as page or referrer');
 assert(scrubAnalyticsEvent(null) === null && scrubAnalyticsEvent({ event: 'x' }).event === 'x', 'empty events pass through');
