@@ -59,15 +59,15 @@ npm test              # every test suite (see Testing); `npm test -- db` runs on
 ## Connect a hosted Supabase project
 
 1. Create a project in the Supabase dashboard.
-2. Load the schema and the starter catalogue, either way:
+2. Load the schema, either way:
    - **One paste (new, empty project):** open [`supabase/setup.sql`](supabase/setup.sql), copy all of it into
-     SQL Editor → New query, and run it once. It contains every migration in order plus the seed.
+     SQL Editor → New query, and run it once. It contains every migration in order plus the categories and delivery settings, and no sample products.
    - **CLI:** this keeps track of which migrations have run, so later updates are a single command.
 
      ```sh
      npx supabase login
      npx supabase link --project-ref <your-project-ref>
-     npx supabase db push --include-seed
+     npx supabase db push
      ```
 
    Later schema changes arrive as new files in `supabase/migrations`. Run only the new ones, in order (SQL Editor),
@@ -138,7 +138,9 @@ The build reads the catalogue from Supabase, so the Supabase variables must be s
   creates an order with status `pending_payment`.
 - Schema changes go in new migrations: `npx supabase migration new <name>`, then `npm run db:reset` and
   `npm run db:types`.
-- To change the starter catalogue, edit `packages/shared/src/catalog.ts` and run `npm run db:seed:generate`.
+- To change the sample catalogue used for local development and the tests, edit `packages/shared/src/catalog.ts` and run
+  `npm run db:seed:generate` (it also writes `supabase/seed.reference.sql`, the categories and delivery settings a live store
+  needs, and the guarded clean-up for sample products: see [docs/REMOVE_SAMPLE_DATA.md](docs/REMOVE_SAMPLE_DATA.md)).
 - After adding a migration or regenerating the seed, run `npm run db:setup:generate` to refresh `supabase/setup.sql`.
 
 ## Suppliers and stock

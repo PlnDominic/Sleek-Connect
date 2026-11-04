@@ -11,10 +11,10 @@ insert into public.age_bands (id, label, stage, sort_order) values
   ('9-12y', '9–12y', 'Big kids', 5);
 
 insert into public.categories (id, name, department, image_key, tint, kind, sort_order) values
-  ('skincare', 'Skincare', 'beauty', 'vitaminCSerum', '#F4E3D7', 'bottle', 0),
-  ('makeup', 'Makeup', 'beauty', 'matteLipColour', '#F4E3D7', 'tube', 1),
-  ('hair-care', 'Hair Care', 'beauty', null, '#F5F5F5', 'bottle', 2),
-  ('fragrance', 'Fragrance', 'beauty', null, '#F4E3D7', 'bottle', 3),
+  ('skincare', 'Skincare', 'beauty', 'vitaminCSerum', '#E8EEF5', 'bottle', 0),
+  ('makeup', 'Makeup', 'beauty', 'matteLipColour', '#E8EEF5', 'tube', 1),
+  ('hair-care', 'Hair Care', 'beauty', null, '#F5F7FA', 'bottle', 2),
+  ('fragrance', 'Fragrance', 'beauty', null, '#E8EEF5', 'bottle', 3),
   ('baby-care', 'Baby Care', 'kids', 'babyWash', '#E3F0EC', 'bottle', 4),
   ('kids-toys', 'Kids & Toys', 'kids', null, '#EDF5F2', 'toy', 5);
 
@@ -23,15 +23,15 @@ insert into public.products (
   badge, tag, summary, image_key, tint, kind, details
 ) values
   ('gentle-baby-wash-shampoo', 'Gentle Baby Wash & Shampoo', 'Little Nest', 'kids', 'baby-care', 'bath', 'Bath time', 85, null, 'New', 'Ages 0+ · Tear-free', 'Mild hair and body wash, pH balanced for newborn skin.', 'babyWash', '#E3F0EC', 'bottle', '{"description":"A mild, tear-free wash for hair and body. Fragrance-free and pH balanced for newborn skin.","highlights":["Ages 0+","Tear-free","Fragrance-free"],"freeFrom":["No added fragrance","No parabens","No hydroquinone or mercury"],"recommendedAge":"From birth (0+)","warnings":"For external use only. Avoid direct contact with eyes. Stop use if irritation occurs.","howToUse":"Wet baby''s hair and body with warm water. Massage a small amount into a lather, then rinse well. Suitable for daily use.","gallery":[{"label":"Front view","image":"babyWash","position":"center"},{"label":"Back label view","image":"babyWash","position":"left"},{"label":"Texture view","image":"sheaBodyButter","position":"center"},{"label":"Seal and batch code view","image":"babyWash","position":"right"}]}'::jsonb),
-  ('vitamin-c-brightening-serum', 'Vitamin C Brightening Serum', null, 'beauty', 'skincare', null, null, 220, 260, '-15%', 'Patch test advised', 'A lightweight daily serum for brighter, more even-looking skin.', 'vitaminCSerum', '#F4E3D7', 'bottle', null),
-  ('whipped-shea-body-butter', 'Whipped Shea Body Butter', null, 'beauty', 'skincare', null, null, 145, null, 'New', 'Fragrance-free', 'Light, whipped shea butter that sinks in fast.', 'sheaBodyButter', '#F5F5F5', 'jar', null),
-  ('velvet-matte-lip-colour', 'Velvet Matte Lip Colour', null, 'beauty', 'makeup', null, null, 75, 90, '-15%', 'Vegan formula', 'Soft-matte colour with a comfortable, non-drying feel.', 'matteLipColour', '#F4E3D7', 'tube', null),
+  ('vitamin-c-brightening-serum', 'Vitamin C Brightening Serum', null, 'beauty', 'skincare', null, null, 220, 260, '-15%', 'Patch test advised', 'A lightweight daily serum for brighter, more even-looking skin.', 'vitaminCSerum', '#E8EEF5', 'bottle', null),
+  ('whipped-shea-body-butter', 'Whipped Shea Body Butter', null, 'beauty', 'skincare', null, null, 145, null, 'New', 'Fragrance-free', 'Light, whipped shea butter that sinks in fast.', 'sheaBodyButter', '#F5F7FA', 'jar', null),
+  ('velvet-matte-lip-colour', 'Velvet Matte Lip Colour', null, 'beauty', 'makeup', null, null, 75, 90, '-15%', 'Vegan formula', 'Soft-matte colour with a comfortable, non-drying feel.', 'matteLipColour', '#E8EEF5', 'tube', null),
   ('organic-cotton-bodysuits', 'Organic Cotton Bodysuits, 3-pack', null, 'kids', 'baby-care', 'clothing', null, 160, null, 'New', 'Ages 0–12m', 'Soft organic cotton with easy snap fastenings.', null, '#EDF5F2', 'garment', null),
-  ('wooden-stacking-blocks', 'Wooden Stacking Blocks', null, 'kids', 'kids-toys', 'toys', null, 120, 135, '-10%', 'Ages 1–3 · No small parts', 'Chunky, smooth-edged blocks finished with non-toxic paint.', null, '#F4E3D7', 'toy', null),
+  ('wooden-stacking-blocks', 'Wooden Stacking Blocks', null, 'kids', 'kids-toys', 'toys', null, 120, 135, '-10%', 'Ages 1–3 · No small parts', 'Chunky, smooth-edged blocks finished with non-toxic paint.', null, '#E8EEF5', 'toy', null),
   ('wooden-number-puzzle', 'Wooden Number Puzzle', null, 'kids', 'kids-toys', 'toys', null, 135, null, null, 'Ages 2–5 · Chunky pieces', 'Bright, non-toxic pieces for learning numbers, colours and shapes.', null, '#E3F0EC', 'toy', null),
-  ('newborn-gift-hamper', 'Newborn Gift Hamper', null, 'kids', 'baby-care', 'gifts', null, 450, null, null, 'Ages 0–6m', 'A wrapped set of newborn essentials, ready to give.', 'giftCollection', '#F5F5F5', 'gift', null),
-  ('argan-hair-oil', 'Argan Hair Oil, 250 ml', null, 'beauty', 'hair-care', null, null, 130, null, 'New', 'All hair types', 'A light oil that smooths and adds shine without weighing hair down.', null, '#F4E3D7', 'bottle', null),
-  ('shea-cocoa-body-butter', 'Shea & Cocoa Body Butter', null, 'beauty', 'skincare', null, null, 145, null, null, 'Fragrance-free · 200 g', 'Rich, fast-absorbing moisture made with Ghanaian shea.', null, '#F5F5F5', 'jar', null);
+  ('newborn-gift-hamper', 'Newborn Gift Hamper', null, 'kids', 'baby-care', 'gifts', null, 450, null, null, 'Ages 0–6m', 'A wrapped set of newborn essentials, ready to give.', 'giftCollection', '#F5F7FA', 'gift', null),
+  ('argan-hair-oil', 'Argan Hair Oil, 250 ml', null, 'beauty', 'hair-care', null, null, 130, null, 'New', 'All hair types', 'A light oil that smooths and adds shine without weighing hair down.', null, '#E8EEF5', 'bottle', null),
+  ('shea-cocoa-body-butter', 'Shea & Cocoa Body Butter', null, 'beauty', 'skincare', null, null, 145, null, null, 'Fragrance-free · 200 g', 'Rich, fast-absorbing moisture made with Ghanaian shea.', null, '#F5F7FA', 'jar', null);
 
 insert into public.product_sizes (product_id, code, label, price_ghs, is_default, sort_order)
 select (select id from public.products where slug = 'gentle-baby-wash-shampoo'), '200', '200 ml', 50, false, 0
