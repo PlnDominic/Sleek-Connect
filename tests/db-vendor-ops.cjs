@@ -17,6 +17,8 @@ const product = (extra = {}) => ({
 });
 
 (async () => {
+  // Sellers opening their own stores is off by default (the owner adds suppliers); these checks are about that flow.
+  sql('update public.store_settings set vendor_accounts_open = true');
   sql("update public.delivery_options set fee_ghs = 20 where id = 'standard'");
   const staff = {};
   for (const [k, role] of [['boss', 'admin'], ['ops', 'operations'], ['fin', 'finance'], ['sup', 'support']]) {

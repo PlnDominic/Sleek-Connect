@@ -16,6 +16,8 @@ const product = () => ({
 });
 
 (async () => {
+  // Sellers opening their own stores is off by default (the owner adds suppliers); these checks are about that flow.
+  sql('update public.store_settings set vendor_accounts_open = true');
   await createUser(`boss+${stamp}@example.com`);
   sql(`insert into public.staff_members (email, role) values ('boss+${stamp}@example.com', 'admin')`);
   const boss = (await staffSession(`boss+${stamp}@example.com`)).client;

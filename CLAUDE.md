@@ -38,6 +38,11 @@
   select grant; when you add a column to `orders`, add it to the column grant in a migration, and list columns
   explicitly in staff queries (no `select *`).
 - After adding a migration or changing the seed, run `npm run db:setup:generate` to refresh `supabase/setup.sql`.
+- **Suppliers, not seller accounts** (`docs/SUPPLIERS.md`): Hubtel does not allow collecting payments on behalf of sellers without a Bank of Ghana
+  aggregator licence, so Sleek Connect buys from suppliers (`vendors.is_supplier`, no owner, no sign-in) and resells; the shopper's money is Sleek Connect's.
+  Staff manage suppliers only through `admin_*supplier*` functions (Admin → Suppliers). `store_settings.vendor_accounts_open` is **off** and
+  `vendor_apply` refuses while it is off; don't switch it on, or build new seller-facing features, unless the payment model changes. Don't describe
+  Sleek Connect as collecting money "for" or "on behalf of" vendors in any shopper- or seller-facing text.
 - Marketplace (see `docs/MARKETPLACE.md`): vendors own `products.vendor_id` (the built-in house vendor owns the shop's
   own range). A vendor product's `price_ghs` and `is_published` are computed by the `products_marketplace_rules` trigger
   from the vendor's price, the owner's markup, the owner's approval and a live (approved + paid) store, so never set them

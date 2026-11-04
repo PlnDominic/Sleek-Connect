@@ -156,7 +156,7 @@ export default async function ProductPage({ params, searchParams }: PageProps<'/
             )}
             {product.vendor && !product.vendor.isHouse && (
               <p className={styles.soldBy}>
-                Sold by <Link href={`/store/${product.vendor.slug}`}>{product.vendor.name}</Link>
+                From <Link href={`/store/${product.vendor.slug}`}>{product.vendor.name}</Link>
                 {shop?.facts?.starSeller && <span className={styles.starSeller}> · ★ Star Seller</span>}
                 {shop?.processingDays ? ` · packs within ${shop.processingDays} working day${shop.processingDays === 1 ? '' : 's'}` : ''}
               </p>

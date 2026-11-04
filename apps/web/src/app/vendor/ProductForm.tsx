@@ -1,5 +1,6 @@
 import { departmentIds, departmentLabels, type AgeBand, type Category } from '@sleek/shared';
 import type { VendorProduct } from '@/lib/vendor';
+import type { ActionState } from '@/lib/admin/action-state';
 import { saveProduct } from './actions';
 import { VendorForm } from './VendorForm';
 import styles from './vendor.module.css';
@@ -22,11 +23,22 @@ const kidsFilters = [
 ] as const;
 
 /** Create or edit one product. Prices here are the vendor's own; the owner adds the markup when approving. */
-export function ProductForm({ product, categories, ageBands }: { product?: VendorProduct; categories: Category[]; ageBands: AgeBand[] }) {
+export function ProductForm({
+  product,
+  categories,
+  ageBands,
+  action,
+}: {
+  product?: VendorProduct;
+  categories: Category[];
+  ageBands: AgeBand[];
+  /** What saving does. Defaults to a seller saving their own product; staff pass the action for a supplier's product. */
+  action?: (state: ActionState, form: FormData) => Promise<ActionState>;
+}) {
   const sizes = product?.sizes ?? [];
   const d = product?.details ?? {};
   return (
-    <VendorForm action={saveProduct.bind(null, product?.id ?? null)} className={styles.productForm}>
+    <VendorForm action={action ?? saveProduct.bind(null, product?.id ?? null)} className={styles.productForm}>
       <section className={styles.panel}>
         <h2>About the product</h2>
         <p className={styles.muted}>The name, brand and where it sits in the shop.</p>

@@ -136,18 +136,18 @@ export default async function TermsPage() {
     },
     {
       id: 'stores',
-      title: 'Independent stores',
+      title: 'Independent suppliers',
       body: (
         <>
           <p>
-            Some products are sold by independent stores, named on the product page (“Sold by”). We check each store and its
-            products before they appear, take your payment, collect the items, deliver them and handle returns and refunds for
-            you, so you deal only with us. The store is responsible for its products being genuine, lawful and as described.
+            Some products come from independent suppliers, named on the product page (“From”). We buy them from the supplier and
+            sell them to you, so you deal only with us: we take your payment, collect the items, deliver them and handle returns
+            and refunds. We check each supplier’s products before they appear, and the supplier is responsible to us for them being
+            genuine, lawful and as described.
           </p>
           <p>
-            Stores never receive your name, phone number, address or delivery code: they see only what to pack. If something is
-            wrong with an item from an independent store, tell us and we will put it right with you and the store. These items
-            are paid for online (not pay on delivery).
+            Suppliers never receive your name, phone number, address or delivery code. If something is wrong with an item from an
+            independent supplier, tell us and we will put it right with you. These items are paid for online (not pay on delivery).
           </p>
         </>
       ),

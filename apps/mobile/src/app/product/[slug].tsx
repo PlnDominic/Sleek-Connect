@@ -107,11 +107,11 @@ function ProductView({ product }: { product: Product }) {
             {product.vendor && (
               <Pressable
                 accessibilityRole="link"
-                accessibilityLabel={`Sold by ${product.vendor.name}`}
+                accessibilityLabel={`From ${product.vendor.name}`}
                 onPress={() => router.push({ pathname: '/store/[slug]', params: { slug: product.vendor!.slug } })}
               >
                 <AppText size={13} color={colors.textMuted}>
-                  Sold by 
+                  From 
                   <AppText weight="semibold" size={13} color={colors.accent}>
                     {product.vendor.name}
                   </AppText>

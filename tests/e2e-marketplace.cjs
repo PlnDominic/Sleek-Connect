@@ -14,6 +14,8 @@ async function go(page, url) { await page.goto(url, { waitUntil: 'load' }); awai
 const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullPage: true });
 
 (async () => {
+  // Sellers opening their own stores is off by default (the owner adds suppliers); these checks are about that flow.
+  sql('update public.store_settings set vendor_accounts_open = true');
   const browser = await chromium.launch();
   const errors = [];
   const ctx = async (cookies) => {

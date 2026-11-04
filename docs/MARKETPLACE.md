@@ -1,5 +1,7 @@
 # Marketplace: vendor storefronts
 
+**Read `docs/SUPPLIERS.md` first: sellers do not open their own stores any more (that switch is off), and products come from suppliers the owner adds.** The rest of this page describes the seller-account flow, which is kept but closed.
+
 Sleek Connect is also a marketplace. Vendors open their own storefronts and list their own products; the owner adds a
 markup and collects every payment.
 

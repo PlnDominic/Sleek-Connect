@@ -420,6 +420,15 @@ export async function getStoreSlugs(): Promise<string[]> {
   return rows.map((r) => r.slug);
 }
 
+/** Whether sellers can open their own stores (off: the owner adds suppliers instead). A database without the setting yet counts as open. */
+export async function getVendorAccountsOpen(): Promise<boolean> {
+  'use cache';
+  cacheLife('minutes');
+  cacheTag('catalog');
+  const { data, error } = await createSupabase().from('store_settings').select('vendor_accounts_open').single();
+  return error ? true : data.vendor_accounts_open === true;
+}
+
 /** What a prospective vendor needs to know before applying. */
 export async function getVendorTerms(): Promise<{ annualFee: number; graceDays: number; payoutHoldDays: number; minPayout: number; replyHours: number }> {
   'use cache';

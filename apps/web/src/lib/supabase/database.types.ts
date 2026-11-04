@@ -742,14 +742,14 @@ isOneToOne: false
                   ]
                 },"store_settings": {
                   Row: {
-                    "vendor_payout_hold_days": number,"vendor_min_payout_ghs": number,"vendor_tin_required": boolean,"vendor_support_reply_hours": number,"reorder_lead_days": number,"reorder_cover_days": number,"pay_on_delivery_enabled": boolean,"pay_on_delivery_hold_hours": number,"pay_on_delivery_max_ghs": number | null,"vendor_annual_fee_ghs": number,"vendor_grace_days": number,"default_markup_percent": number,"vendor_payment_instructions": string | null,"marketplace_orders_open": boolean,"expiry_alert_days": number,"free_delivery_threshold_ghs": number | null,"id": boolean,"low_stock_threshold": number,"max_delivery_attempts": number,"require_delivery_code": boolean,"reservation_minutes": number,"return_window_days": number,"support_email": string | null,"support_hours": string | null,"support_phone": string | null,"support_whatsapp": string | null
+                    "vendor_payout_hold_days": number,"vendor_min_payout_ghs": number,"vendor_tin_required": boolean,"vendor_support_reply_hours": number,"reorder_lead_days": number,"reorder_cover_days": number,"pay_on_delivery_enabled": boolean,"pay_on_delivery_hold_hours": number,"pay_on_delivery_max_ghs": number | null,"vendor_annual_fee_ghs": number,"vendor_grace_days": number,"default_markup_percent": number,"vendor_payment_instructions": string | null,"marketplace_orders_open": boolean,"vendor_accounts_open": boolean,"expiry_alert_days": number,"free_delivery_threshold_ghs": number | null,"id": boolean,"low_stock_threshold": number,"max_delivery_attempts": number,"require_delivery_code": boolean,"reservation_minutes": number,"return_window_days": number,"support_email": string | null,"support_hours": string | null,"support_phone": string | null,"support_whatsapp": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "vendor_payout_hold_days"?: number,"vendor_min_payout_ghs"?: number,"vendor_tin_required"?: boolean,"vendor_support_reply_hours"?: number,"reorder_lead_days"?: number,"reorder_cover_days"?: number,"pay_on_delivery_enabled"?: boolean,"pay_on_delivery_hold_hours"?: number,"pay_on_delivery_max_ghs"?: number | null,"vendor_annual_fee_ghs"?: number,"vendor_grace_days"?: number,"default_markup_percent"?: number,"vendor_payment_instructions"?: string | null,"marketplace_orders_open"?: boolean,"expiry_alert_days"?: number,"free_delivery_threshold_ghs"?: number | null,"id"?: boolean,"low_stock_threshold"?: number,"max_delivery_attempts"?: number,"require_delivery_code"?: boolean,"reservation_minutes"?: number,"return_window_days"?: number,"support_email"?: string | null,"support_hours"?: string | null,"support_phone"?: string | null,"support_whatsapp"?: string | null
+                    "vendor_payout_hold_days"?: number,"vendor_min_payout_ghs"?: number,"vendor_tin_required"?: boolean,"vendor_support_reply_hours"?: number,"reorder_lead_days"?: number,"reorder_cover_days"?: number,"pay_on_delivery_enabled"?: boolean,"pay_on_delivery_hold_hours"?: number,"pay_on_delivery_max_ghs"?: number | null,"vendor_annual_fee_ghs"?: number,"vendor_grace_days"?: number,"default_markup_percent"?: number,"vendor_payment_instructions"?: string | null,"marketplace_orders_open"?: boolean,"vendor_accounts_open"?: boolean,"expiry_alert_days"?: number,"free_delivery_threshold_ghs"?: number | null,"id"?: boolean,"low_stock_threshold"?: number,"max_delivery_attempts"?: number,"require_delivery_code"?: boolean,"reservation_minutes"?: number,"return_window_days"?: number,"support_email"?: string | null,"support_hours"?: string | null,"support_phone"?: string | null,"support_whatsapp"?: string | null
                   }
                   Update: {
-                    "vendor_payout_hold_days"?: number,"vendor_min_payout_ghs"?: number,"vendor_tin_required"?: boolean,"vendor_support_reply_hours"?: number,"reorder_lead_days"?: number,"reorder_cover_days"?: number,"pay_on_delivery_enabled"?: boolean,"pay_on_delivery_hold_hours"?: number,"pay_on_delivery_max_ghs"?: number | null,"vendor_annual_fee_ghs"?: number,"vendor_grace_days"?: number,"default_markup_percent"?: number,"vendor_payment_instructions"?: string | null,"marketplace_orders_open"?: boolean,"expiry_alert_days"?: number,"free_delivery_threshold_ghs"?: number | null,"id"?: boolean,"low_stock_threshold"?: number,"max_delivery_attempts"?: number,"require_delivery_code"?: boolean,"reservation_minutes"?: number,"return_window_days"?: number,"support_email"?: string | null,"support_hours"?: string | null,"support_phone"?: string | null,"support_whatsapp"?: string | null
+                    "vendor_payout_hold_days"?: number,"vendor_min_payout_ghs"?: number,"vendor_tin_required"?: boolean,"vendor_support_reply_hours"?: number,"reorder_lead_days"?: number,"reorder_cover_days"?: number,"pay_on_delivery_enabled"?: boolean,"pay_on_delivery_hold_hours"?: number,"pay_on_delivery_max_ghs"?: number | null,"vendor_annual_fee_ghs"?: number,"vendor_grace_days"?: number,"default_markup_percent"?: number,"vendor_payment_instructions"?: string | null,"marketplace_orders_open"?: boolean,"vendor_accounts_open"?: boolean,"expiry_alert_days"?: number,"free_delivery_threshold_ghs"?: number | null,"id"?: boolean,"low_stock_threshold"?: number,"max_delivery_attempts"?: number,"require_delivery_code"?: boolean,"reservation_minutes"?: number,"return_window_days"?: number,"support_email"?: string | null,"support_hours"?: string | null,"support_phone"?: string | null,"support_whatsapp"?: string | null
                   }
                   Relationships: [
                     
@@ -776,14 +776,14 @@ isOneToOne: false
                   ]
                 },"vendors": {
                   Row: {
-                    "announcement": string | null,"returns_policy": string | null,"processing_days": number,"instagram": string | null,"website": string | null,"paused_at": string | null,"paused_note": string | null,"banner_path": string | null,"created_at": string,"description": string | null,"id": string,"is_house": boolean,"logo_path": string | null,"name": string,"owner_id": string | null,"slug": string,"status": Database["public"]['Enums']["vendor_status"],"tagline": string | null,"updated_at": string
+                    "announcement": string | null,"returns_policy": string | null,"processing_days": number,"instagram": string | null,"website": string | null,"paused_at": string | null,"paused_note": string | null,"banner_path": string | null,"created_at": string,"description": string | null,"id": string,"is_house": boolean,"is_supplier": boolean,"logo_path": string | null,"name": string,"owner_id": string | null,"slug": string,"status": Database["public"]['Enums']["vendor_status"],"tagline": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "announcement"?: string | null,"returns_policy"?: string | null,"processing_days"?: number,"instagram"?: string | null,"website"?: string | null,"paused_at"?: string | null,"paused_note"?: string | null,"banner_path"?: string | null,"created_at"?: string,"description"?: string | null,"id"?: string,"is_house"?: boolean,"logo_path"?: string | null,"name": string,"owner_id"?: string | null,"slug": string,"status"?: Database["public"]['Enums']["vendor_status"],"tagline"?: string | null,"updated_at"?: string
+                    "announcement"?: string | null,"returns_policy"?: string | null,"processing_days"?: number,"instagram"?: string | null,"website"?: string | null,"paused_at"?: string | null,"paused_note"?: string | null,"banner_path"?: string | null,"created_at"?: string,"description"?: string | null,"id"?: string,"is_house"?: boolean,"is_supplier"?: boolean,"logo_path"?: string | null,"name": string,"owner_id"?: string | null,"slug": string,"status"?: Database["public"]['Enums']["vendor_status"],"tagline"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "announcement"?: string | null,"returns_policy"?: string | null,"processing_days"?: number,"instagram"?: string | null,"website"?: string | null,"paused_at"?: string | null,"paused_note"?: string | null,"banner_path"?: string | null,"created_at"?: string,"description"?: string | null,"id"?: string,"is_house"?: boolean,"logo_path"?: string | null,"name"?: string,"owner_id"?: string | null,"slug"?: string,"status"?: Database["public"]['Enums']["vendor_status"],"tagline"?: string | null,"updated_at"?: string
+                    "announcement"?: string | null,"returns_policy"?: string | null,"processing_days"?: number,"instagram"?: string | null,"website"?: string | null,"paused_at"?: string | null,"paused_note"?: string | null,"banner_path"?: string | null,"created_at"?: string,"description"?: string | null,"id"?: string,"is_house"?: boolean,"is_supplier"?: boolean,"logo_path"?: string | null,"name"?: string,"owner_id"?: string | null,"slug"?: string,"status"?: Database["public"]['Enums']["vendor_status"],"tagline"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -1003,6 +1003,30 @@ isOneToOne: false
                            },
 "vendor_delete_section":
 { Args: { "p_id": string }; Returns: undefined
+                           },
+"admin_create_supplier":
+{ Args: { "p": Json }; Returns: string
+                           },
+"admin_update_supplier":
+{ Args: { "p": Json,"p_vendor_id": string }; Returns: undefined
+                           },
+"admin_list_suppliers":
+{ Args: never; Returns: Json
+                           },
+"admin_supplier_products":
+{ Args: { "p_vendor_id": string }; Returns: Json
+                           },
+"admin_save_supplier_product":
+{ Args: { "p": Json,"p_vendor_id": string }; Returns: Json
+                           },
+"admin_set_supplier_stock":
+{ Args: { "p_product_id": string,"p_quantity": number,"p_size_code": string,"p_vendor_id": string }; Returns: undefined
+                           },
+"admin_delete_supplier_product":
+{ Args: { "p_product_id": string,"p_vendor_id": string }; Returns: undefined
+                           },
+"admin_set_vendor_accounts_open":
+{ Args: { "p_open": boolean }; Returns: undefined
                            },
 "admin_list_promotions":
 { Args: never; Returns: Json

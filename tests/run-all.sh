@@ -76,6 +76,7 @@ npx supabase db reset >/dev/null 2>&1; suite "database: the 18+ rule at checkout
 npx supabase db reset >/dev/null 2>&1; suite "database: bulk editing, reorder suggestions, size guides" db-catalogue-tools.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: follow stores, seller replies, Star Seller" db-etsy-extras.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: promo code management" db-promotions.cjs
+npx supabase db reset >/dev/null 2>&1; suite "database: suppliers (admin-created vendors, no sign-in)" db-suppliers.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: store builder (name check, set up before live, sections, vacation mode)" db-store-builder.cjs
 suite "email: Gmail sender (Nodemailer)" unit-email.cjs
 suite "payments: Hubtel provider" unit-hubtel.cjs

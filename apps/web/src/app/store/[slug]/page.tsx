@@ -52,7 +52,7 @@ export default async function StorePage({ params }: PageProps<'/store/[slug]'>) 
               </span>
             )}
             <div>
-              <p className={styles.kicker}>{store.isHouse ? 'Our own range' : 'Vendor store'}</p>
+              <p className={styles.kicker}>{store.isHouse ? 'Our own range' : 'Brand'}</p>
               <h1>
                 {store.name}
                 {store.facts?.starSeller && (

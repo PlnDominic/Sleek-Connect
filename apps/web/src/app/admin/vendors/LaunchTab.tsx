@@ -53,7 +53,7 @@ export async function LaunchTab({ staff }: { staff: Staff }) {
     {
       ok: settings?.marketplace_orders_open === true,
       title: 'Shoppers can order from vendor stores',
-      detail: settings?.marketplace_orders_open ? 'Open.' : 'Still closed. Turn it on under Marketplace settings only after the three rehearsals below.',
+      detail: settings?.marketplace_orders_open ? 'Open.' : 'Still closed. Turn it on under Marketplace settings only after Hubtel has confirmed in writing that buying from suppliers and reselling is allowed (see docs/SUPPLIERS.md), and after the three rehearsals below.',
     },
   ];
   const ready = items.filter((i) => i.ok).length;

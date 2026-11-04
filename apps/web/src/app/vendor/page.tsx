@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { formatPrice } from '@sleek/shared';
 import { momoNetworks } from '@sleek/shared';
 import { Icon } from '@/components/Icon';
-import { getVendorTerms } from '@/lib/catalog';
+import { getVendorAccountsOpen, getVendorTerms } from '@/lib/catalog';
 import { getPaymentProvider } from '@/lib/payments';
 import { getStoreSetup, getVendorSession, type VendorProduct } from '@/lib/vendor';
 import { payOnline, setStock } from './actions';
@@ -121,6 +121,20 @@ function ProductsPanel({ items }: { items: VendorProduct[] }) {
 
 export default async function VendorHome() {
   const session = await getVendorSession();
+  const accountsOpen = await getVendorAccountsOpen();
+
+  // Seller accounts are closed: the owner adds suppliers instead. Anyone who already has a store keeps using it.
+  if (!accountsOpen && (session.state === 'signed_out' || !session.vendor)) {
+    return (
+      <Onboarding title="Supply Sleek Connect" lead="We’re not opening new seller accounts. We buy from suppliers and sell to shoppers ourselves.">
+        <h2 className={styles.onboardCardTitle}>Want to supply us?</h2>
+        <p className={styles.muted}>Tell us what you make or source. If it’s a fit, we agree your products and prices and add you as a supplier. You don’t need an account.</p>
+        <Link href="/sell" className={styles.primary}>
+          How supplying works
+        </Link>
+      </Onboarding>
+    );
+  }
 
   if (session.state === 'signed_out') {
     return (

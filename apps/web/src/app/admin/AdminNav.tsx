@@ -57,7 +57,11 @@ const groups: NavGroup[] = [
       { href: '/admin/delivery', label: 'Areas and fees' },
     ],
   },
-  { label: 'Marketplace', icon: 'store', adminOnly: true, links: [{ href: '/admin/vendors', label: 'Vendors' }] },
+  { label: 'Marketplace', icon: 'store', adminOnly: true, links: [
+      { href: '/admin/suppliers', label: 'Suppliers' },
+      { href: '/admin/vendors', label: 'Vendors' },
+    ],
+  },
   {
     label: 'Settings',
     icon: 'sliders',
