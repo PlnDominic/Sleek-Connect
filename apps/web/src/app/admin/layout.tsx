@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function AdminLayout({ children }: LayoutProps<'/admin'>) {
   return (
     <div className={styles.root}>
-      <Suspense fallback={<p className={styles.loading}>Loading…</p>}>
+      <Suspense fallback={null}>
         <AdminGate>{children}</AdminGate>
       </Suspense>
     </div>

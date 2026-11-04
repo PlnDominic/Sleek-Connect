@@ -1,12 +1,9 @@
+/** Shown inside the console frame while a page's data arrives: quiet placeholder blocks, no message. */
 export default function AdminLoading() {
   return (
-    <main
-      aria-busy="true"
-      aria-live="polite"
-      style={{ padding: '72px 24px', textAlign: 'center' }}
-    >
-      <p style={{ color: '#8b5e3c', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Staff console</p>
-      <p style={{ color: '#5f6368', marginTop: 20 }}>Loading your workspace…</p>
-    </main>
+    <div aria-hidden="true" style={{ display: 'grid', gap: 16 }}>
+      <div style={{ height: 36, width: '32%', borderRadius: 10, background: 'rgb(11 31 58 / 0.06)' }} />
+      <div style={{ height: 220, borderRadius: 16, background: 'rgb(11 31 58 / 0.04)' }} />
+    </div>
   );
 }
