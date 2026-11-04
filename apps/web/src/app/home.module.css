@@ -205,11 +205,6 @@
 }
 
 /* Categories */
-.categoryGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  gap: 16px;
-}
 
 .categoryCard {
   position: relative;
@@ -284,6 +279,10 @@
   align-items: center;
   justify-content: center;
   color: var(--c-ink);
+}
+
+.rail[data-kind='categories'] .railArrow {
+  top: 78px;
 }
 
 .railPrev {
@@ -607,11 +606,6 @@
 
   .heroLead br {
     display: none;
-  }
-
-  .categoryGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
   }
 
   .categoryCard {

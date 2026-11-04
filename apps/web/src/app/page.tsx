@@ -179,7 +179,7 @@ function Categories({ categories }: { categories: Category[] }) {
   return (
     <section id="categories" className={`container ${styles.section}`}>
       <SectionHeader title="Shop by Categories" linkLabel="View All Categories" href="/shop" />
-      <div className={styles.categoryGrid}>
+      <NewArrivalsRail label="categories">
         {categories.map((c) => (
           <Link key={c.id} href={`/shop/${c.department}/${c.id}`} className={styles.categoryCard}>
             <ProductImage image={c.image} photo={c.photo} tint={c.tint} kind={c.kind} alt="" sizes="(max-width: 600px) 50vw, 200px" fill />
@@ -191,7 +191,7 @@ function Categories({ categories }: { categories: Category[] }) {
             </span>
           </Link>
         ))}
-      </div>
+      </NewArrivalsRail>
     </section>
   );
 }
