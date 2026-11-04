@@ -9,7 +9,7 @@ import { BackButton, useScreenTop } from '@/components/ui';
 import { getStorefront } from '@/lib/catalog';
 import { useQuery } from '@/lib/query';
 
-/** A vendor's store: who they are and what they have on sale. Opened from "Sold by" on a product. */
+/** A supplier's brand page: who they are and what we sell from them. Opened from "From" on a product. Sleek Connect is the seller. */
 export default function StoreScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const top = useScreenTop();
@@ -74,7 +74,7 @@ export default function StoreScreen() {
         ) : error ? (
           <ErrorState onRetry={() => void refetch()} />
         ) : (
-          <EmptyState icon="store" title={store ? 'Nothing on sale yet' : 'This store isn’t open'} message="Check back soon, or browse the rest of the shop." />
+          <EmptyState icon="store" title={store ? 'Nothing on sale yet' : 'This brand isn’t available'} message="Check back soon, or browse the rest of the shop." />
         )
       }
     />
