@@ -24,7 +24,10 @@ import { RestockAlert } from './RestockAlert';
 import styles from './product.module.css';
 
 export async function generateStaticParams() {
-  return (await listProductSlugs()).map((slug) => ({ slug }));
+  const slugs = await listProductSlugs();
+  // Next.js needs at least one result to validate the page at build time. With an empty shop that is a placeholder, which
+  // is simply "not found" (no product has this address).
+  return (slugs.length ? slugs : ['no-products-yet']).map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: PageProps<'/products/[slug]'>): Promise<Metadata> {
