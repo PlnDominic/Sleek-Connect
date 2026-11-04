@@ -50,6 +50,7 @@
 --   20261112090000_suppliers.sql
 --   20261113090000_single_store_suppliers.sql
 --   20261114090000_category_photos.sql
+--   20261114100000_remove_vendor_storage_policies.sql
 --   seed.reference.sql (categories, age groups and delivery settings; no sample products)
 
 -- ===========================================================================
@@ -15715,6 +15716,21 @@ $$;
 
 revoke all on function public.admin_set_category_photo(text, text) from public, anon;
 grant execute on function public.admin_set_category_photo(text, text) to authenticated;
+
+-- ===========================================================================
+-- 20261114100000_remove_vendor_storage_policies.sql
+-- ===========================================================================
+
+-- The seller upload rules on Storage called functions that were switched off in 20261113090000, which made every upload to
+-- product-images fail ("permission denied for function my_live_vendor_id"), staff uploads included. Sellers no longer exist, so the
+-- rules go. Staff upload rules for product-images are unchanged.
+
+drop policy if exists "Vendors upload store images" on storage.objects;
+drop policy if exists "Vendors list store images" on storage.objects;
+drop policy if exists "Vendors remove store images" on storage.objects;
+drop policy if exists "Vendors upload their product photos" on storage.objects;
+drop policy if exists "Vendors list their product photos" on storage.objects;
+drop policy if exists "Vendors remove their product photos" on storage.objects;
 
 -- ===========================================================================
 -- seed.reference.sql
