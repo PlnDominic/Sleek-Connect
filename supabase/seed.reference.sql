@@ -10,11 +10,11 @@ insert into public.age_bands (id, label, stage, sort_order) values
   ('9-12y', '9–12y', 'Big kids', 5);
 
 insert into public.categories (id, name, department, image_key, tint, kind, sort_order) values
-  ('skincare', 'Skincare', 'beauty', 'vitaminCSerum', '#E8EEF5', 'bottle', 0),
-  ('makeup', 'Makeup', 'beauty', 'matteLipColour', '#E8EEF5', 'tube', 1),
+  ('skincare', 'Skincare', 'beauty', null, '#E8EEF5', 'bottle', 0),
+  ('makeup', 'Makeup', 'beauty', null, '#E8EEF5', 'tube', 1),
   ('hair-care', 'Hair Care', 'beauty', null, '#F5F7FA', 'bottle', 2),
   ('fragrance', 'Fragrance', 'beauty', null, '#E8EEF5', 'bottle', 3),
-  ('baby-care', 'Baby Care', 'kids', 'babyWash', '#E3F0EC', 'bottle', 4),
+  ('baby-care', 'Baby Care', 'kids', null, '#E3F0EC', 'bottle', 4),
   ('kids-toys', 'Kids & Toys', 'kids', null, '#EDF5F2', 'toy', 5);
 
 insert into public.delivery_areas (name, sort_order) values

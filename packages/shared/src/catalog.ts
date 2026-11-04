@@ -352,16 +352,18 @@ export interface Category {
   name: string;
   department: Department;
   image?: ImageKey;
+  /** A photo staff uploaded for the category (Admin → Categories); used instead of `image`. */
+  photo?: string;
   tint: string;
   kind: ProductKind;
 }
 
 export const categories: Category[] = [
-  { id: 'skincare', name: 'Skincare', department: 'beauty', image: 'vitaminCSerum', tint: colors.blush, kind: 'bottle' },
-  { id: 'makeup', name: 'Makeup', department: 'beauty', image: 'matteLipColour', tint: colors.blush, kind: 'tube' },
+  { id: 'skincare', name: 'Skincare', department: 'beauty', tint: colors.blush, kind: 'bottle' },
+  { id: 'makeup', name: 'Makeup', department: 'beauty', tint: colors.blush, kind: 'tube' },
   { id: 'hair-care', name: 'Hair Care', department: 'beauty', tint: colors.surface, kind: 'bottle' },
   { id: 'fragrance', name: 'Fragrance', department: 'beauty', tint: colors.blush, kind: 'bottle' },
-  { id: 'baby-care', name: 'Baby Care', department: 'kids', image: 'babyWash', tint: colors.tealSoft, kind: 'bottle' },
+  { id: 'baby-care', name: 'Baby Care', department: 'kids', tint: colors.tealSoft, kind: 'bottle' },
   { id: 'kids-toys', name: 'Kids & Toys', department: 'kids', tint: colors.tealPale, kind: 'toy' },
 ];
 

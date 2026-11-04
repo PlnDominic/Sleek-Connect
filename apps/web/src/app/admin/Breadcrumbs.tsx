@@ -16,6 +16,7 @@ const labels: Record<string, string> = {
   content: 'Content',
   riders: 'Riders',
   delivery: 'Delivery',
+  categories: 'Categories',
   suppliers: 'Suppliers',
   staff: 'Staff',
   audit: 'Audit log',

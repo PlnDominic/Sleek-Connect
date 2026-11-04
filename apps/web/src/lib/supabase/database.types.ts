@@ -87,14 +87,14 @@ isOneToOne: false
                   ]
                 },"categories": {
                   Row: {
-                    "department": Database["public"]['Enums']["department"],"expiry_alert_days": number | null,"id": string,"image_key": string | null,"kind": Database["public"]['Enums']["product_kind"],"low_stock_threshold": number | null,"name": string,"sort_order": number,"tint": string
+                    "department": Database["public"]['Enums']["department"],"expiry_alert_days": number | null,"id": string,"image_key": string | null,"kind": Database["public"]['Enums']["product_kind"],"low_stock_threshold": number | null,"name": string,"photo_path": string | null,"sort_order": number,"tint": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "department": Database["public"]['Enums']["department"],"expiry_alert_days"?: number | null,"id": string,"image_key"?: string | null,"kind": Database["public"]['Enums']["product_kind"],"low_stock_threshold"?: number | null,"name": string,"sort_order"?: number,"tint": string
+                    "department": Database["public"]['Enums']["department"],"expiry_alert_days"?: number | null,"id": string,"image_key"?: string | null,"kind": Database["public"]['Enums']["product_kind"],"low_stock_threshold"?: number | null,"name": string,"photo_path"?: string | null,"sort_order"?: number,"tint": string
                   }
                   Update: {
-                    "department"?: Database["public"]['Enums']["department"],"expiry_alert_days"?: number | null,"id"?: string,"image_key"?: string | null,"kind"?: Database["public"]['Enums']["product_kind"],"low_stock_threshold"?: number | null,"name"?: string,"sort_order"?: number,"tint"?: string
+                    "department"?: Database["public"]['Enums']["department"],"expiry_alert_days"?: number | null,"id"?: string,"image_key"?: string | null,"kind"?: Database["public"]['Enums']["product_kind"],"low_stock_threshold"?: number | null,"name"?: string,"photo_path"?: string | null,"sort_order"?: number,"tint"?: string
                   }
                   Relationships: [
                     
@@ -1313,6 +1313,9 @@ isOneToOne: false
                            },
 "admin_save_rider":
 { Args: { "p_active"?: boolean,"p_id": string,"p_name": string,"p_phone": string,"p_vehicle": string }; Returns: string
+                           },
+"admin_set_category_photo":
+{ Args: { "p_id": string,"p_path"?: string }; Returns: undefined
                            },
 "admin_set_batch_status":
 { Args: { "p_batch_id": string,"p_note": string,"p_status": Database["public"]['Enums']["batch_status"] }; Returns: undefined

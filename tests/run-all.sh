@@ -73,6 +73,7 @@ npx supabase db reset >/dev/null 2>&1; suite "database: the 18+ rule at checkout
 npx supabase db reset >/dev/null 2>&1; suite "database: bulk editing, reorder suggestions, size guides" db-catalogue-tools.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: account pages, and the seller side switched off" db-account-extras.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: promo code management" db-promotions.cjs
+npx supabase db reset >/dev/null 2>&1; suite "database: category photos" db-category-photos.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: supplier register and stock receipts" db-suppliers.cjs
 suite "email: Gmail sender (Nodemailer)" unit-email.cjs
 suite "payments: Hubtel provider" unit-hubtel.cjs

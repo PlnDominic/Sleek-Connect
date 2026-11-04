@@ -106,16 +106,19 @@ export interface CategoryRowLike {
   name: string;
   department: Department;
   image_key: string | null;
+  photo_path?: string | null;
   tint: string;
   kind: ProductKind;
 }
 
-export function categoryFromRow(row: CategoryRowLike): Category {
+/** `photoBase` is the public address of the product-images bucket, without a trailing slash. */
+export function categoryFromRow(row: CategoryRowLike, photoBase?: string): Category {
   return {
     id: row.id,
     name: row.name,
     department: row.department,
     image: asImageKey(row.image_key),
+    photo: row.photo_path && photoBase ? `${photoBase}/${row.photo_path}` : undefined,
     tint: row.tint,
     kind: row.kind,
   };

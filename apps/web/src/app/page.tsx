@@ -182,7 +182,7 @@ function Categories({ categories }: { categories: Category[] }) {
       <div className={styles.categoryGrid}>
         {categories.map((c) => (
           <Link key={c.id} href={`/shop/${c.department}/${c.id}`} className={styles.categoryCard}>
-            <ProductImage image={c.image} tint={c.tint} kind={c.kind} alt="" sizes="(max-width: 600px) 50vw, 200px" fill />
+            <ProductImage image={c.image} photo={c.photo} tint={c.tint} kind={c.kind} alt="" sizes="(max-width: 600px) 50vw, 200px" fill />
             <span className={styles.categoryLabel}>
               <strong>{c.name}</strong>
               <span>

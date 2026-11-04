@@ -15,6 +15,7 @@ type ProductRow = Tables['products']['Row'] & {
 };
 
 const productColumns = productSelect;
+const photoBase = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/product-images`;
 
 function unwrap<T>({ data, error }: { data: T | null; error: { message: string } | null }): T {
   if (error) throw new Error(`Supabase query failed: ${error.message}`);
@@ -48,7 +49,7 @@ export async function getHomeCatalog() {
     slotProducts('home_best_sellers'),
   ]);
 
-  const categories: Category[] = categoryRows.map(categoryFromRow);
+  const categories: Category[] = categoryRows.map((r) => categoryFromRow(r, photoBase));
 
   return { categories, newArrivals, bestSellers };
 }
@@ -193,7 +194,7 @@ export async function getCategories(): Promise<Category[]> {
   cacheTag('catalog');
 
   const rows = unwrap(await createSupabase().from('categories').select('*').order('sort_order'));
-  return rows.map(categoryFromRow);
+  return rows.map((r) => categoryFromRow(r, photoBase));
 }
 
 export interface StoreInfo {

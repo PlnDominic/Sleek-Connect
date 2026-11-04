@@ -31,9 +31,11 @@ export interface Banner {
   theme: 'light' | 'sale' | 'gift';
 }
 
+const photoBase = photoUrl('').replace(/\/$/, '');
+
 export async function getCategories(): Promise<Category[]> {
   const rows = check(await supabase.from('categories').select('*').order('sort_order'));
-  return (rows as CategoryRowLike[]).map(categoryFromRow);
+  return (rows as CategoryRowLike[]).map((r) => categoryFromRow(r, photoBase));
 }
 
 export async function getAgeBands(): Promise<AgeBand[]> {

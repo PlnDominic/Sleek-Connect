@@ -132,7 +132,7 @@ export default function HomeScreen() {
                     onPress={() => openShop({ department: dept, category: c.id })}
                     style={styles.category}
                   >
-                    <ProductImage image={c.image} tint={c.tint} kind={c.kind} style={styles.categoryImage} iconSize={26} />
+                    <ProductImage image={c.image} photo={c.photo} tint={c.tint} kind={c.kind} style={styles.categoryImage} iconSize={26} />
                     <AppText weight="semibold" size={12} numberOfLines={2} style={styles.categoryName}>
                       {c.name}
                     </AppText>
