@@ -1,5 +1,6 @@
 import 'server-only';
 import { logger } from '@/lib/observability';
+import { testModesAllowed } from '@/lib/dev-modes';
 import { createGmailTransport, gmailConfig, gmailMessage } from './gmail';
 import { maskRecipient } from './mask';
 
@@ -27,7 +28,7 @@ export interface MessageProvider {
   send(to: string, message: { subject: string; text: string; html?: string }, options?: SendOptions): Promise<SendResult>;
 }
 
-/** Writes messages to the server log instead of sending them. Development only. */
+/** Writes messages to the server log instead of sending them. Automated tests only (see lib/dev-modes.ts). */
 const consoleProvider = (channel: 'sms' | 'email' | 'push'): MessageProvider => ({
   name: 'console',
   async send(to, message) {
@@ -62,8 +63,8 @@ function gmailProvider(): MessageProvider | null {
 function pick(channel: 'sms' | 'email' | 'push', name: string | undefined): MessageProvider | null {
   if (!name) return null;
   if (name === 'console') {
-    // Logging a message isn't delivering it, so never pretend to on the live site.
-    return process.env.VERCEL_ENV === 'production' ? null : consoleProvider(channel);
+    // Logging a message isn't delivering it, so it is for automated tests only.
+    return testModesAllowed() ? consoleProvider(channel) : null;
   }
   if (name === 'gmail' && channel === 'email') return gmailProvider();
   console.error(`Unknown ${channel} provider "${name}", so ${channel} messages are off.`);
@@ -94,7 +95,7 @@ const expoPushProvider = (): MessageProvider => ({
   },
 });
 
-/** Set PUSH_PROVIDER=expo to send to the app, or console to log instead (development). Unset means push is off. */
+/** Set PUSH_PROVIDER=expo to send to the app, or console to log instead (automated tests only). Unset means push is off. */
 export function pushProvider(): MessageProvider | null {
   const name = process.env.PUSH_PROVIDER;
   if (!name) return null;

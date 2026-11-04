@@ -29,10 +29,12 @@ npm run dev:web                                  # http://localhost:3000
 of everything in stock).
 
 To try payments and customer messages locally, also set these in `apps/web/.env.local` (see [Payments](#payments)
-and [Customer messages](#customer-messages)):
+and [Customer messages](#customer-messages)). The stand-ins below move no money and send nothing, so they only work with
+`ENABLE_TEST_MODES=true` and are refused on Vercel production. Do not set any of them on the live site:
 
 ```sh
 SUPABASE_SECRET_KEY=...        # SECRET_KEY printed by `npx supabase status`
+ENABLE_TEST_MODES=true
 PAYMENT_PROVIDER=test
 PAYMENT_WEBHOOK_SECRET=...     # any long random string, e.g. `openssl rand -hex 24`
 SMS_PROVIDER=console           # writes SMS to the server log instead of sending

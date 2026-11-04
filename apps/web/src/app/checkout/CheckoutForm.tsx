@@ -673,12 +673,6 @@ function OrderProgress({ order, live, prompt, onRetry }: OrderProgressProps) {
       <Link href={`/orders/${order.orderToken}`} className={styles.statusLink}>
         Follow this order
       </Link>
-      {order.payment.testMode && (
-        <span className={styles.testNote}>
-          Test mode: no real prompt was sent. Run <code>npm run payments:simulate -- {order.orderNumber} succeeded</code>{' '}
-          to approve it.
-        </span>
-      )}
     </div>
   );
 }

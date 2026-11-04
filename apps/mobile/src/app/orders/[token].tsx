@@ -266,11 +266,9 @@ function PayAgain({ token, reservedUntil, onChanged }: { token: string; reserved
       r.kind === 'requested'
         ? {
             ok: true,
-            text: r.testMode
-              ? 'Test mode: no real prompt was sent.'
-              : r.checkoutUrl
-                ? 'Finish paying on our payment partner’s page. This page updates by itself.'
-                : 'Check your phone and approve the prompt. This page updates by itself.',
+            text: r.checkoutUrl
+              ? 'Finish paying on our payment partner’s page. This page updates by itself.'
+              : 'Check your phone and approve the prompt. This page updates by itself.',
           }
         : { ok: false, text: r.reason },
     );

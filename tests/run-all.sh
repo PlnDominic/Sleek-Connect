@@ -5,7 +5,7 @@
 #   npm test -- db           # database suites only (no browser, no build)
 #
 # Needs: Docker with the local stack running (npm run db:start), apps/web/.env.local pointing at it (with
-# SUPABASE_SECRET_KEY, PAYMENT_PROVIDER=test, PAYMENT_WEBHOOK_SECRET, SMS_PROVIDER=console, EMAIL_PROVIDER=console, PUSH_PROVIDER=console),
+# SUPABASE_SECRET_KEY, ENABLE_TEST_MODES=true, PAYMENT_PROVIDER=test, PAYMENT_WEBHOOK_SECRET, SMS_PROVIDER=console, EMAIL_PROVIDER=console, PUSH_PROVIDER=console),
 # and Playwright's Chromium (npx playwright install chromium). Screenshots and logs go to tests/.output.
 set -uo pipefail
 cd "$(dirname "$0")/.."
@@ -78,6 +78,7 @@ suite "email: Gmail sender (Nodemailer)" unit-email.cjs
 suite "payments: Hubtel provider" unit-hubtel.cjs
 suite "privacy: what Sentry and PostHog may receive" unit-telemetry.cjs
 suite "privacy: no trackers, no cookies of our own" unit-privacy-guard.cjs
+suite "safety: test payment and console messages are off on the live site" unit-dev-modes.cjs
 suite "build: server action files export only async functions" unit-server-actions.cjs
 suite "admin: the settings page shows error reporting first" unit-admin-settings.cjs
 

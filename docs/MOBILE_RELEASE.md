@@ -54,7 +54,7 @@ eas build --profile production --platform all        # what you submit to the st
 - **Push notifications** need a real phone. Expo Go on Android can't receive them; iPhone in Expo Go and every
   development build can. EAS creates the Apple push key for you; for Android, add a Firebase (FCM v1) service account
   key under `eas credentials` once. Test by placing an order and marking it packed in the admin.
-- Place a test order with `PAYMENT_PROVIDER=test` and finish it with `npm run payments:simulate`.
+- Place a test order locally (`ENABLE_TEST_MODES=true`, `PAYMENT_PROVIDER=test`) and finish it with `npm run payments:simulate`.
 - Run `npx expo-doctor` and `npm run typecheck && npm run lint` before every build.
 
 ## Before you submit
@@ -63,8 +63,8 @@ eas build --profile production --platform all        # what you submit to the st
   `scripts/make-app-icons.py`) so the stores get correctly sized files. Swap in your designed logo, keeping the sizes:
   `icon.png` 1024×1024 with no transparency, `splash-icon.png` 1024×1024, the three `android-icon-*.png`,
   `notification-icon.png` 96×96 white on transparent.
-- **Payments:** reviewers will try to check out. Connect a real payment provider (or leave `PAYMENT_PROVIDER=test` only on a
-  staging backend that the reviewers' build points to). Physical goods are paid for outside the stores' own purchase
+- **Payments:** reviewers will try to check out. Connect the real payment provider (Hubtel). The test provider is for automated tests only and is
+  refused on Vercel production. Physical goods are paid for outside the stores' own purchase
   systems, which both stores allow.
 - **Sign-in for reviewers:** they can't receive a text message. In Supabase → Authentication → Providers → Phone, add a
   **test phone number with a fixed code** (for example `233240000000` and `123456`), and put it in the review notes.

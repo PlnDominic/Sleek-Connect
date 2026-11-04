@@ -397,11 +397,9 @@ function Waiting({ placed, onRetryDetails }: { placed: Placed; onRetryDetails: (
         ) : prompt.kind === 'requested' ? (
           <>
             <AppText size={14} color={colors.textMuted}>
-              {prompt.testMode
-                ? 'Test mode: no real prompt was sent. Complete the test payment on the server to continue.'
-                : checkoutUrl
-                  ? 'Finish paying on our payment partner’s page. This screen updates by itself once the payment goes through.'
-                  : 'Check your phone and approve the Mobile Money prompt. This screen updates by itself.'}
+              {checkoutUrl
+                ? 'Finish paying on our payment partner’s page. This screen updates by itself once the payment goes through.'
+                : 'Check your phone and approve the Mobile Money prompt. This screen updates by itself.'}
             </AppText>
             {checkoutUrl ? <Button label="Open the payment page" onPress={() => void openPaymentPage(checkoutUrl)} /> : null}
             <AppText size={13} color={colors.textMuted}>

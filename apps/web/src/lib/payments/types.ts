@@ -36,8 +36,6 @@ export interface PaymentResult {
 export interface PaymentProvider {
   /** Stored with each payment, so keep it stable once payments exist. */
   readonly name: string;
-  /** True when no real money moves. */
-  readonly testMode: boolean;
   /** Whether card payments are available (as well as Mobile Money). */
   readonly supportsCard: boolean;
   /** True when the shopper pays on the provider's own page (they are sent to `checkoutUrl`) instead of a phone prompt. */

@@ -134,7 +134,7 @@ export async function notifyCodOrder(orderToken: string): Promise<void> {
 }
 
 export type PaymentRequest =
-  | { kind: 'requested'; testMode: boolean; /** The payment partner's page, when the shopper pays there. */ checkoutUrl?: string }
+  | { kind: 'requested'; /** The payment partner's page, when the shopper pays there. */ checkoutUrl?: string }
   | { kind: 'unavailable' | 'failed'; reason: string };
 
 /** What online payment offers right now: whether it is on, takes cards, and uses the payment partner's own page. */

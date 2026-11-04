@@ -14,7 +14,6 @@ function sign(body: string, secret: string): string {
 export function createTestProvider(secret: string): PaymentProvider {
   return {
     name: 'test',
-    testMode: true,
     supportsCard: false,
     hostedCheckout: false,
 

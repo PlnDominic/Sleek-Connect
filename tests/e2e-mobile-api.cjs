@@ -26,7 +26,7 @@ const start = (body) => fetch(`${BASE}/api/payments/start`, { method: 'POST', he
 
   r = await start({ orderToken: order.order_token, network: 'mtn', wallet: '0247654321' });
   const body = await r.json();
-  assert(r.ok && body.kind === 'requested' && body.testMode === true, 'an unpaid order gets a payment prompt (test mode here)');
+  assert(r.ok && body.kind === 'requested', 'an unpaid order gets a payment prompt');
   const amount = sql(`select p.amount_ghs from public.payments p join public.orders o on o.id = p.order_id where o.order_number = '${order.order_number}' order by p.created_at desc limit 1`);
   assert(Number(amount) === Number(order.total_ghs), 'for the amount the database priced, never one sent by the phone');
 

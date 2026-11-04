@@ -42,6 +42,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL=$API_URL
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$PUBLISHABLE_KEY
           SUPABASE_SECRET_KEY=$SECRET_KEY
+          ENABLE_TEST_MODES=true
           PAYMENT_PROVIDER=test
           PAYMENT_WEBHOOK_SECRET=ci-webhook-secret-not-used-anywhere-else
           SMS_PROVIDER=console

@@ -7,7 +7,7 @@ import type { PaymentInstructions } from './types';
 
 /** What starting an online payment can come to. */
 export type OnlinePaymentStart =
-  | { kind: 'requested'; testMode: boolean; /** The provider's payment page, when it has one. */ checkoutUrl?: string }
+  | { kind: 'requested'; /** The provider's payment page, when it has one. */ checkoutUrl?: string }
   | { kind: 'unavailable'; reason: string }
   | { kind: 'failed'; reason: string };
 
@@ -67,5 +67,5 @@ export async function startOrderPayment(
     return { kind: 'failed', reason: 'We couldn’t send the payment prompt. Please try again.' };
   }
 
-  return { kind: 'requested', testMode: provider.testMode, checkoutUrl: instructions?.checkoutUrl };
+  return { kind: 'requested', checkoutUrl: instructions?.checkoutUrl };
 }

@@ -22,7 +22,7 @@ const env = { HUBTEL_API_ID: 'id1', HUBTEL_API_KEY: 'key1', HUBTEL_MERCHANT_ACCO
   let reply = { ok: true, status: 200, json: { responseCode: '0000', status: 'Success', data: { checkoutId: 'c1', clientReference: 'SC-1001-abc', checkoutUrl: 'https://pay.hubtel.example/c1' } } };
   const fake = async (url, init) => { calls.push({ url, init }); return { ok: reply.ok, status: reply.status, json: async () => reply.json }; };
   const provider = createHubtelProvider(config, fake);
-  assert(provider.name === 'hubtel' && provider.supportsCard && provider.hostedCheckout && !provider.testMode, 'it is a real provider with a hosted page and cards');
+  assert(provider.name === 'hubtel' && provider.supportsCard && provider.hostedCheckout, 'it is a real provider with a hosted page and cards');
   const out = await provider.requestPayment({ reference: 'SC-1001-abc', orderNumber: 'SC-1001', amountGhs: 130, method: 'momo', network: 'mtn', wallet: '024 123 4567', returnPath: '/orders/tok' });
   assert(out.checkoutUrl === 'https://pay.hubtel.example/c1', 'the shopper is sent to the checkout address Hubtel returns');
   const sent = JSON.parse(calls[0].init.body);

@@ -89,7 +89,6 @@ export function createHubtelProvider(config: HubtelConfig, fetchImpl: typeof fet
 
   return {
     name: 'hubtel',
-    testMode: false,
     supportsCard: config.card,
     hostedCheckout: true,
 
