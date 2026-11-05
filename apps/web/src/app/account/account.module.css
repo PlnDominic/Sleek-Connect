@@ -1272,3 +1272,63 @@ main.shell {
     font-size: 15px;
   }
 }
+
+/* Phones: the app's account screens. Soft cards without outlines, tighter spacing, smaller headings. */
+@media (max-width: 640px) {
+  .shell {
+    gap: 14px;
+    padding-top: 14px;
+    padding-bottom: 40px;
+  }
+
+  .main h1 {
+    margin-bottom: 14px;
+    font-size: 22px;
+    font-weight: 600;
+  }
+
+  .panel,
+  .dashHead,
+  .card,
+  .infoCard {
+    padding: 16px;
+    gap: 12px;
+    border: 0;
+    border-radius: var(--r-xl);
+    background: var(--c-surface);
+    box-shadow: none;
+  }
+
+  .dashHead {
+    padding: 14px 16px;
+  }
+
+  .avatar {
+    width: 48px;
+    height: 48px;
+  }
+
+  .dashGrid,
+  .overviewGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .field input,
+  .input {
+    height: 46px;
+    border-radius: var(--r-lg);
+    background: var(--c-canvas);
+  }
+
+  .primary,
+  .secondary,
+  .google {
+    height: 46px;
+    border-radius: 999px;
+  }
+
+  .preference {
+    background: var(--c-canvas);
+  }
+}

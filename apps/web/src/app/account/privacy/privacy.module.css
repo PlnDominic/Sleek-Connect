@@ -5,7 +5,7 @@
 }
 
 .danger {
-  border-color: #f0c8bb;
+  border-color: color-mix(in srgb, var(--c-danger, #b42318) 30%, var(--c-canvas));
 }
 
 .confirm {

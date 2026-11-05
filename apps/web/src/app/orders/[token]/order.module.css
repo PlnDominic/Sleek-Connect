@@ -418,7 +418,7 @@ button:disabled {
 }
 
 .itemWarning {
-  color: #6b4700;
+  color: var(--c-warn-ink, #6b4700);
   font-weight: 600;
 }
 
@@ -550,5 +550,57 @@ button:disabled {
 
   .expected strong {
     font-size: 16.5px;
+  }
+}
+
+/* Phones: the app's order screen. A compact header card, soft panels without outlines, and full-width actions. */
+@media (max-width: 640px) {
+  .main {
+    padding-top: 14px;
+    padding-bottom: 40px;
+    gap: 12px;
+  }
+
+  .titleRow h1 {
+    font-size: 22px;
+    font-weight: 600;
+  }
+
+  .hero {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .layout,
+  .side {
+    gap: 12px;
+  }
+
+  .panel {
+    padding: 16px;
+    border: 0;
+    background: var(--c-surface);
+  }
+
+  .panelTitle {
+    font-size: 15px;
+    margin-bottom: 12px;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .actions > * {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .primary,
+  .secondary,
+  .danger {
+    height: 46px;
+    border-radius: 999px;
   }
 }
