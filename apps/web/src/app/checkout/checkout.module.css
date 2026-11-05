@@ -581,3 +581,68 @@
     font-size: 16.5px;
   }
 }
+
+/* Phones: the app's checkout. A white (or black) page with soft grey cards, compact steps and a full-width pill button. */
+@media (max-width: 640px) {
+  .page {
+    background: var(--c-canvas);
+  }
+
+  .headerInner {
+    padding: 12px 16px;
+    gap: 8px;
+  }
+
+  .steps {
+    gap: 6px;
+    font-size: 12.5px;
+  }
+
+  .stepMark {
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+  }
+
+  .main {
+    padding: 12px 16px 40px;
+    gap: 14px;
+  }
+
+  .forms {
+    gap: 12px;
+  }
+
+  .panel,
+  .summary {
+    background: var(--c-surface);
+    padding: 16px;
+    gap: 14px;
+  }
+
+  .panelTitle {
+    font-size: 16px;
+  }
+
+  .summaryTitle {
+    font-size: 16px;
+  }
+
+  .fieldGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    height: 46px;
+    border-radius: var(--r-lg);
+  }
+
+  .payButton {
+    height: 48px;
+    border-radius: 999px;
+    font-size: 15px;
+  }
+}

@@ -213,7 +213,7 @@
 }
 
 .footerBottom a {
-  color: var(--c-canvas);
+  color: var(--c-on-solid, var(--c-canvas));
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 3px;

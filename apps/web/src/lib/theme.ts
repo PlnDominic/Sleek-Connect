@@ -15,7 +15,7 @@ for (const [key, value] of Object.entries(radii)) {
 export const themeVars = vars as CSSProperties;
 
 /** The dark scheme as CSS: applies when <html data-theme="dark"> is set (see `themeScript`). `!important` because the light values are inline on <html>. */
-export const darkThemeCss = `html[data-theme="dark"]{color-scheme:dark;--c-on-accent:#00110f !important;--c-solid:#161616 !important;--c-on-solid:#cbd5e4 !important;--c-danger:#ff8a80 !important;${Object.entries(darkColors)
+export const darkThemeCss = `html[data-theme="dark"]{color-scheme:dark;--c-on-accent:#00110f !important;--c-warn-ink:#f2c46d !important;--c-solid:#161616 !important;--c-on-solid:#cbd5e4 !important;--c-danger:#ff8a80 !important;${Object.entries(darkColors)
   .map(([key, value]) => `--c-${kebab(key)}:${value} !important`)
   .join(';')}}`;
 
