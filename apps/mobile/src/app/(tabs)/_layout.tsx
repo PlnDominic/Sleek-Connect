@@ -4,20 +4,20 @@ import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, type IconName } from '@sleek/shared';
+import { colors } from '@sleek/shared';
 import { useBag } from '@sleek/shared/bag';
 import { AppText } from '@/components/AppText';
-import { Icon } from '@/components/Icon';
+import { TabIcon, type TabIconName } from '@/components/TabIcon';
 import { CountBadge } from '@/components/ui';
 
 type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
 
-const items: { label: string; icon: IconName; route: string }[] = [
+const items: { label: string; icon: TabIconName; route: string }[] = [
   { label: 'Home', icon: 'home', route: 'index' },
-  { label: 'Shop', icon: 'grid', route: 'shop' },
-  { label: 'Saved', icon: 'heart', route: 'saved' },
+  { label: 'Shop', icon: 'shop', route: 'shop' },
+  { label: 'Saved', icon: 'saved', route: 'saved' },
   { label: 'Bag', icon: 'bag', route: 'bag' },
-  { label: 'Account', icon: 'user', route: 'account' },
+  { label: 'Account', icon: 'account', route: 'account' },
 ];
 
 function TabBar({ state, navigateToTab }: TabBarProps) {
@@ -67,12 +67,7 @@ function TabBar({ state, navigateToTab }: TabBarProps) {
                 >
                   <View style={[styles.lens, active && styles.lensActive]}>
                     <View>
-                      <Icon
-                        name={item.icon}
-                        size={22}
-                        color={active ? colors.accent : IDLE}
-                        strokeWidth={active ? 2.1 : 1.8}
-                      />
+                      <TabIcon name={item.icon} color={active ? colors.accent : IDLE} active={active} />
                       {item.route === 'bag' && <CountBadge count={count} style={styles.badge} />}
                     </View>
                     <AppText weight={active ? 'bold' : 'medium'} size={11} color={active ? colors.accent : IDLE}>
