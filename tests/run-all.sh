@@ -71,7 +71,7 @@ npx supabase db reset >/dev/null 2>&1; suite "database: launch schema verificati
 npx supabase db reset >/dev/null 2>&1; suite "database: pay on delivery" db-pay-on-delivery.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: the 18+ rule at checkout" db-age-rule.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: bulk editing, reorder suggestions, size guides" db-catalogue-tools.cjs
-npx supabase db reset >/dev/null 2>&1; suite "database: account pages, and the seller side switched off" db-account-extras.cjs
+npx supabase db reset >/dev/null 2>&1; suite "database: account pages, and the seller side removed" db-account-extras.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: promo code management" db-promotions.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: category photos" db-category-photos.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: abandoned bag reminders" db-bag-reminders.cjs

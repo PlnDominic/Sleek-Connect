@@ -27,8 +27,9 @@ bath products, FEFO), and also records:
 - a row in `stock_receipts`, which drives the supplier's history, totals and "last delivery",
 - `products.supplier_id` when the product has no usual supplier yet.
 
-## Switched off
+## Removed
 
-The earlier marketplace functions (`vendor_*`, `admin_*vendor*`, disputes, follows, store pages, product-view counts) are no longer
-callable by the web or mobile apps (migration `20261113090000`). Nothing was deleted from the database: the tables and rows remain until
-a separate clean-up migration, to be run only after a Supabase backup (see `docs/BACKUP_AND_RECOVERY.md`).
+The earlier marketplace (seller stores and their applications and ID documents, subscriptions, payouts, disputes, messages, followed stores,
+product-view counts, seller pickups, and the marketplace price and review columns) was removed from the database by migration
+`20261118090000`. The core order, stock and account functions were rewritten without it. The files in the Storage buckets `vendor-ids` and
+`vendor-assets` are deleted in Supabase → Storage (SQL cannot remove Storage files): empty each bucket, then delete it.

@@ -42,9 +42,8 @@
   There are no seller accounts, seller stores, subscriptions or seller payouts (Hubtel does not allow collecting payments on behalf of sellers
   without a Bank of Ghana aggregator licence). Suppliers are an internal list (`public.suppliers`, no direct grants) reached only through
   `admin_*supplier*` functions (Admin → Suppliers); tax and payment details are for finance/admin only. Stock from a supplier is recorded
-  with `admin_receive_stock_from` (batch, cost per unit, reference, `stock_receipts`). The old `vendor_*` / `admin_*vendor*` functions are
-  revoked (migration `20261113090000`) but the tables remain until a later, backed-up clean-up. Don't re-grant them or build seller-facing
-  features, and don't describe Sleek Connect as collecting money "for" or "on behalf of" anyone.
+  with `admin_receive_stock_from` (batch, cost per unit, reference, `stock_receipts`). The old seller side (vendor tables, columns, functions, the `vendor-ids` and `vendor-assets` buckets' rules) was removed by migration
+  `20261118090000`; don't bring any of it back or build seller-facing features, and don't describe Sleek Connect as collecting money "for" or "on behalf of" anyone.
 - `products`, `product_sizes` and `order_items` are readable **column by column** (migration `20261109090000`): cost and review-note columns
   are never granted to `anon` or `authenticated`. The shop reads products with the explicit `productSelect` in
   `packages/shared/src/rows.ts` (never `select('*')`). When you add a column to one of these tables that the shop needs, add it to
@@ -65,7 +64,7 @@
   sale, status `paid`, `cod_confirmed_at` set, `paid_at` stays empty); `admin_mark_delivered(..., p_cash_collected)` records the
   cash (a `payments` row with provider `cash`, `paid_at`, `cash_collected_ghs`). Nothing else may set `paid_at` for a
   `cod` order, so revenue counts when the cash is in hand and cancelled orders never show a refund due. COD is refused for
-  vendor-store items, above `pay_on_delivery_max_ghs`, or when the fee is unknown.
+  items above `pay_on_delivery_max_ghs`, or when the fee is unknown.
 - Online payment goes through the provider interface in `apps/web/src/lib/payments` (`PAYMENT_PROVIDER=hubtel` for Mobile Money
   and cards on Hubtel's hosted checkout, `test` for development; see `docs/HUBTEL.md`). A callback is never trusted on its
   own: Hubtel's has no signature, so its address carries a secret and `verify()` asks Hubtel's status API before

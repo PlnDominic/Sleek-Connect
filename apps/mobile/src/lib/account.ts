@@ -16,17 +16,6 @@ export async function deleteMyAccount(): Promise<string | null> {
     if (error || (removed?.length ?? 0) < photos.length) return 'We couldn’t remove your return photos, so nothing was deleted. Please try again.';
   }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (user) {
-    const { data: idFiles } = await supabase.storage.from('vendor-ids').list(user.id);
-    if (idFiles?.length) {
-      const { error } = await supabase.storage.from('vendor-ids').remove(idFiles.map((f) => `${user.id}/${f.name}`));
-      if (error) return 'We couldn’t remove your ID file, so nothing was deleted. Please try again.';
-    }
-  }
-
   const { error } = await supabase.rpc('delete_my_account');
   if (error) return error.code === '22023' ? error.message : 'We couldn’t delete your account. Please try again.';
   // The account is gone, so there is nothing to sign out of on the server; just forget the session on this phone.
