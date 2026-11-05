@@ -59,6 +59,21 @@ export default async function HomePage() {
       <AnnouncementBar />
       <SiteHeader current="Home" />
       <main>
+        <div className={`container ${styles.appTop}`}>
+          <Link href="/search" className={styles.appSearch}>
+            <Icon name="search" size={18} strokeWidth={2} />
+            <span>Search products or brands</span>
+          </Link>
+          <div className={styles.appAuthentic}>
+            <span className={styles.appAuthenticIcon}>
+              <Icon name="shieldCheck" size={20} strokeWidth={2} />
+            </span>
+            <span>
+              <strong>100% authentic, every order</strong>
+              <span>Batch and expiry checked before dispatch</span>
+            </span>
+          </div>
+        </div>
         <Hero banner={hero ?? defaultHero} products={heroProducts} />
         <Categories categories={categories} />
         <NewArrivals products={newArrivals} />
