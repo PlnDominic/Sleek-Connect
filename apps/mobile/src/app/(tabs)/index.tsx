@@ -33,7 +33,9 @@ export default function HomeScreen() {
 
   const deptCategories = (categories.data ?? []).filter((c) => c.department === dept);
   const arrivals = (all.data ?? []).filter((p) => p.department === dept).slice(0, 6);
-  const failed = (home.error && !home.data) || (all.error && !all.data);
+  // Only when nothing at all could be loaded: one failing request (say the banners) must not hide the rest of the screen.
+  const failed = Boolean(home.error && !home.data && all.error && !all.data && categories.error && !categories.data);
+  const emptyShop = !all.loading && !all.error && (all.data?.length ?? 0) === 0;
 
   const openShop = (params: { department?: Department; category?: string } = {}) =>
     router.push({ pathname: '/shop', params: { department: params.department ?? '', category: params.category ?? '' } });
@@ -169,7 +171,7 @@ export default function HomeScreen() {
               <ProductGridSkeleton count={4} />
             ) : arrivals.length === 0 ? (
               <AppText size={14} color={colors.textMuted}>
-                Nothing in {departmentLabels[dept]} yet. Check back soon.
+                {emptyShop ? 'We’re stocking the shop. New products are coming very soon.' : `Nothing in ${departmentLabels[dept]} yet. Check back soon.`}
               </AppText>
             ) : (
               <View style={styles.grid}>
