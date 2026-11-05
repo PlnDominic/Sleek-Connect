@@ -57,6 +57,8 @@
   marketing opt-in; they never contain an order link or delivery code and never copy to `STORE_ALERT_EMAIL`.
 - Searches that found nothing are recorded only by `record_search_miss` (normalised words and a daily count, nothing identifying, PII-looking text dropped) and read
   through `admin_search_misses` (Admin → Catalogue → Searches); `search_misses` has no direct grants.
+- Purchasing (`docs/PURCHASING.md`): purchase orders, stock counts, supplier payments and profit are reached only through `admin_*` functions (tables have no direct grants); goods are
+  received only through `admin_receive_purchase_order` (which calls `admin_receive_stock_from`), profit and money owed are finance/admin only.
 - Online orders become paid only through `public.confirm_payment`, after the webhook has verified the provider's
   notification. Stock is reserved by `place_order` and released by `release_order_reservation`.
 - Pay on delivery (`payment_method = 'cod'`, cash to the rider, no bank option; see `docs/PAY_ON_DELIVERY.md`): `place_order`

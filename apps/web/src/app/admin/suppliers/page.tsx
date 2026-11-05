@@ -17,7 +17,11 @@ export default async function SuppliersPage() {
     return <p className={styles.notice}>Only operations, finance and admin staff can see suppliers.</p>;
   }
   const money = can(staff.role, 'suppliers.tax');
-  const { data, error } = await staff.supabase.rpc('admin_list_suppliers');
+  const [{ data, error }, { data: balanceRows }] = await Promise.all([
+    staff.supabase.rpc('admin_list_suppliers'),
+    can(staff.role, 'profit.view') ? staff.supabase.rpc('admin_supplier_balances') : Promise.resolve({ data: null }),
+  ]);
+  const owed = new Map(((balanceRows ?? []) as unknown as { supplier_id: string; owed_ghs: number }[]).map((b) => [b.supplier_id, Number(b.owed_ghs)]));
   if (error) return <p className={styles.notice}>Suppliers aren’t available yet. The latest database update hasn’t been applied.</p>;
   const suppliers = (data as unknown as Supplier[]) ?? [];
 
@@ -63,6 +67,7 @@ export default async function SuppliersPage() {
                   {s.deliveries} {s.deliveries === 1 ? 'delivery' : 'deliveries'} · {s.units_received} units · {formatPrice(Number(s.total_cost_ghs))} at cost · {s.products}{' '}
                   {s.products === 1 ? 'product' : 'products'}
                   {s.last_delivery ? ` · last ${formatDateTime(s.last_delivery)}` : ''}
+                  {owed.has(s.id) && owed.get(s.id)! > 0 ? ` · we owe ${formatPrice(owed.get(s.id)!)}` : ''}
                 </p>
               </div>
             </div>

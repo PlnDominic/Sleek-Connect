@@ -953,6 +953,51 @@ isOneToOne: false
 "admin_duplicate_product":
 { Args: { "p_id": string }; Returns: string
                            },
+"admin_save_purchase_order":
+{ Args: { "p": Json }; Returns: string
+                           },
+"admin_list_purchase_orders":
+{ Args: { "p_status"?: string }; Returns: Json
+                           },
+"admin_get_purchase_order":
+{ Args: { "p_id": string }; Returns: Json
+                           },
+"admin_place_purchase_order":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"admin_cancel_purchase_order":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"admin_complete_purchase_order":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"admin_receive_purchase_order":
+{ Args: { "p_id": string,"p_lines": Json }; Returns: Json
+                           },
+"admin_reorder_to_po":
+{ Args: { "p_supplier_id": string }; Returns: string
+                           },
+"admin_apply_stock_count":
+{ Args: { "p_counts": Json,"p_note": string }; Returns: number
+                           },
+"admin_profit_by_product":
+{ Args: { "p_from": string,"p_to": string }; Returns: Json
+                           },
+"admin_stock_value":
+{ Args: never; Returns: Json
+                           },
+"admin_record_supplier_payment":
+{ Args: { "p_amount": number,"p_method": string,"p_note"?: string,"p_paid_on"?: string,"p_reference"?: string,"p_supplier_id": string }; Returns: string
+                           },
+"admin_delete_supplier_payment":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"admin_supplier_balances":
+{ Args: never; Returns: Json
+                           },
+"admin_supplier_payments":
+{ Args: { "p_supplier_id": string }; Returns: Json
+                           },
 "admin_set_batch_status":
 { Args: { "p_batch_id": string,"p_note": string,"p_status": Database["public"]['Enums']["batch_status"] }; Returns: undefined
                            },

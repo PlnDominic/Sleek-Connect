@@ -29,6 +29,7 @@ const groups: NavGroup[] = [
       { href: '/admin/returns', label: 'Returns' },
       { href: '/admin/finance', label: 'Finance' },
       { href: '/admin/promotions', label: 'Promotions' },
+      { href: '/admin/profit', label: 'Profit' },
     ],
   },
   {
@@ -48,6 +49,7 @@ const groups: NavGroup[] = [
       { href: '/admin/categories', label: 'Categories' },
       { href: '/admin/searches', label: 'Searches' },
       { href: '/admin/inventory', label: 'Inventory' },
+      { href: '/admin/purchasing', label: 'Purchasing' },
       { href: '/admin/suppliers', label: 'Suppliers' },
       { href: '/admin/content', label: 'Content' },
     ],

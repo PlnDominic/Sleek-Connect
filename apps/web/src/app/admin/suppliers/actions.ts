@@ -50,3 +50,27 @@ export async function deleteSupplier(id: string): Promise<ActionState> {
   if (error) return failed(error);
   redirect('/admin/suppliers');
 }
+
+/** Records a payment made to a supplier (finance and admin). */
+export async function recordSupplierPayment(supplierId: string, _: ActionState, form: FormData): Promise<ActionState> {
+  const supabase = await createUserSupabase();
+  const { error } = await supabase.rpc('admin_record_supplier_payment', {
+    p_supplier_id: supplierId,
+    p_amount: Number(text(form, 'amount')),
+    p_paid_on: text(form, 'paid_on') || undefined,
+    p_method: text(form, 'method'),
+    p_reference: text(form, 'reference') || undefined,
+    p_note: text(form, 'note') || undefined,
+  });
+  if (error) return failed(error);
+  refresh();
+  return done('Payment recorded.');
+}
+
+export async function deleteSupplierPayment(id: string): Promise<ActionState> {
+  const supabase = await createUserSupabase();
+  const { error } = await supabase.rpc('admin_delete_supplier_payment', { p_id: id });
+  if (error) return failed(error);
+  refresh();
+  return done('Payment removed.');
+}

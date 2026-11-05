@@ -19,6 +19,8 @@ const titles: Record<string, [string, string]> = {
   content: ['Content', 'Home page banners and featured products'],
   riders: ['Riders', 'Who delivers your orders'],
   delivery: ['Delivery', 'Areas, fees and delivery times'],
+  purchasing: ['Purchasing', 'Orders to suppliers and receiving goods'],
+  profit: ['Profit', 'Sales against what the stock cost'],
   searches: ['Searches', 'What shoppers look for and don’t find'],
   categories: ['Categories', 'The picture shoppers see for each category'],
   suppliers: ['Suppliers', 'Who we buy from, and what they delivered'],
