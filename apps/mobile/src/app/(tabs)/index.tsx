@@ -61,9 +61,14 @@ export default function HomeScreen() {
       }
     >
       <View style={styles.topRow}>
-        <AppText weight="extrabold" size={20} accessibilityRole="header">
-          Sleek <AppText weight="extrabold" size={20} color={colors.accent}>Connect</AppText> Store
-        </AppText>
+        <View style={styles.brand}>
+          <View style={styles.brandTile}>
+            <Image source={require('../../../assets/logo-mark.png')} style={styles.brandMark} contentFit="contain" accessibilityLabel="Sleek Connect logo" />
+          </View>
+          <AppText weight="extrabold" size={18} accessibilityRole="header">
+            Sleek <AppText weight="extrabold" size={18} color={colors.accent}>Connect</AppText> Store
+          </AppText>
+        </View>
         <IconButton icon="bag" label={`Bag, ${count} ${count === 1 ? 'item' : 'items'}`} onPress={() => router.push('/bag')}>
           <CountBadge count={count} />
         </IconButton>
@@ -267,6 +272,25 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
   },
   flex: {
     flex: 1,
+  },
+  brand: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flexShrink: 1,
+  },
+  // The emblem sits on a white tile so its navy stays visible in the dark theme.
+  brandTile: {
+    width: 38,
+    height: 38,
+    borderRadius: 11,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brandMark: {
+    width: 28,
+    height: 31,
   },
   topRow: {
     flexDirection: 'row',

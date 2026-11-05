@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { getStaffSession, roleLabels } from '@/lib/admin/session';
@@ -77,7 +78,7 @@ export async function AdminGate({ children }: { children: ReactNode }) {
         <>
           <Link href="/admin" className={shell.brand}>
             <span className={shell.brandMark} aria-hidden="true">
-              SC
+              <Image src="/brand/logo-mark.png" alt="" width={72} height={80} style={{ width: '82%', height: 'auto' }} />
             </span>
             <span className={shell.brandText}>
               <strong>Sleek Connect</strong>

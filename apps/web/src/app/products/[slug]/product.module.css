@@ -588,3 +588,189 @@
     font-size: 14px;
   }
 }
+
+/* Phones: the app's product screen. A full-width picture, a compact title and price, and the quantity and Add to bag stay in view at the bottom. */
+@media (max-width: 640px) {
+  .breadcrumb {
+    display: none;
+  }
+
+  .main {
+    padding-top: 0;
+    padding-bottom: 24px;
+    gap: 14px;
+  }
+
+  .gallery {
+    flex-basis: 100%;
+    gap: 10px;
+    margin: 0 -24px;
+  }
+
+  .mainImage {
+    border-radius: 0;
+    aspect-ratio: 1 / 1;
+  }
+
+  .newBadge {
+    left: 16px;
+    top: 16px;
+  }
+
+  .thumbs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 0 24px;
+    scrollbar-width: none;
+  }
+
+  .thumbs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .thumb {
+    flex: none;
+    width: 58px;
+    height: 58px;
+  }
+
+  .info {
+    flex-basis: 100%;
+    gap: 14px;
+  }
+
+  .titleBlock {
+    gap: 6px;
+  }
+
+  .brand {
+    font-size: 11.5px;
+  }
+
+  .save {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+
+  .title {
+    font-size: 20px;
+    line-height: 1.25;
+  }
+
+  .description {
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+
+  .chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin: 0 -24px;
+    padding: 0 24px;
+    scrollbar-width: none;
+  }
+
+  .chip {
+    flex: none;
+    font-size: 12px;
+  }
+
+  .price {
+    font-size: 22px;
+  }
+
+  .sizes {
+    gap: 8px;
+  }
+
+  .sizeButton {
+    font-size: 13px;
+  }
+
+  .buyRow {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    flex-wrap: nowrap;
+    gap: 10px;
+    margin: 0 -24px;
+    padding: 10px 24px calc(10px + env(safe-area-inset-bottom, 0px));
+    background: var(--c-canvas);
+    border-top: 1px solid var(--c-line);
+  }
+
+  .qty {
+    flex: none;
+    height: 46px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--c-surface);
+  }
+
+  .qty button {
+    width: 38px;
+    height: 44px;
+    font-size: 17px;
+  }
+
+  .qty span {
+    min-width: 22px;
+    font-size: 14px;
+  }
+
+  .addButton,
+  .momoButton {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 46px;
+    border-radius: 999px;
+    font-size: 14px;
+  }
+
+  .giftOption {
+    padding: 12px 14px;
+  }
+
+  .serviceBox {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .serviceRow {
+    font-size: 12.5px;
+  }
+
+  .tabsSection {
+    padding-bottom: 24px;
+  }
+
+  .tablist {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 6px;
+    padding-bottom: 10px;
+    scrollbar-width: none;
+  }
+
+  .tablist::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab {
+    flex: none;
+    height: 38px;
+    padding: 0 14px;
+    font-size: 13px;
+  }
+
+  .tabPanel {
+    padding: 16px 0;
+  }
+
+  .relatedGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+}

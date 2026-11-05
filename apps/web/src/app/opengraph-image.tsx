@@ -6,7 +6,9 @@ export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
 /** The picture shown when a page of the store is shared and has no photo of its own. */
-export default function OpenGraphImage() {
+export default async function OpenGraphImage() {
+  const mark = await fetch(new URL('../../public/brand/logo-mark.png', import.meta.url)).then((r) => r.arrayBuffer());
+  const markSrc = `data:image/png;base64,${Buffer.from(mark).toString('base64')}`;
   return new ImageResponse(
     (
       <div
@@ -21,6 +23,7 @@ export default function OpenGraphImage() {
           color: colors.ink,
         }}
       >
+        <img src={markSrc} width={150} height={166} alt="" style={{ marginBottom: 28 }} />
         <div style={{ display: 'flex', fontSize: 96, fontWeight: 800, letterSpacing: -3 }}>
           <span>Sleek&nbsp;</span>
           <span style={{ color: colors.accent }}>Connect</span>

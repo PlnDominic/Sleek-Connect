@@ -1,11 +1,30 @@
 /* Logo */
 .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
   font-size: var(--logo-size, 24px);
   font-weight: 800;
   letter-spacing: -0.03em;
   text-decoration: none;
   color: var(--c-ink);
   white-space: nowrap;
+}
+
+.logoTile {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.95em;
+  height: 1.95em;
+  border-radius: 0.45em;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.06);
+}
+
+.logoImage {
+  width: 86%;
+  height: auto;
 }
 
 .logo:hover {
