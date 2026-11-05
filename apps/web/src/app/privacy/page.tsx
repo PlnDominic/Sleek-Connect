@@ -186,6 +186,11 @@ export default async function PrivacyPage() {
             actions were taken (for example adding an item to your bag). They never receive your name, phone number, email address,
             order links, delivery code or payment details, and we collect nothing from the admin console.
           </p>
+          <p>
+            When a search finds nothing and you stay on that result, we keep the words you searched for and a daily count, so we know what to
+            stock. No account, address or device is kept with them, and anything that looks like an email address, a phone number or a web
+            address is not kept at all.
+          </p>
         </>
       ),
     },

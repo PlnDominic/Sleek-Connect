@@ -56,6 +56,8 @@
   only by `apply_order_promotion`, one code per order.
 - Abandoned bag reminders (`docs/BAG_REMINDERS.md`) are queued only by `queue_bag_reminders()` (pg_cron) and only for shoppers whose account has the
   marketing opt-in; they never contain an order link or delivery code and never copy to `STORE_ALERT_EMAIL`.
+- Searches that found nothing are recorded only by `record_search_miss` (normalised words and a daily count, nothing identifying, PII-looking text dropped) and read
+  through `admin_search_misses` (Admin → Catalogue → Searches); `search_misses` has no direct grants.
 - Online orders become paid only through `public.confirm_payment`, after the webhook has verified the provider's
   notification. Stock is reserved by `place_order` and released by `release_order_reservation`.
 - Pay on delivery (`payment_method = 'cod'`, cash to the rider, no bank option; see `docs/PAY_ON_DELIVERY.md`): `place_order`

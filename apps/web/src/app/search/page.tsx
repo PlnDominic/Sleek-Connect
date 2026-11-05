@@ -5,6 +5,7 @@ import { ListingView } from '@/components/listing/ListingView';
 import { ProductCard } from '@/components/ProductCard';
 import styles from '@/components/listing/listing.module.css';
 import { SearchBox } from '@/components/SearchBox';
+import { SearchMissBeacon } from '@/components/SearchMissBeacon';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SiteHeader } from '@/components/SiteHeader';
 import { getAgeBands } from '@/lib/catalog';
@@ -107,6 +108,7 @@ async function SearchResults({ searchParams }: { searchParams: PageProps<'/searc
             }
           />
         )}
+        {q.length >= 2 && matches.length === 0 && <SearchMissBeacon query={q} />}
         {q.length >= 2 && matches.length === 0 && popular.length > 0 && (
           <section aria-labelledby="popular-title" style={{ paddingBottom: 56 }}>
             <h2 id="popular-title" style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>

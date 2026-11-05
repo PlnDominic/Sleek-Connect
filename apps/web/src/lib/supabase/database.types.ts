@@ -1317,6 +1317,15 @@ isOneToOne: false
 "admin_set_category_photo":
 { Args: { "p_id": string,"p_path"?: string }; Returns: undefined
                            },
+"admin_search_misses":
+{ Args: { "p_days"?: number }; Returns: { term: string,searches: number,days_seen: number,last_seen: string }[]
+                           },
+"admin_clear_search_miss":
+{ Args: { "p_term": string }; Returns: undefined
+                           },
+"record_search_miss":
+{ Args: { "p_query": string }; Returns: undefined
+                           },
 "admin_set_batch_status":
 { Args: { "p_batch_id": string,"p_note": string,"p_status": Database["public"]['Enums']["batch_status"] }; Returns: undefined
                            },
