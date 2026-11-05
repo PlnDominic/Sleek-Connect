@@ -24,32 +24,35 @@ function TabBar({ state, navigateToTab }: TabBarProps) {
   const { count } = useBag();
 
   return (
-    <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 16) }]} accessibilityRole="tablist">
-      {items.map((item) => {
-        const active = item.route === current;
-        const color = active ? colors.accent : colors.textMuted;
-        return (
-          <Pressable
-            key={item.label}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: active }}
-            accessibilityLabel={item.route === 'bag' ? `Bag, ${count} ${count === 1 ? 'item' : 'items'}` : item.label}
-            onPress={() => {
-              const route = state.routes.find((r) => r.name === item.route);
-              if (route) navigateToTab(route.key);
-            }}
-            style={styles.item}
-          >
-            <View>
-              <Icon name={item.icon} size={22} color={color} strokeWidth={active ? 2 : 1.8} />
-              {item.route === 'bag' && <CountBadge count={count} style={styles.badge} />}
-            </View>
-            <AppText weight={active ? 'bold' : 'semibold'} size={11} color={color}>
-              {item.label}
-            </AppText>
-          </Pressable>
-        );
-      })}
+    <View style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+      <View style={styles.bar} accessibilityRole="tablist">
+        {items.map((item) => {
+          const active = item.route === current;
+          return (
+            <Pressable
+              key={item.label}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: active }}
+              accessibilityLabel={item.route === 'bag' ? `Bag, ${count} ${count === 1 ? 'item' : 'items'}` : item.label}
+              onPress={() => {
+                const route = state.routes.find((r) => r.name === item.route);
+                if (route) navigateToTab(route.key);
+              }}
+              style={[styles.item, active ? styles.itemActive : styles.itemIdle]}
+            >
+              <View>
+                <Icon name={item.icon} size={22} color={BLACK} strokeWidth={active ? 2 : 1.8} />
+                {item.route === 'bag' && <CountBadge count={count} style={styles.badge} />}
+              </View>
+              {active && (
+                <AppText weight="bold" size={14} color={BLACK}>
+                  {item.label}
+                </AppText>
+              )}
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -66,20 +69,43 @@ export default function TabsLayout() {
   );
 }
 
+const BLACK = '#0A0A0A';
+
+// A floating black pill: the current tab is a white pill with its name, the others are round grey buttons.
 const styles = StyleSheet.create({
+  wrap: {
+    backgroundColor: colors.canvas,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
   bar: {
     flexDirection: 'row',
-    backgroundColor: colors.canvas,
-    borderTopWidth: 1,
-    borderTopColor: colors.line,
-    paddingTop: 12,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: BLACK,
+    borderRadius: 999,
+    padding: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
   },
   item: {
-    flex: 1,
-    minHeight: 44,
+    height: 48,
+    minWidth: 48,
+    borderRadius: 24,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: 8,
+  },
+  itemActive: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+  },
+  itemIdle: {
+    backgroundColor: '#E8E8E8',
   },
   badge: {
     right: -10,
