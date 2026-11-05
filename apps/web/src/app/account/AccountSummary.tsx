@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { formatPriceOr } from '@sleek/shared';
 import { createBrowserSupabase } from '@/lib/supabase/browser';
 import { formatDate, statusShort } from '@/lib/orders';
+import { AppearanceCard } from './AppearanceCard';
 import styles from './account.module.css';
 
 interface Summary {
@@ -112,6 +113,8 @@ export function AccountSummary({ name, email, userId, marketingSms, marketingEma
             <span>Order and delivery updates are always sent.</span>
           </div>
         </section>
+
+        <AppearanceCard />
 
         <section className={`${styles.infoCard} ${styles.recent}`} aria-labelledby="ov-orders">
           <div className={styles.infoHead}>

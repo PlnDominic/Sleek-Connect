@@ -246,3 +246,10 @@
     line-height: 1.6;
   }
 }
+
+/* sc-phone-type: a little smaller on phones */
+@media (max-width: 640px) {
+  .footerBlurb {
+    font-size: 14px;
+  }
+}

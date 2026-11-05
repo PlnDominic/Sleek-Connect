@@ -212,3 +212,19 @@
   font-style: normal;
   font-weight: 600;
 }
+
+/* sc-phone-type: a little smaller on phones */
+@media (max-width: 640px) {
+  .box input,
+.compact input {
+    font-size: 14px;
+  }
+
+  .option {
+    font-size: 14px;
+  }
+
+  .productName {
+    font-size: 14px;
+  }
+}

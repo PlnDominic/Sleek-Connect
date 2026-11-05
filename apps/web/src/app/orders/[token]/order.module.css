@@ -511,3 +511,44 @@ button:disabled {
   gap: 10px;
   margin-left: auto;
 }
+
+/* sc-phone-type: a little smaller on phones */
+@media (max-width: 640px) {
+  .titleRow h1 {
+    font-size: 25.5px;
+  }
+
+  .hero h2 {
+    font-size: 19px;
+  }
+
+  .hero p {
+    font-size: 14px;
+  }
+
+  .code strong {
+    font-size: 25.5px;
+  }
+
+  .panelTitle {
+    font-size: 16.5px;
+  }
+
+  .itemText a,
+.itemText strong {
+    font-size: 14px;
+  }
+
+  .totals,
+.facts {
+    font-size: 14px;
+  }
+
+  .totalRow {
+    font-size: 16.5px;
+  }
+
+  .expected strong {
+    font-size: 16.5px;
+  }
+}

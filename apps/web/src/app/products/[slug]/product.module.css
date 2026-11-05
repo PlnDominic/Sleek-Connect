@@ -528,3 +528,63 @@
   color: var(--c-text-muted, #5f6368);
 }
 
+
+/* sc-phone-type: a little smaller on phones */
+@media (max-width: 640px) {
+  .title {
+    font-size: 29px;
+  }
+
+  .description {
+    font-size: 15px;
+  }
+
+  .price {
+    font-size: 25.5px;
+  }
+
+  .sizeButton {
+    font-size: 14px;
+  }
+
+  .qty button {
+    font-size: 19px;
+  }
+
+  .qty span {
+    font-size: 16px;
+  }
+
+  .addButton,
+.momoButton {
+    font-size: 15px;
+  }
+
+  .giftOption strong {
+    font-size: 14px;
+  }
+
+  .tab {
+    font-size: 14px;
+  }
+
+  .prose {
+    font-size: 14px;
+  }
+
+  .fact strong {
+    font-size: 16.5px;
+  }
+
+  .fact .factSmall {
+    font-size: 14px;
+  }
+
+  .relatedTitle {
+    font-size: 22.5px;
+  }
+
+  .relatedName {
+    font-size: 14px;
+  }
+}

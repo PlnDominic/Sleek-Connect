@@ -402,7 +402,7 @@ main.centered {
 .dashHead,
 .card {
   border: 1px solid rgb(11 31 58 / 0.08);
-  background: #fff;
+  background: var(--c-canvas);
   box-shadow: 0 1px 2px rgb(11 31 58 / 0.04);
 }
 
@@ -472,7 +472,7 @@ main.centered .panel {
 .google,
 .secondary {
   border: 1px solid #d5dce6;
-  background: #fff;
+  background: var(--c-canvas);
   box-shadow: 0 1px 2px rgb(11 31 58 / 0.05);
 }
 
@@ -637,7 +637,7 @@ main.centered .panel {
   padding: 18px 12px;
   border: 1px solid rgb(11 31 58 / 0.08);
   border-radius: 16px;
-  background: #fff;
+  background: var(--c-canvas);
 }
 
 .navGroup {
@@ -731,7 +731,7 @@ main.centered .panel {
   padding: 20px 22px;
   border: 1px solid rgb(11 31 58 / 0.08);
   border-radius: 16px;
-  background: #fff;
+  background: var(--c-canvas);
   box-shadow: 0 1px 2px rgb(11 31 58 / 0.04);
 }
 
@@ -791,7 +791,7 @@ main.centered .panel {
   padding: 28px;
   border: 1px solid rgb(11 31 58 / 0.08);
   border-radius: 16px;
-  background: #fff;
+  background: var(--c-canvas);
 }
 
 .emptyCard strong {
@@ -824,7 +824,7 @@ main.centered .panel {
   list-style: none;
   border: 1px solid rgb(11 31 58 / 0.08);
   border-radius: 16px;
-  background: #fff;
+  background: var(--c-canvas);
   overflow: hidden;
 }
 
@@ -883,7 +883,7 @@ main.centered .panel {
 }
 
 .tabs a[aria-current='page'] {
-  background: #fff;
+  background: var(--c-canvas);
   box-shadow: 0 1px 3px rgb(11 31 58 / 0.12);
   color: var(--c-ink);
 }
@@ -1021,7 +1021,7 @@ main.guestPage {
   padding: 20px 22px;
   border: 1px solid rgb(11 31 58 / 0.08);
   border-radius: 16px;
-  background: #fff;
+  background: var(--c-canvas);
   box-shadow: 0 1px 2px rgb(11 31 58 / 0.04);
 }
 
@@ -1156,5 +1156,119 @@ main.shell {
     padding-top: 16px;
     padding-left: 16px;
     padding-right: 16px;
+  }
+}
+
+/* Light / Dark / Auto switch on the account overview. */
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  align-self: flex-start;
+}
+
+.segmented button {
+  border: 0;
+  background: transparent;
+  color: var(--c-text-subtle);
+  font-weight: 600;
+  font-size: 13px;
+  padding: 7px 16px;
+  border-radius: 999px;
+}
+
+.segmented button[data-on] {
+  background: var(--c-ink);
+  color: var(--c-canvas);
+}
+
+/* sc-phone-type: a little smaller on phones */
+@media (max-width: 640px) {
+  .main h1 {
+    font-size: 25.5px;
+  }
+
+  .panel h2 {
+    font-size: 17px;
+  }
+
+  .google,
+.primary,
+.secondary {
+    font-size: 14px;
+  }
+
+  .saved {
+    font-size: 14px;
+  }
+
+  .confirm {
+    font-size: 14px;
+  }
+
+  .confirm strong {
+    font-size: 15px;
+  }
+
+  .avatar {
+    font-size: 19px;
+  }
+
+  .dashWho h2 {
+    font-size: 19px;
+  }
+
+  .card h3 {
+    font-size: 16px;
+  }
+
+  .main h1 {
+    font-size: 24px;
+  }
+
+  .panel h2 {
+    font-size: 19px;
+  }
+
+  .input {
+    font-size: 14px;
+  }
+
+  .avatar {
+    font-size: 20.5px;
+  }
+
+  .dashWho h2 {
+    font-size: 20.5px;
+  }
+
+  .card h3 {
+    font-size: 16px;
+  }
+
+  .content h1 {
+    font-size: 22.5px;
+  }
+
+  .infoBody strong {
+    font-size: 14.5px;
+  }
+
+  .emptyCard strong {
+    font-size: 15px;
+  }
+
+  .guestPage h1 {
+    font-size: 22.5px;
+  }
+
+  .orderTop strong {
+    font-size: 15px;
+  }
+
+  .orderBottom strong {
+    font-size: 15px;
   }
 }

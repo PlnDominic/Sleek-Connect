@@ -131,3 +131,22 @@
     gap: 12px;
   }
 }
+
+/* sc-phone-type: a little smaller on phones */
+@media (max-width: 640px) {
+  .heading h1 {
+    font-size: 25.5px;
+  }
+
+  .heading p {
+    font-size: 15px;
+  }
+
+  .band strong {
+    font-size: 17.5px;
+  }
+
+  .empty {
+    font-size: 14px;
+  }
+}

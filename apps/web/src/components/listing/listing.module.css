@@ -351,3 +351,22 @@
   border-radius: 12px;
   background: #0f766e;
 }
+
+/* sc-phone-type: a little smaller on phones */
+@media (max-width: 640px) {
+  .hero h1 {
+    font-size: 27px;
+  }
+
+  .filterToggle > summary {
+    font-size: 15px;
+  }
+
+  .count {
+    font-size: 14px;
+  }
+
+  .empty h3 {
+    font-size: 16.5px;
+  }
+}

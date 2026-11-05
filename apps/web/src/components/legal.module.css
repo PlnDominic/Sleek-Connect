@@ -119,3 +119,14 @@
     padding: 6px 12px;
   }
 }
+
+/* sc-phone-type: a little smaller on phones */
+@media (max-width: 640px) {
+  .hero h1 {
+    font-size: 27px;
+  }
+
+  .body h2 {
+    font-size: 19px;
+  }
+}

@@ -67,3 +67,10 @@
   font-weight: 600;
   color: var(--c-accent);
 }
+
+/* sc-phone-type: a little smaller on phones */
+@media (max-width: 640px) {
+  .recentHead h2 {
+    font-size: 16.5px;
+  }
+}

@@ -5,7 +5,7 @@ import { CompareProvider } from '@/components/CompareProvider';
 import { WebBagProvider } from '@/components/WebBagProvider';
 import { WishlistProvider } from '@/components/WishlistProvider';
 import { siteName, siteUrl } from '@/lib/site';
-import { themeVars } from '@/lib/theme';
+import { darkThemeCss, themeScript, themeVars } from '@/lib/theme';
 import './globals.css';
 
 // Inter, the same typeface as the admin console, so the store and the admin feel like one product.
@@ -30,7 +30,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="en-GH" className={inter.variable} style={themeVars}>
+    <html lang="en-GH" className={inter.variable} style={themeVars} suppressHydrationWarning>
+      <head>
+        <style dangerouslySetInnerHTML={{ __html: darkThemeCss }} />
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body>
         <AuthProvider>
           <WebBagProvider>

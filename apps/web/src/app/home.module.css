@@ -220,7 +220,7 @@
   left: 8px;
   right: 8px;
   bottom: 8px;
-  background: rgba(255, 255, 255, 0.94);
+  background: color-mix(in srgb, var(--c-canvas) 94%, transparent);
   border-radius: var(--r-lg);
   padding: 10px 12px;
   display: flex;
@@ -824,9 +824,9 @@
     gap: 12px;
     padding: 12px;
     border-radius: var(--r-lg);
-    background: #e3f0ec;
+    background: var(--c-teal-soft);
     font-size: 12px;
-    color: #134e48;
+    color: var(--c-teal-ink);
   }
 
   .appAuthentic strong {

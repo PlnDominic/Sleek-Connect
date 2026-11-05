@@ -230,3 +230,18 @@
   }
 }
 
+
+/* sc-phone-type: a little smaller on phones */
+@media (max-width: 640px) {
+  .title {
+    font-size: 22.5px;
+  }
+
+  .average strong {
+    font-size: 35px;
+  }
+
+  .rating label {
+    font-size: 22.5px;
+  }
+}

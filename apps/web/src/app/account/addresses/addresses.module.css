@@ -155,3 +155,14 @@
   gap: 18px;
   max-width: 860px;
 }
+
+/* sc-phone-type: a little smaller on phones */
+@media (max-width: 640px) {
+  .card {
+    font-size: 14px;
+  }
+
+  .panel h2 {
+    font-size: 17px;
+  }
+}

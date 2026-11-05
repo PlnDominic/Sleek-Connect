@@ -479,3 +479,63 @@ a.contactCard:hover {
     padding: 20px 18px 8px;
   }
 }
+
+/* sc-phone-type: a little smaller on phones */
+@media (max-width: 640px) {
+  .hero h1 {
+    font-size: 27px;
+  }
+
+  .section h2 {
+    font-size: 20.5px;
+  }
+
+  .faq summary {
+    font-size: 15px;
+  }
+
+  .faq > div {
+    font-size: 14px;
+  }
+
+  .contactCard strong {
+    font-size: 15px;
+  }
+
+  .field input:not([type='checkbox']):not([type='file']),
+.field select {
+    font-size: 14px;
+  }
+
+  .field textarea {
+    font-size: 14px;
+  }
+
+  .primary {
+    font-size: 15px;
+  }
+
+  .secondary {
+    font-size: 14px;
+  }
+
+  .done h2 {
+    font-size: 19px;
+  }
+
+  .caseNumber {
+    font-size: 22.5px;
+  }
+
+  .lineText strong {
+    font-size: 14px;
+  }
+
+  .content > .section h2 {
+    font-size: 17px;
+  }
+
+  .faq summary {
+    font-size: 14px;
+  }
+}

@@ -220,3 +220,34 @@
     height: 72px;
   }
 }
+
+/* sc-phone-type: a little smaller on phones */
+@media (max-width: 640px) {
+  .titleRow h1 {
+    font-size: 25.5px;
+  }
+
+  .empty {
+    font-size: 15px;
+  }
+
+  .lineName {
+    font-size: 15px;
+  }
+
+  .qty button {
+    font-size: 16.5px;
+  }
+
+  .lineTotal {
+    font-size: 15px;
+  }
+
+  .totals {
+    font-size: 14px;
+  }
+
+  .primary {
+    font-size: 15px;
+  }
+}

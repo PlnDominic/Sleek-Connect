@@ -166,3 +166,15 @@
     align-items: flex-start;
   }
 }
+
+/* sc-phone-type: a little smaller on phones */
+@media (max-width: 640px) {
+  .headerText h1 {
+    font-size: 20.5px;
+  }
+
+  .total th,
+.total td {
+    font-size: 15px;
+  }
+}

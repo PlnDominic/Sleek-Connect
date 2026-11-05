@@ -49,6 +49,44 @@ export const colors = {
   avatar: ['#C9A38A', '#7E5A45', '#A9785B', '#5C3F30'],
 } as const;
 
+/**
+ * The dark scheme for the website, the same look as the mobile app's dark theme: a true black canvas with charcoal surfaces and a
+ * brighter teal. Roles flip with the scheme (`ink` becomes the light text colour), so ink-on-canvas pairs stay legible.
+ */
+export const darkColors: Partial<Record<keyof typeof colors, string>> = {
+  ink: '#F2F2F2',
+  canvas: '#000000',
+  accent: '#2BB3A6',
+  accentDeep: '#7FD6CC',
+  accentWarm: '#5FC2B8',
+  accentBlob: '#14857C',
+  accentBlobLight: '#2BB3A6',
+  teal: '#2BB3A6',
+  tealInk: '#BFE9E3',
+  tealSoft: '#0F2321',
+  tealPale: '#0B1B1A',
+  tealMuted: '#2F6B65',
+  blush: '#1C1C1E',
+  surface: '#111111',
+  surfaceHero: '#1A1A1A',
+  surfaceSunken: '#0A0A0A',
+  surfaceMap: '#161616',
+  line: '#262626',
+  lineSoft: '#1C1C1C',
+  lineStrong: '#333333',
+  lineInactive: '#444444',
+  lineTrack: '#2A2A2A',
+  textBody: '#D4D4D4',
+  textSubtle: '#BDBDBD',
+  textMuted: '#A0A0A0',
+  textFaint: '#8E8E8E',
+  textDisabled: '#6B6B6B',
+  textPlaceholder: '#707070',
+  onDark: '#333333',
+  onDarkMuted: '#4A4A4A',
+  darkLine: '#D4D4D4',
+};
+
 export const radii = {
   sm: 4,
   md: 6,

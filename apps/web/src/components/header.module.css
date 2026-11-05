@@ -441,3 +441,27 @@
   margin: 8px 10px;
   background: var(--c-line);
 }
+
+/* sc-phone-type: a little smaller on phones */
+@media (max-width: 640px) {
+  .drawerHead {
+    font-size: 16.5px;
+  }
+
+  .drawerClose {
+    font-size: 15px;
+  }
+
+  .drawerSearch input {
+    font-size: 14px;
+  }
+
+  .drawerLink,
+.drawerGroup summary {
+    font-size: 15px;
+  }
+
+  .drawerSub a {
+    font-size: 14px;
+  }
+}

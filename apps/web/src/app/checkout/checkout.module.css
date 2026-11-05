@@ -532,3 +532,52 @@
   color: var(--c-text-muted);
   font-size: 12px;
 }
+
+/* sc-phone-type: a little smaller on phones */
+@media (max-width: 640px) {
+  .panelTitle {
+    font-size: 19px;
+  }
+
+  .field input,
+.field select,
+.field textarea {
+    font-size: 14px;
+  }
+
+  .choice strong {
+    font-size: 14px;
+  }
+
+  .payText strong {
+    font-size: 15px;
+  }
+
+  .summaryTitle {
+    font-size: 17px;
+  }
+
+  .linePrice {
+    font-size: 14px;
+  }
+
+  .totals {
+    font-size: 14px;
+  }
+
+  .totals .totalRow {
+    font-size: 16.5px;
+  }
+
+  .payButton {
+    font-size: 15px;
+  }
+
+  .statusPanel strong {
+    font-size: 14px;
+  }
+
+  .statusPanel[data-tone='success'] strong {
+    font-size: 16.5px;
+  }
+}
