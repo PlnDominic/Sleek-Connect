@@ -6,7 +6,7 @@ marked **You**.
 
 ## What the app does today
 
-Browse and search the live catalogue, bag and saved items on the phone, sign in (phone code or Google), checkout with
+Browse and search the live catalogue (light and dark themes, switchable in Account), bag and saved items on the phone, sign in (phone code or Google), checkout with
 Mobile Money inside the app, order tracking, pay again or cancel before packing, push notifications for order updates,
 and deleting the account from the Account tab. Returns, receipts and help open the website.
 
@@ -59,10 +59,9 @@ eas build --profile production --platform all        # what you submit to the st
 
 ## Before you submit
 
-- **You:** replace the placeholder icon. `apps/mobile/assets` holds a simple "SC" monogram on the brand teal (made by
-  `scripts/make-app-icons.py`) so the stores get correctly sized files. Swap in your designed logo, keeping the sizes:
-  `icon.png` 1024×1024 with no transparency, `splash-icon.png` 1024×1024, the three `android-icon-*.png`,
-  `notification-icon.png` 96×96 white on transparent.
+- The app icon, Android adaptive icons, notification icon and splash screen use the Sleek Connect logo (`apps/mobile/assets`).
+  The Google Play 512×512 icon and the 1024×500 feature graphic are in `apps/mobile/store-assets`. If you get the logo as a
+  vector file (SVG or AI), send it so the icons can be redrawn sharper.
 - **Payments:** reviewers will try to check out. Connect the real payment provider (Hubtel). The test provider is for automated tests only and is
   refused on Vercel production. Physical goods are paid for outside the stores' own purchase
   systems, which both stores allow.
@@ -130,3 +129,36 @@ providers act for us); encrypted in transit: yes; users can ask for deletion: ye
   pages for a few minutes afterwards, until the catalogue cache refreshes.
 - Bumping versions: `appVersionSource` is `remote` and production builds auto-increment the build number; change
   `version` in `app.json` for a new public release.
+
+## Submission checklist, in order
+
+1. **You:** run `eas init` in `apps/mobile` (writes the project id), then set the three `EXPO_PUBLIC_*` values for the `production`
+   environment (see "One-time setup"). Use the live website address, and the Supabase custom domain once you have one.
+2. `npm run typecheck && npm run lint && npx expo-doctor` from `apps/mobile`. `expo-doctor` may list a few packages a patch version behind
+   the SDK; `npx expo install --fix` aligns them. Test in Expo Go afterwards.
+3. `eas build --profile preview --platform all`, install it on a real iPhone and Android phone, and walk through: browse, add to bag,
+   sign in, checkout with a real GH₵1 payment, track the order, receive the push notification, switch theme, delete a test account.
+4. **You:** App Store Connect: create the app (bundle id `com.sleekconnect.store`), copy its numeric Apple ID into
+   `submit.production.ios.ascAppId` in `eas.json`. Google Play Console: create the app (package `com.sleekconnect.store`).
+5. `eas build --profile production --platform all`, then `eas submit --profile production --platform ios` and `--platform android`
+   (Android goes to the internal testing track first, as a draft).
+6. **You:** upload screenshots (taken once the shop has real products; use the iPhone 6.9″ and a 1080×1920 Android size), paste the listing text above, and
+   upload `store-assets/play-icon-512.png` and `store-assets/play-feature-graphic-1024x500.png` to Google Play.
+
+### App Store review notes (paste into "Notes")
+
+> Sleek Connect Store sells beauty, baby and home products delivered in Accra, Ghana. You can browse and order without an account.
+> To test sign-in use the phone number +233 24 000 0000 with the code 123456 (a fixed test number). Payment is by Mobile Money
+> prompt; physical goods are paid for outside In-App Purchase, as the guidelines allow. Account deletion: Account → Delete my account.
+> Privacy policy: https://sleekconnectstore.com/privacy
+
+(Create that test number in Supabase → Authentication → Providers → Phone → test phone numbers first.)
+
+### Google Play Console answers
+
+- **App access:** "All or some functionality is restricted", with the same test phone number and code.
+- **Ads:** no ads. **Target audience:** 18 and over (checkout asks shoppers to confirm they are 18 or older).
+- **Content rating:** answer the questionnaire honestly: no violence, no user-generated content, no gambling; it is a shopping app.
+- **Data safety:** as in "Privacy answers" above. **Account deletion URL:** `https://sleekconnectstore.com/account/privacy` (needs sign-in) plus the in-app Delete my account.
+- **Financial features:** none (payments go through Hubtel; the app is not a bank, loan or investment product).
+- **News, health, government declarations:** not applicable.
