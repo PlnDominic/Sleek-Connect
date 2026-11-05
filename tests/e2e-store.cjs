@@ -208,6 +208,15 @@ const count = (page) => page.locator('#results-count:visible').first().textConte
   await staff.getByLabel('Return window (days)').fill('10');
   await staff.getByRole('button', { name: 'Save settings' }).click();
   await staff.getByRole('status').filter({ hasText: 'Settings saved.' }).waitFor();
+  await go(shopper, BASE + '/help');
+  assert((await main(shopper).textContent()).includes('[Support phone number]'), 'help centre shows a placeholder until contacts are set');
+  await go(staff, BASE + '/admin/settings');
+  await staff.getByLabel('Phone').fill('030 123 4567');
+  await staff.getByLabel('WhatsApp number').fill('024 000 1111');
+  await staff.getByLabel('Opening hours').fill('Mon–Sat, 8am–6pm');
+  await staff.getByLabel('Return window (days)').fill('10');
+  await staff.getByRole('button', { name: 'Save settings' }).click();
+  await staff.getByRole('status').filter({ hasText: 'Settings saved.' }).waitFor();
   await staff.getByLabel('Send a test email to').fill('owner@example.com');
   await staff.getByRole('button', { name: 'Send test email' }).click();
   await staff.getByRole('status').filter({ hasText: 'Test email sent to owner@example.com through console' }).waitFor();

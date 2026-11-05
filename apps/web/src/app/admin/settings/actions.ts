@@ -1,13 +1,7 @@
 'use server';
 
-import * as Sentry from '@sentry/nextjs';
 import { refresh, updateTag } from 'next/cache';
 import { done, failed, text, type ActionState } from '@/lib/admin/action-state';
-import { can, requireStaffPage } from '@/lib/admin/session';
-import { buildEmailHtml } from '@/lib/notifications/email-html';
-import { emailProvider } from '@/lib/notifications/providers';
-import { siteUrl } from '@/lib/site';
-import { rateLimit } from '@/lib/rate-limit';
 import type { Json } from '@/lib/supabase/database.types';
 import { createUserSupabase } from '@/lib/supabase/server';
 
@@ -32,72 +26,4 @@ export async function saveSettings(_: ActionState, form: FormData): Promise<Acti
   updateTag('catalog');
   refresh();
   return done('Settings saved.');
-}
-
-/**
- * Sends one message through the email provider the store is set up with (Gmail, when EMAIL_PROVIDER=gmail), so an admin
- * can see that order emails will really reach people. Admins only; a few tries a minute.
- */
-export async function sendTestEmail(_: ActionState, form: FormData): Promise<ActionState> {
-  const staff = await requireStaffPage();
-  if (!staff || !can(staff.role, 'settings.edit')) return { ok: false, message: 'Only admins can send a test email.' };
-  const to = text(form, 'to');
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to) || to.length > 254) return { ok: false, message: 'Enter the email address to send the test to.' };
-  if (!rateLimit({ key: `test-email:${staff.email}`, limit: 5, windowMs: 60_000 }).allowed) {
-    return { ok: false, message: 'That is a lot of test emails. Wait a minute and try again.' };
-  }
-  const provider = emailProvider();
-  if (!provider) {
-    return { ok: false, message: 'Email isn’t set up. Set EMAIL_PROVIDER=gmail, GMAIL_USER and GMAIL_APP_PASSWORD on the server, then redeploy.' };
-  }
-  try {
-    const subject = 'Sleek Connect Store: test email';
-    const text = `This is a test message from Sleek Connect Store, sent by ${staff.email ?? 'an admin'}. If you can read it, order emails will reach people.`;
-    await provider.send(to, {
-      subject,
-      text,
-      html: buildEmailHtml({
-        subject,
-        body: 'This is a test message. If you can read it, order emails will reach people.',
-        facts: [
-          ['Sent by', staff.email ?? 'an admin'],
-          ['Sent through', provider.name],
-        ],
-        reason: 'You asked for this test from the admin console.',
-        helpUrl: `${siteUrl()}/help`,
-      }),
-    });
-  } catch (cause) {
-    const reason = cause instanceof Error ? cause.message : 'unknown error';
-    console.error('Test email failed', reason);
-    return {
-      ok: false,
-      message: /535|Invalid login|Username and Password|BadCredentials/i.test(reason)
-        ? 'Gmail refused the sign-in. Use an App Password (Google Account → Security → 2-Step Verification → App passwords), not the account password.'
-        : `The ${provider.name} email provider failed: ${reason}`,
-    };
-  }
-  return done(`Test email sent to ${to} through ${provider.name}. Check that inbox (and spam).`);
-}
-
-/**
- * Sends one deliberate error from the server to Sentry, so an admin can see that error reporting works (and that stack traces show
- * the real code). Admins only; a few tries a minute. It carries no personal data.
- */
-export async function sendTestServerError(_: ActionState, form: FormData): Promise<ActionState> {
-  void form;
-  const staff = await requireStaffPage();
-  if (!staff || !can(staff.role, 'settings.edit')) return { ok: false, message: 'Only admins can send a test error.' };
-  if (!process.env.NEXT_PUBLIC_SENTRY_DSN) {
-    return { ok: false, message: 'Error reporting isn’t switched on: NEXT_PUBLIC_SENTRY_DSN is not set on the server. Add it in Vercel and redeploy.' };
-  }
-  if (!rateLimit({ key: `test-error:${staff.email}`, limit: 5, windowMs: 60_000 }).allowed) {
-    return { ok: false, message: 'That is a lot of test errors. Wait a minute and try again.' };
-  }
-  Sentry.captureException(new Error('Test error from the admin console (server). Safe to ignore.'), { tags: { test: 'true', side: 'server' } });
-  // A serverless function can stop right after replying, so wait for the report to leave first.
-  const sent = await Sentry.flush(3000);
-  return sent
-    ? done('Test error sent. It should appear in Sentry → Issues within a minute, titled “Test error from the admin console (server)”.')
-    : { ok: false, message: 'The report could not be sent to Sentry in time. Check the DSN, and that this server can reach sentry.io.' };
 }

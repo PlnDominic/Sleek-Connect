@@ -1,5 +1,5 @@
 // Renders the real admin Settings page (with a faked staff session and settings row) to check what an admin and a non-admin get.
-// It keeps the error reporting panel at the top where staff can find it.
+// There are no test buttons (test email, test error): the store is live.
 process.env.TSX_TSCONFIG_PATH ??= require('path').resolve(__dirname, '../apps/web/tsconfig.json');
 const Module = require('module');
 const path = require('path');
@@ -34,14 +34,13 @@ require.cache[sessionPath] = {
 
   let html = await render();
   const h = headings(html);
-  assert(h[0] === 'Settings' && h[1] === 'Error reporting', `an admin sees "Error reporting" first, right under the title (${h.slice(0, 3).join(' | ')})`);
-  assert(html.includes('Send a server test error') && html.includes('Send a browser test error'), 'with both test buttons');
-  assert(html.includes('id="error-reporting"'), 'and the panel can be linked to (#error-reporting)');
-  assert(h.includes('Customer support') && h.includes('Email'), 'the other settings are still there');
+  assert(h[0] === 'Settings', `an admin sees the settings page (${h.slice(0, 3).join(' | ')})`);
+  assert(!/test (email|error)/i.test(html) && !html.includes('error-reporting'), 'it has no test email or test error buttons');
+  assert(h.includes('Customer support'), 'the settings themselves are there');
 
   role = 'operations';
   html = await render();
-  assert(!html.includes('Send a server test error') && html.includes('Only admins can change store settings'), 'other staff are told it is for admins and see no test buttons');
+  assert(html.includes('Only admins can change store settings'), 'other staff are told it is for admins');
 
   console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll settings page checks passed');
   process.exit(failures ? 1 : 0);
