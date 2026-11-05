@@ -147,7 +147,7 @@ export async function dispatchNotifications(limit = 20): Promise<{ sent: number;
       });
 
     // The "order received" step has its own alert (alertStoreNewOrder), so only the later messages are copied here.
-    if (n.attempts === 1 && n.channel === 'sms') await alertStore(n);
+    if (n.attempts === 1 && n.channel === 'sms' && n.template !== 'bag_reminder') await alertStore(n);
 
     const content = n.payload as unknown as NotificationPayload;
     const message = n.channel === 'email' ? renderEmail(n.template, content) : renderMessage(n.template, content);

@@ -4,7 +4,7 @@ require('tsx/cjs');
 const nodemailer = require('nodemailer');
 const { gmailConfig, gmailMessage } = require('../apps/web/src/lib/notifications/gmail.ts');
 const { maskRecipient } = require('../apps/web/src/lib/notifications/mask.ts');
-const { renderMessage } = require('../apps/web/src/lib/notifications/templates.ts');
+const { renderMessage, renderEmail } = require('../apps/web/src/lib/notifications/templates.ts');
 const { normalizeSiteUrl } = require('../apps/web/src/lib/site.ts');
 const { buildEmailHtml, splitTrailingUrl, escapeHtml } = require('../apps/web/src/lib/notifications/email-html.ts');
 let failures = 0;
@@ -62,6 +62,12 @@ const assert = (c, m) => { if (!c) { failures++; console.error('FAIL:', m); } el
   assert(normalizeSiteUrl('sleekconnectstore.vercel.app') === 'https://sleekconnectstore.vercel.app', 'a site address without https:// gets it');
   assert(normalizeSiteUrl(' https://shop.example/ ') === 'https://shop.example' && normalizeSiteUrl('localhost:3000') === 'http://localhost:3000', 'spaces and a trailing slash go; localhost stays http');
   assert(normalizeSiteUrl('') === null && normalizeSiteUrl(undefined) === null && normalizeSiteUrl('not a url') === null, 'nothing usable gives null, and the default is used');
+
+  // Bag reminder: names what was left, links to the bag (never an order or a code), and says how to stop.
+  const bag = renderMessage('bag_reminder', { order_number: '', customer_name: 'Ama Mensah', total_ghs: 230, delivery_code: '', item_count: 3, first_item: 'Shea Butter' });
+  assert(bag.text.includes('Shea Butter and 2 more') && bag.text.includes('/bag') && bag.text.includes('Stop these reminders') && !bag.text.includes('/orders/'), 'a bag reminder names the items, links to the bag and says how to stop');
+  const bagMail = renderEmail('bag_reminder', { order_number: '', customer_name: 'Ama', total_ghs: 90, delivery_code: '', item_count: 1, first_item: 'Argan Hair Oil' });
+  assert(bagMail.html.includes('agreed to offers and reminders') && bagMail.html.includes('Back to your bag'), 'the email says why it was sent and has one button back to the bag');
 
   console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll email checks passed');
   process.exit(failures ? 1 : 0);

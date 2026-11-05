@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { ListingView } from '@/components/listing/ListingView';
+import { ProductCard } from '@/components/ProductCard';
 import styles from '@/components/listing/listing.module.css';
 import { SearchBox } from '@/components/SearchBox';
 import { SiteFooter } from '@/components/SiteFooter';
@@ -40,6 +41,11 @@ async function SearchResults({ searchParams }: { searchParams: PageProps<'/searc
   const listing = buildListing(matches, filters, { categories, ageBands, rank, showCategories: true });
   // Only when nothing matched at all (not when filters hide the matches).
   const corrections = q.length >= 2 && matches.length === 0 ? await didYouMean(q) : [];
+  // When nothing matches, still show something worth buying: the most popular products that are in stock.
+  const popular =
+    q.length >= 2 && matches.length === 0
+      ? [...products].filter((p) => p.inStock !== false).sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0)).slice(0, 4)
+      : [];
 
   return (
     <>
@@ -100,6 +106,18 @@ async function SearchResults({ searchParams }: { searchParams: PageProps<'/searc
               </>
             }
           />
+        )}
+        {q.length >= 2 && matches.length === 0 && popular.length > 0 && (
+          <section aria-labelledby="popular-title" style={{ paddingBottom: 56 }}>
+            <h2 id="popular-title" style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>
+              Popular right now
+            </h2>
+            <div className={styles.grid}>
+              {popular.map((p) => (
+                <ProductCard key={p.slug} product={p} />
+              ))}
+            </div>
+          </section>
         )}
       </div>
     </>

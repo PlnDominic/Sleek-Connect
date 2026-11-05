@@ -27,6 +27,9 @@ export interface NotificationPayload {
   reserved_until?: string | null;
   /** Pay on delivery: the customer pays the rider in cash, after staff confirm the order by phone. */
   pay_on_delivery?: boolean;
+  /** Bag reminders: how many items were left, and the name of the one added last. */
+  item_count?: number;
+  first_item?: string;
 }
 
 export interface Message {
@@ -155,6 +158,14 @@ function renderCustomerMessage(template: string, p: NotificationPayload): Messag
         subject: `Reply to your message (${p.case_number})`,
         text: `${hi} about case ${p.case_number}: ${p.note ?? ''}`.trim(),
       };
+    case 'bag_reminder': {
+      const n = p.item_count ?? 1;
+      const what = n > 1 ? `${p.first_item ?? 'your items'} and ${n - 1} more` : (p.first_item ?? 'your item');
+      return {
+        subject: 'You left something in your bag',
+        text: `${hi} you left ${what} in your bag${p.total_ghs ? ` (${formatPrice(p.total_ghs)})` : ''}. Stop these reminders any time in Account → Details. Finish your order: ${siteUrl()}/bag`,
+      };
+    }
     default:
       return null;
   }
@@ -162,6 +173,7 @@ function renderCustomerMessage(template: string, p: NotificationPayload): Messag
 
 const ctaLabels: Record<string, string> = {
   order_received: 'Track your order',
+  bag_reminder: 'Back to your bag',
 };
 
 /** The few facts worth showing in a box, taken from what was captured when the message was queued. */
@@ -203,7 +215,9 @@ export function renderEmail(template: string, p: NotificationPayload, alert?: { 
     tag: alert ? 'Store alert' : undefined,
     reason: alert
       ? 'A copy of this message for the store owner.'
-      : 'You are receiving this because of an order or request you made at Sleek Connect Store.',
+      : template === 'bag_reminder'
+        ? 'You are receiving this because you agreed to offers and reminders from Sleek Connect Store. You can stop them any time in Account → Details.'
+        : 'You are receiving this because of an order or request you made at Sleek Connect Store.',
     helpUrl: help,
   });
   return { ...message, html };
