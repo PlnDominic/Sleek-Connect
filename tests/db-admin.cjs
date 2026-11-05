@@ -70,7 +70,7 @@ const status = (id) => sql(`select status from public.orders where id = '${id}'`
   assert((await errOf(S.ops.rpc('admin_save_product', { p: draft })))?.code === '42501', 'operations cannot edit the catalogue');
   const { data: saved, error: saveErr } = await S.cat.rpc('admin_save_product', { p: draft });
   assert(!saveErr && saved.published === false && saved.slug === 'rosehip-face-oil', `incomplete product saved as a draft (${saveErr?.message})`);
-  assert(['brand', 'description', 'ingredients', 'safety notes', 'country of origin', 'FDA registration number'].every((x) => saved.problems.includes(x)), `missing fields listed (${saved.problems})`);
+  assert(['description', 'FDA registration number'].every((x) => saved.problems.includes(x)) && !saved.problems.includes('brand'), `only the necessary missing fields are listed (${saved.problems})`);
   assert((await anon.from('products').select('id').eq('slug', 'rosehip-face-oil')).data.length === 0, 'draft not visible to shoppers');
   assert((await S.ro.from('products').select('id').eq('slug', 'rosehip-face-oil')).data.length === 1, 'draft visible to staff');
   const full = { ...draft, id: saved.id, brand: 'Glow Lab', description: 'Cold-pressed rosehip oil.', ingredients: 'Rosa Canina Seed Oil', warnings: 'For external use only.', country_of_origin: 'Ghana', regulatory_reference: 'FDA/CB.123', sizes: [{ code: '15', label: '15 ml', price_ghs: 90 }, { code: '30', label: '30 ml', price_ghs: 150, is_default: true }] };

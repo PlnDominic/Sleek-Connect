@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useState, useTransition, type FormEvent, type ReactNode } from 'react';
 import { departmentIds, departmentLabels } from '@sleek/shared';
 import type { ActionState } from '@/lib/admin/action-state';
-import { kidsFilters, problemFields, productKinds, type ProductPayload, type SizePayload } from '@/lib/admin/product-payload';
+import { kidsFilters, problemFields, type ProductPayload, type SizePayload } from '@/lib/admin/product-payload';
 import { Toast } from '../Toast';
 import { saveProduct } from './actions';
 import styles from '../admin.module.css';
@@ -28,7 +28,15 @@ interface ProductFormProps {
 
 const blankSize: SizePayload = { code: '', label: '', price_ghs: '' };
 
-export function ProductForm({ product, categories, ageBands, imageKeys, sizeGuides = [], sizeGuideId, problems, canEdit }: ProductFormProps) {
+/** A size's code is made from its label ("200 ml" becomes "200-ml") unless it already has one, so staff only type a label and a price. */
+const codeFor = (s: SizePayload) => s.code || s.label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+/**
+ * Only what a product needs: its name, where it sits, its price (and sizes if it has them), a description, and for cosmetics the FDA
+ * number. Everything else the product already has (highlights, skin types, size guide…) is kept untouched in hidden fields, so editing
+ * a product here never erases it.
+ */
+export function ProductForm({ product, categories, ageBands, sizeGuideId, problems, canEdit }: ProductFormProps) {
   const [state, action, pending] = useActionState<ActionState, FormData>(saveProduct, null);
   const [, startTransition] = useTransition();
   // Submit through a transition so a refused save keeps everything that was typed.
@@ -60,31 +68,37 @@ export function ProductForm({ product, categories, ageBands, imageKeys, sizeGuid
   );
   const updateSize = (i: number, patch: Partial<SizePayload>) =>
     setSizes((all) => all.map((s, j) => (j === i ? { ...s, ...patch } : patch.is_default ? { ...s, is_default: false } : s)));
+  const keep = (name: string, value: string | undefined) => <textarea key={name} name={name} defaultValue={value ?? ''} hidden readOnly />;
 
   return (
     <form onSubmit={submit} onInput={() => setEditedAt((e) => (dirty && e ? e : { result: state }))} className={styles.form}>
-      <nav className={styles.sectionNav} aria-label="Sections of this form">
-        {[
-          ['basics', 'Basics'],
-          ['pricing', 'Price'],
-          ['compliance', 'Details'],
-          ['returns', 'Returns'],
-        ].map(([id, label]) => (
-          <a key={id} href={`#${id}`}>
-            {label}
-          </a>
-        ))}
-      </nav>
       <fieldset disabled={pending || !canEdit} className={styles.fieldset}>
         {product?.id && <input type="hidden" name="id" value={product.id} />}
-        <input type="hidden" name="sizes_json" value={JSON.stringify(sizes)} />
+        <input type="hidden" name="sizes_json" value={JSON.stringify(sizes.map((s) => ({ ...s, code: codeFor(s) })))} />
+        {/* Kept as they are, not shown. */}
+        {keep('kind', product?.kind ?? 'bottle')}
+        {keep('slug', product?.slug)}
+        {keep('image_key', product?.image_key)}
+        {keep('badge', product?.badge)}
+        {keep('tag', product?.tag)}
+        {keep('summary', product?.summary)}
+        {keep('highlights', product?.highlights?.join('\n'))}
+        {keep('free_from', product?.free_from?.join('\n'))}
+        {keep('how_to_use', product?.how_to_use)}
+        {keep('warnings', product?.warnings)}
+        {keep('country_of_origin', product?.country_of_origin)}
+        {keep('recommended_age', product?.recommended_age)}
+        {keep('warning_label', product?.warning_label)}
+        {keep('size_guide_id', sizeGuideId ?? '')}
+        {keep('size_guide_before', sizeGuideId ?? '')}
+        {keep('period_after_opening', product?.period_after_opening)}
+        {keep('skin_types', product?.skin_types?.join('\n'))}
+        {keep('shades', product?.shades?.join('\n'))}
+        {keep('return_note', product?.return_note)}
 
         <section className={styles.panel} id="basics">
-          <h2>Basics</h2>
-          <div className={styles.row}>
-            {field('name', 'Name', <input name="name" required maxLength={120} defaultValue={product?.name} />)}
-            {field('brand', 'Brand', <input name="brand" defaultValue={product?.brand} />)}
-          </div>
+          <h2>Product</h2>
+          {field('name', 'Name', <input name="name" required maxLength={120} defaultValue={product?.name} />)}
           <div className={styles.row}>
             {field(
               'department',
@@ -112,9 +126,9 @@ export function ProductForm({ product, categories, ageBands, imageKeys, sizeGuid
             {department === 'kids' &&
               field(
                 'kids_filter',
-                'Kids filter',
+                'Type',
                 <select name="kids_filter" defaultValue={product?.kids_filter ?? ''}>
-                  <option value="">None</option>
+                  <option value="">Other</option>
                   {kidsFilters.map((k) => (
                     <option key={k} value={k}>
                       {k}
@@ -124,173 +138,74 @@ export function ProductForm({ product, categories, ageBands, imageKeys, sizeGuid
                 'Bath products count as cosmetics',
               )}
           </div>
-          {field('summary', 'Short summary', <input name="summary" defaultValue={product?.summary} />)}
-          <details className={styles.inline}>
-            <summary>More options</summary>
-            <div className={styles.form}>
-              <div className={styles.row}>
-                {field(
-                  'kind',
-                  'Placeholder picture',
-                  <select name="kind" defaultValue={product?.kind ?? 'bottle'}>
-                    {productKinds.map((k) => (
-                      <option key={k} value={k}>
-                        {k}
-                      </option>
-                    ))}
-                  </select>,
-                  'Shown when there is no photo',
-                )}
-                {field(
-                  'slug',
-                  'Web address',
-                  <input name="slug" defaultValue={product?.slug} placeholder="Made from the name" />,
-                  '/products/…',
-                )}
-                {field(
-                  'image_key',
-                  'Photo',
-                  <select name="image_key" defaultValue={product?.image_key ?? ''}>
-                    <option value="">No photo yet</option>
-                    {imageKeys.map((k) => (
-                      <option key={k} value={k}>
-                        {k}
-                      </option>
-                    ))}
-                  </select>,
-                )}
-                {field('badge', 'Badge', <input name="badge" defaultValue={product?.badge} placeholder="e.g. New, -20%" />)}
+          {field('description', 'Description', <textarea name="description" rows={3} defaultValue={product?.description} />)}
+          <div className={styles.row}>
+            {field('brand', 'Brand (optional)', <input name="brand" defaultValue={product?.brand} />)}
+            {cosmetic &&
+              field('regulatory_reference', 'FDA registration number', <input name="regulatory_reference" defaultValue={product?.regulatory_reference} />, 'Needed for cosmetics')}
+          </div>
+          {cosmetic && field('ingredients', 'Ingredients (optional)', <textarea name="ingredients" rows={2} defaultValue={product?.ingredients} />, 'As printed on the pack')}
+          {!cosmetic && <input type="hidden" name="regulatory_reference" value={product?.regulatory_reference ?? ''} />}
+          {!cosmetic && <input type="hidden" name="ingredients" value={product?.ingredients ?? ''} />}
+          {department === 'kids' && ageBands.length > 0 && (
+            <fieldset className={styles.field}>
+              <span>Ages (optional, for Shop by age)</span>
+              <div className={styles.checks}>
+                {ageBands.map((b) => (
+                  <label key={b.id} className={styles.check}>
+                    <input type="checkbox" name="age_bands" value={b.id} defaultChecked={product?.age_bands.includes(b.id)} />
+                    {b.name}
+                  </label>
+                ))}
               </div>
-              {field('tag', 'Card line', <input name="tag" defaultValue={product?.tag} placeholder="e.g. Ages 0+ · Tear-free" />)}
-            </div>
-          </details>
+            </fieldset>
+          )}
         </section>
 
         <section className={styles.panel} id="pricing">
-          <h2>Price and sizes</h2>
+          <h2>Price</h2>
           {sizes.length === 0 ? (
             <div className={styles.row}>
               {field('price_ghs', 'Price (GH₵)', <input name="price_ghs" inputMode="decimal" defaultValue={String(product?.price_ghs ?? '')} />)}
-              {field('was_price_ghs', 'Was (GH₵)', <input name="was_price_ghs" inputMode="decimal" defaultValue={String(product?.was_price_ghs ?? '')} />, 'Shown crossed out')}
+              {field('was_price_ghs', 'Old price (GH₵, optional)', <input name="was_price_ghs" inputMode="decimal" defaultValue={String(product?.was_price_ghs ?? '')} />, 'Shown crossed out')}
             </div>
           ) : (
             <>
-              <p className={styles.muted}>The price shown on product cards is the default size’s price.</p>
-              {field('was_price_ghs', 'Was (GH₵)', <input name="was_price_ghs" inputMode="decimal" defaultValue={String(product?.was_price_ghs ?? '')} />)}
+              <p className={styles.muted}>The price on product cards is the default size’s price.</p>
+              {field('was_price_ghs', 'Old price (GH₵, optional)', <input name="was_price_ghs" inputMode="decimal" defaultValue={String(product?.was_price_ghs ?? '')} />)}
+              {sizes.map((s, i) => (
+                <div className={styles.row} key={i}>
+                  <label className={styles.field}>
+                    <span>Size</span>
+                    <input value={s.label} onChange={(e) => updateSize(i, { label: e.target.value })} placeholder="e.g. 200 ml" aria-label={`Size ${i + 1} name`} />
+                  </label>
+                  <label className={styles.field}>
+                    <span>Price (GH₵)</span>
+                    <input value={String(s.price_ghs)} inputMode="decimal" onChange={(e) => updateSize(i, { price_ghs: e.target.value })} aria-label={`Size ${i + 1} price`} />
+                  </label>
+                  {sizes.length > 1 && (
+                    <label className={styles.check}>
+                      <input type="radio" name="default_size" checked={Boolean(s.is_default)} onChange={() => updateSize(i, { is_default: true })} />
+                      Default
+                    </label>
+                  )}
+                  <button type="button" className={styles.linkButton} onClick={() => setSizes((all) => all.filter((_, j) => j !== i))}>
+                    Remove
+                  </button>
+                </div>
+              ))}
             </>
           )}
-          {sizes.map((s, i) => (
-            <div className={styles.row} key={i}>
-              <label className={styles.field}>
-                <span>Size code</span>
-                <input value={s.code} onChange={(e) => updateSize(i, { code: e.target.value })} placeholder="e.g. 200" aria-label={`Size ${i + 1} code`} />
-              </label>
-              <label className={styles.field}>
-                <span>Label</span>
-                <input value={s.label} onChange={(e) => updateSize(i, { label: e.target.value })} placeholder="e.g. 200 ml" aria-label={`Size ${i + 1} label`} />
-              </label>
-              <label className={styles.field}>
-                <span>Price (GH₵)</span>
-                <input value={String(s.price_ghs)} inputMode="decimal" onChange={(e) => updateSize(i, { price_ghs: e.target.value })} aria-label={`Size ${i + 1} price`} />
-              </label>
-              <label className={styles.check}>
-                <input type="radio" name="default_size" checked={Boolean(s.is_default)} onChange={() => updateSize(i, { is_default: true })} />
-                Default
-              </label>
-              <button type="button" className={styles.linkButton} onClick={() => setSizes((all) => all.filter((_, j) => j !== i))}>
-                Remove
-              </button>
-            </div>
-          ))}
           <button type="button" className={styles.secondary} onClick={() => setSizes((all) => [...all, { ...blankSize, is_default: all.length === 0 }])}>
-            Add a size
+            {sizes.length === 0 ? 'This product has sizes' : 'Add another size'}
           </button>
         </section>
 
-        <section className={styles.panel} id="compliance">
-          <h2>Details</h2>
-          <p className={styles.muted}>Needed before a product can go on the store.</p>
-          {field('description', 'Description', <textarea name="description" defaultValue={product?.description} />)}
-          {field(
-            'ingredients',
-            cosmetic ? 'Ingredients (INCI list)' : 'Ingredients or materials',
-            <textarea name="ingredients" defaultValue={product?.ingredients} />,
-            'As printed on the pack',
-          )}
-          {field('warnings', 'Safety notes', <textarea name="warnings" defaultValue={product?.warnings} />)}
-          <div className={styles.row}>
-            {field('country_of_origin', 'Country of origin', <input name="country_of_origin" defaultValue={product?.country_of_origin} />)}
-            {field('regulatory_reference', 'FDA registration number', <input name="regulatory_reference" defaultValue={product?.regulatory_reference} />)}
-          </div>
-          {department === 'kids' && (
-            <>
-              {field('recommended_age', 'Recommended age', <input name="recommended_age" defaultValue={product?.recommended_age} placeholder="e.g. From birth (0+)" />)}
-              <fieldset className={styles.field} data-missing={missing.has('recommended_age') || undefined}>
-                <span>Age bands (for Shop by age)</span>
-                <div className={styles.checks}>
-                  {ageBands.map((b) => (
-                    <label key={b.id} className={styles.check}>
-                      <input type="checkbox" name="age_bands" value={b.id} defaultChecked={product?.age_bands.includes(b.id)} />
-                      {b.name}
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-            </>
-          )}
-          <details className={styles.inline}>
-            <summary>More details (optional)</summary>
-            <div className={styles.form}>
-              <div className={styles.row}>
-                {field('highlights', 'Highlights', <textarea name="highlights" defaultValue={product?.highlights?.join('\n')} />, 'One per line')}
-                {field('free_from', 'Free from', <textarea name="free_from" defaultValue={product?.free_from?.join('\n')} />, 'One per line')}
-              </div>
-              {field(
-                'warning_label',
-                'Safety warning label',
-                <input name="warning_label" defaultValue={product?.warning_label} maxLength={200} placeholder="e.g. Choking hazard: small parts. Not for children under 3." />,
-                'Shown above “Add to bag”. Leave empty if none.',
-              )}
-              {field('how_to_use', 'How to use', <textarea name="how_to_use" defaultValue={product?.how_to_use} />)}
-              {sizeGuides.length > 0 &&
-                field(
-                  'size_guide_id',
-                  'Size guide',
-                  <>
-                    <input type="hidden" name="size_guide_before" value={sizeGuideId ?? ''} />
-                    <select name="size_guide_id" defaultValue={sizeGuideId ?? ''}>
-                      <option value="">None</option>
-                      {sizeGuides.map((g) => (
-                        <option key={g.id} value={g.id}>
-                          {g.name}
-                        </option>
-                      ))}
-                    </select>
-                  </>,
-                  'Shows a “Size guide” chart on the product page. Edit the charts under Products → Size guides.',
-                )}
-              {field('period_after_opening', 'Use within after opening', <input name="period_after_opening" defaultValue={product?.period_after_opening} placeholder="e.g. 12M" />)}
-              {cosmetic && (
-                <div className={styles.row}>
-                  {field('skin_types', 'Skin types', <textarea name="skin_types" defaultValue={product?.skin_types?.join('\n')} />, 'One per line, e.g. Dry, Oily, Sensitive. Used by the shop filters.')}
-                  {field('shades', 'Shades', <textarea name="shades" defaultValue={product?.shades?.join('\n')} />, 'One per line, for makeup. Used by the shop filters.')}
-                </div>
-              )}
-            </div>
-          </details>
-        </section>
-
-        <section className={styles.panel} id="returns">
-          <h2>Returns</h2>
+        <section className={`${styles.panel} ${styles.saveBar}`}>
           <label className={styles.check}>
             <input type="checkbox" name="returnable" defaultChecked={product?.returnable ?? true} />
-            Can be returned within the return window
+            Can be returned (untick for items that can’t come back once opened)
           </label>
-          <p className={styles.muted}>Untick for items that can’t come back once opened. Damaged, wrong or expired items can always be returned.</p>
-          {field('return_note', 'Return note', <input name="return_note" defaultValue={product?.return_note} maxLength={200} placeholder="e.g. Unopened and sealed only." />, 'Optional, shown on the product page')}
-        </section>
-
-        <section className={`${styles.panel} ${styles.saveBar}`}>
           <label className={styles.check}>
             <input type="checkbox" name="publish" defaultChecked={product?.publish ?? false} />
             Show on the store

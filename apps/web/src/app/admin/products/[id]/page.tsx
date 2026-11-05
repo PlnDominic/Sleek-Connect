@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { Icon } from '@/components/Icon';
 import { can, requireStaffPage } from '@/lib/admin/session';
 import { productRowColumns, rowToPayload, type ProductRow } from '@/lib/admin/product-payload';
 import { UUID_PATTERN } from '@/lib/orders';
@@ -55,15 +56,15 @@ export default async function EditProductPage({ params, searchParams }: PageProp
           </Link>
           {can(staff.role, 'catalogue.edit') && (
             <ActionForm action={duplicateProduct.bind(null, product.id)}>
-              <button type="submit" className={styles.secondary}>
-                Duplicate
+              <button type="submit" className={styles.iconButton} title="Duplicate" aria-label="Duplicate this product">
+                <Icon name="copy" size={16} />
               </button>
             </ActionForm>
           )}
           {can(staff.role, 'catalogue.edit') && (
             <ActionForm action={deleteProduct.bind(null, product.id)} confirm={`Delete ${product.name}? This can’t be undone.`}>
-              <button type="submit" className={styles.danger}>
-                Delete
+              <button type="submit" className={`${styles.iconButton} ${styles.iconDanger}`} title="Delete" aria-label="Delete this product">
+                <Icon name="trash" size={16} />
               </button>
             </ActionForm>
           )}

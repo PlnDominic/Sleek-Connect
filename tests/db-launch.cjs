@@ -76,7 +76,7 @@ const errOf = async (promise) => (await promise).error;
   const argan = sql("select id from public.products where slug = 'argan-hair-oil'");
   assert(await errOf(anon.rpc('product_publish_problems', { p_product_id: argan })), 'the compliance validator is not readable anonymously');
   const flagged = await admin.rpc('product_publish_problems', { p_product_id: argan });
-  assert(flagged.data?.includes('brand') && flagged.data?.includes('country of origin') && flagged.data?.includes('FDA registration number'),
+  assert(flagged.data?.includes('FDA registration number') && !flagged.data?.includes('brand') && !flagged.data?.includes('country of origin'),
     `a beauty product missing regulatory fields is flagged (${JSON.stringify(flagged.data)})`);
   sql(`update public.products set brand = 'Kente Botanics', ingredients = 'Cold-pressed argan oil', country_of_origin = 'Ghana', regulatory_reference = 'FDA/GHA-001', details = coalesce(details, '{}'::jsonb) || '{"description":"A light oil that smooths hair.","warnings":"For external use only."}'::jsonb where id = '${argan}'`);
   const cleared = await admin.rpc('product_publish_problems', { p_product_id: argan });

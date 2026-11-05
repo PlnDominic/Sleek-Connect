@@ -64,6 +64,13 @@ export const icons = {
   pin: { shapes: [path('M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z'), circle(12, 10, 2.5)] },
   calendar: { shapes: [rect(4, 5, 16, 16, 2), path('M4 10h16M9 3v4M15 3v4')] },
   plus: { shapes: [path('M12 5v14M5 12h14')] },
+  // Row actions in the admin console
+  pencil: { shapes: [path('M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z'), path('M13.5 6.5l4 4')] },
+  eye: { shapes: [path('M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z'), circle(12, 12, 2.8)] },
+  eyeOff: { shapes: [path('M9.9 5.8A9.7 9.7 0 0 1 12 5.5C18 5.5 21.5 12 21.5 12a17 17 0 0 1-2.6 3.4M6.4 7.4A16.7 16.7 0 0 0 2.5 12S6 18.5 12 18.5a9.5 9.5 0 0 0 4.1-.9'), path('M10 10a2.8 2.8 0 0 0 4 4M3 3l18 18')] },
+  copy: { shapes: [rect(8, 8, 12, 12, 2), path('M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2')] },
+  trash: { shapes: [path('M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2')] },
+  externalLink: { shapes: [path('M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4')] },
   alert: { shapes: [path('M12 3.5 2.5 20h19z'), path('M12 10v4.5'), circle(12, 17.25, 0.9, true)] },
   chat: { shapes: [path('M4 5h16v11H9l-5 4z'), path('M8 9.5h8M8 12.5h5')] },
   mail: { shapes: [rect(3, 5, 18, 14, 2), path('M3.5 6.5 12 13l8.5-6.5')] },

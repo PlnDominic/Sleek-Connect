@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { formatPrice } from '@sleek/shared';
 import Image from 'next/image';
 import { can, requireStaffPage } from '@/lib/admin/session';
+import { Icon } from '@/components/Icon';
 import { photoUrl } from '@/lib/photos';
 import { ActionForm } from '../ActionForm';
 import { deleteProduct, duplicateProduct, setPublished } from './actions';
@@ -168,32 +169,37 @@ export default async function ProductsPage({ searchParams }: PageProps<'/admin/p
                   <td className={styles.muted}>{p.problems.filter((x) => x !== 'recall lifted').join(', ') || '–'}</td>
                   <td>
                     <div className={styles.rowActions}>
-                      <Link href={`/admin/products/${p.id}`} className={styles.secondary}>
-                        {edit ? 'Edit' : 'View'}
+                      <Link href={`/admin/products/${p.id}`} className={styles.iconButton} title={edit ? 'Edit' : 'View'} aria-label={`${edit ? 'Edit' : 'View'} ${p.name}`}>
+                        <Icon name={edit ? 'pencil' : 'eye'} size={16} />
                       </Link>
                       {p.is_published && (
-                        <Link href={`/products/${p.slug}`} className={styles.secondary} target="_blank">
-                          View on store
+                        <Link href={`/products/${p.slug}`} className={styles.iconButton} target="_blank" title="View on the store" aria-label={`View ${p.name} on the store`}>
+                          <Icon name="externalLink" size={16} />
                         </Link>
                       )}
                       {edit && !p.recalled_at && (
                         <ActionForm action={setPublished.bind(null, p.id, !p.is_published)}>
-                          <button type="submit" className={styles.secondary}>
-                            {p.is_published ? 'Take off store' : 'Publish'}
+                          <button
+                            type="submit"
+                            className={styles.iconButton}
+                            title={p.is_published ? 'Take off the store' : 'Show on the store'}
+                            aria-label={p.is_published ? `Take ${p.name} off the store` : `Show ${p.name} on the store`}
+                          >
+                            <Icon name={p.is_published ? 'eyeOff' : 'eye'} size={16} />
                           </button>
                         </ActionForm>
                       )}
                       {edit && (
                         <ActionForm action={duplicateProduct.bind(null, p.id)}>
-                          <button type="submit" className={styles.secondary}>
-                            Duplicate
+                          <button type="submit" className={styles.iconButton} title="Duplicate" aria-label={`Duplicate ${p.name}`}>
+                            <Icon name="copy" size={16} />
                           </button>
                         </ActionForm>
                       )}
                       {edit && (
                         <ActionForm action={deleteProduct.bind(null, p.id)} confirm={`Delete ${p.name}? This can’t be undone.`}>
-                          <button type="submit" className={styles.danger}>
-                            Delete
+                          <button type="submit" className={`${styles.iconButton} ${styles.iconDanger}`} title="Delete" aria-label={`Delete ${p.name}`}>
+                            <Icon name="trash" size={16} />
                           </button>
                         </ActionForm>
                       )}

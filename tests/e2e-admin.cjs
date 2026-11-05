@@ -191,11 +191,9 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   await ct.waitForURL('**/admin/products/*?done=*');
   assert(await ct.getByText(/Product created as a draft/).isVisible(), 'new product starts as a draft');
   assert((await ct.locator('p').filter({ hasText: 'Needed before it can go on the store' }).textContent()).includes('FDA registration number'), 'missing compliance fields listed');
-  await ct.getByRole('textbox', { name: 'Brand' }).fill('Accra Botanics');
+  await ct.getByRole('textbox', { name: /Brand/ }).fill('Accra Botanics');
   await ct.getByRole('textbox', { name: 'Description' }).fill('A refreshing moringa mist.');
   await ct.getByRole('textbox', { name: /Ingredients/ }).fill('Aqua, Moringa Oleifera Leaf Extract');
-  await ct.getByRole('textbox', { name: 'Safety notes' }).fill('Avoid contact with eyes.');
-  await ct.getByRole('textbox', { name: 'Country of origin' }).fill('Ghana');
   await ct.getByRole('textbox', { name: 'FDA registration number' }).fill('FDA/CB.24-777');
   await ct.getByRole('checkbox', { name: 'Show on the store' }).check();
   await ct.getByRole('button', { name: 'Save changes' }).click();

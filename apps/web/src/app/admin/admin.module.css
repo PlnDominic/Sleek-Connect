@@ -913,7 +913,7 @@ details.panel > summary {
   flex-wrap: wrap;
   gap: 6px;
   align-items: center;
-  min-width: 220px;
+  min-width: 0;
 }
 
 .rowActions > * {
@@ -927,4 +927,35 @@ details.panel > summary {
   font-size: 13px;
   display: inline-flex;
   align-items: center;
+}
+
+/* Round icon buttons for row actions (edit, view, show/hide, duplicate, delete). */
+.iconButton {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--c-line-strong, #d5dce6);
+  border-radius: 10px;
+  background: var(--c-canvas, #fff);
+  color: var(--c-ink, #0b1f3a);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.iconButton:hover {
+  background: var(--c-surface, #f5f7fa);
+  color: var(--c-accent, #0f766e);
+}
+
+.iconDanger:hover {
+  color: var(--c-danger, #b42318);
+  border-color: var(--c-danger, #b42318);
+}
+
+.rowActions .iconButton {
+  height: 34px;
+  padding: 0;
+  font-size: inherit;
 }
