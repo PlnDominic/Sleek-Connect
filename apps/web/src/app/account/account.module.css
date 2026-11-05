@@ -385,7 +385,7 @@ main.centered .panel {
  * ========================================================================================================== */
 
 main.centered {
-  background: #f4f6f9;
+  background: var(--c-surface);
   max-width: none;
   padding-left: 16px;
   padding-right: 16px;
@@ -401,7 +401,7 @@ main.centered {
 .panel,
 .dashHead,
 .card {
-  border: 1px solid rgb(11 31 58 / 0.08);
+  border: 1px solid color-mix(in srgb, var(--c-ink) 10%, transparent);
   background: var(--c-canvas);
   box-shadow: 0 1px 2px rgb(11 31 58 / 0.04);
 }
@@ -430,7 +430,7 @@ main.centered .panel {
 .input {
   min-height: 48px;
   padding: 0 14px;
-  border: 1px solid #d5dce6;
+  border: 1px solid var(--c-line-strong);
   border-radius: 10px;
   box-shadow: 0 1px 2px rgb(11 31 58 / 0.04);
   font-size: 15px;
@@ -440,7 +440,7 @@ main.centered .panel {
 }
 
 .input:hover {
-  border-color: #b6c1cf;
+  border-color: var(--c-line-inactive);
 }
 
 .input:focus-visible {
@@ -462,24 +462,24 @@ main.centered .panel {
 }
 
 .primary {
-  background: #0f766e;
+  background: var(--c-accent);
 }
 
 .primary:hover:not(:disabled) {
-  background: #0b5d57;
+  background: var(--c-accent-deep);
 }
 
 .google,
 .secondary {
-  border: 1px solid #d5dce6;
+  border: 1px solid var(--c-line-strong);
   background: var(--c-canvas);
   box-shadow: 0 1px 2px rgb(11 31 58 / 0.05);
 }
 
 .google:hover:not(:disabled),
 .secondary:hover:not(:disabled) {
-  border-color: #b6c1cf;
-  background: #f8fafc;
+  border-color: var(--c-line-inactive);
+  background: var(--c-surface);
 }
 
 .secondary {
@@ -488,9 +488,9 @@ main.centered .panel {
 
 .consent {
   padding: 14px 16px;
-  border: 1px solid #e4e9f0;
+  border: 1px solid var(--c-line);
   border-radius: 12px;
-  background: #fafbfc;
+  background: var(--c-surface);
   font-size: 13.5px;
 }
 
@@ -518,25 +518,25 @@ main.centered .panel {
 
 .error {
   padding: 12px 14px;
-  border: 1px solid #f6d0cb;
+  border: 1px solid color-mix(in srgb, var(--c-danger, var(--c-danger, #b42318)) 30%, var(--c-canvas));
   border-radius: 10px;
-  background: #fef6f5;
-  color: #912018;
+  background: color-mix(in srgb, var(--c-danger, var(--c-danger, #b42318)) 10%, var(--c-canvas));
+  color: var(--c-danger, #912018);
   font-weight: 500;
 }
 
 .saved {
-  border: 1px solid #b9e1da;
+  border: 1px solid color-mix(in srgb, var(--c-accent) 30%, var(--c-canvas));
   border-radius: 10px;
-  background: #f0faf8;
-  color: #0b4f49;
+  background: var(--c-teal-soft);
+  color: var(--c-teal-ink);
   font-size: 14px;
 }
 
 .confirm {
-  border: 1px solid #b9e1da;
+  border: 1px solid color-mix(in srgb, var(--c-accent) 30%, var(--c-canvas));
   border-radius: 16px;
-  background: #f0faf8;
+  background: var(--c-teal-soft);
 }
 
 /* Signed in */
@@ -553,7 +553,7 @@ main.centered .panel {
 .avatar {
   width: 60px;
   height: 60px;
-  background: #0f766e;
+  background: var(--c-accent);
   font-size: 24px;
   font-weight: 800;
 }
@@ -578,19 +578,19 @@ main.centered .panel {
 
 .preference {
   padding: 12px 14px;
-  border: 1px solid #e4e9f0;
+  border: 1px solid var(--c-line);
   border-radius: 12px;
   cursor: pointer;
 }
 
 .preference:has(input:checked) {
   border-color: rgb(15 118 110 / 0.4);
-  background: #f0faf8;
+  background: var(--c-teal-soft);
 }
 
 .sessionRow {
   padding-top: 14px;
-  border-top-color: #eef1f5;
+  border-top-color: var(--c-line-soft);
 }
 
 @media (max-width: 520px) {
@@ -621,7 +621,7 @@ main.centered .panel {
   gap: 32px;
   padding-top: 32px;
   padding-bottom: 72px;
-  background: #f4f6f9;
+  background: var(--c-surface);
   max-width: none;
 }
 
@@ -635,7 +635,7 @@ main.centered .panel {
   flex-direction: column;
   gap: 18px;
   padding: 18px 12px;
-  border: 1px solid rgb(11 31 58 / 0.08);
+  border: 1px solid color-mix(in srgb, var(--c-ink) 10%, transparent);
   border-radius: 16px;
   background: var(--c-canvas);
 }
@@ -668,13 +668,13 @@ main.centered .panel {
 }
 
 .navLink:hover {
-  background: #f4f6f9;
+  background: var(--c-surface);
   color: var(--c-ink);
 }
 
 .navLink[aria-current='page'] {
-  background: #e7f6f3;
-  color: #0b5d57;
+  background: var(--c-teal-soft);
+  color: var(--c-accent-deep);
   font-weight: 650;
 }
 
@@ -689,10 +689,10 @@ main.centered .panel {
   margin-top: 4px;
   padding: 0 12px;
   border: 0;
-  border-top: 1px solid #eef1f5;
+  border-top: 1px solid var(--c-line-soft);
   border-radius: 0 0 10px 10px;
   background: none;
-  color: #b42318;
+  color: var(--c-danger, #b42318);
   font-size: 14px;
   font-weight: 600;
   text-align: left;
@@ -729,7 +729,7 @@ main.centered .panel {
   flex-direction: column;
   gap: 8px;
   padding: 20px 22px;
-  border: 1px solid rgb(11 31 58 / 0.08);
+  border: 1px solid color-mix(in srgb, var(--c-ink) 10%, transparent);
   border-radius: 16px;
   background: var(--c-canvas);
   box-shadow: 0 1px 2px rgb(11 31 58 / 0.04);
@@ -741,7 +741,7 @@ main.centered .panel {
   justify-content: space-between;
   gap: 12px;
   padding-bottom: 10px;
-  border-bottom: 1px solid #eef1f5;
+  border-bottom: 1px solid var(--c-line-soft);
 }
 
 .infoHead h2 {
@@ -789,7 +789,7 @@ main.centered .panel {
   align-items: flex-start;
   gap: 12px;
   padding: 28px;
-  border: 1px solid rgb(11 31 58 / 0.08);
+  border: 1px solid color-mix(in srgb, var(--c-ink) 10%, transparent);
   border-radius: 16px;
   background: var(--c-canvas);
 }
@@ -804,16 +804,16 @@ main.centered .panel {
   min-height: 42px;
   padding: 0 18px;
   border-radius: 10px;
-  background: #0f766e;
-  color: #fff;
+  background: var(--c-accent);
+  color: var(--c-on-accent, #fff);
   font-size: 14px;
   font-weight: 650;
   text-decoration: none;
 }
 
 .emptyCard a:hover {
-  background: #0b5d57;
-  color: #fff;
+  background: var(--c-accent-deep);
+  color: var(--c-on-accent, #fff);
 }
 
 .pendingList {
@@ -822,7 +822,7 @@ main.centered .panel {
   margin: 0;
   padding: 0;
   list-style: none;
-  border: 1px solid rgb(11 31 58 / 0.08);
+  border: 1px solid color-mix(in srgb, var(--c-ink) 10%, transparent);
   border-radius: 16px;
   background: var(--c-canvas);
   overflow: hidden;
@@ -835,7 +835,7 @@ main.centered .panel {
   justify-content: space-between;
   gap: 8px 16px;
   padding: 16px 20px;
-  border-bottom: 1px solid #eef1f5;
+  border-bottom: 1px solid var(--c-line-soft);
 }
 
 .pendingList li:last-child {
@@ -854,8 +854,8 @@ main.centered .panel {
   min-height: 38px;
   padding: 0 16px;
   border-radius: 10px;
-  background: #0f766e;
-  color: #fff;
+  background: var(--c-accent);
+  color: var(--c-on-accent, #fff);
   font-size: 13.5px;
   font-weight: 650;
   text-decoration: none;
@@ -866,7 +866,7 @@ main.centered .panel {
   gap: 4px;
   padding: 4px;
   border-radius: 12px;
-  background: #e9edf2;
+  background: var(--c-surface-sunken);
   width: fit-content;
   max-width: 100%;
   overflow-x: auto;
@@ -945,7 +945,7 @@ main.centered .panel {
 }
 
 .recentOrders li {
-  border-bottom: 1px solid #eef1f5;
+  border-bottom: 1px solid var(--c-line-soft);
 }
 
 .recentOrders li:last-child {
@@ -987,7 +987,7 @@ main.guestPage {
   min-height: 70vh;
   padding-top: 32px;
   padding-bottom: 72px;
-  background: #f4f6f9;
+  background: var(--c-surface);
   max-width: none;
 }
 
@@ -1019,7 +1019,7 @@ main.guestPage {
   flex-direction: column;
   gap: 14px;
   padding: 20px 22px;
-  border: 1px solid rgb(11 31 58 / 0.08);
+  border: 1px solid color-mix(in srgb, var(--c-ink) 10%, transparent);
   border-radius: 16px;
   background: var(--c-canvas);
   box-shadow: 0 1px 2px rgb(11 31 58 / 0.04);
@@ -1031,7 +1031,7 @@ main.guestPage {
   justify-content: space-between;
   gap: 12px;
   padding-bottom: 14px;
-  border-bottom: 1px solid #eef1f5;
+  border-bottom: 1px solid var(--c-line-soft);
 }
 
 .orderTop > div {
@@ -1095,7 +1095,7 @@ main.guestPage {
   justify-content: space-between;
   gap: 10px 16px;
   padding-top: 14px;
-  border-top: 1px solid #eef1f5;
+  border-top: 1px solid var(--c-line-soft);
   font-size: 14.5px;
 }
 
@@ -1108,9 +1108,9 @@ main.guestPage {
   align-items: center;
   min-height: 40px;
   padding: 0 18px;
-  border: 1px solid #0f766e;
+  border: 1px solid var(--c-accent);
   border-radius: 10px;
-  color: #0f766e;
+  color: var(--c-accent);
   font-size: 13.5px;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -1119,8 +1119,8 @@ main.guestPage {
 }
 
 .seeDetails:hover {
-  background: #0f766e;
-  color: #fff;
+  background: var(--c-accent);
+  color: var(--c-on-accent, #fff);
 }
 
 @media (max-width: 520px) {
@@ -1141,8 +1141,8 @@ main.guestPage,
 main.centered {
   padding-top: 32px;
   padding-bottom: 72px;
-  background: #f4f6f9;
-  box-shadow: 0 0 0 100vmax #f4f6f9;
+  background: var(--c-surface);
+  box-shadow: 0 0 0 100vmax var(--c-surface);
   clip-path: inset(0 -100vmax);
 }
 

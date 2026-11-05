@@ -1,15 +1,24 @@
 'use client';
 
 import Form from 'next/form';
-import { useRef, type ReactNode } from 'react';
+import { useRef, useSyncExternalStore, type ReactNode } from 'react';
 import styles from './listing.module.css';
 
 /**
  * The filter sidebar. Any change re-runs the listing (client-side navigation, keeping the scroll position);
  * the Apply button covers browsers without JavaScript.
  */
+const PHONE = '(max-width: 860px)';
+const subscribePhone = (listener: () => void) => {
+  const query = matchMedia(PHONE);
+  query.addEventListener('change', listener);
+  return () => query.removeEventListener('change', listener);
+};
+
 export function FilterForm({ action, children, activeCount }: { action: string; children: ReactNode; activeCount: number }) {
   const ref = useRef<HTMLFormElement>(null);
+  // Open beside the results on a computer; folded away behind one "Filters" button on a phone, like the app.
+  const phone = useSyncExternalStore(subscribePhone, () => matchMedia(PHONE).matches, () => false);
   return (
     <Form
       id="filters"
@@ -19,7 +28,7 @@ export function FilterForm({ action, children, activeCount }: { action: string; 
       className={styles.filters}
       onChange={() => ref.current?.requestSubmit()}
     >
-      <details className={styles.filterToggle} open>
+      <details className={styles.filterToggle} open={!phone}>
         <summary>
           Filters{activeCount > 0 && <span className={styles.filterCount}>{activeCount}</span>}
         </summary>

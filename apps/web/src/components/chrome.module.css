@@ -38,8 +38,8 @@
 
 /* Announcement bar */
 .announce {
-  background: var(--c-ink);
-  color: var(--c-canvas);
+  background: var(--c-solid, var(--c-ink));
+  color: var(--c-on-solid, var(--c-canvas));
   font-size: 12px;
   font-weight: 500;
   padding: 10px 24px;
@@ -197,8 +197,8 @@
 }
 
 .footerBottom {
-  background: var(--c-ink);
-  color: var(--c-on-dark);
+  background: var(--c-solid, var(--c-ink));
+  color: var(--c-on-solid, var(--c-on-dark));
 }
 
 .footer .footerBottomInner {

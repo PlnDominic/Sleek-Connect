@@ -349,7 +349,7 @@
 .followed a > img,
 .followed a > span {
   border-radius: 12px;
-  background: #0f766e;
+  background: var(--c-accent);
 }
 
 /* sc-phone-type: a little smaller on phones */
@@ -368,5 +368,87 @@
 
   .empty h3 {
     font-size: 16.5px;
+  }
+}
+
+/* Phones: the shop screen of the app. A compact title, department chips in one scrolling row, a Filters button and a two-column grid. */
+@media (max-width: 640px) {
+  .hero {
+    padding: 14px 0 12px;
+  }
+
+  .breadcrumb,
+  .hero p {
+    display: none;
+  }
+
+  .hero h1 {
+    font-size: 22px;
+    font-weight: 600;
+  }
+
+  .subnav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+    margin: 12px -24px 0;
+    padding: 0 24px 2px;
+    scrollbar-width: none;
+  }
+
+  .subnav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .subnav a {
+    flex: none;
+    padding: 0 16px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    font-size: 13px;
+    background: transparent;
+    border-color: var(--c-line-strong);
+  }
+
+  .layout {
+    gap: 12px;
+    padding-top: 14px;
+    padding-bottom: 40px;
+  }
+
+  .filterToggle > summary {
+    margin: 0;
+    height: 44px;
+    padding: 0 16px;
+    background: var(--c-surface);
+    border: 0;
+    border-radius: var(--r-lg);
+    font-size: 14px;
+  }
+
+  .filterToggle[open] > summary {
+    margin-bottom: 10px;
+  }
+
+  .toolbar {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .sort span {
+    display: none;
+  }
+
+  .sort select {
+    height: 36px;
+    font-size: 13px;
+    background: var(--c-surface);
+    border-color: transparent;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
   }
 }
