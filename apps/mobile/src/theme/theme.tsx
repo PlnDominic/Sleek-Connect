@@ -25,9 +25,9 @@ const ThemeContext = createContext<ThemeValue>({
 function readMode(): ThemeMode {
   try {
     const saved = getDeviceStorage().getItem(KEY);
-    return saved === 'dark' || saved === 'system' ? saved : 'light';
+    return saved === 'light' || saved === 'system' ? saved : 'dark';
   } catch {
-    return 'light';
+    return 'dark';
   }
 }
 
