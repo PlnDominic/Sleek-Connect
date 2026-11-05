@@ -38,7 +38,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   // Keep native pieces (keyboard, alerts, date pickers) in step with the chosen look.
   useEffect(() => {
-    Appearance.setColorScheme(mode === 'system' ? 'unspecified' : mode);
+    // Not available in the web preview, where the page's own colours already follow our palette.
+    Appearance.setColorScheme?.(mode === 'system' ? 'unspecified' : mode);
   }, [mode]);
 
   const setMode = useCallback((next: ThemeMode) => {
