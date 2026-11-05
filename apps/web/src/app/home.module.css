@@ -616,3 +616,177 @@
     flex-direction: column;
   }
 }
+
+/* Phones: smaller type, a shorter hero, tighter sections and a sideways category row that shows the next tile peeking in. */
+@media (max-width: 640px) {
+  .heroInner {
+    min-height: 0;
+    gap: 0;
+  }
+
+  .heroCopy {
+    flex-basis: 100%;
+    gap: 12px;
+    padding: 28px 0 8px;
+  }
+
+  .kicker {
+    font-size: 11.5px;
+  }
+
+  .heroTitle {
+    font-size: 30px;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+  }
+
+  .heroLead {
+    font-size: 14.5px;
+    line-height: 1.55;
+  }
+
+  .heroActions {
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .primaryCta,
+  .secondaryCta {
+    height: 44px;
+    font-size: 14px;
+    padding: 0 18px;
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .heroVisual {
+    flex-basis: 100%;
+    height: 330px;
+  }
+
+  .heroBlob {
+    top: 40px;
+    height: 290px;
+  }
+
+  .heroModel {
+    top: 28px;
+    height: 302px;
+    left: 26%;
+    width: 48%;
+  }
+
+  .floatCard {
+    width: 100px;
+    padding: 8px;
+  }
+
+  .floatImage {
+    height: 52px;
+  }
+
+  .floatName {
+    font-size: 10.5px;
+  }
+
+  .floatPrice {
+    font-size: 11.5px;
+  }
+
+  .floatShea {
+    top: 150px;
+  }
+
+  .floatBabyWash {
+    top: 180px;
+  }
+
+  .section {
+    padding-top: 32px;
+  }
+
+  .sectionHeader {
+    margin-bottom: 14px;
+    gap: 6px;
+  }
+
+  .sectionHeader h2 {
+    font-size: 18px;
+  }
+
+  .sectionHeader a {
+    font-size: 12px;
+  }
+
+  .railTrack {
+    grid-auto-columns: 42%;
+    gap: 12px;
+  }
+
+  .railArrow {
+    display: none;
+  }
+
+  .categoryCard {
+    height: 150px;
+  }
+
+  .categoryLabel {
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    padding: 7px 9px;
+  }
+
+  .categoryLabel strong {
+    font-size: 12.5px;
+  }
+
+  .categoryLabel span {
+    font-size: 10.5px;
+  }
+
+  .bestCard {
+    padding: 14px;
+    gap: 12px;
+    min-height: 0;
+  }
+
+  .bestName,
+  .bestPrice {
+    font-size: 14.5px;
+  }
+
+  .bestSummary,
+  .bestTag {
+    font-size: 11.5px;
+  }
+
+  .promoSection {
+    padding-top: 24px;
+  }
+
+  .promo {
+    padding: 20px;
+    min-height: 0;
+  }
+
+  .promoTitle {
+    font-size: 22px;
+  }
+
+  .promoText,
+  .promoKicker,
+  .promoCta {
+    font-size: 12px;
+  }
+
+  .trustSection {
+    padding-bottom: 32px;
+  }
+
+  .trust {
+    padding: 16px;
+    gap: 12px;
+  }
+}

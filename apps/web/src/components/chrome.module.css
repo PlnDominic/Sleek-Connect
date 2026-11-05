@@ -227,7 +227,22 @@
   }
 
   .footerLinks {
-    grid-template-columns: 1fr;
-    gap: 28px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px 16px;
+    padding: 22px 0;
+  }
+
+  .footerCol {
+    gap: 9px;
+    font-size: 13px;
+  }
+
+  .footerCol strong {
+    font-size: 11px;
+  }
+
+  .footerBlurb {
+    font-size: 13.5px;
+    line-height: 1.6;
   }
 }
