@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 20,
-    paddingBottom: 28,
+    paddingBottom: 120,
   },
   header: {
     flexDirection: 'row',

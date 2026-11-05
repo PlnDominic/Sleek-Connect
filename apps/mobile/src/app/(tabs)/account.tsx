@@ -231,7 +231,7 @@ function LinkRow({ icon, title, text, onPress, disabled }: { icon: IconName; tit
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.surface },
-  content: { paddingHorizontal: 20, paddingBottom: 28, gap: 18 },
+  content: { paddingHorizontal: 20, paddingBottom: 120, gap: 18 },
   flex: { flex: 1 },
   lh: { lineHeight: 19 },
   inlineLinks: { flexDirection: 'row', gap: 18 },

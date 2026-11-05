@@ -1,6 +1,8 @@
 import { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { AccessibilityInfo, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, type IconName } from '@sleek/shared';
 import { useBag } from '@sleek/shared/bag';
@@ -22,36 +24,66 @@ function TabBar({ state, navigateToTab }: TabBarProps) {
   const insets = useSafeAreaInsets();
   const current = state.routes[state.index]?.name;
   const { count } = useBag();
+  const [reduceTransparency, setReduceTransparency] = useState(false);
+
+  useEffect(() => {
+    let live = true;
+    AccessibilityInfo.isReduceTransparencyEnabled?.()
+      .then((on) => live && setReduceTransparency(on))
+      .catch(() => {});
+    const sub = AccessibilityInfo.addEventListener('reduceTransparencyChanged', setReduceTransparency);
+    return () => {
+      live = false;
+      sub.remove();
+    };
+  }, []);
+
+  // Glass only where blur is dependable (iOS); Android and Reduce Transparency get a near-opaque bar.
+  const glass = Platform.OS === 'ios' && !reduceTransparency;
 
   return (
-    <View style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-      <View style={styles.bar} accessibilityRole="tablist">
-        {items.map((item) => {
-          const active = item.route === current;
-          return (
-            <Pressable
-              key={item.label}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: active }}
-              accessibilityLabel={item.route === 'bag' ? `Bag, ${count} ${count === 1 ? 'item' : 'items'}` : item.label}
-              onPress={() => {
-                const route = state.routes.find((r) => r.name === item.route);
-                if (route) navigateToTab(route.key);
-              }}
-              style={[styles.item, active ? styles.itemActive : styles.itemIdle]}
-            >
-              <View>
-                <Icon name={item.icon} size={22} color={BLACK} strokeWidth={active ? 2 : 1.8} />
-                {item.route === 'bag' && <CountBadge count={count} style={styles.badge} />}
-              </View>
-              {active && (
-                <AppText weight="bold" size={14} color={BLACK}>
-                  {item.label}
-                </AppText>
-              )}
-            </Pressable>
-          );
-        })}
+    <View pointerEvents="box-none" style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+      <View style={styles.shadow}>
+        <View style={styles.clip}>
+          {glass ? (
+            <BlurView intensity={70} tint="systemChromeMaterialLight" style={StyleSheet.absoluteFill} />
+          ) : null}
+          <View style={[StyleSheet.absoluteFill, glass ? styles.fillGlass : styles.fillSolid]} />
+          <View style={styles.sheen} pointerEvents="none" />
+          <View style={styles.row} accessibilityRole="tablist">
+            {items.map((item) => {
+              const active = item.route === current;
+              return (
+                <Pressable
+                  key={item.label}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: active }}
+                  accessibilityLabel={item.route === 'bag' ? `Bag, ${count} ${count === 1 ? 'item' : 'items'}` : item.label}
+                  onPress={() => {
+                    const route = state.routes.find((r) => r.name === item.route);
+                    if (route) navigateToTab(route.key);
+                  }}
+                  style={styles.item}
+                >
+                  <View style={[styles.lens, active && styles.lensActive]}>
+                    <View>
+                      <Icon
+                        name={item.icon}
+                        size={22}
+                        color={active ? colors.accent : IDLE}
+                        strokeWidth={active ? 2.1 : 1.8}
+                      />
+                      {item.route === 'bag' && <CountBadge count={count} style={styles.badge} />}
+                    </View>
+                    <AppText weight={active ? 'bold' : 'medium'} size={11} color={active ? colors.accent : IDLE}>
+                      {item.label}
+                    </AppText>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -69,43 +101,65 @@ export default function TabsLayout() {
   );
 }
 
-const BLACK = '#0A0A0A';
+const IDLE = 'rgba(11, 31, 58, 0.62)'; // ink at 62%: 4.5:1+ on the light glass
 
-// A floating black pill: the current tab is a white pill with its name, the others are round grey buttons.
+// Liquid Glass tab bar: a floating, blurred capsule over the content. The current tab sits in a
+// brighter glass lens; colour is spent once, on the active icon and name.
 const styles = StyleSheet.create({
   wrap: {
-    backgroundColor: colors.canvas,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
     paddingHorizontal: 16,
-    paddingTop: 8,
   },
-  bar: {
+  shadow: {
+    borderRadius: 36,
+    shadowColor: '#0B1F3A',
+    shadowOpacity: 0.16,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 10,
+  },
+  clip: {
+    borderRadius: 36,
+    overflow: 'hidden',
+    borderWidth: StyleSheet.hairlineWidth * 2,
+    borderColor: 'rgba(255, 255, 255, 0.85)',
+  },
+  fillGlass: { backgroundColor: 'rgba(255, 255, 255, 0.42)' },
+  fillSolid: { backgroundColor: 'rgba(250, 251, 253, 0.97)' },
+  sheen: {
+    position: 'absolute',
+    top: 0,
+    left: 24,
+    right: 24,
+    height: StyleSheet.hairlineWidth * 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  },
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: BLACK,
-    borderRadius: 999,
     padding: 6,
-    shadowColor: '#000',
-    shadowOpacity: 0.18,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
   },
   item: {
-    height: 48,
-    minWidth: 48,
-    borderRadius: 24,
-    flexDirection: 'row',
+    flex: 1,
+    minHeight: 56,
+  },
+  lens: {
+    flex: 1,
+    minHeight: 56,
+    borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 3,
   },
-  itemActive: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-  },
-  itemIdle: {
-    backgroundColor: '#E8E8E8',
+  lensActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.78)',
+    shadowColor: '#0B1F3A',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
   },
   badge: {
     right: -10,
