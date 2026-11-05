@@ -3,12 +3,12 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { colors } from '@sleek/shared';
 import { BagProvider } from '@sleek/shared/bag';
 import { AuthProvider } from '@/lib/auth';
 import { PushSetup } from '@/lib/push';
 import { getDeviceStorage } from '@/lib/storage';
 import { fontFiles } from '@/theme/fonts';
+import { ThemeProvider, useTheme } from '@/theme/theme';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -23,12 +23,23 @@ export default function RootLayout() {
 
   // The bag is kept on the phone between visits.
   return (
-    <AuthProvider>
-      <BagProvider storage={getDeviceStorage}>
-        <StatusBar style="dark" />
-        <PushSetup />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }} />
-      </BagProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <BagProvider storage={getDeviceStorage}>
+          <ThemedShell />
+        </BagProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  );
+}
+
+function ThemedShell() {
+  const { scheme, colors } = useTheme();
+  return (
+    <>
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+      <PushSetup />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }} />
+    </>
   );
 }

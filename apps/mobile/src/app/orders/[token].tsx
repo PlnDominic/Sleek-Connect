@@ -1,20 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import {
-  buildTimeline,
-  colors,
-  expectedDelivery,
-  finalStatuses,
-  formatPrice,
-  formatPriceOr,
-  momoNetworks,
-  networkNames,
-  payOnDeliveryLabels,
-  statusLabels,
-  trackingProgress,
-  type MomoNetwork,
-} from '@sleek/shared';
+import { buildTimeline, expectedDelivery, finalStatuses, formatPrice, formatPriceOr, momoNetworks, networkNames, payOnDeliveryLabels, statusLabels, trackingProgress, type MomoNetwork } from '@sleek/shared';
 import { AppText } from '@/components/AppText';
 import { Button, Card, Choices, Field, Notice } from '@/components/Form';
 import { EmptyState, ErrorState, Skeleton } from '@/components/States';
@@ -25,10 +12,12 @@ import { cancelOrder, formatDate, formatDateTime, getOrder, rememberOrder, type 
 import { pushAllowed, registerForPush } from '@/lib/push';
 import { useQuery } from '@/lib/query';
 import { openSite } from '@/lib/site';
+import { useColors, useStyles, type Palette } from '@/theme/theme';
 
 const REFRESH_MS = 15_000;
 
 export default function OrderScreen() {
+  const styles = useStyles(makeStyles);
   const { token } = useLocalSearchParams<{ token: string }>();
   const top = useScreenTop();
   const { data: order, error, loading, refetch } = useQuery(token ? `order:${token}` : null, () => getOrder(token), 5_000);
@@ -67,6 +56,7 @@ export default function OrderScreen() {
 }
 
 function Header({ title = 'Your order' }: { title?: string }) {
+  const styles = useStyles(makeStyles);
   return (
     <View style={styles.titleRow}>
       <BackButton fallback="/orders" />
@@ -78,6 +68,8 @@ function Header({ title = 'Your order' }: { title?: string }) {
 }
 
 function OrderView({ order, token, onChanged }: { order: CustomerOrder; token: string; onChanged: () => void }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   const top = useScreenTop();
   const delivery = useQuery('delivery-config', getDeliveryConfig, 5 * 60_000);
   const progress = trackingProgress(order.status);
@@ -235,6 +227,8 @@ function OrderView({ order, token, onChanged }: { order: CustomerOrder; token: s
 }
 
 function Total({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   return (
     <View style={styles.line}>
       <AppText size={14} color={bold ? colors.ink : colors.textMuted} weight={bold ? 'bold' : 'regular'} style={styles.flex}>
@@ -249,6 +243,7 @@ function Total({ label, value, bold }: { label: string; value: string; bold?: bo
 
 /** An unpaid order: send the Mobile Money prompt again to the same or another number. */
 function PayAgain({ token, reservedUntil, onChanged }: { token: string; reservedUntil: string | null; onChanged: () => void }) {
+  const colors = useColors();
   const [network, setNetwork] = useState<MomoNetwork>('mtn');
   const [wallet, setWallet] = useState('');
   const [busy, setBusy] = useState(false);
@@ -290,7 +285,7 @@ function PayAgain({ token, reservedUntil, onChanged }: { token: string; reserved
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.surface },
   content: { paddingHorizontal: 20, paddingBottom: 40, gap: 16 },
   flex: { flex: 1 },

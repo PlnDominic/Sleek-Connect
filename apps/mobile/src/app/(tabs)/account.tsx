@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { colors, radii, type IconName } from '@sleek/shared';
+import { radii, type IconName } from '@sleek/shared';
 import { AppText } from '@/components/AppText';
 import { Button, Card, Field, Notice } from '@/components/Form';
 import { Icon } from '@/components/Icon';
@@ -10,6 +10,7 @@ import { deleteMyAccount } from '@/lib/account';
 import { normalizeGhanaPhone, useAuth } from '@/lib/auth';
 import { pushAllowed, registerForPush, unregisterPush } from '@/lib/push';
 import { openSite, siteConfigured } from '@/lib/site';
+import { useColors, useStyles, useTheme, type Palette, type ThemeMode } from '@/theme/theme';
 
 const siteLinks: { icon: IconName; title: string; text: string; path: string }[] = [
   { icon: 'headset', title: 'Help and contact', text: 'Delivery, returns and how to reach us', path: '/help' },
@@ -18,6 +19,8 @@ const siteLinks: { icon: IconName; title: string; text: string; path: string }[]
 ];
 
 export default function AccountScreen() {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   const top = useScreenTop();
   const { user, loading } = useAuth();
   return (
@@ -36,6 +39,8 @@ export default function AccountScreen() {
         <SignedOut />
       )}
 
+      <AppearanceCard />
+
       <View style={styles.list}>
         <LinkRow icon="box" title="Your orders" text="Track an order, or find one by its number" onPress={() => router.push('/orders')} />
         {siteLinks.map((l) => (
@@ -46,7 +51,52 @@ export default function AccountScreen() {
   );
 }
 
+const appearanceOptions: { mode: ThemeMode; label: string }[] = [
+  { mode: 'light', label: 'Light' },
+  { mode: 'dark', label: 'Dark' },
+  { mode: 'system', label: 'Auto' },
+];
+
+function AppearanceCard() {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
+  const { mode, setMode } = useTheme();
+  return (
+    <View style={styles.appearance}>
+      <View style={styles.flex}>
+        <AppText weight="bold" size={15}>
+          Appearance
+        </AppText>
+        <AppText size={13} color={colors.textMuted}>
+          {mode === 'system' ? 'Matches your phone' : mode === 'dark' ? 'Dark theme' : 'Light theme'}
+        </AppText>
+      </View>
+      <View style={styles.segment} accessibilityRole="radiogroup">
+        {appearanceOptions.map((o) => {
+          const on = o.mode === mode;
+          return (
+            <Pressable
+              key={o.mode}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: on }}
+              accessibilityLabel={o.label}
+              onPress={() => setMode(o.mode)}
+              style={[styles.segmentItem, on && styles.segmentOn]}
+            >
+              <AppText weight={on ? 'bold' : 'semibold'} size={13} color={on ? colors.canvas : colors.textMuted}>
+                {o.label}
+              </AppText>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
 function SignedOut() {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   const { sendPhoneOtp, verifyPhoneOtp, signInWithGoogle, recordConsent } = useAuth();
   const [agreed, setAgreed] = useState(false);
   const [phone, setPhone] = useState('');
@@ -130,6 +180,7 @@ function SignedOut() {
 }
 
 function SignedIn() {
+  const colors = useColors();
   const { user, consented, recordConsent, signOut } = useAuth();
   const [agreed, setAgreed] = useState(false);
   const [notifying, setNotifying] = useState<boolean | null>(null);
@@ -205,6 +256,8 @@ function SignedIn() {
 }
 
 function LinkRow({ icon, title, text, onPress, disabled }: { icon: IconName; title: string; text: string; onPress: () => void; disabled?: boolean }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   return (
     <Pressable
       accessibilityRole="link"
@@ -229,10 +282,14 @@ function LinkRow({ icon, title, text, onPress, disabled }: { icon: IconName; tit
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.surface },
   content: { paddingHorizontal: 20, paddingBottom: 120, gap: 18 },
   flex: { flex: 1 },
+  appearance: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderRadius: radii.xl, backgroundColor: colors.canvas },
+  segment: { flexDirection: 'row', padding: 3, borderRadius: radii.pill, backgroundColor: colors.surface },
+  segmentItem: { minHeight: 36, minWidth: 52, paddingHorizontal: 10, borderRadius: radii.pill, alignItems: 'center', justifyContent: 'center' },
+  segmentOn: { backgroundColor: colors.ink },
   lh: { lineHeight: 19 },
   inlineLinks: { flexDirection: 'row', gap: 18 },
   list: { borderTopWidth: 1, borderTopColor: colors.line },

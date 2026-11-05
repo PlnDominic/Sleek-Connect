@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
-import { colors, radii, type IconName } from '@sleek/shared';
+import { radii, type IconName } from '@sleek/shared';
 import { AppText } from './AppText';
 import { Icon } from './Icon';
+import { useColors, useStyles, type Palette } from '@/theme/theme';
 
 /** A grey block that gently pulses while content loads. */
 export function Skeleton({ style }: { style?: object }) {
+  const styles = useStyles(makeStyles);
   const [opacity] = useState(() => new Animated.Value(0.55));
   useEffect(() => {
     const loop = Animated.loop(
@@ -22,6 +24,7 @@ export function Skeleton({ style }: { style?: object }) {
 
 /** Placeholder tiles shown in the shape of the product grid while it loads. */
 export function ProductGridSkeleton({ count = 6 }: { count?: number }) {
+  const styles = useStyles(makeStyles);
   return (
     <View style={styles.grid} accessibilityLabel="Loading products" accessibilityRole="progressbar">
       {Array.from({ length: count }, (_, i) => (
@@ -37,6 +40,8 @@ export function ProductGridSkeleton({ count = 6 }: { count?: number }) {
 
 /** Shown when something couldn't be loaded, with a way to try again. */
 export function ErrorState({ message = "We couldn't load this. Check your connection and try again.", onRetry }: { message?: string; onRetry?: () => void }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   return (
     <View style={styles.state} accessibilityRole="alert">
       <View style={styles.icon}>
@@ -57,6 +62,8 @@ export function ErrorState({ message = "We couldn't load this. Check your connec
 }
 
 export function EmptyState({ icon, title, message, action }: { icon: IconName; title: string; message: string; action?: { label: string; onPress: () => void } }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   return (
     <View style={styles.state}>
       <View style={styles.icon}>
@@ -79,7 +86,7 @@ export function EmptyState({ icon, title, message, action }: { icon: IconName; t
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   skeleton: {
     backgroundColor: colors.surfaceSunken,
     borderRadius: radii.md,

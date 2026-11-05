@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { Image } from 'expo-image';
 import { useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { colors, departmentIds, departmentLabels, radii, type Department } from '@sleek/shared';
+import { departmentIds, departmentLabels, radii, type Department } from '@sleek/shared';
 import { useBag } from '@sleek/shared/bag';
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
@@ -14,15 +14,19 @@ import { getAgeBands, getAllProducts, getCategories, getHome, type Banner } from
 import { appHref } from '@/lib/links';
 import { useQuery } from '@/lib/query';
 import { images } from '@/theme/images';
+import { useColors, useStyles, type Palette } from '@/theme/theme';
 
 /** Promo card colours for each banner theme. */
-const themes = {
-  light: { background: colors.surfaceHero, text: colors.ink },
-  sale: { background: colors.ink, text: colors.canvas },
-  gift: { background: colors.blush, text: colors.ink },
-} as const;
+const makeThemes = (colors: Palette) =>
+  ({
+    light: { background: colors.surfaceHero, text: colors.ink },
+    sale: { background: colors.ink, text: colors.canvas },
+    gift: { background: colors.blush, text: colors.ink },
+  }) as const;
 
 export default function HomeScreen() {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   const top = useScreenTop();
   const { count } = useBag();
   const [dept, setDept] = useState<Department>('beauty');
@@ -195,6 +199,8 @@ export default function HomeScreen() {
 
 /** The main banner, as set in Admin → Content. */
 function HeroCard({ banner }: { banner: Banner }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   const dark = banner.theme === 'sale';
   return (
     <View style={[styles.hero, { backgroundColor: dark ? colors.ink : colors.teal }]}>
@@ -219,7 +225,9 @@ function HeroCard({ banner }: { banner: Banner }) {
 }
 
 function PromoCard({ banner }: { banner: Banner }) {
-  const theme = themes[banner.theme];
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
+  const theme = makeThemes(colors)[banner.theme];
   return (
     <Pressable
       accessibilityRole="link"
@@ -247,7 +255,7 @@ function PromoCard({ banner }: { banner: Banner }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.canvas,

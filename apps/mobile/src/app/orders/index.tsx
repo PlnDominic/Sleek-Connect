@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { colors, formatPriceOr, radii, statusShort } from '@sleek/shared';
+import { formatPriceOr, radii, statusShort } from '@sleek/shared';
 import { AppText } from '@/components/AppText';
 import { Button, Card, Field, Notice } from '@/components/Form';
 import { TrackingBar } from '@/components/TrackingBar';
@@ -9,9 +9,12 @@ import { BackButton, useScreenTop } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { findOrder, formatDate, getMyOrders, readRecentOrders, type OrderSummary } from '@/lib/orders';
 import { useQuery } from '@/lib/query';
+import { useColors, useStyles, type Palette } from '@/theme/theme';
 
 /** Orders for the signed-in shopper, orders opened on this phone, and a way to find any order by number and phone. */
 export default function OrdersScreen() {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   const top = useScreenTop();
   const { user } = useAuth();
   const mine = useQuery(user ? `my-orders:${user.id}` : null, getMyOrders, 15_000);
@@ -93,6 +96,8 @@ export default function OrdersScreen() {
 }
 
 function OrderRow({ order }: { order: OrderSummary }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   return (
     <Pressable
       accessibilityRole="link"
@@ -123,7 +128,7 @@ function OrderRow({ order }: { order: OrderSummary }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.surface },
   content: { paddingHorizontal: 20, paddingBottom: 40, gap: 16 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },

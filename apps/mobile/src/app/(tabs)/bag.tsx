@@ -1,14 +1,17 @@
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { colors, formatPrice, radii } from '@sleek/shared';
+import { formatPrice, radii } from '@sleek/shared';
 import { MAX_ITEM_QTY, useBag, type ResolvedBagItem } from '@sleek/shared/bag';
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
 import { ProductImage } from '@/components/ProductImage';
 import { EmptyState } from '@/components/States';
 import { useScreenTop } from '@/components/ui';
+import { useColors, useStyles, type Palette } from '@/theme/theme';
 
 export default function BagScreen() {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   const top = useScreenTop();
   const { items, count, subtotal, setQty, remove } = useBag();
   const soldOut = items.filter((i) => i.inStock === false);
@@ -89,6 +92,8 @@ export default function BagScreen() {
 }
 
 function Line({ item, onQty, onRemove }: { item: ResolvedBagItem; onQty: (qty: number) => void; onRemove: () => void }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   return (
     <View style={styles.line}>
       <Pressable
@@ -140,6 +145,7 @@ function Line({ item, onQty, onRemove }: { item: ResolvedBagItem; onQty: (qty: n
 }
 
 function Step({ label, onPress, disabled, symbol }: { label: string; onPress: () => void; disabled: boolean; symbol: string }) {
+  const styles = useStyles(makeStyles);
   return (
     <Pressable
       accessibilityRole="button"
@@ -157,7 +163,7 @@ function Step({ label, onPress, disabled, symbol }: { label: string; onPress: ()
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.canvas,
@@ -181,7 +187,7 @@ const styles = StyleSheet.create({
     gap: 10,
     padding: 12,
     borderRadius: radii.lg,
-    backgroundColor: '#FDF0D6',
+    backgroundColor: colors.warnSoft,
   },
   list: {
     gap: 14,

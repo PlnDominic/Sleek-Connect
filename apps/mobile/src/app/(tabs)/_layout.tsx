@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors } from '@sleek/shared';
 import { useBag } from '@sleek/shared/bag';
 import { AppText } from '@/components/AppText';
 import { TabIcon, type TabIconName } from '@/components/TabIcon';
 import { CountBadge } from '@/components/ui';
+import { useStyles, useTheme, type Palette } from '@/theme/theme';
 
 type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
 
@@ -21,6 +21,8 @@ const items: { label: string; icon: TabIconName; route: string }[] = [
 ];
 
 function TabBar({ state, navigateToTab }: TabBarProps) {
+  const { colors, scheme } = useTheme();
+  const styles = useStyles(makeStyles);
   const insets = useSafeAreaInsets();
   const current = state.routes[state.index]?.name;
   const { count } = useBag();
@@ -46,7 +48,7 @@ function TabBar({ state, navigateToTab }: TabBarProps) {
       <View style={styles.shadow}>
         <View style={styles.clip}>
           {glass ? (
-            <BlurView intensity={70} tint="systemChromeMaterialLight" style={StyleSheet.absoluteFill} />
+            <BlurView intensity={70} tint={scheme === 'dark' ? 'systemChromeMaterialDark' : 'systemChromeMaterialLight'} style={StyleSheet.absoluteFill} />
           ) : null}
           <View style={[StyleSheet.absoluteFill, glass ? styles.fillGlass : styles.fillSolid]} />
           <View style={styles.sheen} pointerEvents="none" />
@@ -67,10 +69,10 @@ function TabBar({ state, navigateToTab }: TabBarProps) {
                 >
                   <View style={[styles.lens, active && styles.lensActive]}>
                     <View>
-                      <TabIcon name={item.icon} color={active ? colors.accent : IDLE} active={active} />
+                      <TabIcon name={item.icon} color={active ? colors.accent : colors.tabIdle} active={active} />
                       {item.route === 'bag' && <CountBadge count={count} style={styles.badge} />}
                     </View>
-                    <AppText weight={active ? 'bold' : 'medium'} size={11} color={active ? colors.accent : IDLE}>
+                    <AppText weight={active ? 'bold' : 'medium'} size={11} color={active ? colors.accent : colors.tabIdle}>
                       {item.label}
                     </AppText>
                   </View>
@@ -96,11 +98,9 @@ export default function TabsLayout() {
   );
 }
 
-const IDLE = 'rgba(11, 31, 58, 0.62)'; // ink at 62%: 4.5:1+ on the light glass
-
 // Liquid Glass tab bar: a floating, blurred capsule over the content. The current tab sits in a
 // brighter glass lens; colour is spent once, on the active icon and name.
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   wrap: {
     position: 'absolute',
     left: 0,
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   },
   shadow: {
     borderRadius: 36,
-    shadowColor: '#0B1F3A',
+    shadowColor: colors.tabShadow,
     shadowOpacity: 0.16,
     shadowRadius: 24,
     shadowOffset: { width: 0, height: 10 },
@@ -120,17 +120,17 @@ const styles = StyleSheet.create({
     borderRadius: 36,
     overflow: 'hidden',
     borderWidth: StyleSheet.hairlineWidth * 2,
-    borderColor: 'rgba(255, 255, 255, 0.85)',
+    borderColor: colors.tabEdge,
   },
-  fillGlass: { backgroundColor: 'rgba(255, 255, 255, 0.42)' },
-  fillSolid: { backgroundColor: 'rgba(250, 251, 253, 0.97)' },
+  fillGlass: { backgroundColor: colors.tabFill },
+  fillSolid: { backgroundColor: colors.surface },
   sheen: {
     position: 'absolute',
     top: 0,
     left: 24,
     right: 24,
     height: StyleSheet.hairlineWidth * 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: colors.tabEdge,
   },
   row: {
     flexDirection: 'row',
@@ -150,8 +150,8 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   lensActive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.78)',
-    shadowColor: '#0B1F3A',
+    backgroundColor: colors.tabLens,
+    shadowColor: colors.tabShadow,
     shadowOpacity: 0.1,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },

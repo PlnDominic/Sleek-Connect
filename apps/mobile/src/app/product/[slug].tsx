@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState, type ReactNode } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
-import { colors, formatPrice, getSize, isAvailable, radii, unitPrice, type IconName, type Product } from '@sleek/shared';
+import { formatPrice, getSize, isAvailable, radii, unitPrice, type IconName, type Product } from '@sleek/shared';
 import { useBag } from '@sleek/shared/bag';
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
@@ -11,8 +11,10 @@ import { BackButton, BottomBar, IconButton, TrustChip, useScreenTop } from '@/co
 import { getProduct } from '@/lib/catalog';
 import { useQuery } from '@/lib/query';
 import { useSaved } from '@/lib/saved';
+import { useColors, useStyles, type Palette } from '@/theme/theme';
 
 export default function ProductScreen() {
+  const styles = useStyles(makeStyles);
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const top = useScreenTop();
   const { data: product, error, loading, refetch } = useQuery(slug ? `product:${slug}` : null, () => getProduct(slug));
@@ -53,6 +55,8 @@ export default function ProductScreen() {
 }
 
 function ProductView({ product }: { product: Product }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   const top = useScreenTop();
   const { add, count } = useBag();
   const { slugs, toggle } = useSaved();
@@ -234,6 +238,7 @@ function ProductView({ product }: { product: Product }) {
 
 /** The product's photos, swiped sideways; a single picture when there is only one. */
 function Gallery({ product }: { product: Product }) {
+  const styles = useStyles(makeStyles);
   const { width } = useWindowDimensions();
   const [index, setIndex] = useState(0);
   const photos = product.photos?.map((p) => p.url) ?? [];
@@ -273,7 +278,7 @@ function Gallery({ product }: { product: Product }) {
 
 function Fact({
   icon,
-  iconColor = colors.ink,
+  iconColor,
   title,
   children,
   last,
@@ -284,6 +289,8 @@ function Fact({
   children: ReactNode;
   last?: boolean;
 }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   return (
     <View style={[styles.fact, !last && styles.factDivider]}>
       <Icon name={icon} size={20} color={iconColor} strokeWidth={icon === 'shieldCheck' ? 2 : 1.8} />
@@ -300,6 +307,8 @@ function Fact({
 }
 
 function Accordion({ title, children, initiallyOpen, last }: { title: string; children: ReactNode; initiallyOpen?: boolean; last?: boolean }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   const [open, setOpen] = useState(!!initiallyOpen);
   return (
     <View style={[styles.accordion, !last && styles.factDivider]}>
@@ -323,7 +332,7 @@ function Accordion({ title, children, initiallyOpen, last }: { title: string; ch
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.canvas,
@@ -388,7 +397,7 @@ const styles = StyleSheet.create({
     gap: 10,
     padding: 12,
     borderRadius: radii.lg,
-    backgroundColor: '#FDF0D6',
+    backgroundColor: colors.warnSoft,
   },
   sizes: {
     flexDirection: 'row',

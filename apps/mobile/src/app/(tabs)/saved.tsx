@@ -1,6 +1,5 @@
 import { router } from 'expo-router';
 import { FlatList, StyleSheet, View } from 'react-native';
-import { colors } from '@sleek/shared';
 import { AppText } from '@/components/AppText';
 import { ProductTile } from '@/components/ProductTile';
 import { EmptyState, ErrorState, ProductGridSkeleton } from '@/components/States';
@@ -8,8 +7,11 @@ import { useScreenTop } from '@/components/ui';
 import { getAllProducts } from '@/lib/catalog';
 import { useQuery } from '@/lib/query';
 import { useSaved } from '@/lib/saved';
+import { useColors, useStyles, type Palette } from '@/theme/theme';
 
 export default function SavedScreen() {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   const top = useScreenTop();
   const { slugs } = useSaved();
   const all = useQuery('products:all', getAllProducts);
@@ -65,7 +67,7 @@ export default function SavedScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.canvas,

@@ -1,7 +1,7 @@
 import { Link, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { colors, formatPrice, radii, type AgeBandId, type KidsFilter } from '@sleek/shared';
+import { formatPrice, radii, type AgeBandId, type KidsFilter } from '@sleek/shared';
 import { useBag } from '@sleek/shared/bag';
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
@@ -10,6 +10,7 @@ import { ErrorState, ProductGridSkeleton } from '@/components/States';
 import { BackButton, TrustChip, useScreenTop } from '@/components/ui';
 import { getAgeBands, getAllProducts } from '@/lib/catalog';
 import { useQuery } from '@/lib/query';
+import { useColors, useStyles, type Palette } from '@/theme/theme';
 
 const filters: { id: KidsFilter | 'all'; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -19,6 +20,8 @@ const filters: { id: KidsFilter | 'all'; label: string }[] = [
 ];
 
 export default function ShopByAgeScreen() {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   const top = useScreenTop();
   const { add } = useBag();
   const params = useLocalSearchParams<{ band?: string }>();
@@ -139,7 +142,7 @@ export default function ShopByAgeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.canvas,

@@ -1,14 +1,17 @@
 import { Link } from 'expo-router';
 import { memo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { colors, formatPrice, radii, type Product } from '@sleek/shared';
+import { formatPrice, radii, type Product } from '@sleek/shared';
 import { useSaved } from '@/lib/saved';
 import { AppText } from './AppText';
 import { Icon } from './Icon';
 import { ProductImage } from './ProductImage';
+import { useColors, useStyles, type Palette } from '@/theme/theme';
 
 /** Two-up product tile used in the home, shop and saved grids. */
 export const ProductTile = memo(function ProductTile({ product }: { product: Product }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   const { slugs, toggle } = useSaved();
   const saved = slugs.includes(product.slug);
   const soldOut = product.inStock === false;
@@ -69,7 +72,7 @@ export const ProductTile = memo(function ProductTile({ product }: { product: Pro
   );
 });
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   tile: {
     flex: 1,
   },
@@ -119,7 +122,7 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: radii.pill,
-    backgroundColor: 'rgba(255,255,255,0.92)',
+    backgroundColor: colors.glass,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { colors, defaultDeliveryArea, estimate, formatPrice, momoNetworks, quote, type DeliveryConfig, type MomoNetwork } from '@sleek/shared';
+import { defaultDeliveryArea, estimate, formatPrice, momoNetworks, quote, type DeliveryConfig, type MomoNetwork } from '@sleek/shared';
 import { useBag } from '@sleek/shared/bag';
 import { AppText } from '@/components/AppText';
 import { Button, Card, Checkbox, Choices, Field, Notice } from '@/components/Form';
@@ -15,6 +15,7 @@ import { registerForPush } from '@/lib/push';
 import { siteAddress } from '@/lib/site';
 import { useQuery } from '@/lib/query';
 import { supabase } from '@/lib/supabase';
+import { useColors, useStyles, type Palette } from '@/theme/theme';
 
 const POLL_MS = 3000;
 
@@ -28,6 +29,7 @@ interface SavedAddress {
 
 /** Details, delivery and Mobile Money in one screen; then waits for the shopper to approve the prompt on their phone. */
 export default function CheckoutScreen() {
+  const styles = useStyles(makeStyles);
   const top = useScreenTop();
   const { items, count, subtotal } = useBag();
   const delivery = useQuery('delivery-config', getDeliveryConfig, 5 * 60_000);
@@ -65,6 +67,7 @@ interface Placed {
 }
 
 function Header({ title = 'Checkout' }: { title?: string }) {
+  const styles = useStyles(makeStyles);
   return (
     <View style={styles.titleRow}>
       <BackButton fallback="/bag" />
@@ -91,6 +94,8 @@ function Details({
   subtotal: number;
   onPlaced: (placed: Placed) => void;
 }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   const top = useScreenTop();
   const { user, consented } = useAuth();
   const [adult, setAdult] = useState(false);
@@ -313,6 +318,8 @@ function Details({
 }
 
 function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   return (
     <View style={styles.total}>
       <AppText size={14} color={bold ? colors.ink : colors.textMuted} weight={bold ? 'bold' : 'regular'}>
@@ -327,6 +334,8 @@ function Row({ label, value, bold }: { label: string; value: string; bold?: bool
 
 /** After the order is placed: wait for the shopper to approve the prompt, then show the order. */
 function Waiting({ placed, onRetryDetails }: { placed: Placed; onRetryDetails: () => void }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   const { order, payer } = placed;
   const top = useScreenTop();
   const { clear } = useBag();
@@ -428,7 +437,7 @@ function Waiting({ placed, onRetryDetails }: { placed: Placed; onRetryDetails: (
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.surface },
   content: { paddingHorizontal: 20, paddingBottom: 130, gap: 16 },
   flex: { flex: 1 },

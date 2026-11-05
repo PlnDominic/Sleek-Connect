@@ -1,9 +1,12 @@
 import { StyleSheet, View } from 'react-native';
-import { colors, trackingProgress, trackingStages, type OrderStatus } from '@sleek/shared';
+import { trackingProgress, trackingStages, type OrderStatus } from '@sleek/shared';
 import { AppText } from './AppText';
+import { useColors, useStyles, type Palette } from '@/theme/theme';
 
 /** Confirmed → Packed → On the way → Delivered, with the current step marked. */
 export function TrackingBar({ status, compact }: { status: OrderStatus; compact?: boolean }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   const { done, current, problem } = trackingProgress(status);
   return (
     <View accessible accessibilityLabel={`Progress: ${done} of ${trackingStages.length} steps done`}>
@@ -25,7 +28,7 @@ export function TrackingBar({ status, compact }: { status: OrderStatus; compact?
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   track: { flexDirection: 'row', gap: 4 },
   segment: { flex: 1, height: 6, borderRadius: 3, backgroundColor: colors.lineTrack },
   done: { backgroundColor: colors.accent },

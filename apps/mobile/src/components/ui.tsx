@@ -2,9 +2,10 @@ import { router, type Href } from 'expo-router';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, radii, type IconName } from '@sleek/shared';
+import { radii, type IconName } from '@sleek/shared';
 import { AppText } from './AppText';
 import { Icon } from './Icon';
+import { useColors, useStyles, type Palette } from '@/theme/theme';
 
 /** Top padding for screens: clears the status bar, with the design's 52pt as the minimum. */
 export function useScreenTop() {
@@ -34,13 +35,15 @@ export function IconButton({
   icon,
   label,
   onPress,
-  background = colors.surface,
+  background,
   round,
-  color = colors.ink,
+  color,
   iconSize = 20,
   children,
   style,
 }: IconButtonProps) {
+  const styles = useStyles(makeStyles);
+  const colors = useColors();
   return (
     <Pressable
       accessibilityRole="button"
@@ -48,29 +51,32 @@ export function IconButton({
       onPress={onPress}
       style={({ pressed }) => [
         styles.iconButton,
-        { backgroundColor: background, borderRadius: round ? radii.pill : radii.lg, opacity: pressed ? 0.7 : 1 },
+        { backgroundColor: background ?? colors.surface, borderRadius: round ? radii.pill : radii.lg, opacity: pressed ? 0.7 : 1 },
         style,
       ]}
     >
-      <Icon name={icon} size={iconSize} color={color} strokeWidth={icon === 'chevronLeft' ? 2 : 1.8} />
+      <Icon name={icon} size={iconSize} color={color ?? colors.ink} strokeWidth={icon === 'chevronLeft' ? 2 : 1.8} />
       {children}
     </Pressable>
   );
 }
 
 /** Back control that falls back to a given route when there is no history (deep links, web reloads). */
-export function BackButton({ fallback, label = 'Back', background = colors.canvas }: { fallback: Href; label?: string; background?: string }) {
+export function BackButton({ fallback, label = 'Back', background }: { fallback: Href; label?: string; background?: string }) {
+  const colors = useColors();
   return (
     <IconButton
       icon="chevronLeft"
       label={label}
-      background={background}
+      background={background ?? colors.canvas}
       onPress={() => (router.canGoBack() ? router.back() : router.replace(fallback))}
     />
   );
 }
 
 export function CountBadge({ count, style }: { count: number; style?: StyleProp<ViewStyle> }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   if (count <= 0) return null;
   return (
     <View style={[styles.badge, style]}>
@@ -82,6 +88,7 @@ export function CountBadge({ count, style }: { count: number; style?: StyleProp<
 }
 
 export function SectionHeader({ title, onSeeAll }: { title: string; onSeeAll?: () => void }) {
+  const styles = useStyles(makeStyles);
   return (
     <View style={styles.sectionHeader}>
       <AppText weight="semibold" size={18} accessibilityRole="header">
@@ -99,6 +106,8 @@ export function SectionHeader({ title, onSeeAll }: { title: string; onSeeAll?: (
 }
 
 export function TrustChip({ label, compact }: { label: string; compact?: boolean }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   return (
     <View style={[styles.chip, compact && styles.chipCompact]}>
       <AppText weight="bold" size={compact ? 11 : 12} color={colors.teal}>
@@ -109,6 +118,8 @@ export function TrustChip({ label, compact }: { label: string; compact?: boolean
 }
 
 export function Checkbox({ checked, onChange, label }: { checked: boolean; onChange: (next: boolean) => void; label: string }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   return (
     <Pressable
       accessibilityRole="checkbox"
@@ -126,11 +137,12 @@ export function Checkbox({ checked, onChange, label }: { checked: boolean; onCha
 
 /** White action bar pinned to the bottom of a screen. */
 export function BottomBar({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
+  const styles = useStyles(makeStyles);
   const bottom = useBarBottom();
   return <View style={[styles.bottomBar, { paddingBottom: bottom }, style]}>{children}</View>;
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   iconButton: {
     width: 44,
     height: 44,

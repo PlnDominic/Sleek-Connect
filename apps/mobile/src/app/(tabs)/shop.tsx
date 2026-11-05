@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, TextInput, type TextInputInstance, View } from 'react-native';
-import { colors, departmentIds, departmentLabels, isDepartment, radii, type Department, type Product } from '@sleek/shared';
+import { departmentIds, departmentLabels, isDepartment, radii, type Department, type Product } from '@sleek/shared';
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
 import { ProductTile } from '@/components/ProductTile';
@@ -11,6 +11,7 @@ import { getAllProducts, getCategories, searchSlugs } from '@/lib/catalog';
 import { useQuery } from '@/lib/query';
 import { useDebounced } from '@/lib/useDebounced';
 import { fonts } from '@/theme/fonts';
+import { useColors, useStyles, type Palette } from '@/theme/theme';
 
 type Sort = 'newest' | 'price-asc' | 'price-desc';
 const sorts: { id: Sort; label: string }[] = [
@@ -20,6 +21,8 @@ const sorts: { id: Sort; label: string }[] = [
 ];
 
 export default function ShopScreen() {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   const top = useScreenTop();
   const params = useLocalSearchParams<{ department?: string; category?: string; focus?: string }>();
   const input = useRef<TextInputInstance>(null);
@@ -169,6 +172,8 @@ export default function ShopScreen() {
 }
 
 function Chip({ label, on, onPress, small }: { label: string; on: boolean; onPress: () => void; small?: boolean }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   return (
     <Pressable
       accessibilityRole="button"
@@ -183,7 +188,7 @@ function Chip({ label, on, onPress, small }: { label: string; on: boolean; onPre
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.canvas,
