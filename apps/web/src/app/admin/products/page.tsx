@@ -4,6 +4,8 @@ import { formatPrice } from '@sleek/shared';
 import Image from 'next/image';
 import { can, requireStaffPage } from '@/lib/admin/session';
 import { photoUrl } from '@/lib/photos';
+import { ActionForm } from '../ActionForm';
+import { deleteProduct, duplicateProduct, setPublished } from './actions';
 import { BulkBar } from './BulkBar';
 import styles from '../admin.module.css';
 
@@ -125,6 +127,9 @@ export default async function ProductsPage({ searchParams }: PageProps<'/admin/p
                 {header('available', styles.num)}
                 {header('status')}
                 <th scope="col">Missing for publishing</th>
+                <th scope="col">
+                  <span className="visually-hidden">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -161,6 +166,39 @@ export default async function ProductsPage({ searchParams }: PageProps<'/admin/p
                     )}
                   </td>
                   <td className={styles.muted}>{p.problems.filter((x) => x !== 'recall lifted').join(', ') || '–'}</td>
+                  <td>
+                    <div className={styles.rowActions}>
+                      <Link href={`/admin/products/${p.id}`} className={styles.secondary}>
+                        {edit ? 'Edit' : 'View'}
+                      </Link>
+                      {p.is_published && (
+                        <Link href={`/products/${p.slug}`} className={styles.secondary} target="_blank">
+                          View on store
+                        </Link>
+                      )}
+                      {edit && !p.recalled_at && (
+                        <ActionForm action={setPublished.bind(null, p.id, !p.is_published)}>
+                          <button type="submit" className={styles.secondary}>
+                            {p.is_published ? 'Take off store' : 'Publish'}
+                          </button>
+                        </ActionForm>
+                      )}
+                      {edit && (
+                        <ActionForm action={duplicateProduct.bind(null, p.id)}>
+                          <button type="submit" className={styles.secondary}>
+                            Duplicate
+                          </button>
+                        </ActionForm>
+                      )}
+                      {edit && (
+                        <ActionForm action={deleteProduct.bind(null, p.id)} confirm={`Delete ${p.name}? This can’t be undone.`}>
+                          <button type="submit" className={styles.danger}>
+                            Delete
+                          </button>
+                        </ActionForm>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>

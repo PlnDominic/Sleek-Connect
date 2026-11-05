@@ -906,3 +906,25 @@ details.panel > summary {
   border-radius: 12px;
   background: var(--surface-muted, #f7f8fa);
 }
+
+/* The buttons at the end of a table row (products list). */
+.rowActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  min-width: 220px;
+}
+
+.rowActions > * {
+  margin: 0;
+}
+
+.rowActions .secondary,
+.rowActions .danger {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+}

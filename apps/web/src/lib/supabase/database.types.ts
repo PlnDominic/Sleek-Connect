@@ -947,6 +947,12 @@ isOneToOne: false
 "record_search_miss":
 { Args: { "p_query": string }; Returns: undefined
                            },
+"admin_delete_product":
+{ Args: { "p_id": string }; Returns: string[]
+                           },
+"admin_duplicate_product":
+{ Args: { "p_id": string }; Returns: string
+                           },
 "admin_set_batch_status":
 { Args: { "p_batch_id": string,"p_note": string,"p_status": Database["public"]['Enums']["batch_status"] }; Returns: undefined
                            },

@@ -76,6 +76,7 @@ npx supabase db reset >/dev/null 2>&1; suite "database: promo code management" d
 npx supabase db reset >/dev/null 2>&1; suite "database: category photos" db-category-photos.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: abandoned bag reminders" db-bag-reminders.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: searches with no results" db-search-misses.cjs
+npx supabase db reset >/dev/null 2>&1; suite "database: product actions (duplicate, delete)" db-product-actions.cjs
 npx supabase db reset >/dev/null 2>&1; suite "database: supplier register and stock receipts" db-suppliers.cjs
 suite "email: Gmail sender (Nodemailer)" unit-email.cjs
 suite "payments: Hubtel provider" unit-hubtel.cjs

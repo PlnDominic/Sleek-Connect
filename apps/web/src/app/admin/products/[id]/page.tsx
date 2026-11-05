@@ -7,7 +7,7 @@ import { UUID_PATTERN } from '@/lib/orders';
 import { photoUrl } from '@/lib/photos';
 import { ActionForm } from '../../ActionForm';
 import { Flash } from '../../Flash';
-import { liftRecall, recallProduct } from '../actions';
+import { deleteProduct, duplicateProduct, liftRecall, recallProduct } from '../actions';
 import { productFormOptions } from '../data';
 import { PhotoManager } from '../PhotoManager';
 import { ProductForm } from '../ProductForm';
@@ -49,9 +49,25 @@ export default async function EditProductPage({ params, searchParams }: PageProp
             )}
           </p>
         </div>
-        <Link href={`/admin/inventory/${product.id}`} className={styles.secondary}>
-          Stock and batches
-        </Link>
+        <div className={styles.buttons}>
+          <Link href={`/admin/inventory/${product.id}`} className={styles.secondary}>
+            Stock and batches
+          </Link>
+          {can(staff.role, 'catalogue.edit') && (
+            <ActionForm action={duplicateProduct.bind(null, product.id)}>
+              <button type="submit" className={styles.secondary}>
+                Duplicate
+              </button>
+            </ActionForm>
+          )}
+          {can(staff.role, 'catalogue.edit') && (
+            <ActionForm action={deleteProduct.bind(null, product.id)} confirm={`Delete ${product.name}? This can’t be undone.`}>
+              <button type="submit" className={styles.danger}>
+                Delete
+              </button>
+            </ActionForm>
+          )}
+        </div>
       </div>
       <Flash message={query.done} />
       {product.recalled_at && (

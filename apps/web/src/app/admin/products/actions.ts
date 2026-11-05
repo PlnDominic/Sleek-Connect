@@ -288,3 +288,27 @@ export async function deleteSizeGuide(id: string, _: ActionState, form: FormData
   refresh();
   return done('Size guide deleted.');
 }
+
+/** Deletes a product that was never ordered and has no stock, and removes its photo files. */
+export async function deleteProduct(productId: string, _: ActionState, form: FormData): Promise<ActionState> {
+  void form;
+  const supabase = await createUserSupabase();
+  const { data: paths, error } = await supabase.rpc('admin_delete_product', { p_id: productId });
+  if (error) return failed(error);
+  if (paths.length) {
+    const { error: storageError } = await supabase.storage.from('product-images').remove(paths);
+    if (storageError) console.error('Removing the product photos failed', storageError);
+  }
+  updateTag('catalog');
+  flash('/admin/products', 'Product deleted.');
+}
+
+/** Copies a product as a new draft and opens it for editing. */
+export async function duplicateProduct(productId: string, _: ActionState, form: FormData): Promise<ActionState> {
+  void form;
+  const supabase = await createUserSupabase();
+  const { data: id, error } = await supabase.rpc('admin_duplicate_product', { p_id: productId });
+  if (error) return failed(error);
+  updateTag('catalog');
+  flash(`/admin/products/${id}`, 'Copy created as a draft. Add photos and check the details, then publish it.');
+}
