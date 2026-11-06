@@ -92,11 +92,11 @@ async function placeOrder(items, { area = 'Osu', pay = true } = {}) {
   await main(shopper).getByRole('button', { name: 'Add to bag' }).click();
   await go(shopper, BASE + '/checkout');
   const window = (name) => shopper.locator('label', { has: shopper.getByRole('radio') }).filter({ hasText: name });
-  await shopper.getByLabel('Area', { exact: true }).selectOption('Osu');
+  await shopper.getByLabel('Area', { exact: true }).fill('Osu');
   assert((await window('Standard').textContent()).includes('1–2 working days · GH₵ 20'), `standard: estimate and fee (${await window('Standard').textContent()})`);
   assert((await window('Same day').textContent()).includes('Today if you order by 11:59 pm'), 'same day: cut-off shown');
   assert((await main(shopper).textContent()).includes('Add GH₵ 70 more for free standard delivery'), 'free-delivery nudge');
-  await shopper.getByLabel('Area', { exact: true }).selectOption('Spintex');
+  await shopper.getByLabel('Area', { exact: true }).fill('Spintex');
   assert((await window('Standard').textContent()).includes('GH₵ 45'), 'zone fee for an outer area');
   assert((await window('Same day').textContent()).includes('Not available in Spintex') && await window('Same day').getByRole('radio').isDisabled(), 'option the zone doesn’t get is disabled');
   const summary = shopper.locator('aside:visible');
@@ -105,7 +105,7 @@ async function placeOrder(items, { area = 'Osu', pay = true } = {}) {
   await main(shopper).getByRole('button', { name: 'Increase quantity' }).click();
   await main(shopper).getByRole('button', { name: 'Add to bag' }).click();
   await go(shopper, BASE + '/checkout');
-  await shopper.getByLabel('Area', { exact: true }).selectOption('Spintex');
+  await shopper.getByLabel('Area', { exact: true }).fill('Spintex');
   assert((await window('Standard').textContent()).includes('Free'), 'standard delivery free over the threshold');
   await shot(shopper, 'checkout-zones');
   await go(shopper, BASE + '/');

@@ -8,7 +8,6 @@ import type { PaymentInstructions } from './types';
 /** What starting an online payment can come to. */
 export type OnlinePaymentStart =
   | { kind: 'requested'; /** The provider's payment page, when it has one. */ checkoutUrl?: string }
-  | { kind: 'unavailable'; reason: string }
   | { kind: 'failed'; reason: string };
 
 /** Pay on delivery has nothing to start: staff confirm the order and the rider collects the cash. */
@@ -22,18 +21,18 @@ export async function startOrderPayment(
   order: { token: string; number: string; total: number | null },
   payer: { method: 'momo'; network: MomoNetwork; wallet: string } | { method: 'card' },
 ): Promise<OnlinePaymentStart> {
-  const provider = getPaymentProvider();
-  if (!provider) {
-    return { kind: 'unavailable', reason: 'Online payment isn’t switched on yet, so no payment prompt was sent.' };
-  }
-  if (order.total === null) {
-    return {
-      kind: 'unavailable',
-      reason: 'Delivery fees aren’t set yet, so the total is unknown and no payment prompt was sent.',
-    };
-  }
-
   const admin = createAdminSupabase();
+  // Nothing to charge with, or no amount to charge: cancel the order now so its stock is released, rather than leave it waiting.
+  const cancel = async (reason: string, why: string): Promise<OnlinePaymentStart> => {
+    const { data: row } = await admin.from('orders').select('id').eq('public_token', order.token).maybeSingle();
+    if (row) await admin.rpc('release_order_reservation', { p_order_id: row.id, p_reason: why });
+    return { kind: 'failed', reason };
+  };
+
+  const provider = getPaymentProvider();
+  if (!provider) return cancel('Online payment isn’t available right now. Please try again shortly or choose pay on delivery.', 'online payment unavailable');
+  if (order.total === null) return cancel('We can’t price delivery to that area yet, so your order wasn’t placed. Please contact us.', 'delivery fee not set');
+
   const reference = `${order.number}-${randomUUID().replace(/-/g, '').slice(0, 12)}`;
   const { data: amount, error } = await admin.rpc('start_payment', {
     p_order_token: order.token,

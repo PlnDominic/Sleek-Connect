@@ -74,15 +74,16 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
 
   if (input.saveAddress) {
     // Best effort: the order is placed either way.
-    const { error: saveError } = await supabase.rpc('save_address', {
-      p: {
-        recipient_name: input.customer.name,
-        phone: input.customer.phone,
-        area: input.customer.area,
-        ghanapost_gps: input.customer.ghanapostGps ?? '',
-        directions: input.customer.directions ?? '',
-      },
-    });
+    const address = {
+      recipient_name: input.customer.name,
+      phone: input.customer.phone,
+      area: input.customer.area,
+      ghanapost_gps: input.customer.ghanapostGps ?? '',
+      directions: input.customer.directions ?? '',
+    };
+    let { error: saveError } = await supabase.rpc('save_address', { p: address });
+    // An address book only keeps areas we list; a typed-in area is saved without one (the shopper types it again next time).
+    if (saveError?.code === '22023') ({ error: saveError } = await supabase.rpc('save_address', { p: { ...address, area: '' } }));
     if (saveError && saveError.code !== '22023') console.error('save_address failed', saveError);
   }
 

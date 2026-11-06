@@ -22,7 +22,7 @@ async function fillDetails(page, { option = 'Same day', email } = {}) {
   { const age = page.getByRole('checkbox', { name: /18 or older/ }); if (await age.count()) await age.check(); }
   await page.getByLabel('Phone number').fill('024 123 4567');
   if (email) await page.getByLabel('Email (optional)').fill(email);
-  await page.getByLabel('Area', { exact: true }).selectOption('Osu');
+  await page.getByLabel('Area', { exact: true }).fill('Osu');
   await page.getByRole('radio', { name: new RegExp(option) }).check();
   await page.getByLabel('Wallet number').fill('024 765 4321');
 }

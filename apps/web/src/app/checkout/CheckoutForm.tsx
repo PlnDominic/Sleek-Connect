@@ -102,7 +102,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
     set('phone', a.phone);
     set('gps', a.ghanapost_gps);
     set('directions', a.directions);
-    if (a.area && areas.includes(a.area)) setArea(a.area);
+    if (a.area) setArea(a.area);
     setSaveAddress(false);
   };
 
@@ -159,7 +159,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
   const networkLabel = momoNetworks.find((n) => n.id === network)!.label;
   const walletDisplay = wallet.trim() || 'your phone';
   // Prices follow the area's zone and free delivery (the database recalculates them when the order is placed).
-  const quotes = new Map(delivery.options.map((o) => [o.id, quote(delivery, area, o.id, bag.subtotal)]));
+  const quotes = new Map(delivery.options.map((o) => [o.id, quote(delivery, area.trim(), o.id, bag.subtotal)]));
   const deliveryId = quotes.get(chosenId)?.available ? chosenId : (delivery.options.find((o) => quotes.get(o.id)?.available)?.id ?? '');
   const fee = quotes.get(deliveryId)?.fee ?? null;
   const freeOption = delivery.options.find((o) => o.freeEligible && quotes.get(o.id)?.available);
@@ -288,11 +288,29 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
                   <small id="em-hint">We’ll email your order updates as well as texting them.</small>
                 </Field>
                 <Field id="area" label="Area">
-                  <select id="area" name="area" required value={area} onChange={(e) => setArea(e.target.value)}>
-                    {areas.map((area) => (
-                      <option key={area}>{area}</option>
+                  <input
+                    id="area"
+                    name="area"
+                    type="text"
+                    list="area-options"
+                    required
+                    maxLength={80}
+                    autoComplete="address-level2"
+                    value={area}
+                    onChange={(e) => setArea(e.target.value)}
+                    placeholder="e.g. East Legon, or type your own"
+                    aria-describedby="area-hint"
+                  />
+                  <datalist id="area-options">
+                    {areas.map((name) => (
+                      <option key={name} value={name} />
                     ))}
-                  </select>
+                  </datalist>
+                  <small id="area-hint">
+                    {areas.includes(area.trim())
+                      ? 'Choose from the list or type your own area.'
+                      : 'Your own area: the standard delivery fee applies, and we’ll confirm by phone if it changes.'}
+                  </small>
                 </Field>
                 <Field id="gps" label="GhanaPost GPS address">
                   <input id="gps" name="gps" type="text" maxLength={20} placeholder="e.g. GA-000-0000" />
@@ -628,20 +646,6 @@ function OrderProgress({ order, live, prompt, onRetry }: OrderProgressProps) {
         <button type="button" className={styles.retry} onClick={onRetry}>
           Try again
         </button>
-      </div>
-    );
-  }
-
-  if (order.payment.kind === 'unavailable') {
-    return (
-      <div role="status" className={styles.statusPanel}>
-        <strong>Order {order.orderNumber} placed</strong>
-        <span>
-          Your items are held until {heldUntil}. {order.payment.reason}
-        </span>
-        <Link href={`/orders/${order.orderToken}`} className={styles.statusLink}>
-          Follow this order
-        </Link>
       </div>
     );
   }
