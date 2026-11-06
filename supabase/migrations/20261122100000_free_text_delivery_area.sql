@@ -1,7 +1,7 @@
--- Customers can type their own delivery area at checkout instead of choosing from a list. A listed area keeps its zone's fee; any other area
--- is priced at the delivery option's standard fee, and the typed text is kept on the order for the rider and staff.
+-- Customers can type their own delivery area at checkout. A listed area keeps its zone's fee; any other area is priced at the delivery
+-- option's standard fee, and the typed text is kept on the order. Built on the current place_order (after the marketplace removal).
 
-create or replace function public.place_order(p_customer jsonb, p_delivery_option text, p_payment jsonb, p_items jsonb, p_is_gift boolean DEFAULT false)
+CREATE OR REPLACE FUNCTION public.place_order(p_customer jsonb, p_delivery_option text, p_payment jsonb, p_items jsonb, p_is_gift boolean DEFAULT false)
  RETURNS TABLE(order_number text, order_token uuid, subtotal_ghs numeric, delivery_fee_ghs numeric, total_ghs numeric, reserved_until timestamp with time zone)
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -144,12 +144,6 @@ begin
     where p.slug = v_item ->> 'slug' and p.is_published;
     if not found then
       raise exception 'A product in your bag is no longer available.' using errcode = '22023';
-    end if;
-    if v_method = 'cod' and exists (
-      select 1 from public.vendors vd where vd.id = v_product.vendor_id and not vd.is_house
-    ) then
-      raise exception '% is sold by an independent store, which is paid for online. Choose Mobile Money.', v_product.name
-        using errcode = '22023';
     end if;
 
     if jsonb_typeof(v_item -> 'quantity') is distinct from 'number'

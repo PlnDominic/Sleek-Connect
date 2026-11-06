@@ -14,10 +14,10 @@ const order = (area) => anon.rpc('place_order', {
 
 (async () => {
   sql("update public.delivery_options set fee_ghs = 30 where id = 'same_day'");
-  const typed = await order('Behind the Shell filling station, Weija');
+  const typed = await order('Labadi Beach Road, near the Shell station');
   assert(!typed.error, 'an area the store does not list is accepted');
   assert(Number(typed.data.delivery_fee_ghs) === 30, 'and is priced at the option\'s standard fee');
-  assert(sql(`select area from public.orders where order_number = '${typed.data.order_number}'`) === 'Behind the Shell filling station, Weija', 'the typed area is kept on the order');
+  assert(sql(`select area from public.orders where order_number = '${typed.data.order_number}'`) === 'Labadi Beach Road, near the Shell station', 'the typed area is kept on the order');
   assert((await order('')).error?.message.includes('Enter the area'), 'an empty area is refused');
   assert((await order('x'.repeat(81))).error?.message.includes('80 characters'), 'so is an over-long one');
   const listed = await order('Osu');
