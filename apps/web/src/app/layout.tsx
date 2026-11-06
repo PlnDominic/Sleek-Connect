@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { Inter } from 'next/font/google';
 import { AnalyticsConsent } from '@/components/AnalyticsConsent';
 import { AuthProvider } from '@/components/AuthProvider';
@@ -37,7 +38,10 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
-        <AnalyticsConsent />
+        {/* usePathname() needs a Suspense boundary so pages can still be prerendered. */}
+        <Suspense fallback={null}>
+          <AnalyticsConsent />
+        </Suspense>
         <AuthProvider>
           <WebBagProvider>
             <WishlistProvider><CompareProvider>{children}</CompareProvider></WishlistProvider>
