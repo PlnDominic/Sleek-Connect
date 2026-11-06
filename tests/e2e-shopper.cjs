@@ -92,11 +92,11 @@ async function placeOrder(items, { area = 'Osu', pay = true } = {}) {
   await main(shopper).getByRole('button', { name: 'Add to bag' }).click();
   await go(shopper, BASE + '/checkout');
   const window = (name) => shopper.locator('label', { has: shopper.getByRole('radio') }).filter({ hasText: name });
-  await shopper.getByLabel('Area', { exact: true }).fill('Osu');
+  await shopper.getByLabel('Location', { exact: true }).fill('Osu');
   assert((await window('Standard').textContent()).includes('1–2 working days · GH₵ 20'), `standard: estimate and fee (${await window('Standard').textContent()})`);
   assert((await window('Same day').textContent()).includes('Today if you order by 11:59 pm'), 'same day: cut-off shown');
   assert((await main(shopper).textContent()).includes('Add GH₵ 70 more for free standard delivery'), 'free-delivery nudge');
-  await shopper.getByLabel('Area', { exact: true }).fill('Spintex');
+  await shopper.getByLabel('Location', { exact: true }).fill('Spintex');
   assert((await window('Standard').textContent()).includes('GH₵ 45'), 'zone fee for an outer area');
   assert((await window('Same day').textContent()).includes('Not available in Spintex') && await window('Same day').getByRole('radio').isDisabled(), 'option the zone doesn’t get is disabled');
   const summary = shopper.locator('aside:visible');
@@ -105,7 +105,7 @@ async function placeOrder(items, { area = 'Osu', pay = true } = {}) {
   await main(shopper).getByRole('button', { name: 'Increase quantity' }).click();
   await main(shopper).getByRole('button', { name: 'Add to bag' }).click();
   await go(shopper, BASE + '/checkout');
-  await shopper.getByLabel('Area', { exact: true }).fill('Spintex');
+  await shopper.getByLabel('Location', { exact: true }).fill('Spintex');
   assert((await window('Standard').textContent()).includes('Free'), 'standard delivery free over the threshold');
   await shot(shopper, 'checkout-zones');
   await go(shopper, BASE + '/');
@@ -169,7 +169,7 @@ async function placeOrder(items, { area = 'Osu', pay = true } = {}) {
   await add.getByLabel(/Name for this address/).fill('Home');
   await add.getByLabel('Recipient’s name').fill('Esi Mensah');
   await add.getByLabel('Phone number').fill('024 555 0101');
-  assert(await add.getByLabel('Area', { exact: true }).count() === 0, 'the account address form has no area field (it is chosen at checkout)');
+  assert(await add.getByLabel('Location', { exact: true }).count() === 0, 'the account address form has no area field (it is chosen at checkout)');
   await add.getByLabel(/GhanaPost GPS/).fill('ga-123-4567');
   await add.getByRole('button', { name: 'Save address' }).click();
   await add.getByRole('status').filter({ hasText: 'Address saved.' }).waitFor();
@@ -187,7 +187,7 @@ async function placeOrder(items, { area = 'Osu', pay = true } = {}) {
   await go(guest, BASE + '/checkout');
   await guest.getByLabel('Saved addresses').waitFor();
   assert(await until(async () => (await guest.getByLabel('Full name').inputValue()) === 'Esi Mensah'), 'checkout fills in the default address');
-  assert(await guest.getByLabel('Phone number').inputValue() === '024 555 0101' && (await guest.getByLabel('Area', { exact: true }).inputValue()) !== '', 'phone filled in too, and the area is still chosen at checkout');
+  assert(await guest.getByLabel('Phone number').inputValue() === '024 555 0101' && (await guest.getByLabel('Location', { exact: true }).inputValue()) === '', 'phone filled in too, and the location is still typed at checkout');
 
   // --- Customer cancels (FR-052) -----------------------------------------------------------------------------
   const paid = await placeOrder([{ slug: 'velvet-matte-lip-colour', quantity: 1 }]);

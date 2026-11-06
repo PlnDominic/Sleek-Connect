@@ -110,7 +110,7 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   await shopper.getByLabel('Full name').fill('Ama Owusu');
   { const age = shopper.getByRole('checkbox', { name: /18 or older/ }); if (await age.count()) await age.check(); }
   await shopper.getByLabel('Phone number').fill('024 123 4567');
-  await shopper.getByLabel('Area', { exact: true }).fill('Osu');
+  await shopper.getByLabel('Location', { exact: true }).fill('Osu');
   await shopper.getByRole('radio', { name: /Same day/ }).check();
   await shopper.getByLabel('Wallet number').fill('024 765 4321');
   await shopper.getByLabel('This is a gift (wrap it and hide prices)').check();

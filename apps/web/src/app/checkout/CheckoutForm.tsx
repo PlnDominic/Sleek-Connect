@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState, useTransition, type FormEvent, type ReactNode } from 'react';
-import { defaultDeliveryArea, formatPrice, formatPriceOr, momoNetworks, sampleCustomer, type MomoNetwork } from '@sleek/shared';
+import { formatPrice, formatPriceOr, momoNetworks, sampleCustomer, type MomoNetwork } from '@sleek/shared';
 import { useBag, type ResolvedBagItem } from '@sleek/shared/bag';
 import { useAuth } from '@/components/AuthProvider';
 import { Icon } from '@/components/Icon';
@@ -52,9 +52,9 @@ const paidStatuses: OrderStatus['status'][] = ['paid', 'packed', 'out_for_delive
 export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
   const bag = useBag();
   const { user, consented } = useAuth();
-  const areas = delivery.areas.map((a) => a.name);
   const formRef = useRef<HTMLFormElement>(null);
-  const [area, setArea] = useState(areas.includes(defaultDeliveryArea) ? defaultDeliveryArea : (areas[0] ?? ''));
+  // Typed by the shopper; one that matches a delivery area we list picks up that area's fee.
+  const [area, setArea] = useState('');
   const [chosenId, setChosenId] = useState(delivery.options[0]?.id ?? '');
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [saveAddress, setSaveAddress] = useState(true);
@@ -126,8 +126,6 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
     return () => {
       cancelled = true;
     };
-    // fillAddress only touches the form and area state.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signedIn]);
 
   // Signed-in shoppers can also pick a saved Mobile Money number; the default one fills the field.
@@ -173,7 +171,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
   // Pay on delivery needs a known total, and may be capped by an admin.
   const cod = delivery.payOnDelivery;
   const codMax = cod.maxGhs;
-  const codBlocked = total === null ? 'Choose an area with a delivery fee first.' : codMax !== null && total > codMax ? `Available for orders up to ${formatPrice(codMax)}. Pay with Mobile Money for this one.` : null;
+  const codBlocked = total === null ? 'Enter your location with a delivery fee first.' : codMax !== null && total > codMax ? `Available for orders up to ${formatPrice(codMax)}. Pay with Mobile Money for this one.` : null;
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -287,30 +285,20 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
                   />
                   <small id="em-hint">We’ll email your order updates as well as texting them.</small>
                 </Field>
-                <Field id="area" label="Area">
+                <Field id="area" label="Location">
                   <input
                     id="area"
                     name="area"
                     type="text"
-                    list="area-options"
                     required
                     maxLength={80}
                     autoComplete="address-level2"
                     value={area}
                     onChange={(e) => setArea(e.target.value)}
-                    placeholder="e.g. East Legon, or type your own"
+                    placeholder="Type your location, e.g. East Legon"
                     aria-describedby="area-hint"
                   />
-                  <datalist id="area-options">
-                    {areas.map((name) => (
-                      <option key={name} value={name} />
-                    ))}
-                  </datalist>
-                  <small id="area-hint">
-                    {areas.includes(area.trim())
-                      ? 'Choose from the list or type your own area.'
-                      : 'Your own area: the standard delivery fee applies, and we’ll confirm by phone if it changes.'}
-                  </small>
+                  <small id="area-hint">Type where we should deliver, such as your suburb or town.</small>
                 </Field>
                 <Field id="gps" label="GhanaPost GPS address">
                   <input id="gps" name="gps" type="text" maxLength={20} placeholder="e.g. GA-000-0000" />
@@ -356,7 +344,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
                           <span>
                             {q.available
                               ? `${estimate(option, now)} · ${q.free ? 'Free' : formatPriceOr(q.fee, 'To be confirmed')}`
-                              : `Not available in ${area}`}
+                              : `Not available in ${area.trim() || 'that location'}`}
                           </span>
                         </span>
                       </label>
