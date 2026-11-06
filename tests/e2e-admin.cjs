@@ -183,6 +183,7 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   // --- Catalogue: create, fix, publish ---------------------------------------------------------------
   const ct = await ctx(cat.cookies());
   await go(ct, BASE + '/admin/products/new');
+  assert(await ct.getByText('Choose photos').isVisible(), 'the add-product page lets staff choose photos');
   await ct.getByRole('textbox', { name: 'Name', exact: true }).fill('Moringa Face Mist');
   await ct.getByRole('combobox', { name: 'Category' }).selectOption('skincare');
   await ct.getByRole('textbox', { name: 'Price (GH₵)' }).fill('75');

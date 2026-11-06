@@ -1,11 +1,13 @@
 'use client';
 
-import { useActionState, useEffect, useState, useTransition, type FormEvent, type ReactNode } from 'react';
+import { useActionState, useEffect, useMemo, useState, useTransition, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import { departmentIds, departmentLabels } from '@sleek/shared';
 import type { ActionState } from '@/lib/admin/action-state';
 import { kidsFilters, problemFields, type ProductPayload, type SizePayload } from '@/lib/admin/product-payload';
+import { createBrowserSupabase } from '@/lib/supabase/browser';
 import { Toast } from '../Toast';
-import { saveProduct } from './actions';
+import { addProductPhoto, saveProduct } from './actions';
 import styles from '../admin.module.css';
 
 interface Option {
@@ -28,6 +30,10 @@ interface ProductFormProps {
 
 const blankSize: SizePayload = { code: '', label: '', price_ghs: '' };
 
+const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
+const PHOTO_MAX = 8;
+
 /** A size's code is made from its label ("200 ml" becomes "200-ml") unless it already has one, so staff only type a label and a price. */
 const codeFor = (s: SizePayload) => s.code || s.label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
@@ -39,11 +45,54 @@ const codeFor = (s: SizePayload) => s.code || s.label.toLowerCase().replace(/[^a
 export function ProductForm({ product, categories, ageBands, sizeGuideId, problems, canEdit }: ProductFormProps) {
   const [state, action, pending] = useActionState<ActionState, FormData>(saveProduct, null);
   const [, startTransition] = useTransition();
+  const router = useRouter();
+  // Photos chosen while adding a new product. They upload right after the product is saved (an existing product uses the Photos panel).
+  const [files, setFiles] = useState<File[]>([]);
+  const [photoError, setPhotoError] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const previews = useMemo(() => files.map((f) => URL.createObjectURL(f)), [files]);
+  useEffect(() => () => previews.forEach((u) => URL.revokeObjectURL(u)), [previews]);
+  const choose = (event: ChangeEvent<HTMLInputElement>) => {
+    const picked = [...(event.target.files ?? [])];
+    event.target.value = '';
+    const bad = picked.find((f) => !PHOTO_TYPES.includes(f.type) || f.size > PHOTO_MAX_BYTES);
+    if (bad) return setPhotoError(`${bad.name}: use JPEG, PNG or WebP photos under 5 MB.`);
+    if (files.length + picked.length > PHOTO_MAX) return setPhotoError(`A product can have up to ${PHOTO_MAX} photos.`);
+    setPhotoError('');
+    setFiles((all) => [...all, ...picked]);
+  };
   // Submit through a transition so a refused save keeps everything that was typed.
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    startTransition(() => action(data));
+    if (product?.id || files.length === 0) return startTransition(() => action(data));
+    // New product with photos: save it, upload the photos, then open it.
+    data.set('stay', '1');
+    setUploading(true);
+    setPhotoError('');
+    startTransition(async () => {
+      const saved = await saveProduct(null, data);
+      if (!saved?.ok || !saved.id) {
+        setUploading(false);
+        return setPhotoError(saved?.message ?? 'That didn’t work. Please try again.');
+      }
+      const storage = createBrowserSupabase().storage.from('product-images');
+      let failed = 0;
+      for (const file of files) {
+        const ext = file.type === 'image/jpeg' ? 'jpg' : file.type.split('/')[1];
+        const path = `${saved.id}/${crypto.randomUUID()}.${ext}`;
+        const { error } = await storage.upload(path, file, { contentType: file.type, cacheControl: '31536000' });
+        if (error) {
+          console.error(error);
+          failed += 1;
+          continue;
+        }
+        const added = await addProductPhoto(saved.id, path);
+        if (!added.ok) failed += 1;
+      }
+      const note = failed ? `Product created, but ${failed} photo${failed === 1 ? '' : 's'} didn’t upload. Add them below.` : 'Product created with its photos.';
+      router.push(`/admin/products/${saved.id}?done=${encodeURIComponent(note)}`);
+    });
   };
   // Edits made since the last successful save (or since the page opened).
   const [editedAt, setEditedAt] = useState<{ result: ActionState } | null>(null);
@@ -72,7 +121,7 @@ export function ProductForm({ product, categories, ageBands, sizeGuideId, proble
 
   return (
     <form onSubmit={submit} onInput={() => setEditedAt((e) => (dirty && e ? e : { result: state }))} className={styles.form}>
-      <fieldset disabled={pending || !canEdit} className={styles.fieldset}>
+      <fieldset disabled={pending || uploading || !canEdit} className={styles.fieldset}>
         {product?.id && <input type="hidden" name="id" value={product.id} />}
         <input type="hidden" name="sizes_json" value={JSON.stringify(sizes.map((s) => ({ ...s, code: codeFor(s) })))} />
         {/* Kept as they are, not shown. */}
@@ -162,6 +211,40 @@ export function ProductForm({ product, categories, ageBands, sizeGuideId, proble
           )}
         </section>
 
+        {!product?.id && (
+          <section className={styles.panel} id="photos">
+            <h2>Photos</h2>
+            <p className={styles.muted}>
+              The first photo is the main one on the store. Up to {PHOTO_MAX} photos; JPEG, PNG or WebP under 5 MB. They upload when you create the product.
+            </p>
+            {files.length > 0 && (
+              <ol className={styles.photos}>
+                {files.map((f, i) => (
+                  <li key={`${f.name}-${i}`} className={styles.photo}>
+                    {/* eslint-disable-next-line @next/next/no-img-element -- a local preview of a file not uploaded yet */}
+                    <img src={previews[i]} alt={f.name} width={120} height={120} className={styles.photoImage} />
+                    <div className={styles.photoBody}>
+                      {i === 0 && <span className={styles.badge} data-tone="good">Main photo</span>}
+                      <div className={styles.buttons}>
+                        <button type="button" className={styles.secondary} disabled={i === 0} aria-label={`Move photo ${i + 1} earlier`}
+                          onClick={() => setFiles((all) => { const n = [...all]; const [p] = n.splice(i, 1); n.splice(i - 1, 0, p); return n; })}>↑</button>
+                        <button type="button" className={styles.danger} onClick={() => setFiles((all) => all.filter((_, j) => j !== i))}>Remove</button>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
+            {files.length < PHOTO_MAX && (
+              <label className={styles.secondary}>
+                {files.length === 0 ? 'Choose photos' : 'Add more photos'}
+                <input type="file" accept={PHOTO_TYPES.join(',')} multiple hidden onChange={choose} />
+              </label>
+            )}
+            {photoError && <p role="alert" className={styles.error}>{photoError}</p>}
+          </section>
+        )}
+
         <section className={styles.panel} id="pricing">
           <h2>Price</h2>
           {sizes.length === 0 ? (
@@ -218,7 +301,7 @@ export function ProductForm({ product, categories, ageBands, sizeGuideId, proble
           )}
           <div className={styles.buttons}>
             <button type="submit" className={styles.primary}>
-              {pending ? 'Saving…' : product?.id ? 'Save changes' : 'Create product'}
+              {uploading ? 'Uploading photos…' : pending ? 'Saving…' : product?.id ? 'Save changes' : 'Create product'}
             </button>
           </div>
           {dirty && !pending && <p className={styles.unsaved}>You have unsaved changes.</p>}

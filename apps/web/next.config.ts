@@ -24,7 +24,8 @@ const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src ${scriptSources}`,
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob: ${supabaseOrigin} ${googleAnalytics}`,
+  // lh3.googleusercontent.com serves the profile picture of someone who signs in with Google.
+  `img-src 'self' data: blob: ${supabaseOrigin} https://lh3.googleusercontent.com ${googleAnalytics}`,
   `connect-src 'self' ${supabaseOrigin} ${sentryOrigin} ${googleAnalytics}`.trim(),
   "font-src 'self' data:",
   "base-uri 'self'",

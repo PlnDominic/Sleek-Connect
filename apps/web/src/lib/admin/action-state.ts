@@ -1,6 +1,6 @@
 import type { PostgrestError } from '@supabase/supabase-js';
 
-export type ActionState = { ok: boolean; message: string } | null;
+export type ActionState = { ok: boolean; message: string; id?: string } | null;
 
 /** Turns a database error into a message for staff. Rule violations carry their own wording (22023, 42501). */
 export function failed(error: PostgrestError | null, fallback = 'That didn’t work. Please try again.'): ActionState {

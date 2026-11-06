@@ -76,6 +76,8 @@ export async function saveProduct(_: ActionState, form: FormData): Promise<Actio
   }
   updateTag('catalog');
   const what = payload.id ? 'Saved' : 'Product created';
+  // A new product with photos to upload: the browser needs its id before it can upload, so it redirects itself afterwards.
+  if (form.get('stay') === '1') return { ok: true, message: `${what}.`, id: result.id };
   flash(
     `/admin/products/${result.id}`,
     result.published
