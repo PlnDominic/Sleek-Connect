@@ -16,6 +16,8 @@ if (sentryDsn) {
     environment: process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT || process.env.NODE_ENV,
     // A tenth of page loads are traced for speed; every error is kept.
     tracesSampleRate: 0.1,
+    // Keep per-transaction scrubbing (beforeSendTransaction) working; the streaming mode ignores it.
+    traceLifecycle: 'static',
     beforeSend: (event) => scrubMonitoringEvent(event),
     beforeSendTransaction: (event) => scrubMonitoringEvent(event),
     // Noise that says nothing about the store.

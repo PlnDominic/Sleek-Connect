@@ -9,6 +9,8 @@ if (dsn) {
     environment: process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT || process.env.VERCEL_ENV || process.env.NODE_ENV,
     release: process.env.VERCEL_GIT_COMMIT_SHA,
     tracesSampleRate: 0.1,
+    // Keep per-transaction scrubbing (beforeSendTransaction) working; the streaming mode ignores it.
+    traceLifecycle: 'static',
     beforeSend: (event) => scrubMonitoringEvent(event),
     beforeSendTransaction: (event) => scrubMonitoringEvent(event),
   });
