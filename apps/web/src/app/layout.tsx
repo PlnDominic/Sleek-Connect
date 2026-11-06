@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import { AnalyticsConsent } from '@/components/AnalyticsConsent';
 import { AuthProvider } from '@/components/AuthProvider';
 import { CompareProvider } from '@/components/CompareProvider';
 import { WebBagProvider } from '@/components/WebBagProvider';
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
+        <AnalyticsConsent />
         <AuthProvider>
           <WebBagProvider>
             <WishlistProvider><CompareProvider>{children}</CompareProvider></WishlistProvider>

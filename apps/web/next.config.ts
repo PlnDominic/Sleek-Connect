@@ -15,13 +15,17 @@ const sentryOrigin = (() => {
   }
 })();
 const posthogRegion = process.env.NEXT_PUBLIC_POSTHOG_REGION === 'eu' ? 'eu' : 'us';
-const scriptSources = process.env.NODE_ENV === 'development' ? "'self' 'unsafe-inline' 'unsafe-eval'" : "'self' 'unsafe-inline'";
+// Google Tag Manager (see components/AnalyticsConsent.tsx): allowed by the policy, but only ever loaded after a visitor accepts, and never on private pages.
+const tagManager = 'https://www.googletagmanager.com';
+const googleAnalytics = 'https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://stats.g.doubleclick.net';
+const scriptSources =
+  (process.env.NODE_ENV === 'development' ? "'self' 'unsafe-inline' 'unsafe-eval'" : "'self' 'unsafe-inline'") + ` ${tagManager}`;
 const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src ${scriptSources}`,
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob: ${supabaseOrigin}`,
-  `connect-src 'self' ${supabaseOrigin} ${sentryOrigin}`.trim(),
+  `img-src 'self' data: blob: ${supabaseOrigin} ${googleAnalytics}`,
+  `connect-src 'self' ${supabaseOrigin} ${sentryOrigin} ${googleAnalytics}`.trim(),
   "font-src 'self' data:",
   "base-uri 'self'",
   "form-action 'self'",

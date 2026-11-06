@@ -52,3 +52,14 @@ stops Next.js redirecting `/page/` to `/page`.
 - Not yet in the mobile app. Its own install needs care with Expo Go, so add it as a separate step.
 - If you later want cookies, a returning-visitor count or session replay, add a cookie consent banner first and change the
   PostHog settings in `src/instrumentation-client.ts`.
+
+## Google Tag Manager (container GTM-PLSFL8ZJ)
+
+Loaded by `components/AnalyticsConsent.tsx` only after a visitor presses **Accept** on the visit-statistics prompt (the choice is kept on the device; the footer link
+"Visit statistics choices" asks again). It never loads on `/admin`, `/auth`, `/account`, `/orders`, `/checkout`, `/track`, `/saved`, `/bag`, `/api` or the problem-report page, and Consent Mode
+keeps advertising storage denied. `NEXT_PUBLIC_GTM_ID` changes the container; set it empty to switch Tag Manager off.
+
+Settings to make inside Google Tag Manager / Google Analytics so private addresses never reach Google:
+- In GA4 turn **off** "Page changes based on browser history events" (Enhanced measurement), and don't add a History Change trigger. The store is a single-page app: a visitor who accepted
+  on a public page and then opens `/orders/<token>` would otherwise have that address recorded, and an order address proves ownership of the order.
+- Don't add advertising or remarketing tags without updating the consent prompt and the privacy notice.

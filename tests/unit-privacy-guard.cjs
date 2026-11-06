@@ -19,7 +19,11 @@ const all = files.map((f) => [f, read(f)]);
 
 // 1. No advertising or tracking services.
 const trackers = /googletagmanager|google-analytics|gtag\(|fbq\(|connect\.facebook|hotjar|clarity\.ms|mixpanel|segment\.com|tiktok.*pixel|doubleclick|adsbygoogle|intercom/i;
-const trackerHits = all.filter(([, text]) => trackers.test(text)).map(([f]) => f);
+// The only allowed exception is Google Tag Manager, in the consent component, which loads nothing until the visitor accepts.
+const trackerHits = all.filter(([f, text]) => !f.endsWith('components/AnalyticsConsent.tsx') && trackers.test(text)).map(([f]) => f);
+const consent = read('apps/web/src/components/AnalyticsConsent.tsx');
+assert(/choice === 'granted' && !isPrivate/.test(consent) && /ad_storage: 'denied'/.test(consent) && /analytics_storage: 'denied'/.test(consent), 'Google Tag Manager loads only after the visitor accepts, never on private pages, with advertising storage denied');
+assert(/\(admin\|auth\|account\|orders\|checkout\|track/.test(consent), 'the private pages (account, orders, checkout, track) are excluded from the tag manager');
 assert(trackerHits.length === 0, `no advertising or tracking services in the code (${trackerHits.join(', ') || 'none'})`);
 
 // 2. No script loaded from another site.
@@ -45,8 +49,8 @@ assert(/beforeSend:\s*\(event\)\s*=>\s*scrubMonitoringEvent/.test(analytics), 'e
 // 5. The browser may only connect to us, Supabase and Sentry (PostHog goes through /ingest).
 const config = read('apps/web/next.config.ts');
 const connect = config.match(/`connect-src ([^`]*)`/)[1];
-assert(connect === "'self' ${supabaseOrigin} ${sentryOrigin}", `connect-src allows only ourselves, Supabase and Sentry (${connect})`);
-assert(/script-src \$\{scriptSources\}/.test(config) && !/script-src[^`]*https?:/.test(config), 'script-src allows no other site');
+assert(connect === "'self' ${supabaseOrigin} ${sentryOrigin} ${googleAnalytics}", `connect-src allows only ourselves, Supabase, Sentry and Google's measurement hosts (${connect})`);
+assert(/script-src \$\{scriptSources\}/.test(config) && !/script-src[^`]*https?:/.test(config) && /tagManager = 'https:\/\/www\.googletagmanager\.com'/.test(config), 'script-src allows no other site than Google Tag Manager');
 
 // 6. The privacy notice says what is on the device and about analytics.
 const privacy = read('apps/web/src/app/privacy/page.tsx');

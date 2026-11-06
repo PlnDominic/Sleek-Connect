@@ -187,6 +187,12 @@ export default async function PrivacyPage() {
             order links, delivery code or payment details, and we collect nothing from the admin console.
           </p>
           <p>
+            If you press Accept when we ask, we also load Google Tag Manager on the public pages of the store, to count visits and see which
+            pages are useful. It is off until you accept, never runs on your account, bag, checkout or order pages, and advertising storage
+            stays off. Google may place its own cookies when it runs, under Google’s notice. You can change your mind at any time with
+            “Visit statistics choices” in the footer, which asks again.
+          </p>
+          <p>
             When a search finds nothing and you stay on that result, we keep the words you searched for and a daily count, so we know what to
             stock. No account, address or device is kept with them, and anything that looks like an email address, a phone number or a web
             address is not kept at all.

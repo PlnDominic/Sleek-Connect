@@ -1,3 +1,4 @@
+import { AnalyticsChoicesButton } from './AnalyticsConsent';
 import Link from 'next/link';
 import { paymentMethodsLine } from '@sleek/shared';
 import { businessDetails } from '@/lib/legal';
@@ -73,6 +74,7 @@ export function SiteFooter() {
             © 2026 Sleek Connect Store. All rights reserved.
             {operator ? ` Operated by ${operator}.` : ''}
           </span>
+          <AnalyticsChoicesButton />
           <span className={styles.footerCredit}>
             Developed by:{' '}
             <a href="https://www.ecstasytechnologies.com" target="_blank" rel="noopener">
