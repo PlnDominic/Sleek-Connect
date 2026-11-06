@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { can, requireStaffPage } from '@/lib/admin/session';
+import { skuChoices, skuProductColumns } from '@/lib/admin/sku-options';
 import { PurchaseOrderForm } from '../PurchaseOrderForm';
 import styles from '../../admin.module.css';
 
@@ -10,8 +11,11 @@ export default async function NewPurchaseOrderPage() {
   const staff = await requireStaffPage();
   if (!staff) return null;
   if (!can(staff.role, 'purchasing.edit')) return <p className={styles.notice}>Only operations staff and admins can create purchase orders.</p>;
-  const [{ data: supplierRows }, { data: levels }] = await Promise.all([staff.supabase.rpc('admin_supplier_options'), staff.supabase.rpc('admin_stock_overview')]);
-  const skus = (levels ?? []).map((l) => ({ value: `${l.product_id}|${l.size_code}`, label: `${l.product_name}${l.size_label ? `, ${l.size_label}` : ''}` }));
+  const [{ data: supplierRows }, { data: products }] = await Promise.all([
+    staff.supabase.rpc('admin_supplier_options'),
+    staff.supabase.from('products').select(skuProductColumns).order('name'),
+  ]);
+  const skus = skuChoices(products ?? []);
   return (
     <>
       <div className={styles.pageHead}>

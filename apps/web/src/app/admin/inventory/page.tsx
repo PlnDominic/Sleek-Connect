@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { can, requireStaffPage } from '@/lib/admin/session';
+import { skuChoices, skuProductColumns } from '@/lib/admin/sku-options';
 import { ReceiveForm } from './ReceiveForm';
 import styles from '../admin.module.css';
 
@@ -18,21 +19,17 @@ export default async function InventoryPage({ searchParams }: PageProps<'/admin/
   const [{ data: levels, error }, { data: expiring }, { data: products }, { data: supplierRows }] = await Promise.all([
     staff.supabase.rpc('admin_stock_overview'),
     staff.supabase.rpc('admin_expiring_batches'),
-    staff.supabase.from('products').select('id, department, kids_filter'),
+    staff.supabase.from('products').select(skuProductColumns).order('name'),
     staff.supabase.rpc('admin_supplier_options'),
   ]);
   const suppliers = (supplierRows ?? []) as unknown as { id: string; name: string }[];
   if (error) throw error;
-  const cosmetic = new Set((products ?? []).filter((p) => p.department === 'beauty' || p.kids_filter === 'bath').map((p) => p.id));
 
   const shown = levels.filter((l) =>
     filter === 'low' ? l.is_low : filter === 'expiring' ? l.expiring_soon : filter === 'oversold' ? l.available < 0 : true,
   );
-  const skus = levels.map((l) => ({
-    value: `${l.product_id}|${l.size_code}`,
-    label: `${l.product_name}${l.size_label ? `, ${l.size_label}` : ''}`,
-    needsExpiry: cosmetic.has(l.product_id),
-  }));
+  // Every product on the products page can receive stock, including ones that have never had any.
+  const skus = skuChoices(products ?? []);
 
   return (
     <>

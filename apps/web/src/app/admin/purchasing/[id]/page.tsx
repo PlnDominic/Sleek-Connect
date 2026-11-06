@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { formatPrice } from '@sleek/shared';
 import { can, requireStaffPage } from '@/lib/admin/session';
+import { skuChoices, skuProductColumns } from '@/lib/admin/sku-options';
 import { formatDate, UUID_PATTERN } from '@/lib/orders';
 import { ActionForm } from '../../ActionForm';
 import { Flash } from '../../Flash';
@@ -44,12 +45,15 @@ export default async function PurchaseOrderPage({ params, searchParams }: PagePr
 
   let draftForm = null;
   if (edit && order.status === 'draft') {
-    const [{ data: supplierRows }, { data: levels }] = await Promise.all([staff.supabase.rpc('admin_supplier_options'), staff.supabase.rpc('admin_stock_overview')]);
+    const [{ data: supplierRows }, { data: products }] = await Promise.all([
+      staff.supabase.rpc('admin_supplier_options'),
+      staff.supabase.from('products').select(skuProductColumns).order('name'),
+    ]);
     draftForm = (
       <PurchaseOrderForm
         id={order.id}
         suppliers={(supplierRows ?? []) as unknown as { id: string; name: string }[]}
-        skus={(levels ?? []).map((l) => ({ value: `${l.product_id}|${l.size_code}`, label: `${l.product_name}${l.size_label ? `, ${l.size_label}` : ''}` }))}
+        skus={skuChoices(products ?? [])}
         initial={{
           supplier_id: order.supplier_id,
           expected_on: order.expected_on ?? '',
