@@ -32,7 +32,8 @@ export function getPaymentProvider(): PaymentProvider | null {
   if (name === 'hubtel') {
     const config = hubtelConfig();
     if (!config) {
-      console.error('HUBTEL_API_ID, HUBTEL_API_KEY, HUBTEL_MERCHANT_ACCOUNT or PAYMENT_WEBHOOK_SECRET is not set, so Hubtel payments are off.');
+      const missing = ['HUBTEL_API_ID', 'HUBTEL_API_KEY', 'HUBTEL_MERCHANT_ACCOUNT', 'PAYMENT_WEBHOOK_SECRET'].filter((n) => !process.env[n]?.trim());
+      console.error(`Hubtel payments are off. Not set (or empty) in this deployment: ${missing.join(', ')}.`);
       return null;
     }
     return createHubtelProvider(config);
