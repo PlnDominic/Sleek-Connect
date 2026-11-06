@@ -12,7 +12,8 @@ export { WebhookSignatureError } from './types';
  * `hubtel` is the real one (Mobile Money and cards); `test` stands in for it in automated tests only.
  */
 export function getPaymentProvider(): PaymentProvider | null {
-  const name = process.env.PAYMENT_PROVIDER;
+  // Tolerate capitals and stray spaces ("Hubtel" works as well as "hubtel").
+  const name = process.env.PAYMENT_PROVIDER?.trim().toLowerCase();
   if (!name) return null;
 
   if (name === 'test') {

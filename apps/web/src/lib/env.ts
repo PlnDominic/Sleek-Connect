@@ -30,7 +30,7 @@ export function missingServerEnv(): string[] {
   const missing: string[] = [];
   if (process.env.NODE_ENV === 'production' && !present('SUPABASE_SECRET_KEY')) missing.push('SUPABASE_SECRET_KEY');
   if (present('PAYMENT_PROVIDER') && !present('PAYMENT_WEBHOOK_SECRET')) missing.push('PAYMENT_WEBHOOK_SECRET');
-  if (process.env.PAYMENT_PROVIDER?.trim() === 'hubtel') {
+  if (process.env.PAYMENT_PROVIDER?.trim().toLowerCase() === 'hubtel') {
     for (const name of ['HUBTEL_API_ID', 'HUBTEL_API_KEY', 'HUBTEL_MERCHANT_ACCOUNT']) if (!present(name)) missing.push(name);
   }
   if (process.env.VERCEL_ENV === 'production') {
