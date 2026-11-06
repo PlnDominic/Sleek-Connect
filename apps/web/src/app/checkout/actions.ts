@@ -10,7 +10,7 @@ import { createUserSupabase } from '@/lib/supabase/server';
 export interface PlaceOrderInput {
   customer: { name: string; phone: string; email?: string; area: string; ghanapostGps?: string; directions?: string; adultConfirmed: boolean };
   deliveryOption: string;
-  payment: { method: 'momo'; network: MomoNetwork; wallet: string } | { method: 'card' } | { method: 'cod' };
+  payment: { method: 'momo'; network: MomoNetwork; wallet: string } | { method: 'card' };
   items: { slug: string; size?: string; quantity: number }[];
   isGift: boolean;
   promoCode?: string;
@@ -123,13 +123,10 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   logger.info('order_placed', { orderNumber: data.order_number, source: 'web', emailGiven: Boolean(input.customer.email) });
   after(() => dispatchNotifications());
 
-  const payment: PaymentStart =
-    input.payment.method === 'cod'
-      ? { kind: 'cod' }
-      : await startOrderPayment(
-          { token: data.order_token, number: data.order_number, total },
-          input.payment.method === 'card' ? { method: 'card' } : { method: 'momo', network: input.payment.network, wallet: input.payment.wallet },
-        );
+  const payment: PaymentStart = await startOrderPayment(
+    { token: data.order_token, number: data.order_number, total },
+    input.payment.method === 'card' ? { method: 'card' } : { method: 'momo', network: input.payment.network, wallet: input.payment.wallet },
+  );
   if (payment.kind === 'failed') return { ok: false, error: payment.reason };
 
   // Tell the store about every order, whether or not the shopper gave an email.

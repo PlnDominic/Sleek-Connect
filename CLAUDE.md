@@ -61,7 +61,7 @@
   received only through `admin_receive_purchase_order` (which calls `admin_receive_stock_from`), profit and money owed are finance/admin only.
 - Online orders become paid only through `public.confirm_payment`, after the webhook has verified the provider's
   notification. Stock is reserved by `place_order` and released by `release_order_reservation`.
-- Pay on delivery (`payment_method = 'cod'`, cash to the rider, no bank option; see `docs/PAY_ON_DELIVERY.md`): `place_order`
+- **Pay on delivery is switched off** (migration 20261123090000; checkout no longer offers it, `pay_on_delivery_enabled` is false); the rules below only matter for cash orders already placed. Pay on delivery (`payment_method = 'cod'`, cash to the rider, no bank option; see `docs/PAY_ON_DELIVERY.md`): `place_order`
   holds the stock for `pay_on_delivery_hold_hours`; staff confirm it with `admin_confirm_cod_order` (reservation becomes a
   sale, status `paid`, `cod_confirmed_at` set, `paid_at` stays empty); `admin_mark_delivered(..., p_cash_collected)` records the
   cash (a `payments` row with provider `cash`, `paid_at`, `cash_collected_ghs`). Nothing else may set `paid_at` for a

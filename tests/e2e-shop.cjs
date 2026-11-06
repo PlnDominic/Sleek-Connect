@@ -195,31 +195,17 @@ const statusPanel = (page) => page.locator('aside:visible').getByRole('status').
   assert(sql(`select o.status || ' ' || p.status from public.orders o join public.payments p on p.order_id = o.id where o.order_number = '${order4}'`) === 'cancelled expired', 'expired order cancelled, payment expired');
   assert(simulate(order4, 'succeeded').startsWith('ERR'), 'no pending payment left to simulate after expiry');
 
-  // Delivery option with no fee yet: order placed, honest message, no prompt
+  // Delivery option with no fee yet: the order is refused with a clear message and nothing is charged.
   await page.getByRole('button', { name: 'Try again' }).click();
   await page.getByRole('radio', { name: /Standard/ }).check();
   await page.getByRole('button', { name: 'Pay with MTN MoMo' }).click();
-  await statusPanel(page).filter({ hasText: 'placed' }).waitFor();
-  const t5 = await statusPanel(page).textContent();
-  assert(t5.includes('Delivery fees aren’t set yet') && t5.includes('held until'), 'no-fee order explains why no prompt was sent');
-  const order5 = t5.match(/SC-\d+/)?.[0];
-  assert(sql(`select count(*) from public.payments p join public.orders o on o.id = p.order_id where o.order_number = '${order5}'`) === '0', 'no payment started without a total');
+  await page.getByRole('alert').filter({ hasText: /not configured yet|can’t price delivery/ }).waitFor();
+  assert(sql(`select count(*) from public.payments p join public.orders o on o.id = p.order_id where o.status = 'pending_payment' and o.total_ghs is null`) === '0', 'no payment is started without a total');
 
-  // Pay on delivery: no payment prompt; the bag is cleared; the order waits for staff to confirm it.
-  await go(page, BASE + '/products/vitamin-c-brightening-serum');
-  await page.getByRole('button', { name: 'Add to bag' }).click();
+  // Pay on delivery is no longer offered.
   await go(page, BASE + '/checkout');
-  await fillDetails(page, { email: 'cod.guest@example.com' });
-  await page.getByRole('radio', { name: /Pay on delivery/ }).check();
-  assert(await page.getByText('Have GH₵').isVisible(), 'pay on delivery tells the shopper to have the cash ready');
-  assert(!(await page.getByLabel('Wallet number').isVisible()), 'and hides the wallet number');
-  await page.getByRole('button', { name: 'Place order, pay on delivery' }).click();
-  await statusPanel(page).filter({ hasText: 'received' }).waitFor();
-  const codText = await statusPanel(page).textContent();
-  const codOrder = codText.match(/SC-\d+/)?.[0];
-  assert(!!codOrder && codText.includes('call you to confirm'), `pay on delivery order ${codOrder} is placed, and says we will call`);
-  assert(sql(`select o.status || ' ' || o.payment_method || ' ' || (select count(*) from public.payments p where p.order_id = o.id) from public.orders o where o.order_number = '${codOrder}'`) === 'pending_payment cod 0', 'it waits for confirmation with no payment started');
-  assert(await bagCount(page) === 0, 'the bag is cleared at once: there is no payment to retry');
+  assert((await page.getByRole('radio', { name: /Pay on delivery/ }).count()) === 0, 'pay on delivery is not offered at checkout');
+  assert(await page.getByRole('radio', { name: /Debit or credit card/ }).count() === 1, 'card is offered');
 
   assert(errors.length === 0, 'no page errors ' + errors.join(' | '));
   await browser.close();

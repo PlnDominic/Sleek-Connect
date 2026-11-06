@@ -60,6 +60,7 @@
 --   20261122090000_backfill_stock_rows.sql
 --   20261122100000_free_text_delivery_area.sql
 --   20261122110000_orders_area_free_text.sql
+--   20261123090000_pay_on_delivery_off.sql
 --   seed.reference.sql (categories, age groups and delivery settings; no sample products)
 
 -- ===========================================================================
@@ -18120,6 +18121,14 @@ begin
          case when v_fee is null then null else v_subtotal + v_fee end, v_reserved_until;
 end;
 $function$;
+
+-- ===========================================================================
+-- 20261123090000_pay_on_delivery_off.sql
+-- ===========================================================================
+
+-- Pay on delivery is no longer offered: shoppers pay online (Mobile Money or card). Switching the setting off makes place_order refuse
+-- new cash orders from any client, including older copies of the app. Cash orders already placed are unaffected and staff can finish them.
+update public.store_settings set pay_on_delivery_enabled = false;
 
 -- ===========================================================================
 -- seed.reference.sql
