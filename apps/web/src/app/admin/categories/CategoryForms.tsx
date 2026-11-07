@@ -55,8 +55,8 @@ export function AddCategory() {
 export function CategoryActions({ id, name, department, first, last, productCount }: { id: string; name: string; department: string; first: boolean; last: boolean; productCount: number }) {
   const [editing, setEditing] = useState(false);
   return (
-    <div>
-      <div className={styles.buttons}>
+    <div style={{ display: 'contents' }}>
+      <div style={{ display: 'contents' }}>
         <button type="button" className={styles.iconButton} title="Edit" aria-label={`Edit ${name}`} aria-expanded={editing} onClick={() => setEditing((e) => !e)}>
           <Icon name="pencil" size={16} />
         </button>
@@ -82,9 +82,11 @@ export function CategoryActions({ id, name, department, first, last, productCoun
         </ActionForm>
       </div>
       {editing && (
-        <ActionForm action={saveCategory}>
-          <CategoryFields id={id} name={name} department={department} />
-        </ActionForm>
+        <div style={{ flexBasis: '100%' }}>
+          <ActionForm action={saveCategory}>
+            <CategoryFields id={id} name={name} department={department} />
+          </ActionForm>
+        </div>
       )}
     </div>
   );

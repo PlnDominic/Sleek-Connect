@@ -3,7 +3,8 @@
 import Image from 'next/image';
 import { useState, useTransition, type ChangeEvent, type ReactNode } from 'react';
 import { createBrowserSupabase } from '@/lib/supabase/browser';
-import { clearCategoryPhoto, setCategoryPhoto, type CategoryPhotoResult } from './actions';
+import { Icon } from '@/components/Icon';
+import { setCategoryPhoto, type CategoryPhotoResult } from './actions';
 import styles from '../admin.module.css';
 
 const TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -42,20 +43,21 @@ export function CategoryPhoto({ id, name, url, path, canEdit, actions }: { id: s
         <div>
           <h2>{name}</h2>
           <p className={styles.muted}>{url ? 'Shown on the home page and in the app.' : 'No photo yet: shoppers see a plain coloured tile.'}</p>
-          {canEdit && (
-            <div className={styles.buttons}>
-              <label className={styles.secondary} style={{ cursor: busy ? 'wait' : 'pointer' }}>
-                {busy ? 'Uploading…' : url ? 'Replace photo' : 'Upload photo'}
+          {/* One row of icon buttons: the photo, then (from the page) edit, reorder and delete. */}
+          <div className={styles.buttons} style={{ alignItems: 'center' }}>
+            {canEdit && (
+              <label
+                className={styles.iconButton}
+                style={{ cursor: busy ? 'wait' : 'pointer' }}
+                title={url ? 'Replace photo' : 'Upload photo'}
+                aria-label={url ? `Replace photo for ${name}` : `Upload photo for ${name}`}
+              >
+                <Icon name="image" size={16} />
                 <input type="file" accept={TYPES.join(',')} onChange={upload} disabled={busy} hidden />
               </label>
-              {url && (
-                <button type="button" className={styles.secondary} disabled={busy} onClick={() => startTransition(async () => setResult(await clearCategoryPhoto(id, path)))}>
-                  Remove
-                </button>
-              )}
-            </div>
-          )}
-          {actions}
+            )}
+            {actions}
+          </div>
           {result && (
             <p role="status" className={result.ok ? styles.muted : styles.notice}>
               {result.message}
