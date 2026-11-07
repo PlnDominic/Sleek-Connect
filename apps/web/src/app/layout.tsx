@@ -20,11 +20,11 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: {
-    default: 'Sleek Connect Store: beauty, home, fashion and kids essentials in Accra',
+    default: 'Sleek Connect Store: everyday essentials, delivered across Accra',
     template: '%s | Sleek Connect Store',
   },
   description:
-    'Beauty, baby and kids, home and groceries, fashion and accessories, delivered across Accra. Pay with Mobile Money or card.',
+    'Shop beauty, baby and kids, home and groceries, fashion, electronics and more, delivered across Accra. Pay with Mobile Money or card.',
   applicationName: siteName,
   openGraph: { type: 'website', siteName, locale: 'en_GH' },
   twitter: { card: 'summary_large_image' },

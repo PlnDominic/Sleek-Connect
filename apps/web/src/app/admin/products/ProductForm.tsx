@@ -125,7 +125,7 @@ export function ProductForm({ product, categories, ageBands, sizeGuideId, proble
         {product?.id && <input type="hidden" name="id" value={product.id} />}
         <input type="hidden" name="sizes_json" value={JSON.stringify(sizes.map((s) => ({ ...s, code: codeFor(s) })))} />
         {/* Kept as they are, not shown. */}
-        {keep('kind', product?.kind ?? 'bottle')}
+        {keep('kind', product?.kind ?? (department === 'beauty' ? 'bottle' : department === 'kids' ? 'toy' : 'box'))}
         {keep('slug', product?.slug)}
         {keep('image_key', product?.image_key)}
         {keep('badge', product?.badge)}

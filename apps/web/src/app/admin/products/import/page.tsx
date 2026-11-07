@@ -22,8 +22,8 @@ export default async function ImportPage() {
       <section className={styles.panel}>
         <h2>How to fill it in</h2>
         <ul className={styles.muted}>
-          <li>department: beauty or kids. kind: bottle, jar, tube, garment, toy or gift (the placeholder picture).</li>
-          <li>category: a category ID such as skincare, makeup, hair-care, fragrance, baby-care, kids-toys.</li>
+          <li>department: beauty, kids, home, fashion, electronics, sports or general. kind: bottle, jar, tube, garment, toy, gift or box (the placeholder picture; use box for anything else).</li>
+          <li>category: a category ID, shown on the Categories page (for example skincare, groceries, jewellery).</li>
           <li>highlights, free_from and age_bands: several values separated by “;”. Age bands: 0-6m, 6-12m, 1-2y, 3-5y, 6-8y, 9-12y.</li>
           <li>sizes: code:label:price separated by “;”, with * before the default, e.g. 200:200 ml:50;*400:400 ml:85.</li>
           <li>publish: yes or no. Rows missing required details are saved as drafts and the result says what’s missing.</li>

@@ -112,4 +112,5 @@ export const kindIcon: Record<ProductKind, IconName> = {
   garment: 'garment',
   toy: 'toy',
   gift: 'gift',
+  box: 'box',
 };

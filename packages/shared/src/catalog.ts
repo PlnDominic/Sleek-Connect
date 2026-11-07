@@ -31,7 +31,7 @@ export function asImageKey(key: string | null | undefined): ImageKey | undefined
 }
 
 /** The shop's departments, in the order they appear in menus. Each is also its web path, /shop/<department>. */
-export const departmentIds = ['beauty', 'kids', 'home', 'fashion'] as const;
+export const departmentIds = ['beauty', 'kids', 'home', 'fashion', 'electronics', 'sports', 'general'] as const;
 export type Department = (typeof departmentIds)[number];
 
 export function isDepartment(value: string | null | undefined): value is Department {
@@ -39,7 +39,7 @@ export function isDepartment(value: string | null | undefined): value is Departm
 }
 
 /** Shape used for the tinted placeholder when a product has no photo yet. */
-export type ProductKind = 'bottle' | 'jar' | 'tube' | 'garment' | 'toy' | 'gift';
+export type ProductKind = 'bottle' | 'jar' | 'tube' | 'garment' | 'toy' | 'gift' | 'box';
 
 export type AgeBandId = '0-6m' | '6-12m' | '1-2y' | '3-5y' | '6-8y' | '9-12y';
 
@@ -329,6 +329,9 @@ export const departmentLabels: Record<Department, string> = {
   kids: 'Baby & Kids',
   home: 'Home & Groceries',
   fashion: 'Fashion & Accessories',
+  electronics: 'Electronics',
+  sports: 'Sports & Outdoors',
+  general: 'More',
 };
 
 /** One line under each department's name on its shop page and in search results. */
@@ -337,6 +340,9 @@ export const departmentBlurbs: Record<Department, string> = {
   kids: 'Safe, age-appropriate essentials, toys and clothing for little ones.',
   home: 'Groceries, kitchen and home appliances for everyday life.',
   fashion: 'Jewellery, bags and accessories.',
+  electronics: 'Phones, gadgets, appliances and accessories.',
+  sports: 'Sports gear, fitness and outdoor essentials.',
+  general: 'Everything else, from gifts to everyday needs.',
 };
 
 function pick(slugs: string[]): Product[] {
@@ -383,6 +389,9 @@ export const appNewArrivals: Record<Department, Product[]> = {
   kids: pick(['gentle-baby-wash-shampoo', 'organic-cotton-bodysuits', 'wooden-stacking-blocks', 'wooden-number-puzzle']),
   home: [],
   fashion: [],
+  electronics: [],
+  sports: [],
+  general: [],
 };
 
 export const relatedProducts = pick([

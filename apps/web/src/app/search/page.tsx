@@ -63,7 +63,7 @@ async function SearchResults({ searchParams }: { searchParams: PageProps<'/searc
           <div className={styles.layout}>
             <div className={styles.empty}>
               <h3>What are you looking for?</h3>
-              <p>Search by product, brand or category, for example “serum”, “baby wash” or “shea butter”.</p>
+              <p>Search by product, brand or category, for example “blender”, “sneakers” or “shea butter”.</p>
               <div className={styles.chips}>
                 {categories.map((c) => (
                   <Link key={c.id} href={`/shop/${c.department}/${c.id}`}>

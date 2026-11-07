@@ -28,6 +28,11 @@ const stamp = Date.now();
   assert(!(await cat.rpc('admin_save_category', { p: { id: 'nail-care', name: 'Nails & Polish', department: 'beauty' } })).error, 'a category can be renamed');
   assert(sql(`select name from public.categories where id = 'nail-care'`) === 'Nails & Polish', 'the new name is saved');
 
+  // The store sells general merchandise: other departments exist, and a new category starts with the neutral picture kind
+  const phones = await cat.rpc('admin_save_category', { p: { name: 'Phones', department: 'electronics' } });
+  assert(!phones.error && sql(`select department || '|' || kind from public.categories where id = '${phones.data}'`) === 'electronics|box', 'categories can go in the electronics department, with the neutral picture kind');
+  assert(!(await cat.rpc('admin_save_category', { p: { name: 'Gym Gear', department: 'sports' } })).error && !(await cat.rpc('admin_save_category', { p: { name: 'Gifts', department: 'general' } })).error, 'and in sports and general');
+
   // Order
   const before = sql(`select string_agg(id, ',' order by sort_order, name) from public.categories`).split(',');
   assert(before[before.length - 1] === 'nail-care', 'a new category goes last');

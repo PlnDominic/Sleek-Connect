@@ -60,6 +60,8 @@ export default function ShopScreen() {
     return list;
   }, [all.data, matches.data, searching, sort, department, category]);
 
+  // A department shows once it has a category, so a new one doesn't appear empty.
+  const shownDepartments = categories.data ? departmentIds.filter((d) => categories.data?.some((c) => c.department === d)) : departmentIds;
   const deptCategories = (categories.data ?? []).filter((c) => c.department === department);
   const waitingForSearch = searching && matches.loading;
   const failed = all.error && !all.data;
@@ -94,7 +96,7 @@ export default function ShopScreen() {
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips} keyboardShouldPersistTaps="handled">
         <Chip label="All" on={!department} onPress={() => setFilters({})} />
-        {departmentIds.map((d) => (
+        {shownDepartments.map((d) => (
           <Chip key={d} label={departmentLabels[d]} on={d === department} onPress={() => setFilters({ department: d })} />
         ))}
       </ScrollView>

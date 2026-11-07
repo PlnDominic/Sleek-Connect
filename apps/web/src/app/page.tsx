@@ -90,10 +90,10 @@ export default async function HomePage() {
 const defaultHero: Banner = {
   id: 'default',
   kicker: 'Trending now',
-  title: 'Glow Products\nYou\'ll Love',
-  body: 'Beauty, home, fashion and everything for little ones,\ncurated for modern families in Ghana.',
+  title: 'Everything You Need,\nDelivered to You',
+  body: 'Beauty, home, fashion, electronics and more,\nchosen for families across Ghana.',
   cta: { label: 'Shop Now', href: '/shop?sort=newest' },
-  secondaryCta: { label: 'Shop Baby & Kids', href: '/shop/kids' },
+  secondaryCta: { label: 'Browse categories', href: '/shop' },
   image: 'heroModel',
   theme: 'light',
 };

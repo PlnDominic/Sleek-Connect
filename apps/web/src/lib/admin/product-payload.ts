@@ -42,7 +42,7 @@ export interface ProductPayload {
   publish: boolean;
 }
 
-export const productKinds = ['bottle', 'jar', 'tube', 'garment', 'toy', 'gift'] as const;
+export const productKinds = ['bottle', 'jar', 'tube', 'garment', 'toy', 'gift', 'box'] as const;
 export const kidsFilters = ['bath', 'toys', 'clothing', 'gifts'] as const;
 
 /** A product row as staff read it, with its sizes and age bands. */

@@ -70,7 +70,7 @@ export default async function ShopPage({ params, searchParams }: PageProps<'/sho
               )}
             </nav>
             <h1>{title}</h1>
-            <p>{scope.department ? departments[scope.department].blurb : 'Authentic beauty and safe essentials for little ones.'}</p>
+            <p>{scope.department ? departments[scope.department].blurb : 'Everything you need, from beauty and baby care to home, fashion and electronics.'}</p>
             <nav aria-label={scope.department ? 'Categories' : 'Departments'} className={styles.subnav}>
               {scope.department ? (
                 <>
@@ -84,7 +84,7 @@ export default async function ShopPage({ params, searchParams }: PageProps<'/sho
                   ))}
                 </>
               ) : (
-                departmentIds.map((d) => (
+                departmentIds.filter((d) => categories.some((c) => c.department === d)).map((d) => (
                   <Link key={d} href={`/shop/${d}`}>
                     {departments[d].name}
                   </Link>

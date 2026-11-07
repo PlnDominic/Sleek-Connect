@@ -9,11 +9,12 @@ const columns = [
   {
     title: 'Shop',
     links: [
+      { label: 'All products', href: '/shop' },
       { label: 'Beauty', href: '/shop/beauty' },
-      { label: 'Skin type finder', href: '/skin-finder' },
       { label: 'Baby & Kids', href: '/shop/kids' },
       { label: 'Home & Groceries', href: '/shop/home' },
       { label: 'Fashion & Accessories', href: '/shop/fashion' },
+      { label: 'Skin type finder', href: '/skin-finder' },
       { label: 'Shop by Age', href: '/shop-by-age' },
     ],
   },
@@ -48,7 +49,7 @@ export function SiteFooter() {
           <span className={styles.footerKicker}>The thoughtful way to shop</span>
           <Logo size={30} />
           <span className={styles.footerBlurb}>
-            Beauty, baby and kids, home and groceries, fashion and accessories, delivered across Accra.
+            Everyday essentials for the whole family, delivered across Accra.
           </span>
         </div>
         <div className={styles.footerLinks}>

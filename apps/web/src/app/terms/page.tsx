@@ -21,7 +21,7 @@ export default async function TermsPage() {
       body: (
         <>
           <p>
-            Sleek Connect Store (“we”, “us”) sells beauty, baby and kids’, home and grocery, and fashion and accessory products to customers in Accra, Ghana, through
+            Sleek Connect Store (“we”, “us”) sells a wide range of products, including beauty, baby and kids’, home and grocery, fashion and accessory, and electronics, to customers in Accra, Ghana, through
             this website.
             {business.name && (
               <>

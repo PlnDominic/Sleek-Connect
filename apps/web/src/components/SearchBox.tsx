@@ -178,7 +178,7 @@ export function SearchBox({
         name="q"
         type="search"
         autoComplete="off"
-        placeholder="Search serums, baby wash, gift sets..."
+        placeholder="Search products, brands and categories..."
         value={value}
         autoFocus={autoFocus}
         onChange={(e) => {

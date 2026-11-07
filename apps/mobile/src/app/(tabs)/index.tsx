@@ -35,6 +35,8 @@ export default function HomeScreen() {
   const categories = useQuery('categories', getCategories);
   const bands = useQuery('age-bands', getAgeBands);
 
+  // A department shows once it has a category, so a new one doesn't appear empty.
+  const shownDepartments = categories.data ? departmentIds.filter((d) => categories.data?.some((c) => c.department === d)) : departmentIds;
   const deptCategories = (categories.data ?? []).filter((c) => c.department === dept);
   const arrivals = (all.data ?? []).filter((p) => p.department === dept).slice(0, 6);
   // Only when nothing at all could be loaded: one failing request (say the banners) must not hide the rest of the screen.
@@ -113,7 +115,7 @@ export default function HomeScreen() {
       ) : (
         <>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.depts} accessibilityRole="tablist">
-            {departmentIds.map((d) => {
+            {shownDepartments.map((d) => {
               const on = d === dept;
               return (
                 <Pressable

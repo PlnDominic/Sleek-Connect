@@ -69,11 +69,13 @@ function DepartmentMenu({ id, categories, current }: { id: Department; categorie
 export async function SiteHeader({ current }: { current?: string }) {
   const categories = await getCategories();
   const byDepartment = (d: Department) => categories.filter((c) => c.department === d);
+  // A department shows in the menus once it has a category, so a new department doesn't appear empty.
+  const shownDepartments = departmentIds.filter((d) => byDepartment(d).length > 0);
   return (
     <header className={styles.header}>
       <div className={`container ${styles.top}`}>
         <MobileMenu
-          departments={departmentIds.map((d) => ({
+          departments={shownDepartments.map((d) => ({
             id: d,
             label: departmentLabels[d],
             categories: byDepartment(d).map((c) => ({ id: c.id, name: c.name })),
@@ -101,7 +103,7 @@ export async function SiteHeader({ current }: { current?: string }) {
           <Link href="/shop" className={styles.navLink} aria-current={current === 'Shop' ? 'page' : undefined}>
             Shop All
           </Link>
-          {departmentIds.map((d) => (
+          {shownDepartments.map((d) => (
             <DepartmentMenu key={d} id={d} categories={byDepartment(d)} current={current === departmentLabels[d]} />
           ))}
           <span className={styles.navEnd}>
