@@ -204,6 +204,36 @@
   text-decoration: none;
 }
 
+/* Departments */
+
+.deptStrip {
+  display: flex;
+  gap: 10px;
+  padding-top: 28px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.deptStrip::-webkit-scrollbar {
+  display: none;
+}
+
+.deptChip {
+  flex: none;
+  padding: 9px 16px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.deptChip:hover {
+  border-color: var(--c-accent);
+  color: var(--c-accent);
+}
+
 /* Categories */
 
 .categoryCard {

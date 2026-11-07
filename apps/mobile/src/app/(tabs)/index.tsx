@@ -99,7 +99,7 @@ export default function HomeScreen() {
             100% authentic, every order
           </AppText>
           <AppText size={13} color={colors.tealInk}>
-            Batch and expiry checked before dispatch
+            Every order checked before dispatch
           </AppText>
         </View>
       </View>

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { colors, formatPrice, type Category, type IconName, type Product } from '@sleek/shared';
+import { colors, departmentIds, departmentLabels, formatPrice, type Category, type IconName, type Product } from '@sleek/shared';
 import { AddToBagButton } from '@/components/AddToBagButton';
 import { Icon } from '@/components/Icon';
 import { JsonLd } from '@/components/JsonLd';
@@ -70,11 +70,12 @@ export default async function HomePage() {
             </span>
             <span>
               <strong>100% authentic, every order</strong>
-              <span>Batch and expiry checked before dispatch</span>
+              <span>Every order checked before dispatch</span>
             </span>
           </div>
         </div>
         <Hero banner={hero ?? defaultHero} products={heroProducts} />
+        <Departments categories={categories} />
         <Categories categories={categories} />
         <NewArrivals products={newArrivals} />
         <BestSellers products={bestSellers} />
@@ -187,6 +188,22 @@ function SectionHeader({ title, linkLabel, href = '#' }: { title: string; linkLa
         {linkLabel} <Icon name="arrowRight" size={15} strokeWidth={2} />
       </Link>
     </div>
+  );
+}
+
+/** Quick links to each department that has categories, so the home page reads as a store for everything. */
+function Departments({ categories }: { categories: Category[] }) {
+  const shown = departmentIds.filter((d) => categories.some((c) => c.department === d));
+  if (shown.length < 2) return null;
+  return (
+    <nav aria-label="Departments" className={`container ${styles.deptStrip}`}>
+      <Link href="/shop" className={styles.deptChip}>All products</Link>
+      {shown.map((d) => (
+        <Link key={d} href={`/shop/${d}`} className={styles.deptChip}>
+          {departmentLabels[d]}
+        </Link>
+      ))}
+    </nav>
   );
 }
 
