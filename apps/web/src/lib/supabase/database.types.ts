@@ -938,6 +938,15 @@ isOneToOne: false
 "admin_set_category_photo":
 { Args: { "p_id": string,"p_path"?: string }; Returns: undefined
                            },
+"admin_save_category":
+{ Args: { "p": Json }; Returns: string
+                           },
+"admin_move_category":
+{ Args: { "p_id": string,"p_direction": number }; Returns: undefined
+                           },
+"admin_delete_category":
+{ Args: { "p_id": string }; Returns: string | null
+                           },
 "admin_search_misses":
 { Args: { "p_days"?: number }; Returns: { term: string,searches: number,days_seen: number,last_seen: string }[]
                            },

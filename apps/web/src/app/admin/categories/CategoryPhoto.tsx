@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useTransition, type ChangeEvent } from 'react';
+import { useState, useTransition, type ChangeEvent, type ReactNode } from 'react';
 import { createBrowserSupabase } from '@/lib/supabase/browser';
 import { clearCategoryPhoto, setCategoryPhoto, type CategoryPhotoResult } from './actions';
 import styles from '../admin.module.css';
@@ -10,7 +10,7 @@ const TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_BYTES = 5 * 1024 * 1024;
 
 /** The picture for one category: choose a file to upload it (it replaces the current one), or remove it. */
-export function CategoryPhoto({ id, name, url, path, canEdit }: { id: string; name: string; url: string | null; path: string | null; canEdit: boolean }) {
+export function CategoryPhoto({ id, name, url, path, canEdit, actions }: { id: string; name: string; url: string | null; path: string | null; canEdit: boolean; actions?: ReactNode }) {
   const [result, setResult] = useState<CategoryPhotoResult | null>(null);
   const [busy, startTransition] = useTransition();
 
@@ -55,6 +55,7 @@ export function CategoryPhoto({ id, name, url, path, canEdit }: { id: string; na
               )}
             </div>
           )}
+          {actions}
           {result && (
             <p role="status" className={result.ok ? styles.muted : styles.notice}>
               {result.message}
