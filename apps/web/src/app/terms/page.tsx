@@ -90,10 +90,8 @@ export default async function TermsPage() {
       body: (
         <>
           <p>
-            Placing an order is an offer to buy. We accept it when payment is confirmed or, for pay on delivery, when we have
-            confirmed the order with you; you will get a message with your order number and a link to your order page. We reserve
-            the stock while you pay (a few minutes for an online payment) or while we confirm a pay on delivery order (for a
-            limited time, usually a day), and release it if the payment or the confirmation does not happen in time.
+            Placing an order is an offer to buy. We accept it when payment is confirmed; you will get a message with your order number and a link to your order
+            page. We reserve the stock while you pay (a few minutes) and release it if the payment does not happen in time.
           </p>
           <p>
             We may refuse or cancel an order if an item is out of stock, an address is outside our delivery areas, we can’t
@@ -107,31 +105,11 @@ export default async function TermsPage() {
       title: 'Payment',
       body: (
         <p>
-          You can pay online with Mobile Money (MTN MoMo, Telecel Cash or AT Money) or a Visa or Mastercard card, or choose pay
-          on delivery. Online payments are made on the secure page of our payment provider
+          You can pay online with Mobile Money (MTN MoMo, Telecel Cash or AT Money) or a Visa or Mastercard card. Payments are made on the secure page of our payment provider
           {business.paymentProvider ? `, ${business.paymentProvider}` : ''}: you approve a Mobile Money payment with your own PIN
           or enter your card there, so we never see or store your PIN or card details. If you save a Mobile Money number to your
           account we store only the network and the number, so you can choose it at checkout.
         </p>
-      ),
-    },
-    {
-      id: 'cash',
-      title: 'Pay on delivery',
-      body: (
-        <>
-          <p>
-            With pay on delivery you pay the rider in cash when your order arrives; we do not accept bank transfers. We call you
-            to confirm the order before we pack it, and an order we cannot confirm in time is cancelled and its stock released.
-            Please have the full amount ready; the rider cannot complete the delivery until it is paid. The option may be limited to
-            orders up to a maximum amount, may be switched off, and is not offered for items from independent stores, which are paid
-            for online.
-          </p>
-          <p>
-            If you repeatedly refuse or can’t be reached for pay on delivery orders, we may ask you to pay online in future. If you
-            paid cash and are later due a refund, we pay it to a Mobile Money number you give us.
-          </p>
-        </>
       ),
     },
     {

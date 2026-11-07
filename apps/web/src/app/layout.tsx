@@ -28,6 +28,8 @@ export const metadata: Metadata = {
   applicationName: siteName,
   openGraph: { type: 'website', siteName, locale: 'en_GH' },
   twitter: { card: 'summary_large_image' },
+  // Google Search Console's HTML-tag verification (optional; a DNS record verifies the whole domain without it).
+  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ? { verification: { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION } } : {}),
 };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {

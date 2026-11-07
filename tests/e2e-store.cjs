@@ -164,6 +164,9 @@ const count = (page) => page.locator('#results-count:visible').first().textConte
   const sitemap = await (await fetch(BASE + '/sitemap.xml')).text();
   assert(sitemap.includes('/products/vitamin-c-brightening-serum') && sitemap.includes('/shop/beauty/skincare') && sitemap.includes('/shop-by-age/1-2y'), 'the sitemap lists products, categories and age bands');
   assert(!/\/(admin|checkout|bag|account|orders)/.test(sitemap), 'the sitemap leaves private pages out');
+  const llms = await fetch(BASE + '/llms.txt');
+  const llmsText = await llms.text();
+  assert(llms.status === 200 && (llms.headers.get('content-type') ?? '').startsWith('text/plain') && llmsText.includes('Sleek Connect Store') && llmsText.includes('/shop/beauty/skincare') && !/\/(admin|checkout|bag|account|orders)/.test(llmsText), 'llms.txt summarises the store for AI assistants and links only public pages');
   for (const path of ['/admin', '/bag', '/checkout', '/account', '/saved', '/track', '/api/search/live']) {
     const res = await fetch(BASE + path, { redirect: 'manual' });
     assert((res.headers.get('x-robots-tag') ?? '').includes('noindex'), `${path} is marked noindex`);
