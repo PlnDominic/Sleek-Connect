@@ -31,9 +31,9 @@ The repository already contains many of these capabilities in an initial form. E
 ## P1 — Core customer experience
 
 21. **Build — Product search relevance:** Improve ranking using product name, brand, category, synonyms, availability, and popularity.
-22. **Build — Search filters:** Add robust filters for category, brand, age band, price, rating, availability, and delivery eligibility.
+22. **Build — Search filters:** Add robust filters for category, brand, price, rating, availability, and delivery eligibility.
 23. **Build — Sort controls:** Add relevance, newest, price ascending, price descending, rating, and best-selling sorts.
-24. **Build — Product comparison:** Allow shoppers to compare selected products on price, size, ingredients/materials, safety notes, age band, and availability.
+24. **Build — Product comparison:** Allow shoppers to compare selected products on price, size, ingredients/materials, safety notes, and availability.
 25. **Build — Product recommendations:** Add related, recently viewed, frequently bought together, and age-appropriate recommendations.
 26. **Build — Recently viewed products:** Persist recently viewed products for guests and signed-in shoppers with privacy-safe limits.
 27. **Build — Product availability alerts:** Let shoppers subscribe to restock notifications for unavailable products or sizes.

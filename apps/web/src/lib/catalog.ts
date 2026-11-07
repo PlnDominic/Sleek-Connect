@@ -1,6 +1,6 @@
 import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
-import { categoryFromRow, productFromRow, productSelect, type AgeBand, type AgeBandId, type Category, type Product } from '@sleek/shared';
+import { categoryFromRow, productFromRow, productSelect, type Category, type Product } from '@sleek/shared';
 import type { DeliveryConfig } from './delivery';
 import { photoUrl } from './photos';
 import { createSupabase } from './supabase/server';
@@ -9,7 +9,6 @@ import type { Database } from './supabase/database.types';
 type Tables = Database['public']['Tables'];
 type ProductRow = Tables['products']['Row'] & {
   product_sizes: Pick<Tables['product_sizes']['Row'], 'code' | 'label' | 'price_ghs' | 'is_default' | 'sort_order'>[];
-  product_age_bands: Pick<Tables['product_age_bands']['Row'], 'age_band_id'>[];
   inventory_levels: { size_code: string; in_stock: boolean | null }[];
   product_images: Pick<Tables['product_images']['Row'], 'path' | 'alt' | 'sort_order'>[];
 };
@@ -94,7 +93,6 @@ export async function getRelatedProducts(excludeSlug: string): Promise<Product[]
       (p.category === target.category ? 5 : 0) +
       (p.brand && target.brand && p.brand === target.brand ? 4 : 0) +
       (p.department === target.department ? 2 : 0) +
-      (p.ageBands?.some((a) => target.ageBands?.includes(a)) ? 2 : 0) +
       (p.inStock === false ? -3 : 0) +
       (p.popularity ?? 0) / 1000;
     [...all].filter((p) => p.slug !== excludeSlug).sort((a, b) => score(b) - score(a) || a.name.localeCompare(b.name)).forEach((p) => selected.set(p.slug, p));
@@ -227,29 +225,4 @@ export async function getStoreInfo(): Promise<StoreInfo> {
     supportEmail: s.support_email ?? undefined,
     supportHours: s.support_hours ?? undefined,
   };
-}
-
-export async function getAgeBands(): Promise<AgeBand[]> {
-  'use cache';
-  cacheLife('minutes');
-  cacheTag('catalog');
-
-  const rows = unwrap(await createSupabase().from('age_bands').select('id, label, stage').order('sort_order'));
-  return rows.map((b) => ({ id: b.id as AgeBandId, label: b.label, stage: b.stage }));
-}
-
-/** Published products suitable for an age band, by name. */
-export async function getAgeBandProducts(band: string): Promise<Product[]> {
-  'use cache';
-  cacheLife('minutes');
-  cacheTag('catalog');
-
-  const rows = unwrap(
-    await createSupabase()
-      .from('products')
-      .select(`${productColumns}, band:product_age_bands!inner(age_band_id)`)
-      .eq('band.age_band_id', band)
-      .order('name'),
-  );
-  return rows.map((r) => toProduct(r as unknown as ProductRow));
 }

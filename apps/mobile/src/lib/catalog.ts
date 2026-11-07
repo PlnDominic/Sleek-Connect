@@ -2,8 +2,6 @@ import {
   categoryFromRow,
   productFromRow,
   productSelect,
-  type AgeBand,
-  type AgeBandId,
   type Category,
   type CategoryRowLike,
   type ImageKey,
@@ -36,11 +34,6 @@ const photoBase = photoUrl('').replace(/\/$/, '');
 export async function getCategories(): Promise<Category[]> {
   const rows = check(await supabase.from('categories').select('*').order('sort_order'));
   return (rows as CategoryRowLike[]).map((r) => categoryFromRow(r, photoBase));
-}
-
-export async function getAgeBands(): Promise<AgeBand[]> {
-  const rows = check(await supabase.from('age_bands').select('id, label, stage').order('sort_order'));
-  return (rows as { id: string; label: string; stage: string }[]).map((b) => ({ id: b.id as AgeBandId, label: b.label, stage: b.stage }));
 }
 
 /** Products in a merchandising slot (for example `home_new_arrivals`), in position order. */

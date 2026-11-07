@@ -30,7 +30,6 @@ export async function AnnouncementBar() {
 
 /** Links after the departments, on the right of the category bar and in the phone menu. */
 const extraLinks = [
-  { label: 'Shop by Age', href: '/shop-by-age' },
   { label: 'Contact', href: '/help#contact' },
 ];
 

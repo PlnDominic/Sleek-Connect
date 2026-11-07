@@ -7,7 +7,7 @@ import { ListingView } from '@/components/listing/ListingView';
 import styles from '@/components/listing/listing.module.css';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SiteHeader } from '@/components/SiteHeader';
-import { getAgeBands, getCategories } from '@/lib/catalog';
+import { getCategories } from '@/lib/catalog';
 import { buildListing, getListingData, readFilters } from '@/lib/listing';
 import { defaultShareImage } from '@/lib/site';
 
@@ -108,14 +108,13 @@ async function Results({ scope, path, searchParams }: { scope: Scope; path: stri
   // Read the URL first: cached data fetched before this point would be frozen into the build-time shell and replayed
   // once after staff change the catalogue.
   const params = await searchParams;
-  const [{ products, categories, featured }, ageBands] = await Promise.all([getListingData(), getAgeBands()]);
+  const { products, categories, featured } = await getListingData();
   const filters = readFilters(params, 'featured');
   const inScope = products.filter(
     (p) => (!scope.department || p.department === scope.department) && (!scope.category || p.category === scope.category.id),
   );
   const listing = buildListing(inScope, filters, {
     categories,
-    ageBands,
     rank: new Map(featured),
     showCategories: !scope.category,
   });

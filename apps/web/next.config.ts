@@ -76,8 +76,8 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
-      // Shop by age opens on toddlers, the band the design shows by default.
-      { source: '/shop-by-age', destination: '/shop-by-age/1-2y', permanent: false },
+      // "Shop by age" was removed; old links and search results go to the kids' department.
+      { source: '/shop-by-age/:path*', destination: '/shop/kids', permanent: true },
     ];
   },
 };

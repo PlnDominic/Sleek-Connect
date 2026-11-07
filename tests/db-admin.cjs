@@ -66,7 +66,7 @@ const status = (id) => sql(`select status from public.orders where id = '${id}'`
   assert(immutable, 'audit log cannot be edited, even by the database owner');
 
   // --- Catalogue -----------------------------------------------------------------
-  const draft = { name: 'Rosehip Face Oil', department: 'beauty', kind: 'bottle', category_id: sql("select id from public.categories where department = 'beauty' limit 1"), price_ghs: 150, publish: true, sizes: [], age_bands: [] };
+  const draft = { name: 'Rosehip Face Oil', department: 'beauty', kind: 'bottle', category_id: sql("select id from public.categories where department = 'beauty' limit 1"), price_ghs: 150, publish: true, sizes: [] };
   assert((await errOf(S.ops.rpc('admin_save_product', { p: draft })))?.code === '42501', 'operations cannot edit the catalogue');
   const { data: saved, error: saveErr } = await S.cat.rpc('admin_save_product', { p: draft });
   assert(!saveErr && saved.published === false && saved.slug === 'rosehip-face-oil', `incomplete product saved as a draft (${saveErr?.message})`);
@@ -86,7 +86,7 @@ const status = (id) => sql(`select status from public.orders where id = '${id}'`
 
   // --- Home and fashion departments ---------------------------------------------------
   assert(sql("select count(*) from public.categories where department in ('home', 'fashion')") === '5', 'starter categories exist for the home and fashion departments');
-  const blender = { name: 'Blender 1L', department: 'home', kind: 'gift', category_id: 'kitchen-appliances', kids_filter: 'bath', price_ghs: 320, publish: true, sizes: [], age_bands: [] };
+  const blender = { name: 'Blender 1L', department: 'home', kind: 'gift', category_id: 'kitchen-appliances', kids_filter: 'bath', price_ghs: 320, publish: true, sizes: [] };
   const { data: bl, error: blErr } = await S.cat.rpc('admin_save_product', { p: blender });
   assert(!blErr && sql(`select department || '/' || coalesce(kids_filter::text, 'none') from public.products where id = '${bl?.id}'`) === 'home/none', `a home product saves with the kids filter cleared (${blErr?.message})`);
   assert(bl && !bl.problems.includes('FDA registration number') && !bl.problems.includes('age range'), `home products need neither an FDA number nor an age range (${bl?.problems})`);

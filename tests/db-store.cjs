@@ -68,7 +68,7 @@ async function deliver(S, o, rider) {
   const blocksId = sql("select id from public.products where slug = 'wooden-stacking-blocks'");
   const lipId = sql("select id from public.products where slug = 'velvet-matte-lip-colour'");
   const beauty = sql("select id from public.categories where department = 'beauty' limit 1");
-  const balm = { name: 'Rose Lip Balm', department: 'beauty', kind: 'tube', category_id: beauty, price_ghs: 40, brand: 'Glow Lab', description: 'Balm.', ingredients: 'Shea', warnings: 'External use.', country_of_origin: 'Ghana', regulatory_reference: 'FDA/1', sizes: [], age_bands: [], publish: true, warning_label: ' Contains shea nut butter. ', shades: ['Ruby', ' Nude ', ''], skin_types: ['Dry'], returnable: false, return_note: 'Unopened only.' };
+  const balm = { name: 'Rose Lip Balm', department: 'beauty', kind: 'tube', category_id: beauty, price_ghs: 40, brand: 'Glow Lab', description: 'Balm.', ingredients: 'Shea', warnings: 'External use.', country_of_origin: 'Ghana', regulatory_reference: 'FDA/1', sizes: [], publish: true, warning_label: ' Contains shea nut butter. ', shades: ['Ruby', ' Nude ', ''], skin_types: ['Dry'], returnable: false, return_note: 'Unopened only.' };
   const { data: balmSaved, error: balmErr } = await S.cat.rpc('admin_save_product', { p: balm });
   assert(!balmErr && balmSaved.published, `product with the new fields publishes (${balmErr?.message ?? balmSaved?.problems})`);
   assert(sql(`select array_to_string(shades, ',') || '|' || array_to_string(skin_types, ',') || '|' || returnable || '|' || return_note || '|' || warning_label from public.products where id = '${balmSaved.id}'`) === 'Ruby,Nude|Dry|false|Unopened only.|Contains shea nut butter.', 'filters, warning and return rule stored (trimmed)');

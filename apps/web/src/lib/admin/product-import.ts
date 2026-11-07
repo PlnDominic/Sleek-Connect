@@ -7,7 +7,7 @@ export const importColumns = [
   'slug', 'name', 'brand', 'department', 'category', 'kids_filter', 'kind', 'price', 'was_price', 'tag', 'summary',
   'description', 'highlights', 'free_from', 'recommended_age', 'warnings', 'how_to_use', 'ingredients',
   'country_of_origin', 'regulatory_reference', 'period_after_opening', 'skin_types', 'shades', 'warning_label',
-  'returnable', 'return_note', 'age_bands', 'sizes', 'publish',
+  'returnable', 'return_note', 'sizes', 'publish',
 ] as const;
 
 export type ImportColumn = (typeof importColumns)[number];
@@ -100,7 +100,6 @@ export function rowPayload(v: ImportRow['values'], existing?: ProductPayload): P
     warning_label: pick('warning_label', existing?.warning_label),
     returnable: v.returnable ? /^(yes|true|y)$/i.test(v.returnable) : (existing?.returnable ?? true),
     return_note: pick('return_note', existing?.return_note),
-    age_bands: v.age_bands ? list(v.age_bands) : (existing?.age_bands ?? []),
     sizes: sizes.length ? sizes : (existing?.sizes ?? []),
     publish: v.publish ? /^(yes|true|y)$/i.test(v.publish) : (existing?.publish ?? false),
   };

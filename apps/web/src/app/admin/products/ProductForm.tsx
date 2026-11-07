@@ -19,7 +19,6 @@ interface Option {
 interface ProductFormProps {
   product?: ProductPayload;
   categories: Option[];
-  ageBands: Option[];
   imageKeys: string[];
   /** The size guides a product can be given, and the one it has now. */
   sizeGuides?: Option[];
@@ -42,7 +41,7 @@ const codeFor = (s: SizePayload) => s.code || s.label.toLowerCase().replace(/[^a
  * number. Everything else the product already has (highlights, skin types, size guide…) is kept untouched in hidden fields, so editing
  * a product here never erases it.
  */
-export function ProductForm({ product, categories, ageBands, sizeGuideId, problems, canEdit }: ProductFormProps) {
+export function ProductForm({ product, categories, sizeGuideId, problems, canEdit }: ProductFormProps) {
   const [state, action, pending] = useActionState<ActionState, FormData>(saveProduct, null);
   const [, startTransition] = useTransition();
   const router = useRouter();
@@ -196,19 +195,6 @@ export function ProductForm({ product, categories, ageBands, sizeGuideId, proble
           {cosmetic && field('ingredients', 'Ingredients (optional)', <textarea name="ingredients" rows={2} defaultValue={product?.ingredients} />, 'As printed on the pack')}
           {!cosmetic && <input type="hidden" name="regulatory_reference" value={product?.regulatory_reference ?? ''} />}
           {!cosmetic && <input type="hidden" name="ingredients" value={product?.ingredients ?? ''} />}
-          {department === 'kids' && ageBands.length > 0 && (
-            <fieldset className={styles.field}>
-              <span>Ages (optional, for Shop by age)</span>
-              <div className={styles.checks}>
-                {ageBands.map((b) => (
-                  <label key={b.id} className={styles.check}>
-                    <input type="checkbox" name="age_bands" value={b.id} defaultChecked={product?.age_bands.includes(b.id)} />
-                    {b.name}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-          )}
         </section>
 
         {!product?.id && (

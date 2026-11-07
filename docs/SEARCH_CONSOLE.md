@@ -4,7 +4,7 @@ What the site already does for search engines and AI answer engines, and the ste
 
 ## What the site provides
 
-- `/sitemap.xml`: every public page (home, shop, departments, categories, age bands, help, terms, privacy, each product).
+- `/sitemap.xml`: every public page (home, shop, departments, categories, help, terms, privacy, each product).
 - `/robots.txt`: lets crawlers read the shop and keeps the admin, bag, checkout, account and order pages out. Those pages are also `noindex`.
 - Canonical links on product and shop pages (filters and pages point at the plain page, so search engines see one copy).
 - schema.org data: `Organization` and `WebSite` (with a site search box) on the home page, `Product`, `Offer` and `BreadcrumbList` on each product page.

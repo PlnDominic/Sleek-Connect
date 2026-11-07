@@ -48,28 +48,14 @@ const statusPanel = (page) => page.locator('aside:visible').getByRole('status').
   await page.context().addCookies(buyer.cookies());
   const bag = page.locator('header a[aria-label^="Bag"]:visible');
 
-  // --- #10 Shop by age -------------------------------------------------------
+  // --- Shop by age is gone: old links go to the kids' department ----------------------------
+  const oldAge = await page.request.get(BASE + '/shop-by-age/1-2y', { maxRedirects: 0 });
+  assert(oldAge.status() === 308 && (oldAge.headers()['location'] ?? '').endsWith('/shop/kids'), 'old shop-by-age links redirect to the kids department');
   await go(page, BASE + '/');
-  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Shop by Age' }).click();
-  await page.waitForURL('**/shop-by-age/1-2y');
-  assert(await page.getByRole('heading', { name: '3 products for 1–2 years' }).or(page.getByRole('heading', { name: /3 products for/ })).isVisible(), 'shop by age lists the 1-2y products');
-  const bandNav = page.getByRole('navigation', { name: 'Age band' });
-  assert((await bandNav.locator('[aria-current="page"]').textContent()).includes('1'), 'current age band is marked');
-  await page.getByRole('button', { name: 'Toys' }).click();
-  assert(await page.getByRole('heading', { name: /2 products for/ }).isVisible(), 'toys filter narrows to 2');
-  assert(await page.getByText('Sold out').first().isVisible(), 'sold-out puzzle is labelled');
-  assert(await page.getByRole('button', { name: 'Wooden Number Puzzle is sold out' }).isDisabled(), 'sold-out add button disabled');
-  await page.getByRole('button', { name: 'Clothing' }).click();
-  assert(await page.getByText('Nothing here yet for this age').isVisible(), 'empty filter shows a message');
-  await page.getByRole('button', { name: 'All' }).click();
-  await bandNav.getByRole('link').first().click();
-  await page.waitForURL('**/shop-by-age/0-6m');
-  assert(await page.getByRole('link', { name: 'Newborn Gift Hamper' }).isVisible(), '0-6m band shows the hamper');
-  await page.getByRole('button', { name: 'Add Organic Cotton Bodysuits, 3-pack to bag' }).click();
-  assert((await bag.getAttribute('aria-label')) === 'Bag, 1 item', 'add to bag from shop by age');
-  await page.screenshot({ path: OUT + '/shop-by-age.png' });
-  const notFound = await page.request.get(BASE + '/shop-by-age/99y');
-  assert((await notFound.text()).includes('could not be found'), 'unknown age band shows not found');
+  assert((await page.getByRole('link', { name: 'Shop by Age' }).count()) === 0, 'there is no Shop by Age link');
+  await go(page, BASE + '/products/organic-cotton-bodysuits');
+  await page.getByRole('button', { name: 'Add to bag' }).click();
+  assert((await bag.getAttribute('aria-label')) === 'Bag, 1 item', 'add to bag from a product page');
 
   // --- Sold out on the product page ----------------------------------------
   await go(page, BASE + '/products/gentle-baby-wash-shampoo');

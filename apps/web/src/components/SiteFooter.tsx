@@ -15,7 +15,6 @@ const columns = [
       { label: 'Home & Groceries', href: '/shop/home' },
       { label: 'Fashion & Accessories', href: '/shop/fashion' },
       { label: 'Skin type finder', href: '/skin-finder' },
-      { label: 'Shop by Age', href: '/shop-by-age' },
     ],
   },
   {

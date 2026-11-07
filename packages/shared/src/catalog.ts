@@ -41,23 +41,6 @@ export function isDepartment(value: string | null | undefined): value is Departm
 /** Shape used for the tinted placeholder when a product has no photo yet. */
 export type ProductKind = 'bottle' | 'jar' | 'tube' | 'garment' | 'toy' | 'gift' | 'box';
 
-export type AgeBandId = '0-6m' | '6-12m' | '1-2y' | '3-5y' | '6-8y' | '9-12y';
-
-export interface AgeBand {
-  id: AgeBandId;
-  label: string;
-  stage: string;
-}
-
-export const ageBands: AgeBand[] = [
-  { id: '0-6m', label: '0–6m', stage: 'Newborn' },
-  { id: '6-12m', label: '6–12m', stage: 'Crawlers' },
-  { id: '1-2y', label: '1–2y', stage: 'Toddlers' },
-  { id: '3-5y', label: '3–5y', stage: 'Pre-school' },
-  { id: '6-8y', label: '6–8y', stage: 'Early school' },
-  { id: '9-12y', label: '9–12y', stage: 'Big kids' },
-];
-
 export type KidsFilter = 'bath' | 'toys' | 'clothing' | 'gifts';
 
 export interface ProductSize {
@@ -89,7 +72,6 @@ export interface Product {
   kind: ProductKind;
   sizes?: ProductSize[];
   defaultSize?: string;
-  ageBands?: AgeBandId[];
   /** False when no size can be bought right now; undefined when stock isn't known. */
   inStock?: boolean;
   /** Sub-collection shown in the breadcrumb, e.g. "Bath time". */
@@ -163,7 +145,6 @@ export const products: Product[] = [
       { id: '400', label: '400 ml', price: 85 },
     ],
     defaultSize: '400',
-    ageBands: ['0-6m', '6-12m', '1-2y'],
     collection: 'Bath time',
     details: {
       description: 'A mild, tear-free wash for hair and body. Fragrance-free and pH balanced for newborn skin.',
@@ -236,7 +217,6 @@ export const products: Product[] = [
     summary: 'Soft organic cotton with easy snap fastenings.',
     tint: colors.tealPale,
     kind: 'garment',
-    ageBands: ['0-6m', '6-12m'],
   },
   {
     slug: 'wooden-stacking-blocks',
@@ -251,7 +231,6 @@ export const products: Product[] = [
     summary: 'Chunky, smooth-edged blocks finished with non-toxic paint.',
     tint: colors.blush,
     kind: 'toy',
-    ageBands: ['1-2y', '3-5y'],
   },
   {
     slug: 'wooden-number-puzzle',
@@ -264,7 +243,6 @@ export const products: Product[] = [
     summary: 'Bright, non-toxic pieces for learning numbers, colours and shapes.',
     tint: colors.tealSoft,
     kind: 'toy',
-    ageBands: ['1-2y', '3-5y'],
   },
   {
     slug: 'newborn-gift-hamper',
@@ -278,7 +256,6 @@ export const products: Product[] = [
     image: 'giftCollection',
     tint: colors.surface,
     kind: 'gift',
-    ageBands: ['0-6m'],
   },
   {
     slug: 'argan-hair-oil',

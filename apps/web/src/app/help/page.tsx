@@ -185,7 +185,7 @@ export default async function HelpPage() {
           <Topic id="safety" title="Product safety">
             <Faq q="How do you keep baby and kids’ products safe?">
               <p>
-                Every kids’ product lists its recommended age, and you can <Link href="/shop-by-age">shop by age</Link>.
+                Every kids’ product lists its recommended age.
                 Important warnings, such as small parts, appear above “Add to bag” and in your bag.
               </p>
             </Faq>

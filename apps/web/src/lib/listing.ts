@@ -32,7 +32,6 @@ export interface Filters {
   category: string[];
   brand: string[];
   price: string[];
-  age: string[];
   skin: string[];
   shade: string[];
   rating: string[];
@@ -52,7 +51,6 @@ export function readFilters(params: Params, defaultSort: SortKey): Filters {
     category: list(params.category),
     brand: list(params.brand),
     price: list(params.price),
-    age: list(params.age),
     skin: list(params.skin),
     shade: list(params.shade),
     rating: list(params.rating),
@@ -63,13 +61,12 @@ export function readFilters(params: Params, defaultSort: SortKey): Filters {
   };
 }
 
-type FacetKey = 'category' | 'brand' | 'price' | 'age' | 'skin' | 'shade' | 'rating';
+type FacetKey = 'category' | 'brand' | 'price' | 'skin' | 'shade' | 'rating';
 
 const matches: Record<FacetKey, (p: Product, values: string[]) => boolean> = {
   category: (p, v) => v.includes(p.category),
   brand: (p, v) => Boolean(p.brand && v.includes(p.brand)),
   price: (p, v) => priceBands.some((b) => v.includes(b.id) && p.price >= b.min && p.price < b.max),
-  age: (p, v) => Boolean(p.ageBands?.some((a) => v.includes(a))),
   skin: (p, v) => Boolean(p.skinTypes?.some((s) => v.includes(s))),
   shade: (p, v) => Boolean(p.shades?.some((s) => v.includes(s))),
   rating: (p, v) => v.some((value) => (p.rating ?? 0) >= Number(value)),
@@ -128,7 +125,7 @@ export interface Listing {
 export function buildListing(
   scope: Product[],
   f: Filters,
-  context: { categories: Category[]; ageBands: { id: string; label: string }[]; rank?: Map<string, number>; showCategories: boolean },
+  context: { categories: Category[]; rank?: Map<string, number>; showCategories: boolean },
 ): Listing {
   const filtered = scope.filter((p) => passes(p, f));
   const rank = (p: Product) => context.rank?.get(p.slug) ?? Number.MAX_SAFE_INTEGER;
@@ -158,7 +155,6 @@ export function buildListing(
     context.showCategories
       ? facet('category', 'Category', scope, f, context.categories.filter((c) => inScope(c.id)).map((c) => ({ value: c.id, label: c.name })))
       : null,
-    facet('age', 'Age', scope, f, context.ageBands.filter((a) => scope.some((p) => p.ageBands?.includes(a.id as never))).map((a) => ({ value: a.id, label: a.label }))),
     facet('skin', 'Skin type', scope, f, unique(scope.flatMap((p) => p.skinTypes ?? [])).map((v) => ({ value: v, label: v }))),
     facet('shade', 'Shade', scope, f, unique(scope.flatMap((p) => p.shades ?? [])).map((v) => ({ value: v, label: v }))),
     facet('rating', 'Rating', scope, f, [
@@ -234,7 +230,6 @@ export function listingHref(path: string, f: Filters, change: Partial<Record<str
     category: f.category,
     brand: f.brand,
     price: f.price,
-    age: f.age,
     skin: f.skin,
     shade: f.shade,
     rating: f.rating,

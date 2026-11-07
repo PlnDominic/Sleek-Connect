@@ -10,7 +10,7 @@ import { ProductImage } from '@/components/ProductImage';
 import { ProductTile } from '@/components/ProductTile';
 import { ErrorState, ProductGridSkeleton, Skeleton } from '@/components/States';
 import { CountBadge, IconButton, SectionHeader, useScreenTop } from '@/components/ui';
-import { getAgeBands, getAllProducts, getCategories, getHome, type Banner } from '@/lib/catalog';
+import { getAllProducts, getCategories, getHome, type Banner } from '@/lib/catalog';
 import { appHref } from '@/lib/links';
 import { useQuery } from '@/lib/query';
 import { images } from '@/theme/images';
@@ -33,7 +33,6 @@ export default function HomeScreen() {
   const home = useQuery('home', getHome);
   const all = useQuery('products:all', getAllProducts);
   const categories = useQuery('categories', getCategories);
-  const bands = useQuery('age-bands', getAgeBands);
 
   // A department shows once it has a category, so a new one doesn't appear empty.
   const shownDepartments = categories.data ? departmentIds.filter((d) => categories.data?.some((c) => c.department === d)) : departmentIds;
@@ -148,27 +147,6 @@ export default function HomeScreen() {
                     <ProductImage image={c.image} photo={c.photo} tint={c.tint} kind={c.kind} style={styles.categoryImage} iconSize={26} />
                     <AppText weight="semibold" size={12} numberOfLines={2} style={styles.categoryName}>
                       {c.name}
-                    </AppText>
-                  </Pressable>
-                ))}
-              </ScrollView>
-            </View>
-          )}
-
-          {dept === 'kids' && (bands.data?.length ?? 0) > 0 && (
-            <View style={styles.section}>
-              <SectionHeader title="Shop by age" onSeeAll={() => router.push('/shop-by-age')} />
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.ageRow}>
-                {bands.data!.map((band) => (
-                  <Pressable
-                    key={band.id}
-                    accessibilityRole="link"
-                    accessibilityLabel={`Shop ages ${band.label}`}
-                    onPress={() => router.push({ pathname: '/shop-by-age', params: { band: band.id } })}
-                    style={styles.ageChip}
-                  >
-                    <AppText weight="bold" size={15} color={colors.teal}>
-                      {band.label}
                     </AppText>
                   </Pressable>
                 ))}
@@ -396,16 +374,6 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
   },
   categoryName: {
     textAlign: 'center',
-  },
-  ageRow: {
-    gap: 8,
-  },
-  ageChip: {
-    backgroundColor: colors.tealSoft,
-    borderRadius: radii.lg,
-    minHeight: 44,
-    justifyContent: 'center',
-    paddingHorizontal: 16,
   },
   grid: {
     flexDirection: 'row',

@@ -2,14 +2,6 @@
 -- Starter catalogue and checkout configuration for local development.
 -- Load it into a hosted project with: npx supabase db push --include-seed
 
-insert into public.age_bands (id, label, stage, sort_order) values
-  ('0-6m', '0–6m', 'Newborn', 0),
-  ('6-12m', '6–12m', 'Crawlers', 1),
-  ('1-2y', '1–2y', 'Toddlers', 2),
-  ('3-5y', '3–5y', 'Pre-school', 3),
-  ('6-8y', '6–8y', 'Early school', 4),
-  ('9-12y', '9–12y', 'Big kids', 5);
-
 insert into public.categories (id, name, department, image_key, tint, kind, sort_order) values
   ('skincare', 'Skincare', 'beauty', null, '#E8EEF5', 'bottle', 0),
   ('makeup', 'Makeup', 'beauty', null, '#E8EEF5', 'tube', 1),
@@ -39,27 +31,6 @@ union all
 select (select id from public.products where slug = 'gentle-baby-wash-shampoo'), '400', '400 ml', 85, true, 1
 union all
 select (select id from public.products where slug = 'vitamin-c-brightening-serum'), '30', '30 ml', 220, true, 0;
-
-insert into public.product_age_bands (product_id, age_band_id)
-select (select id from public.products where slug = 'gentle-baby-wash-shampoo'), '0-6m'
-union all
-select (select id from public.products where slug = 'gentle-baby-wash-shampoo'), '6-12m'
-union all
-select (select id from public.products where slug = 'gentle-baby-wash-shampoo'), '1-2y'
-union all
-select (select id from public.products where slug = 'organic-cotton-bodysuits'), '0-6m'
-union all
-select (select id from public.products where slug = 'organic-cotton-bodysuits'), '6-12m'
-union all
-select (select id from public.products where slug = 'wooden-stacking-blocks'), '1-2y'
-union all
-select (select id from public.products where slug = 'wooden-stacking-blocks'), '3-5y'
-union all
-select (select id from public.products where slug = 'wooden-number-puzzle'), '1-2y'
-union all
-select (select id from public.products where slug = 'wooden-number-puzzle'), '3-5y'
-union all
-select (select id from public.products where slug = 'newborn-gift-hamper'), '0-6m';
 
 insert into public.merchandising_slots (slot, product_id, position)
 select 'home_hero', (select id from public.products where slug = 'vitamin-c-brightening-serum'), 0

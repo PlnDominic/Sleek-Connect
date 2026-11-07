@@ -10,7 +10,7 @@ export function appHref(webHref: string | undefined): Href {
   const [path] = webHref.split('?');
   const parts = path.split('/').filter(Boolean);
   if (parts[0] === 'products' && parts[1]) return { pathname: '/product/[slug]', params: { slug: parts[1] } };
-  if (parts[0] === 'shop-by-age') return '/shop-by-age';
+  if (parts[0] === 'shop-by-age') return { pathname: '/shop', params: { department: 'kids' } };
   if (parts[0] === 'shop' && isDepartment(parts[1])) {
     return { pathname: '/shop', params: parts[2] ? { department: parts[1], category: parts[2] } : { department: parts[1] } };
   }

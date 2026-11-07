@@ -30,7 +30,6 @@ export function GET() {
     warning_label: '',
     returnable: 'yes',
     return_note: 'Unopened and sealed only.',
-    age_bands: '',
     sizes: '15:15 ml:90;*30:30 ml:150',
     publish: 'no',
   };

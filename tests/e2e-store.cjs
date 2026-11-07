@@ -163,7 +163,7 @@ const count = (page) => page.locator('#results-count:visible').first().textConte
   assert(!/admin|\/api|\/auth/.test(robots) && /Disallow: \/checkout/.test(robots) && /Sitemap: \S+\/sitemap\.xml/.test(robots), 'robots.txt keeps crawlers out of private pages and points to the sitemap, without naming the admin or API');
   for (const hidden of ['/admin', '/api/health']) assert((await fetch(BASE + hidden)).headers.get('x-robots-tag')?.includes('noindex'), `${hidden} is marked noindex`);
   const sitemap = await (await fetch(BASE + '/sitemap.xml')).text();
-  assert(sitemap.includes('/products/vitamin-c-brightening-serum') && sitemap.includes('/shop/beauty/skincare') && sitemap.includes('/shop-by-age/1-2y'), 'the sitemap lists products, categories and age bands');
+  assert(sitemap.includes('/products/vitamin-c-brightening-serum') && sitemap.includes('/shop/beauty/skincare'), 'the sitemap lists products and categories');
   assert(!/\/(admin|checkout|bag|account|orders)/.test(sitemap), 'the sitemap leaves private pages out');
   const llms = await fetch(BASE + '/llms.txt');
   const llmsText = await llms.text();

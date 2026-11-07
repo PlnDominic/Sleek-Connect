@@ -52,5 +52,6 @@ const stamp = Date.now();
   assert(Number(sql(`select count(*) from public.categories where id = 'nail-care'`)) === 0, 'and it is gone');
   assert(Number(sql(`select count(*) from public.audit_log where action like 'category.%'`)) >= 4, 'each change is in the audit log');
 
+  assert(sql("select coalesce(to_regclass('public.age_bands')::text, '') || coalesce(to_regclass('public.product_age_bands')::text, '')") === '', 'Shop by age is gone: its tables no longer exist');
   process.exit(failures ? 1 : 0);
 })();

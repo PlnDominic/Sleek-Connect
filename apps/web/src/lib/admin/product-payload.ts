@@ -38,14 +38,13 @@ export interface ProductPayload {
   returnable?: boolean;
   return_note?: string;
   sizes: SizePayload[];
-  age_bands: string[];
   publish: boolean;
 }
 
 export const productKinds = ['bottle', 'jar', 'tube', 'garment', 'toy', 'gift', 'box'] as const;
 export const kidsFilters = ['bath', 'toys', 'clothing', 'gifts'] as const;
 
-/** A product row as staff read it, with its sizes and age bands. */
+/** A product row as staff read it, with its sizes. */
 export interface ProductRow {
   id: string;
   slug: string;
@@ -74,11 +73,10 @@ export interface ProductRow {
   return_note: string | null;
   is_published: boolean;
   product_sizes: { code: string; label: string; price_ghs: number; is_default: boolean; sort_order: number }[];
-  product_age_bands: { age_band_id: string }[];
 }
 
 export const productRowColumns =
-  'id, slug, name, brand, department, category_id, kids_filter, kind, price_ghs, was_price_ghs, badge, tag, summary, image_key, tint, details, ingredients, country_of_origin, regulatory_reference, period_after_opening, skin_types, shades, warning_label, returnable, return_note, is_published, recalled_at, recall_reason, product_sizes(code, label, price_ghs, is_default, sort_order), product_age_bands(age_band_id)';
+  'id, slug, name, brand, department, category_id, kids_filter, kind, price_ghs, was_price_ghs, badge, tag, summary, image_key, tint, details, ingredients, country_of_origin, regulatory_reference, period_after_opening, skin_types, shades, warning_label, returnable, return_note, is_published, recalled_at, recall_reason, product_sizes(code, label, price_ghs, is_default, sort_order)';
 
 export function rowToPayload(row: ProductRow): ProductPayload {
   const d = (row.details ?? {}) as Record<string, unknown>;
@@ -118,7 +116,6 @@ export function rowToPayload(row: ProductRow): ProductPayload {
     sizes: [...row.product_sizes]
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((s) => ({ code: s.code, label: s.label, price_ghs: s.price_ghs, is_default: s.is_default })),
-    age_bands: row.product_age_bands.map((b) => b.age_band_id),
     publish: row.is_published,
   };
 }

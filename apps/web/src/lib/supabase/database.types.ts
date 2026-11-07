@@ -23,21 +23,7 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "age_bands": {
-                  Row: {
-                    "id": string,"label": string,"sort_order": number,"stage": string
-                  }
-                  ComputedFields: never
-                  Insert: {
-                    "id": string,"label": string,"sort_order": number,"stage": string
-                  }
-                  Update: {
-                    "id"?: string,"label"?: string,"sort_order"?: number,"stage"?: string
-                  }
-                  Relationships: [
-                    
-                  ]
-                },"audit_log": {
+            "audit_log": {
                   Row: {
                     "action": string,"actor_email": string | null,"actor_id": string | null,"at": string,"details": Json | null,"entity": string,"entity_id": string | null,"id": number
                   }
@@ -384,32 +370,6 @@ isOneToOne: false
       columns: ["order_id"]
 isOneToOne: false
       referencedRelation: "orders"
-      referencedColumns: ["id"]
-    }
-                  ]
-                },"product_age_bands": {
-                  Row: {
-                    "age_band_id": string,"product_id": string
-                  }
-                  ComputedFields: never
-                  Insert: {
-                    "age_band_id": string,"product_id": string
-                  }
-                  Update: {
-                    "age_band_id"?: string,"product_id"?: string
-                  }
-                  Relationships: [
-                    {
-      foreignKeyName: "product_age_bands_age_band_id_fkey"
-      columns: ["age_band_id"]
-isOneToOne: false
-      referencedRelation: "age_bands"
-      referencedColumns: ["id"]
-    },{
-      foreignKeyName: "product_age_bands_product_id_fkey"
-      columns: ["product_id"]
-isOneToOne: false
-      referencedRelation: "products"
       referencedColumns: ["id"]
     }
                   ]

@@ -18,7 +18,7 @@ interface ListingViewProps {
 /** Filter sidebar, sort, results grid and pagination, shared by category pages and search. */
 export function ListingView({ path, listing, filters, sorts, keep = {}, empty }: ListingViewProps) {
   const active =
-    filters.category.length + filters.brand.length + filters.price.length + filters.age.length + filters.skin.length +
+    filters.category.length + filters.brand.length + filters.price.length + filters.skin.length +
     filters.shade.length + filters.rating.length + (filters.sale ? 1 : 0) + (filters.inStock ? 1 : 0);
   const from = (listing.page - 1) * 24 + 1;
   const to = from + listing.products.length - 1;

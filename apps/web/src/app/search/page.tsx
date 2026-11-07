@@ -8,7 +8,6 @@ import { SearchBox } from '@/components/SearchBox';
 import { SearchMissBeacon } from '@/components/SearchMissBeacon';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SiteHeader } from '@/components/SiteHeader';
-import { getAgeBands } from '@/lib/catalog';
 import { buildListing, getListingData, readFilters, searchProducts } from '@/lib/listing';
 import { didYouMean } from '@/lib/search';
 
@@ -31,15 +30,14 @@ export default function SearchPage({ searchParams }: PageProps<'/search'>) {
 async function SearchResults({ searchParams }: { searchParams: PageProps<'/search'>['searchParams'] }) {
   const params = await searchParams;
   const q = typeof params.q === 'string' ? params.q.trim().slice(0, 100) : '';
-  const [{ products, categories }, ageBands, slugs] = await Promise.all([
+  const [{ products, categories }, slugs] = await Promise.all([
     getListingData(),
-    getAgeBands(),
     q.length >= 2 ? searchProducts(q) : Promise.resolve([] as string[]),
   ]);
   const rank = new Map(slugs.map((slug, i) => [slug, i] as [string, number]));
   const matches = products.filter((p) => rank.has(p.slug));
   const filters = readFilters(params, 'relevance');
-  const listing = buildListing(matches, filters, { categories, ageBands, rank, showCategories: true });
+  const listing = buildListing(matches, filters, { categories, rank, showCategories: true });
   // Only when nothing matched at all (not when filters hide the matches).
   const corrections = q.length >= 2 && matches.length === 0 ? await didYouMean(q) : [];
   // When nothing matches, still show something worth buying: the most popular products that are in stock.

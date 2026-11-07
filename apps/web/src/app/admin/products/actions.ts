@@ -48,7 +48,6 @@ function payloadFromForm(form: FormData): ProductPayload {
     returnable: form.get('returnable') === 'on',
     return_note: text(form, 'return_note'),
     sizes: sizes.filter((s) => s.code || s.label || s.price_ghs !== ''),
-    age_bands: form.getAll('age_bands').map(String),
     publish: form.get('publish') === 'on',
   };
 }

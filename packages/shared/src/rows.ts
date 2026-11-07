@@ -4,7 +4,6 @@
  */
 import {
   asImageKey,
-  type AgeBandId,
   type Category,
   type Department,
   type KidsFilter,
@@ -13,11 +12,11 @@ import {
   type ProductKind,
 } from './catalog';
 
-/** The columns to select for a product, with the tables it needs to be shown (sizes, age bands, stock, photos). */
+/** The columns to select for a product, with the tables it needs to be shown (sizes, stock, photos). */
 // Listed column by column: the supplier cost and the review notes on `products` are not readable by the shop (see
 // migration 20261109090000). A new column the shop needs must be added here and granted with `grant select (col) on public.products`.
 export const productSelect =
-  'id, slug, name, brand, department, category_id, kids_filter, collection, price_ghs, was_price_ghs, badge, tag, summary, image_key, tint, kind, details, is_published, created_at, updated_at, ingredients, country_of_origin, regulatory_reference, period_after_opening, recalled_at, recall_reason, skin_types, shades, warning_label, returnable, return_note, size_guide_id, product_sizes(code, label, price_ghs, is_default, sort_order), product_age_bands(age_band_id), inventory_levels(size_code, in_stock), product_images(path, alt, sort_order)';
+  'id, slug, name, brand, department, category_id, kids_filter, collection, price_ghs, was_price_ghs, badge, tag, summary, image_key, tint, kind, details, is_published, created_at, updated_at, ingredients, country_of_origin, regulatory_reference, period_after_opening, recalled_at, recall_reason, skin_types, shades, warning_label, returnable, return_note, size_guide_id, product_sizes(code, label, price_ghs, is_default, sort_order), inventory_levels(size_code, in_stock), product_images(path, alt, sort_order)';
 
 /** A `products` row as `productSelect` returns it. */
 export interface ProductRowLike {
@@ -48,7 +47,6 @@ export interface ProductRowLike {
   regulatory_reference: string | null;
   period_after_opening: string | null;
   product_sizes: { code: string; label: string; price_ghs: number; is_default: boolean; sort_order: number }[];
-  product_age_bands: { age_band_id: string }[];
   inventory_levels: { size_code: string; in_stock: boolean | null }[];
   product_images: { path: string; alt: string | null; sort_order: number }[];
   /** Who sells it; missing when the query didn't ask for it. */
@@ -82,7 +80,6 @@ export function productFromRow(row: ProductRowLike, photoUrl: (path: string) => 
       ? sizes.map((s) => ({ id: s.code, label: s.label, price: s.price_ghs, inStock: inStock(s.code) }))
       : undefined,
     defaultSize: sizes.find((s) => s.is_default)?.code,
-    ageBands: row.product_age_bands.map((b) => b.age_band_id as AgeBandId),
     inStock: sizes.length ? sizes.some((s) => inStock(s.code)) : inStock(''),
     details: (row.details as ProductDetails | null) ?? undefined,
     warningLabel: row.warning_label ?? undefined,

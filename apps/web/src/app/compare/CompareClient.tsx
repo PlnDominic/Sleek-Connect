@@ -10,7 +10,7 @@ export function CompareClient() {
     ['Rating', (p) => p.reviewCount ? `${p.rating?.toFixed(1)} / 5 (${p.reviewCount} reviews)` : 'No reviews yet'],
     ['Availability', (p) => p.inStock === false ? 'Sold out' : 'In stock'],
     ['Sizes', (p) => p.sizes?.map((s) => `${s.label} · ${formatPrice(s.price)}`).join(', ') ?? 'One size'],
-    ['Age range', (p) => p.details?.recommendedAge ?? p.ageBands?.join(', ') ?? 'Not specified'],
+    ['Age range', (p) => p.details?.recommendedAge ?? 'Not specified'],
     ['Ingredients / materials', (p) => p.compliance?.ingredients ?? 'See product details'],
     ['Safety notes', (p) => p.warningLabel ?? p.details?.warnings ?? 'No special warning listed'],
   ];

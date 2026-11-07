@@ -8,10 +8,10 @@ Expo** for the mobile app (App Store and Google Play, tested in Expo Go). The we
 
 | Workspace | What it is | Status |
 | --- | --- | --- |
-| [`apps/web`](apps/web) | Next.js 16 storefront (Home, Shop and category pages with filters, Search, Shop by age, Product, Bag, Checkout, Account with addresses and saved items, order tracking, receipts, cancellation, returns and the help centre) and the staff admin console at `/admin` | Active. Runs on Supabase |
+| [`apps/web`](apps/web) | Next.js 16 storefront (Home, Shop and category pages with filters, Search, Product, Bag, Checkout, Account with addresses and saved items, order tracking, receipts, cancellation, returns and the help centre) and the staff admin console at `/admin` | Active. Runs on Supabase |
 | [`tests`](tests) | Database and browser test suites (`npm test`), also run by GitHub Actions | Active |
 | [`supabase`](supabase) | Database schema (migrations), access rules and starter data | Active |
-| [`apps/mobile`](apps/mobile) | Expo SDK 57 app: Home, Shop (live search and filters), Product, Bag, Saved, Shop by age | Reads the live catalogue from Supabase, signs shoppers in, places and pays for orders, tracks them and sends push notifications |
+| [`apps/mobile`](apps/mobile) | Expo SDK 57 app: Home, Shop (live search and filters), Product, Bag, Saved | Reads the live catalogue from Supabase, signs shoppers in, places and pays for orders, tracks them and sends push notifications |
 | [`packages/shared`](packages/shared) | Design tokens, icons, types, starter catalogue and bag state used by both apps | Active |
 
 ## Run it locally
@@ -109,7 +109,7 @@ The build reads the catalogue from Supabase, so the Supabase variables must be s
 
 | Table | Purpose | Who can read it |
 | --- | --- | --- |
-| `products`, `product_sizes`, `product_age_bands`, `categories`, `age_bands` | Catalogue | Everyone (published products only) |
+| `products`, `product_sizes`, `categories` | Catalogue | Everyone (published products only) |
 | `merchandising_slots` | Ordered product lists such as `home_hero`, `home_new_arrivals`, `home_best_sellers`, `product_related` | Everyone |
 | `banners` | Home page hero and promo cards, with optional start and end times and a countdown | Everyone sees live ones; staff see all |
 | `delivery_areas`, `delivery_zones`, `delivery_rates`, `delivery_options` | Where you deliver, zones that charge their own fee or skip an option, standard fees, estimates and cut-offs. Edited in Admin → Delivery | Everyone |
@@ -188,7 +188,7 @@ What's in it:
   refund, low stock and expiry alerts.
 - **Orders:** work queues; bulk "start packing" and "mark packed"; a printable pick list and packing slip (gift orders
   leave out prices); dispatch to a rider or courier; delivery with proof; failed deliveries; cancellations.
-- **Products:** add and edit products with their sizes, age bands and compliance details; bulk import from CSV (with a
+- **Products:** add and edit products with their sizes and compliance details; bulk import from CSV (with a
   template and row-by-row results); publish, unpublish and recall. A product can only be published when it has its
   brand, category, description, ingredients or materials, safety notes and country of origin. Beauty and bath products
   also need their FDA registration number, and kids' products an age range (PRD FR-100).
@@ -255,7 +255,7 @@ delivery (PRD FR-041). `place_order` applies the same rules, so the charge never
 
 - `/shop` lists everything; `/shop/beauty`, `/shop/kids` and `/shop/<department>/<category>` narrow it (PRD FR-011).
   24 products per page.
-- Filters (PRD FR-013): category, brand, price band, age band (kids), skin type and shade (beauty), on sale and in
+- Filters (PRD FR-013): category, brand, price band, skin type and shade (beauty), on sale and in
   stock. Each option shows how many products it would leave. Sort by featured (Best Sellers first), newest or price.
   Skin types and shades come from the product's fields in the admin console; a filter only appears once some product
   in view has values for it.
@@ -447,7 +447,7 @@ catalogue as the website.
   `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (the same values as the website's public ones), and `EXPO_PUBLIC_SITE_URL` (the
   live website). Never put the secret key here. Then `npm run start -w @sleek/mobile` and open it in Expo Go. For a quick
   look in a browser, `cd apps/mobile && npx expo start --web`.
-- **What works:** Home (banners from Admin → Content, the four departments, categories, new arrivals, shop by age), Shop
+- **What works:** Home (banners from Admin → Content, the four departments, categories, new arrivals), Shop
   (live search that forgives typos, department and category filters, sorting), Product (photo gallery, sizes, stock,
   Add to bag), Bag (quantities, subtotal), Saved items, and links to help and legal pages. The bag and saved items are kept
   on the phone.
