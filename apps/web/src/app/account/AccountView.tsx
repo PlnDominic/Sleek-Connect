@@ -5,13 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 import { useBag } from '@sleek/shared/bag';
 import { useAuth } from '@/components/AuthProvider';
+import { safeNextPath } from '@/lib/safe-redirect';
 import { AccountSummary } from './AccountSummary';
 import styles from './account.module.css';
-
-/** Where to go after signing in: a same-site path only. */
-function safeNext(value: string | null): string {
-  return value && value.startsWith('/') && !value.startsWith('//') ? value : '/account';
-}
 
 function normalizeGhanaPhone(value: string): string | null {
   const compact = value.replace(/[\s()-]/g, '');
@@ -23,7 +19,7 @@ function normalizeGhanaPhone(value: string): string | null {
 export function AccountView({ mode = 'overview' }: { mode?: 'overview' | 'details' }) {
   const params = useSearchParams();
   const router = useRouter();
-  const next = safeNext(params.get('next'));
+  const next = safeNextPath(params.get('next'));
   const { user, loading, consented, signInWithGoogle, sendPhoneOtp, verifyPhoneOtp, recordConsent, signOut, signOutEverywhere, updateProfile, updateNotificationPreferences } = useAuth();
   const { count } = useBag();
   const [agreed, setAgreed] = useState(false);
