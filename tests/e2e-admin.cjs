@@ -103,7 +103,11 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   assert(true, 'signing out returns to the sign-in');
 
   // --- Customer places and pays --------------------------------------------------------------
-  const shopper = await ctx();
+  // Checkout needs a signed-in shopper, who confirmed 18+ and the terms when creating the account.
+  await createUser(`checkout-buyer+${stamp}@example.com`);
+  const checkoutBuyer = await staffSession(`checkout-buyer+${stamp}@example.com`);
+  await checkoutBuyer.client.rpc('record_signup_consent');
+  const shopper = await ctx(checkoutBuyer.cookies());
   await go(shopper, BASE + '/products/vitamin-c-brightening-serum');
   await shopper.getByRole('button', { name: 'Add to bag' }).click();
   await go(shopper, BASE + '/checkout');

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, useTransition, type FormEvent, type ReactNode } from 'react';
 import { formatPrice, formatPriceOr, momoNetworks, sampleCustomer, type MomoNetwork } from '@sleek/shared';
 import { useBag, type ResolvedBagItem } from '@sleek/shared/bag';
@@ -51,7 +52,8 @@ const paidStatuses: OrderStatus['status'][] = ['paid', 'packed', 'out_for_delive
 
 export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
   const bag = useBag();
-  const { user, consented } = useAuth();
+  const { user, consented, loading: authLoading } = useAuth();
+  const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   // Typed by the shopper; one that matches a delivery area we list picks up that area's fee.
   const [area, setArea] = useState('');
@@ -65,7 +67,6 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
   const [wallet, setWallet] = useState('');
   const [methods, setMethods] = useState<SavedMethod[]>([]);
   const [saveWallet, setSaveWallet] = useState(true);
-  const [adult, setAdult] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cardNotice, setCardNotice] = useState(false);
   const [placed, setPlaced] = useState<PlacedOrder | null>(null);
@@ -106,6 +107,10 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
 
   // Signed-in shoppers can pick a saved address; the default one fills the form.
   const signedIn = Boolean(user && consented);
+  // Checkout needs an account: anyone not signed in (or not yet confirmed) is sent to sign in, then brought straight back here.
+  useEffect(() => {
+    if (!authLoading && !signedIn) router.replace('/account?next=/checkout');
+  }, [authLoading, signedIn, router]);
   useEffect(() => {
     if (!signedIn) return;
     let cancelled = false;
@@ -177,9 +182,9 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
     const form = new FormData(event.currentTarget);
     const text = (name: string) => String(form.get(name) ?? '').trim();
     const orderedItems = bag.items;
-    // Signed-in shoppers confirmed this when they created their account; a guest confirms it here (the database insists).
-    if (!signedIn && !adult) {
-      setError('Please confirm that you are 18 or older and accept the terms.');
+    // Checkout is for signed-in shoppers, who confirmed they are 18 or older and accepted the terms when they created their account.
+    if (!signedIn) {
+      setError('Please sign in to place your order.');
       return;
     }
     track('checkout_submitted', { payment_method: method, items: orderedItems.reduce((n, i) => n + i.qty, 0) });
@@ -193,7 +198,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
           area: text('area'),
           ghanapostGps: text('gps') || undefined,
           directions: text('directions') || undefined,
-          adultConfirmed: signedIn || adult,
+          adultConfirmed: true,
         },
         deliveryOption: deliveryId,
         payment: method === 'momo' ? { method: 'momo', network, wallet } : { method },
@@ -228,12 +233,19 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
     setCardNotice(false);
   };
 
+  if (!signedIn && !placed) {
+    return (
+      <main className={styles.main}>
+        <p role="status" className={styles.note}>{authLoading ? 'Loading your checkout…' : 'Taking you to sign in…'}</p>
+      </main>
+    );
+  }
+
   return (
     <main className={styles.main}>
       <form id="checkout-form" ref={formRef} className={styles.forms} onSubmit={onSubmit}>
         <fieldset disabled={!!placed} className={styles.fieldset}>
           <div className={styles.forms}>
-            {!signedIn && <p className={styles.note}>Checking out as a guest? No account is required. You can create one after your order is placed.</p>}
             <section className={styles.panel}>
               <h2 className={styles.panelTitle}>1. Delivery details</h2>
               {addresses.length > 0 && (
@@ -436,15 +448,6 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
                   </span>
                 </label>
               </div>
-              {!signedIn && (
-                <label className={styles.saveWallet}>
-                  <input type="checkbox" checked={adult} onChange={(e) => setAdult(e.target.checked)} />
-                  <span>
-                    I’m 18 or older and I accept the <Link href="/terms" target="_blank">Terms of Service</Link> and{' '}
-                    <Link href="/privacy" target="_blank">Privacy notice</Link>
-                  </span>
-                </label>
-              )}
             </section>
           </div>
         </fieldset>

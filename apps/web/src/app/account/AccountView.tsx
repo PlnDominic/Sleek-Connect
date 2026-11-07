@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useBag } from '@sleek/shared/bag';
 import { useAuth } from '@/components/AuthProvider';
 import { AccountSummary } from './AccountSummary';
@@ -22,6 +22,7 @@ function normalizeGhanaPhone(value: string): string | null {
 
 export function AccountView({ mode = 'overview' }: { mode?: 'overview' | 'details' }) {
   const params = useSearchParams();
+  const router = useRouter();
   const next = safeNext(params.get('next'));
   const { user, loading, consented, signInWithGoogle, sendPhoneOtp, verifyPhoneOtp, recordConsent, signOut, signOutEverywhere, updateProfile, updateNotificationPreferences } = useAuth();
   const { count } = useBag();
@@ -34,6 +35,12 @@ export function AccountView({ mode = 'overview' }: { mode?: 'overview' | 'detail
   const [error, setError] = useState<string | null>(
     params.get('error') === 'signin' ? "We couldn't sign you in with Google. Please try again." : null,
   );
+
+  // Sent here to sign in on the way somewhere (checkout, the bag): carry on once signed in and confirmed, whichever way they signed in.
+  const wantsNext = params.get('next') !== null;
+  useEffect(() => {
+    if (wantsNext && user && consented) router.replace(next);
+  }, [wantsNext, user, consented, next, router]);
 
   async function run(action: () => Promise<void>, failure: string) {
     setBusy(true);

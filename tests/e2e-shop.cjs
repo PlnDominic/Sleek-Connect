@@ -2,6 +2,7 @@ const path = require('path');
 const { chromium } = require('playwright');
 const { execSync } = require('child_process');
 const crypto = require('crypto');
+const { createUser, staffSession } = require('./lib.cjs');
 const fs = require('fs');
 const BASE = 'http://localhost:3000';
 const ROOT = path.resolve(__dirname, '..');
@@ -19,7 +20,6 @@ const stock = (slug, size = '') => sql(`select on_hand || '/' || reserved from p
 
 async function fillDetails(page, { option = 'Same day', email } = {}) {
   await page.getByLabel('Full name').fill('Ama Owusu');
-  { const age = page.getByRole('checkbox', { name: /18 or older/ }); if (await age.count()) await age.check(); }
   await page.getByLabel('Phone number').fill('024 123 4567');
   if (email) await page.getByLabel('Email (optional)').fill(email);
   await page.getByLabel('Location', { exact: true }).fill('Osu');
@@ -40,6 +40,12 @@ const statusPanel = (page) => page.locator('aside:visible').getByRole('status').
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   const errors = []; page.on('pageerror', e => errors.push(e.message));
+  // Checkout needs a signed-in shopper, who confirmed 18+ and the terms when creating the account.
+  const buyerEmail = `shop-buyer+${Date.now()}@example.com`;
+  await createUser(buyerEmail);
+  const buyer = await staffSession(buyerEmail);
+  await buyer.client.rpc('record_signup_consent');
+  await page.context().addCookies(buyer.cookies());
   const bag = page.locator('header a[aria-label^="Bag"]:visible');
 
   // --- #10 Shop by age -------------------------------------------------------
@@ -206,6 +212,14 @@ const statusPanel = (page) => page.locator('aside:visible').getByRole('status').
   await go(page, BASE + '/checkout');
   assert((await page.getByRole('radio', { name: /Pay on delivery/ }).count()) === 0, 'pay on delivery is not offered at checkout');
   assert(await page.getByRole('radio', { name: /Debit or credit card/ }).count() === 1, 'card is offered');
+
+  // Signed-out visitors are sent to sign in, and come back to checkout afterwards.
+  const visitor = await (await browser.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
+  await go(visitor, BASE + '/checkout');
+  await visitor.waitForURL(/\/account\?next=\/checkout/);
+  assert(true, 'checkout sends a signed-out visitor to sign in first');
+  await go(page, BASE + '/checkout');
+  assert((await page.getByLabel(/18 or older/).count()) === 0, 'the checkout page has no 18+ box');
 
   assert(errors.length === 0, 'no page errors ' + errors.join(' | '));
   await browser.close();
