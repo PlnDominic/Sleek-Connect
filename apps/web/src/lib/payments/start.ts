@@ -1,0 +1,70 @@
+import 'server-only';
+import { randomUUID } from 'node:crypto';
+import type { MomoNetwork } from '@sleek/shared';
+import { createAdminSupabase } from '@/lib/supabase/admin';
+import { getPaymentProvider } from './index';
+import type { PaymentInstructions } from './types';
+
+/** What starting an online payment can come to. */
+export type OnlinePaymentStart =
+  | { kind: 'requested'; /** The provider's payment page, when it has one. */ checkoutUrl?: string }
+  | { kind: 'failed'; reason: string };
+
+/** Pay on delivery has nothing to start: staff confirm the order and the rider collects the cash. */
+export type PaymentStart = OnlinePaymentStart | { kind: 'cod' };
+
+/**
+ * Starts payment for a freshly placed order: records the attempt, then asks the provider to charge the amount the
+ * database priced. If the provider can't be reached the attempt is marked failed, which releases the reserved stock.
+ */
+export async function startOrderPayment(
+  order: { token: string; number: string; total: number | null },
+  payer: { method: 'momo'; network: MomoNetwork; wallet: string } | { method: 'card' },
+): Promise<OnlinePaymentStart> {
+  const admin = createAdminSupabase();
+  // Nothing to charge with, or no amount to charge: cancel the order now so its stock is released, rather than leave it waiting.
+  const cancel = async (reason: string, why: string): Promise<OnlinePaymentStart> => {
+    const { data: row } = await admin.from('orders').select('id').eq('public_token', order.token).maybeSingle();
+    if (row) await admin.rpc('release_order_reservation', { p_order_id: row.id, p_reason: why });
+    return { kind: 'failed', reason };
+  };
+
+  const provider = getPaymentProvider();
+  if (!provider) return cancel('Online payment isn’t available right now. Please try again shortly or choose pay on delivery.', 'online payment unavailable');
+  if (order.total === null) return cancel('We can’t price delivery to that area yet, so your order wasn’t placed. Please contact us.', 'delivery fee not set');
+
+  const reference = `${order.number}-${randomUUID().replace(/-/g, '').slice(0, 12)}`;
+  const { data: amount, error } = await admin.rpc('start_payment', {
+    p_order_token: order.token,
+    p_provider: provider.name,
+    p_reference: reference,
+  });
+  if (error) {
+    console.error('start_payment failed', error);
+    return { kind: 'failed', reason: 'We couldn’t start the payment. Please try again.' };
+  }
+
+  let instructions: PaymentInstructions | void;
+  try {
+    instructions = await provider.requestPayment({
+      reference,
+      orderNumber: order.number,
+      amountGhs: amount,
+      returnPath: `/orders/${order.token}`,
+      ...payer,
+    });
+  } catch (cause) {
+    console.error(`${provider.name}: payment request failed`, cause);
+    const { error: releaseError } = await admin.rpc('confirm_payment', {
+      p_provider: provider.name,
+      p_reference: reference,
+      p_status: 'failed',
+      p_amount_ghs: 0,
+      p_event: { error: 'request_failed' },
+    });
+    if (releaseError) console.error('Could not release the reservation', releaseError);
+    return { kind: 'failed', reason: 'We couldn’t send the payment prompt. Please try again.' };
+  }
+
+  return { kind: 'requested', checkoutUrl: instructions?.checkoutUrl };
+}

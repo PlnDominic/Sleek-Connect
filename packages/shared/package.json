@@ -2,7 +2,7 @@
   "name": "@sleek/shared",
   "version": "0.0.0",
   "private": true,
-  "description": "Design tokens, catalog data and icons shared by the Sleek Connect web storefront and mobile app.",
+  "description": "Design tokens, catalog data and icons shared by the Sleek Connect Store web storefront and mobile app.",
   "main": "src/index.ts",
   "types": "src/index.ts",
   "exports": {

@@ -2,8 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { formatPrice, unitPrice, type Product } from '@sleek/shared';
-import { useBag } from '@sleek/shared/bag';
+import { formatPrice, isAvailable, unitPrice, type Product } from '@sleek/shared';
+import { MAX_ITEM_QTY, useBag } from '@sleek/shared/bag';
 import { Icon } from '@/components/Icon';
 import styles from './product.module.css';
 
@@ -14,8 +14,10 @@ export function PurchasePanel({ product }: { product: Product }) {
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
 
+  const available = isAvailable(product, sizeId);
+
   const addToBag = () => {
-    add(product.slug, sizeId, qty);
+    add(product, sizeId, qty);
     setAdded(true);
   };
 
@@ -37,14 +39,29 @@ export function PurchasePanel({ product }: { product: Product }) {
                 key={size.id}
                 type="button"
                 aria-pressed={size.id === sizeId}
-                onClick={() => setSizeId(size.id)}
+                onClick={() => {
+                  setSizeId(size.id);
+                  setAdded(false);
+                }}
                 className={styles.sizeButton}
+                data-sold-out={size.inStock === false}
               >
                 {size.label}
+                {size.inStock === false && <span className="visually-hidden"> (sold out)</span>}
               </button>
             ))}
           </div>
         </div>
+      )}
+
+      {product.warningLabel && (
+        <p className={styles.safetyWarning} id="safety-warning">
+          <Icon name="alert" size={18} strokeWidth={2} />
+          <span>
+            <strong>Safety: </strong>
+            {product.warningLabel}
+          </span>
+        </p>
       )}
 
       <div className={styles.buyRow}>
@@ -55,18 +72,29 @@ export function PurchasePanel({ product }: { product: Product }) {
           <span aria-live="polite" aria-label={`Quantity ${qty}`}>
             {qty}
           </span>
-          <button type="button" aria-label="Increase quantity" onClick={() => setQty((q) => q + 1)}>
+          <button
+            type="button"
+            aria-label="Increase quantity"
+            onClick={() => setQty((q) => Math.min(MAX_ITEM_QTY, q + 1))}
+          >
             +
           </button>
         </div>
-        <button type="button" className={styles.addButton} onClick={addToBag}>
-          {added ? 'Added to bag' : 'Add to bag'}
+        <button
+          type="button"
+          className={styles.addButton}
+          onClick={addToBag}
+          disabled={!available}
+          aria-describedby={product.warningLabel ? 'safety-warning' : undefined}
+        >
+          {!available ? 'Sold out' : added ? 'Added to bag' : 'Add to bag'}
         </button>
         <button
           type="button"
           className={styles.momoButton}
+          disabled={!available}
           onClick={() => {
-            add(product.slug, sizeId, qty);
+            add(product, sizeId, qty);
             router.push('/checkout');
           }}
         >

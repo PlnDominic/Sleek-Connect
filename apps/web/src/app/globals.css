@@ -12,10 +12,33 @@ html {
 
 body {
   margin: 0;
+  /* At least a screen tall, so on a short page the footer sits at the bottom instead of floating mid-screen. */
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
   background: var(--c-canvas);
   color: var(--c-ink);
   font-family: var(--font-sans), sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+body > * {
+  flex-shrink: 0;
+}
+
+/* The page content takes the spare height; its centred containers keep their full width. */
+body > main {
+  flex: 1 0 auto;
+}
+
+body > main,
+body > .container {
+  width: 100%;
+}
+
+body > footer {
+  margin-top: auto;
 }
 
 a {

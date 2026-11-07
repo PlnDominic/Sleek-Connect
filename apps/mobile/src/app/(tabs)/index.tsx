@@ -1,116 +1,93 @@
+import { router } from 'expo-router';
 import { Image } from 'expo-image';
-import { Link, router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
-import {
-  ageBands,
-  appCategories,
-  appNewArrivals,
-  colors,
-  defaultDeliveryArea,
-  city,
-  pending,
-  radii,
-  shadows,
-  type Department,
-} from '@sleek/shared';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { departmentIds, departmentLabels, radii, type Department } from '@sleek/shared';
 import { useBag } from '@sleek/shared/bag';
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
 import { ProductImage } from '@/components/ProductImage';
 import { ProductTile } from '@/components/ProductTile';
+import { ErrorState, ProductGridSkeleton, Skeleton } from '@/components/States';
 import { CountBadge, IconButton, SectionHeader, useScreenTop } from '@/components/ui';
-import { fonts } from '@/theme/fonts';
+import { getAllProducts, getCategories, getHome, type Banner } from '@/lib/catalog';
+import { appHref } from '@/lib/links';
+import { useQuery } from '@/lib/query';
 import { images } from '@/theme/images';
+import { useColors, useStyles, type Palette } from '@/theme/theme';
 
-const heroes = {
-  beauty: {
-    background: colors.ink,
-    kicker: 'Weekend deal',
-    title: `Glow essentials, up to ${pending.saleMaxPercent}% off`,
-    image: images.heroModel,
-  },
-  kids: {
-    background: colors.teal,
-    kicker: 'Bath time edit',
-    title: 'Gentle care for new skin',
-    image: images.babyWash,
-  },
-};
+/** Promo card colours for each banner theme. */
+const makeThemes = (colors: Palette) =>
+  ({
+    light: { background: colors.surfaceHero, text: colors.ink },
+    sale: { background: colors.ink, text: colors.canvas },
+    gift: { background: colors.blush, text: colors.ink },
+  }) as const;
 
 export default function HomeScreen() {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   const top = useScreenTop();
   const { count } = useBag();
   const [dept, setDept] = useState<Department>('beauty');
-  const hero = heroes[dept];
-  const products = appNewArrivals[dept];
+  const home = useQuery('home', getHome);
+  const all = useQuery('products:all', getAllProducts);
+  const categories = useQuery('categories', getCategories);
+
+  // A department shows once it has a category, so a new one doesn't appear empty.
+  const shownDepartments = categories.data ? departmentIds.filter((d) => categories.data?.some((c) => c.department === d)) : departmentIds;
+  const deptCategories = (categories.data ?? []).filter((c) => c.department === dept);
+  const arrivals = (all.data ?? []).filter((p) => p.department === dept).slice(0, 6);
+  // Only when nothing at all could be loaded: one failing request (say the banners) must not hide the rest of the screen.
+  const failed = Boolean(home.error && !home.data && all.error && !all.data && categories.error && !categories.data);
+  const emptyShop = !all.loading && !all.error && (all.data?.length ?? 0) === 0;
+
+  const openShop = (params: { department?: Department; category?: string } = {}) =>
+    router.push({ pathname: '/shop', params: { department: params.department ?? '', category: params.category ?? '' } });
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={[styles.content, { paddingTop: top }]}>
-      <View style={styles.topRow}>
-        <Pressable accessibilityRole="button" accessibilityLabel={`Deliver to ${defaultDeliveryArea}, ${city}. Change`}>
-          <AppText size={12} color={colors.textMuted}>
-            Deliver to
-          </AppText>
-          <View style={styles.row4}>
-            <AppText weight="bold" size={16}>
-              {defaultDeliveryArea}, {city}
-            </AppText>
-            <Icon name="chevronDown" size={16} strokeWidth={2} />
-          </View>
-        </Pressable>
-        <View style={styles.row6}>
-          <IconButton icon="bell" label="Notifications" />
-          <IconButton icon="bag" label={`Bag, ${count} items`} onPress={() => router.push('/checkout')}>
-            <CountBadge count={count} />
-          </IconButton>
-        </View>
-      </View>
-
-      <View style={styles.search}>
-        <Icon name="search" size={18} color={colors.textMuted} strokeWidth={2} />
-        <TextInput
-          accessibilityLabel="Search"
-          placeholder="Search products or brands"
-          placeholderTextColor={colors.textMuted}
-          style={styles.searchInput}
-          returnKeyType="search"
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={[styles.content, { paddingTop: top }]}
+      refreshControl={
+        <RefreshControl
+          refreshing={home.refreshing || all.refreshing}
+          onRefresh={() => {
+            void home.refetch();
+            void all.refetch();
+            void categories.refetch();
+          }}
+          tintColor={colors.accent}
         />
-      </View>
-
-      <View style={styles.segment} accessibilityRole="tablist">
-        {(['beauty', 'kids'] as const).map((d) => {
-          const on = d === dept;
-          return (
-            <Pressable
-              key={d}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: on }}
-              onPress={() => setDept(d)}
-              style={[styles.segmentButton, on && styles.segmentOn]}
-            >
-              <AppText weight="bold" size={14} color={on ? (d === 'kids' ? colors.teal : colors.accent) : colors.textMuted}>
-                {d === 'kids' ? 'Baby & Kids' : 'Beauty'}
-              </AppText>
-            </Pressable>
-          );
-        })}
-      </View>
-
-      <View style={[styles.hero, { backgroundColor: hero.background }]}>
-        <Image source={hero.image} style={styles.heroImage} contentFit="cover" contentPosition="top" />
-        <AppText weight="bold" size={12} color={colors.canvas} style={styles.heroKicker}>
-          {hero.kicker.toUpperCase()}
-        </AppText>
-        <AppText weight="bold" size={24} color={colors.canvas} style={styles.heroTitle}>
-          {hero.title}
-        </AppText>
-        <Pressable accessibilityRole="button" style={styles.heroCta}>
-          <AppText weight="bold" size={14}>
-            Shop now
+      }
+    >
+      <View style={styles.topRow}>
+        <View style={styles.brand}>
+          <View style={styles.brandTile}>
+            <Image source={require('../../../assets/logo-mark.png')} style={styles.brandMark} contentFit="contain" accessibilityLabel="Sleek Connect logo" />
+          </View>
+          <AppText weight="extrabold" size={18} accessibilityRole="header">
+            Sleek <AppText weight="extrabold" size={18} color={colors.accent}>Connect</AppText> Store
           </AppText>
-        </Pressable>
+        </View>
+        <IconButton icon="bag" label={`Bag, ${count} ${count === 1 ? 'item' : 'items'}`} onPress={() => router.push('/bag')}>
+          <CountBadge count={count} />
+        </IconButton>
       </View>
+
+      <Pressable
+        accessibilityRole="search"
+        accessibilityLabel="Search products or brands"
+        onPress={() => router.push({ pathname: '/shop', params: { focus: String(Date.now()) } })}
+        style={styles.search}
+      >
+        <Icon name="search" size={18} color={colors.textMuted} strokeWidth={2} />
+        <AppText size={15} color={colors.textMuted}>
+          Search products or brands
+        </AppText>
+      </Pressable>
+
+      {home.loading ? <Skeleton style={styles.heroSkeleton} /> : home.data?.hero ? <HeroCard banner={home.data.hero} /> : null}
 
       <View style={styles.authentic}>
         <View style={styles.authenticIcon}>
@@ -121,92 +98,179 @@ export default function HomeScreen() {
             100% authentic, every order
           </AppText>
           <AppText size={13} color={colors.tealInk}>
-            Batch and expiry checked before dispatch
+            Every order checked before dispatch
           </AppText>
         </View>
       </View>
 
-      <View style={styles.section}>
-        <SectionHeader title="Categories" />
-        <View style={styles.categories}>
-          {appCategories[dept].map((c) => (
-            <View key={c.id} style={styles.category}>
-              <ProductImage image={c.image} tint={c.tint} kind={c.kind} style={styles.categoryImage} iconSize={26} />
-              <AppText weight="semibold" size={12}>
-                {c.name}
+      {failed ? (
+        <ErrorState
+          onRetry={() => {
+            void home.refetch();
+            void all.refetch();
+            void categories.refetch();
+          }}
+        />
+      ) : (
+        <>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.depts} accessibilityRole="tablist">
+            {shownDepartments.map((d) => {
+              const on = d === dept;
+              return (
+                <Pressable
+                  key={d}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: on }}
+                  onPress={() => setDept(d)}
+                  style={[styles.dept, on && styles.deptOn]}
+                >
+                  <AppText weight="bold" size={14} color={on ? colors.canvas : colors.ink}>
+                    {departmentLabels[d]}
+                  </AppText>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+
+          {deptCategories.length > 0 && (
+            <View style={styles.section}>
+              <SectionHeader title="Categories" onSeeAll={() => openShop({ department: dept })} />
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categories}>
+                {deptCategories.map((c) => (
+                  <Pressable
+                    key={c.id}
+                    accessibilityRole="link"
+                    accessibilityLabel={c.name}
+                    onPress={() => openShop({ department: dept, category: c.id })}
+                    style={styles.category}
+                  >
+                    <ProductImage image={c.image} photo={c.photo} tint={c.tint} kind={c.kind} style={styles.categoryImage} iconSize={26} />
+                    <AppText weight="semibold" size={12} numberOfLines={2} style={styles.categoryName}>
+                      {c.name}
+                    </AppText>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
+          <View style={styles.section}>
+            <SectionHeader title="New arrivals" onSeeAll={arrivals.length ? () => openShop({ department: dept }) : undefined} />
+            {all.loading ? (
+              <ProductGridSkeleton count={4} />
+            ) : arrivals.length === 0 ? (
+              <AppText size={14} color={colors.textMuted}>
+                {emptyShop ? 'We’re stocking the shop. New products are coming very soon.' : `Nothing in ${departmentLabels[dept]} yet. Check back soon.`}
               </AppText>
-            </View>
-          ))}
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <SectionHeader title="Shop by age" onSeeAll={() => router.push('/shop-by-age')} />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.ageRow}>
-          {ageBands.slice(0, 5).map((band) => (
-            <Link key={band.id} href={{ pathname: '/shop-by-age', params: { band: band.id } }} asChild>
-              <Pressable accessibilityRole="link" accessibilityLabel={`Shop ages ${band.label}`} style={styles.ageChip}>
-                <AppText weight="bold" size={15} color={colors.teal}>
-                  {band.label}
-                </AppText>
-              </Pressable>
-            </Link>
-          ))}
-        </ScrollView>
-      </View>
-
-      <View style={styles.section}>
-        <SectionHeader title="New arrivals" />
-        <View style={styles.grid}>
-          {products.map((p) => (
-            <View key={p.slug} style={styles.gridCell}>
-              <ProductTile product={p} />
-            </View>
-          ))}
-        </View>
-      </View>
-
-      <Link href={{ pathname: '/product/[slug]', params: { slug: 'newborn-gift-hamper' } }} asChild>
-        <Pressable accessibilityRole="link" style={styles.gift}>
-          <View style={styles.giftIcon}>
-            <Icon name="gift" size={24} color={colors.canvas} />
+            ) : (
+              <View style={styles.grid}>
+                {arrivals.map((p) => (
+                  <View key={p.slug} style={styles.gridCell}>
+                    <ProductTile product={p} />
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
-          <View style={styles.flex}>
-            <AppText weight="bold" size={15} color={colors.canvas}>
-              Send a gift
-            </AppText>
-            <AppText size={13} color={colors.onDarkMuted}>
-              Wrapped, with your note, no prices shown
-            </AppText>
-          </View>
-          <Icon name="chevronRight" size={18} color={colors.canvas} strokeWidth={2} />
-        </Pressable>
-      </Link>
+
+          {(home.data?.promos ?? []).map((promo) => (
+            <PromoCard key={promo.id} banner={promo} />
+          ))}
+        </>
+      )}
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
+/** The main banner, as set in Admin → Content. */
+function HeroCard({ banner }: { banner: Banner }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
+  const dark = banner.theme === 'sale';
+  return (
+    <View style={[styles.hero, { backgroundColor: dark ? colors.ink : colors.teal }]}>
+      {banner.image && <Image source={images[banner.image]} style={styles.heroImage} contentFit="cover" contentPosition="top" cachePolicy="memory-disk" />}
+      {banner.kicker && (
+        <AppText weight="bold" size={12} color={colors.canvas} style={styles.heroKicker}>
+          {banner.kicker.toUpperCase()}
+        </AppText>
+      )}
+      <AppText weight="bold" size={24} color={colors.canvas} style={styles.heroTitle} accessibilityRole="header">
+        {banner.title.replace(/\n/g, ' ')}
+      </AppText>
+      {banner.ctaLabel && (
+        <Pressable accessibilityRole="button" onPress={() => router.push(appHref(banner.ctaHref))} style={styles.heroCta}>
+          <AppText weight="bold" size={14} color={colors.ink}>
+            {banner.ctaLabel}
+          </AppText>
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
+function PromoCard({ banner }: { banner: Banner }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
+  const theme = makeThemes(colors)[banner.theme];
+  return (
+    <Pressable
+      accessibilityRole="link"
+      accessibilityLabel={banner.title.replace(/\n/g, ' ')}
+      onPress={() => router.push(appHref(banner.ctaHref))}
+      style={[styles.promo, { backgroundColor: theme.background }]}
+    >
+      <View style={styles.flex}>
+        {banner.kicker && (
+          <AppText weight="bold" size={11} color={theme.text} style={styles.heroKicker}>
+            {banner.kicker.toUpperCase()}
+          </AppText>
+        )}
+        <AppText weight="bold" size={18} color={theme.text}>
+          {banner.title.replace(/\n/g, ' ')}
+        </AppText>
+        {banner.body && (
+          <AppText size={13} color={theme.text} style={styles.promoBody}>
+            {banner.body}
+          </AppText>
+        )}
+      </View>
+      <Icon name="chevronRight" size={20} color={theme.text} strokeWidth={2} />
+    </Pressable>
+  );
+}
+
+const makeStyles = (colors: Palette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.canvas,
   },
   content: {
     paddingHorizontal: 20,
-    paddingBottom: 28,
+    paddingBottom: 120,
     gap: 22,
   },
   flex: {
     flex: 1,
   },
-  row4: {
+  brand: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 10,
+    flexShrink: 1,
   },
-  row6: {
-    flexDirection: 'row',
-    gap: 6,
+  // The emblem sits on a white tile so its navy stays visible in the dark theme.
+  brandTile: {
+    width: 38,
+    height: 38,
+    borderRadius: 11,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brandMark: {
+    width: 28,
+    height: 31,
   },
   topRow: {
     flexDirection: 'row',
@@ -223,34 +287,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     height: 52,
   },
-  searchInput: {
-    flex: 1,
-    fontFamily: fonts.regular,
-    fontSize: 15,
-    color: colors.ink,
+  depts: {
+    gap: 8,
+    paddingRight: 20,
   },
-  segment: {
-    flexDirection: 'row',
-    gap: 4,
-    backgroundColor: colors.surface,
-    borderRadius: radii.lg,
-    padding: 4,
-  },
-  segmentButton: {
-    flex: 1,
+  dept: {
     height: 44,
-    borderRadius: 11,
+    paddingHorizontal: 18,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: colors.lineStrong,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  segmentOn: {
-    backgroundColor: colors.canvas,
-    boxShadow: shadows.segment,
+  deptOn: {
+    backgroundColor: colors.ink,
+    borderColor: colors.ink,
+  },
+  heroSkeleton: {
+    height: 190,
+    borderRadius: radii.xl,
   },
   hero: {
     borderRadius: radii.xl,
     padding: 22,
-    minHeight: 180,
+    minHeight: 190,
     overflow: 'hidden',
     gap: 10,
   },
@@ -267,14 +328,15 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     lineHeight: 28,
-    maxWidth: 180,
+    maxWidth: 190,
   },
   heroCta: {
     alignSelf: 'flex-start',
     marginTop: 6,
+    minHeight: 44,
+    justifyContent: 'center',
     backgroundColor: colors.canvas,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
     borderRadius: radii.xxl,
   },
   authentic: {
@@ -297,11 +359,11 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   categories: {
-    flexDirection: 'row',
-    gap: 10,
+    gap: 14,
+    paddingRight: 20,
   },
   category: {
-    flex: 1,
+    width: 78,
     alignItems: 'center',
     gap: 8,
   },
@@ -310,39 +372,28 @@ const styles = StyleSheet.create({
     height: 72,
     borderRadius: radii.xl,
   },
-  ageRow: {
-    gap: 8,
-  },
-  ageChip: {
-    backgroundColor: colors.tealSoft,
-    borderRadius: radii.lg,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+  categoryName: {
+    textAlign: 'center',
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    rowGap: 14,
+    rowGap: 18,
     columnGap: 14,
   },
   gridCell: {
     width: '47.6%',
     flexGrow: 1,
   },
-  gift: {
+  promo: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    backgroundColor: colors.ink,
     borderRadius: radii.xl,
     padding: 20,
   },
-  giftIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: radii.lg,
-    backgroundColor: colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
+  promoBody: {
+    marginTop: 4,
+    opacity: 0.85,
   },
 });

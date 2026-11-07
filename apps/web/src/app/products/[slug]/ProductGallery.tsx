@@ -7,9 +7,13 @@ import styles from './product.module.css';
 
 const thumbTints = [colors.tealSoft, colors.tealPale, colors.surface, colors.blush];
 
+type View = Omit<GalleryView, 'image'> & { image?: GalleryView['image']; photo?: string };
+
 export function ProductGallery({ product }: { product: Product }) {
-  const views: GalleryView[] =
-    product.details?.gallery ?? (product.image ? [{ label: 'Front view', image: product.image, position: 'center' }] : []);
+  // Uploaded photos replace the design's sample gallery.
+  const views: View[] = product.photos?.length
+    ? product.photos.map((p, i) => ({ label: p.alt ?? `Photo ${i + 1}`, photo: p.url, position: 'center' }))
+    : (product.details?.gallery ?? (product.image ? [{ label: 'Front view', image: product.image, position: 'center' }] : []));
   const [selected, setSelected] = useState(0);
   const current = views[selected];
 
@@ -18,6 +22,7 @@ export function ProductGallery({ product }: { product: Product }) {
       <div className={styles.mainImage} style={{ background: product.tint }}>
         <ProductImage
           image={current?.image}
+          photo={current?.photo}
           tint={product.tint}
           kind={product.kind}
           alt={`${product.name}, ${current?.label.toLowerCase() ?? 'product photo'}`}
@@ -32,7 +37,7 @@ export function ProductGallery({ product }: { product: Product }) {
         <div className={styles.thumbs}>
           {views.map((view, i) => (
             <button
-              key={view.label}
+              key={`${i}-${view.label}`}
               type="button"
               aria-label={view.label}
               aria-pressed={i === selected}
@@ -40,7 +45,7 @@ export function ProductGallery({ product }: { product: Product }) {
               className={styles.thumb}
               style={{ background: thumbTints[i % thumbTints.length] }}
             >
-              <ProductImage image={view.image} tint="transparent" kind={product.kind} alt="" sizes="140px" position={view.position} fill />
+              <ProductImage image={view.image} photo={view.photo} tint="transparent" kind={product.kind} alt="" sizes="140px" position={view.position} fill />
             </button>
           ))}
         </div>
