@@ -6,7 +6,7 @@ import { getPaymentProvider } from './index';
 
 /**
  * Settles payments whose notification never arrived. A callback can be lost (or fail Hubtel's status check once), and then the order
- * would sit unpaid until it expires. This asks the provider about every payment still pending after a couple of minutes and
+ * would sit unpaid until it expires. This asks the provider about every payment still pending (or expired unanswered) after a couple of minutes, for three days, and
  * records the ones it says are paid, exactly as the webhook would (`confirm_payment` ignores anything already settled).
  * Only a final "paid" answer is acted on; an unpaid or unknown answer leaves the payment alone.
  */
@@ -20,7 +20,9 @@ export async function reconcilePendingPayments(limit = 25): Promise<{ checked: n
     .from('payments')
     .select('provider_reference')
     .eq('provider', provider.name)
-    .eq('status', 'pending')
+    // "expired" too: when an order times out its unanswered payment is marked expired, and money can still arrive afterwards
+    // (confirm_payment then records it and flags the cancelled order for review).
+    .in('status', ['pending', 'expired'])
     .lt('created_at', new Date(now - 2 * 60_000).toISOString())
     .gt('created_at', new Date(now - 3 * 24 * 60 * 60_000).toISOString())
     .order('created_at', { ascending: true })
