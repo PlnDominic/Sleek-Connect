@@ -945,7 +945,7 @@ details.panel > summary {
 }
 
 .iconButton:hover {
-  background: var(--c-surface, #f5f7fa);
+  background: var(--c-surface, #f6f6f7);
   color: var(--c-accent, #0f766e);
 }
 

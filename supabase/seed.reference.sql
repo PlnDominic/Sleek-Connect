@@ -2,12 +2,12 @@
 -- Reference data for a live store: categories and delivery options. No sample products or stock.
 
 insert into public.categories (id, name, department, image_key, tint, kind, sort_order) values
-  ('skincare', 'Skincare', 'beauty', null, '#E8EEF5', 'bottle', 0),
-  ('makeup', 'Makeup', 'beauty', null, '#E8EEF5', 'tube', 1),
-  ('hair-care', 'Hair Care', 'beauty', null, '#F5F7FA', 'bottle', 2),
-  ('fragrance', 'Fragrance', 'beauty', null, '#E8EEF5', 'bottle', 3),
+  ('skincare', 'Skincare', 'beauty', null, '#EEEFF1', 'bottle', 0),
+  ('makeup', 'Makeup', 'beauty', null, '#EEEFF1', 'tube', 1),
+  ('hair-care', 'Hair Care', 'beauty', null, '#F6F6F7', 'bottle', 2),
+  ('fragrance', 'Fragrance', 'beauty', null, '#EEEFF1', 'bottle', 3),
   ('baby-care', 'Baby Care', 'kids', null, '#E3F0EC', 'bottle', 4),
-  ('kids-toys', 'Kids & Toys', 'kids', null, '#EDF5F2', 'toy', 5);
+  ('kids-toys', 'Kids & Toys', 'kids', null, '#F4F5F6', 'toy', 5);
 
 insert into public.delivery_options (id, label, fee_ghs, free_eligible, sort_order) values
   ('standard', 'Standard', null, true, 0),
