@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createUserSupabase } from '@/lib/supabase/server';
 import { clientAddress, rateLimit, rateLimitResponse } from '@/lib/rate-limit';
 import { logger, requestId } from '@/lib/observability';
+import { safeNextPath } from '@/lib/safe-redirect';
 
 /** Google sends the shopper back here; exchange the one-time code for a session cookie. */
 export async function GET(request: NextRequest) {
@@ -10,9 +11,8 @@ export async function GET(request: NextRequest) {
   if (!limit.allowed) return rateLimitResponse(limit.retryAfter, id);
   const { searchParams } = request.nextUrl;
   const code = searchParams.get('code');
-  const nextParam = searchParams.get('next') ?? '/account';
-  // Only allow same-site paths, never "//evil.example".
-  const next = nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : '/account';
+  // Only same-site paths: never "//evil.example" or "/\evil.example" (see safeNextPath).
+  const next = safeNextPath(searchParams.get('next'));
 
   if (code) {
     const supabase = await createUserSupabase();

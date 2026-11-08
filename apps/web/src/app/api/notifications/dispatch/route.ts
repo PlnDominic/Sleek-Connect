@@ -1,11 +1,19 @@
+import { timingSafeEqual } from 'node:crypto';
 import { dispatchNotifications } from '@/lib/notifications/dispatch';
 import { logger, requestId, withRequestId } from '@/lib/observability';
+
+/** Constant-time comparison, so the response time doesn't reveal how much of the secret was right. */
+function sameSecret(given: string, expected: string) {
+  const a = Buffer.from(given);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
 
 /** Retries queued customer messages. Call it on a schedule with Authorization: Bearer <CRON_SECRET>. */
 export async function GET(request: Request) {
   const id = requestId(request);
   const secret = process.env.CRON_SECRET;
-  if (!secret || request.headers.get('authorization') !== `Bearer ${secret}`) {
+  if (!secret || !sameSecret(request.headers.get('authorization') ?? '', `Bearer ${secret}`)) {
     logger.warn('notification_dispatch_unauthorized', { requestId: id });
     return withRequestId(Response.json({ error: 'Not allowed.', requestId: id }, { status: 401 }), id);
   }
