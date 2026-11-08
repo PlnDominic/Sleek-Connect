@@ -2,7 +2,7 @@
 
 The starter catalogue (about ten example products with 25 of each in stock) was loaded when the project was set up. It is sample
 data, not stock the store owns. New projects no longer receive it: `supabase/setup.sql` contains only the reference data (categories,
-age groups, delivery areas and options). `supabase/seed.sql` still holds the samples for local development and the automated tests.
+age groups and delivery options). `supabase/seed.sql` still holds the samples for local development and the automated tests.
 
 ## Run order
 

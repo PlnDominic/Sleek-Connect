@@ -7,16 +7,6 @@ export const deliveryFees: { standard: number | null; sameDay: number | null } =
   sameDay: null,
 };
 
-export const defaultDeliveryArea = 'East Legon';
-
-/** Sample signed-in customer used to prefill checkout until accounts exist. */
-export const sampleCustomer = {
-  name: 'Akosua Mensah',
-  phone: '024 000 0000',
-  area: 'East Legon',
-  ghanaPostGps: 'GA-000-0000',
-};
-
 export const city = 'Accra';
 
 export const paymentMethodsLine = 'MTN MoMo · Telecel Cash · AT Money · Visa · Mastercard';

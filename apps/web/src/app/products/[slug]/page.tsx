@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { city, defaultDeliveryArea, departmentLabels, formatPrice } from '@sleek/shared';
+import { city, departmentLabels, formatPrice } from '@sleek/shared';
 import { Icon } from '@/components/Icon';
 import { JsonLd } from '@/components/JsonLd';
 import { ProductImage } from '@/components/ProductImage';
@@ -177,7 +177,7 @@ export default async function ProductPage({ params, searchParams }: PageProps<'/
               <Icon name="truck" size={22} />
               <span>
                 <strong>
-                  Delivery to {defaultDeliveryArea}, {city}
+                  Delivery across {city}
                 </strong>{' '}
                 <Link href="/help#delivery" className={styles.serviceLink}>
                   Delivery areas

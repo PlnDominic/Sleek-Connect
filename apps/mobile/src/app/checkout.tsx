@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { defaultDeliveryArea, estimate, formatPrice, momoNetworks, quote, type DeliveryConfig, type MomoNetwork } from '@sleek/shared';
+import { estimate, formatPrice, momoNetworks, quote, type DeliveryConfig, type MomoNetwork } from '@sleek/shared';
 import { useBag } from '@sleek/shared/bag';
 import { AppText } from '@/components/AppText';
 import { Button, Card, Checkbox, Choices, Field, Notice } from '@/components/Form';
@@ -99,11 +99,10 @@ function Details({
   const top = useScreenTop();
   const { user, consented } = useAuth();
   const [adult, setAdult] = useState(false);
-  const areas = delivery.areas.map((a) => a.name);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState(user?.email ?? '');
-  const [area, setArea] = useState(areas.includes(defaultDeliveryArea) ? defaultDeliveryArea : (areas[0] ?? ''));
+  const [area, setArea] = useState('');
   const [directions, setDirections] = useState('');
   const [gps, setGps] = useState('');
   const [optionId, setOptionId] = useState(delivery.options[0]?.id ?? '');
@@ -136,7 +135,7 @@ function Details({
       if (a) {
         setName((v) => v || a.recipient_name);
         setPhone((v) => v || a.phone);
-        if (areas.includes(a.area)) setArea(a.area);
+        setArea((v) => v || a.area);
         setDirections((v) => v || (a.directions ?? ''));
         setGps((v) => v || (a.ghanapost_gps ?? ''));
       }
@@ -146,8 +145,6 @@ function Details({
         setWallet((v) => v || m.wallet_number);
       }
     })();
-    // The address list only matters the first time.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const quotes = useMemo(() => delivery.options.map((o) => ({ option: o, q: quote(delivery, area, o.id, subtotal) })), [delivery, area, subtotal]);
@@ -158,7 +155,7 @@ function Details({
   const codSetting = delivery.payOnDelivery;
   const total = fee === null ? null : subtotal + fee;
   const codBlocked =
-    total === null ? 'Choose an area with a delivery fee first.' : codSetting.maxGhs !== null && total > codSetting.maxGhs ? `Available for orders up to ${formatPrice(codSetting.maxGhs)}.` : null;
+    total === null ? 'Enter your location first.' : codSetting.maxGhs !== null && total > codSetting.maxGhs ? `Available for orders up to ${formatPrice(codSetting.maxGhs)}.` : null;
   const cod = payWith === 'cod' && codSetting.enabled && codBlocked === null;
   const cardPay = payWith === 'card' && card;
 
@@ -175,7 +172,7 @@ function Details({
     setBusy(true);
     try {
       const order = await placeOrder({
-        customer: { name: name.trim(), phone: phone.trim(), email: email.trim() || undefined, area, ghanapostGps: gps.trim() || undefined, directions: directions.trim() || undefined, adultConfirmed: !!(user && consented) || adult },
+        customer: { name: name.trim(), phone: phone.trim(), email: email.trim() || undefined, area: area.trim(), ghanapostGps: gps.trim() || undefined, directions: directions.trim() || undefined, adultConfirmed: !!(user && consented) || adult },
         deliveryOption: optionId,
         payment: cod ? { cod: true } : cardPay ? { card: true } : { network, wallet: wallet.trim() },
         items: items.map((i) => ({ slug: i.slug, size: i.sizeId, quantity: i.qty })),
@@ -227,11 +224,11 @@ function Details({
 
         <Card title="Delivery details">
           <Field label="Full name" value={name} onChangeText={setName} autoComplete="name" textContentType="name" />
-          <Field label="Phone number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" autoComplete="tel" textContentType="telephoneNumber" placeholder="024 123 4567" hint="The rider calls this number." />
-          <Field label="Email (optional)" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" textContentType="emailAddress" placeholder="you@example.com" hint="We’ll email your order updates as well as texting them." />
-          <Choices label="Area" value={area} options={areas.map((a) => ({ id: a, label: a }))} onChange={setArea} />
-          <Field label="Directions (optional)" value={directions} onChangeText={setDirections} multiline placeholder="Landmarks, gate colour, floor…" />
-          <Field label="GhanaPost GPS (optional)" value={gps} onChangeText={setGps} autoCapitalize="characters" placeholder="GA-123-4567" />
+          <Field label="Phone number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" autoComplete="tel" textContentType="telephoneNumber" />
+          <Field label="Email (optional)" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" textContentType="emailAddress" />
+          <Field label="Location" value={area} onChangeText={setArea} autoComplete="postal-address-locality" maxLength={80} />
+          <Field label="Directions (optional)" value={directions} onChangeText={setDirections} multiline />
+          <Field label="GhanaPost GPS (optional)" value={gps} onChangeText={setGps} autoCapitalize="characters" />
         </Card>
 
         <Card title="Delivery">
@@ -274,7 +271,7 @@ function Details({
           ) : (
             <>
               <Choices label="Network" value={network} onChange={setNetwork} options={momoNetworks.map((n) => ({ id: n.id, label: n.label }))} />
-              <Field label="Mobile Money number" value={wallet} onChangeText={setWallet} keyboardType="phone-pad" placeholder="024 123 4567" hint="You will get a prompt on this phone to approve the payment." />
+              <Field label="Mobile Money number" value={wallet} onChangeText={setWallet} keyboardType="phone-pad" />
             </>
           )}
           <Field label="Promo code (optional)" value={promo} onChangeText={setPromo} autoCapitalize="characters" />

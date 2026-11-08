@@ -18,6 +18,8 @@ q() { docker exec supabase_db_Sleek-Connect psql -U postgres -At -c "$1" >/dev/n
 fresh() {
   npx supabase db reset >/dev/null 2>&1 || { echo "database reset failed"; exit 1; }
   q "update public.delivery_options set fee_ghs = 30 where id = 'same_day'"
+  # The store ships with no delivery areas (shoppers type their location); the suites that exercise area zones need a few.
+  q "insert into public.delivery_areas (name, sort_order) values ('East Legon', 0), ('Osu', 1), ('Airport Residential', 2), ('Spintex', 3), ('Dansoman', 4)"
 }
 stop() { if command -v fuser >/dev/null; then fuser -k 3000/tcp >/dev/null 2>&1; else pkill -f "next start -p 3000" >/dev/null 2>&1; fi; true; }
 start() {

@@ -116,13 +116,6 @@ from public.inventory_levels i join public.products p on p.id = i.product_id;
 insert into public.stock_movements (product_id, size_code, batch_id, reason, quantity, sellable_change, note)
 select b.product_id, b.size_code, b.id, 'opening', b.quantity, b.quantity, b.note from public.stock_batches b;
 
-insert into public.delivery_areas (name, sort_order) values
-  ('East Legon', 0),
-  ('Osu', 1),
-  ('Airport Residential', 2),
-  ('Spintex', 3),
-  ('Dansoman', 4);
-
 -- Standard delivery becomes free once a free-delivery threshold is set (Admin → Delivery).
 insert into public.delivery_options (id, label, fee_ghs, free_eligible, sort_order) values
   ('standard', 'Standard', null, true, 0),

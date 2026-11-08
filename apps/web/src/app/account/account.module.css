@@ -895,33 +895,46 @@ main.centered .panel {
     padding-top: 16px;
   }
 
+  /* Every link stays visible: groups with a heading, links wrapping as chips (a scrolling row hid most of them). */
   .sideNav {
     position: static;
-    flex-direction: row;
-    gap: 6px;
-    padding: 6px;
-    overflow-x: auto;
-    scrollbar-width: none;
+    max-height: none;
+    overflow: visible;
+    flex-direction: column;
+    gap: 14px;
+    padding: 14px;
   }
 
   .navGroup {
     flex-direction: row;
-    gap: 4px;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .navTitle {
-    display: none;
+    flex: 0 0 100%;
+    padding: 0 2px 2px;
   }
 
   .navLink {
-    flex: none;
+    min-height: 38px;
+    padding: 0 14px;
+    border: 1px solid var(--c-line-soft);
+    border-radius: 999px;
     white-space: nowrap;
   }
 
+  .navLink[aria-current='page'] {
+    border-color: transparent;
+  }
+
   .navLogout {
-    flex: none;
+    align-self: flex-start;
+    min-height: 38px;
     margin: 0;
-    border: 0;
+    padding: 0 14px;
+    border: 1px solid var(--c-line-soft);
+    border-radius: 999px;
     white-space: nowrap;
   }
 }

@@ -41,24 +41,23 @@ async function checkSchema(requestIdValue: string) {
 
 /**
  * Whether the business values the launch checklist requires have been entered (P0 item 14):
- * every delivery option priced with at least one area to deliver to, and a support contact to show in the help centre.
+ * every delivery option priced, and a support contact to show in the help centre. Shoppers type their own location, so
+ * listing delivery areas is optional (they only group places into zones with their own fees).
  */
 async function launchReadiness() {
   const supabase = createSupabase();
-  const [settings, options, areas] = await Promise.all([
+  const [settings, options] = await Promise.all([
     supabase
       .from('store_settings')
       .select('support_phone, support_whatsapp, support_email, support_hours, free_delivery_threshold_ghs')
       .limit(1)
       .maybeSingle(),
     supabase.from('delivery_options').select('fee_ghs'),
-    supabase.from('delivery_areas').select('name', { count: 'exact', head: true }),
   ]);
   const row = settings.data;
   const support = [row?.support_phone, row?.support_whatsapp, row?.support_email].some((v) => v) ? 'ready' : 'incomplete';
   const fees = options.data ?? [];
-  const delivery =
-    (areas.count ?? 0) > 0 && fees.length > 0 && fees.every((option) => option.fee_ghs !== null) ? 'ready' : 'incomplete';
+  const delivery = fees.length > 0 && fees.every((option) => option.fee_ghs !== null) ? 'ready' : 'incomplete';
   return { delivery, support };
 }
 

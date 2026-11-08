@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, useTransition, type FormEvent, type ReactNode } from 'react';
-import { formatPrice, formatPriceOr, momoNetworks, sampleCustomer, type MomoNetwork } from '@sleek/shared';
+import { formatPrice, formatPriceOr, momoNetworks, type MomoNetwork } from '@sleek/shared';
 import { useBag, type ResolvedBagItem } from '@sleek/shared/bag';
 import { useAuth } from '@/components/AuthProvider';
 import { Icon } from '@/components/Icon';
@@ -271,10 +271,10 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
               )}
               <div className={styles.fieldGrid}>
                 <Field id="fn" label="Full name">
-                  <input id="fn" name="name" type="text" autoComplete="name" required placeholder={sampleCustomer.name} />
+                  <input id="fn" name="name" type="text" autoComplete="name" required />
                 </Field>
                 <Field id="ph" label="Phone number">
-                  <input id="ph" name="phone" type="tel" autoComplete="tel" required placeholder={sampleCustomer.phone} />
+                  <input id="ph" name="phone" type="tel" autoComplete="tel" required />
                 </Field>
                 <Field id="em" label="Email (optional)">
                   <input
@@ -285,10 +285,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
                     autoComplete="email"
                     maxLength={254}
                     defaultValue={user?.email ?? ''}
-                    placeholder="you@example.com"
-                    aria-describedby="em-hint"
                   />
-                  <small id="em-hint">We’ll email your order updates as well as texting them.</small>
                 </Field>
                 <Field id="area" label="Location">
                   <input
@@ -300,13 +297,10 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
                     autoComplete="address-level2"
                     value={area}
                     onChange={(e) => setArea(e.target.value)}
-                    placeholder="Type your location, e.g. East Legon"
-                    aria-describedby="area-hint"
                   />
-                  <small id="area-hint">Type where we should deliver, such as your suburb or town.</small>
                 </Field>
                 <Field id="gps" label="GhanaPost GPS address">
-                  <input id="gps" name="gps" type="text" maxLength={20} placeholder="e.g. GA-000-0000" />
+                  <input id="gps" name="gps" type="text" maxLength={20} />
                 </Field>
               </div>
               <Field
@@ -317,7 +311,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
                   </>
                 }
               >
-                <input id="dir" name="directions" type="text" maxLength={300} placeholder="Landmark, gate colour, house number" />
+                <input id="dir" name="directions" type="text" maxLength={300} />
               </Field>
               {signedIn && (
                 <label className={styles.giftCheck}>
@@ -421,7 +415,6 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
                           type="tel"
                           inputMode="tel"
                           required
-                          placeholder={sampleCustomer.phone}
                           value={wallet}
                           onChange={(e) => setWallet(e.target.value)}
                         />
@@ -488,7 +481,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
               <input type="checkbox" name="gift" form="checkout-form" checked={isGift} onChange={(e) => setIsGift(e.target.checked)} />
               This is a gift (wrap it and hide prices)
             </label>
-            {isGift && <label className={styles.field} htmlFor="gift-message"><span>Gift message <span className={styles.optional}>(optional)</span></span><textarea id="gift-message" name="gift_message" form="checkout-form" rows={3} maxLength={500} value={giftMessage} onChange={(e) => setGiftMessage(e.target.value)} placeholder="A little note for the recipient" /></label>}
+            {isGift && <label className={styles.field} htmlFor="gift-message"><span>Gift message <span className={styles.optional}>(optional)</span></span><textarea id="gift-message" name="gift_message" form="checkout-form" rows={3} maxLength={500} value={giftMessage} onChange={(e) => setGiftMessage(e.target.value)} /></label>}
           </>
         )}
         <dl className={styles.totals}>

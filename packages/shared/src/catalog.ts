@@ -378,8 +378,6 @@ export const relatedProducts = pick([
   'newborn-gift-hamper',
 ]);
 
-export const deliveryAreas = ['East Legon', 'Osu', 'Airport Residential', 'Spintex', 'Dansoman'];
-
 export type MomoNetwork = 'mtn' | 'telecel' | 'at';
 
 export const momoNetworks: { id: MomoNetwork; label: string }[] = [
