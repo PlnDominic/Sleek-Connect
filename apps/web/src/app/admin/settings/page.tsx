@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { can, requireStaffPage } from '@/lib/admin/session';
-import { businessDetails } from '@/lib/legal';
 import { ActionForm } from '../ActionForm';
 import { saveSettings } from './actions';
 import styles from '../admin.module.css';
@@ -15,19 +14,6 @@ export default async function SettingsPage() {
   }
   const { data: s, error } = await staff.supabase.from('store_settings').select('*').single();
   if (error) throw error;
-  // The company details the terms, privacy notice, footer and receipts print. They come from the server's environment
-  // (Vercel → Environment Variables), so this only shows whether each is set, never changes it.
-  const business = businessDetails();
-  const details: [string, string, boolean][] = [
-    ['Company name', 'BUSINESS_NAME', Boolean(business.name)],
-    ['Registration number', 'BUSINESS_REGISTRATION_NUMBER', Boolean(business.registrationNumber)],
-    ['Business address', 'BUSINESS_ADDRESS', Boolean(business.address)],
-    ['Data Protection Commission number', 'DATA_PROTECTION_REGISTRATION_NUMBER', Boolean(business.dataProtectionNumber)],
-    ['Tax identification number (TIN)', 'BUSINESS_TIN', Boolean(business.taxNumber)],
-    ['Payment provider name', 'PAYMENT_PROVIDER_NAME', Boolean(business.paymentProvider)],
-  ];
-  const missing = details.filter(([, , set]) => !set).length;
-
   return (
     <>
       <div className={styles.pageHead}>
@@ -36,22 +22,6 @@ export default async function SettingsPage() {
           <p className={styles.muted}>Store-wide rules.</p>
         </div>
       </div>
-      <section className={styles.panel} aria-labelledby="company-title">
-        <h2 id="company-title">Company details on the legal pages</h2>
-        <p className={styles.muted}>
-          The terms, privacy notice, footer and receipts name your company when these are set, and leave the sentence out when they are not.
-          Set them in Vercel → Environment Variables and redeploy.
-          {missing > 0 ? ` ${missing} not set yet.` : ' All set.'}
-        </p>
-        <ul className={styles.form}>
-          {details.map(([label, name, set]) => (
-            <li key={name}>
-              <span className={styles.badge} data-tone={set ? 'good' : 'warn'}>{set ? 'Set' : 'Not set'}</span> {label} <code>{name}</code>
-            </li>
-          ))}
-        </ul>
-      </section>
-
       <ActionForm action={saveSettings}>
         <section className={styles.panel}>
           <h2>Customer support</h2>
