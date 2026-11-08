@@ -21,9 +21,10 @@ export default async function OrdersPage({ searchParams }: PageProps<'/admin/ord
 
   let query = staff.supabase
     .from('orders')
-    .select('id, order_number, status, customer_name, phone, area, delivery_option_id, total_ghs, created_at, needs_review, refund_due, is_gift, payment_method, order_items(quantity)')
+    .select('id, order_number, status, customer_name, phone, area, delivery_option_id, total_ghs, created_at, needs_review, refund_due, cancel_reason, is_gift, payment_method, order_items(quantity)')
     .limit(200);
   if ('statuses' in config) query = query.in('status', [...config.statuses]);
+  if ('cancelReasons' in config) query = query.eq('status', 'cancelled').in('cancel_reason', [...config.cancelReasons]);
   if ('flag' in config) query = query.eq(config.flag, true);
   if ('method' in config) query = query.eq('payment_method', config.method);
   if ('notMethod' in config) query = query.neq('payment_method', config.notMethod);
@@ -81,8 +82,8 @@ export default async function OrdersPage({ searchParams }: PageProps<'/admin/ord
                 <strong>{formatPriceOr(o.total_ghs as number | null, '–')}</strong>
               </td>
               <td>
-                <StatusBadge status={o.status as OrderStatus} />
-                {o.needs_review && <span className={styles.badge} data-tone="bad"> Review</span>}
+                <StatusBadge status={o.status as OrderStatus} cancelReason={o.cancel_reason} needsReview={o.needs_review} />
+                {o.needs_review && o.status !== 'cancelled' && <span className={styles.badge} data-tone="bad"> Review</span>}
                 {o.refund_due && <span className={styles.badge} data-tone="warn"> Refund due</span>}
               </td>
             </tr>

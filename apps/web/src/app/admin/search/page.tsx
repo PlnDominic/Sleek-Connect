@@ -15,7 +15,7 @@ export default async function AdminSearchPage({ searchParams }: PageProps<'/admi
   // Characters that mean something in a filter are dropped, not escaped.
   const q = (typeof raw === 'string' ? raw : '').replace(/[%,()*\\]/g, ' ').trim().slice(0, 60);
 
-  let orders: { order_number: string; customer_name: string; status: string; total_ghs: number | null; created_at: string }[] = [];
+  let orders: { order_number: string; customer_name: string; status: string; total_ghs: number | null; created_at: string; cancel_reason: string | null; needs_review: boolean }[] = [];
   let products: { id: string; name: string; brand: string; slug: string; is_published: boolean }[] = [];
   let suppliers: { id: string; name: string; phone: string | null }[] = [];
 
@@ -25,7 +25,7 @@ export default async function AdminSearchPage({ searchParams }: PageProps<'/admi
     const [o, p, v] = await Promise.all([
       db
         .from('orders')
-        .select('order_number, customer_name, status, total_ghs, created_at')
+        .select('order_number, customer_name, status, total_ghs, created_at, cancel_reason, needs_review')
         .or(`order_number.ilike.%${q}%,customer_name.ilike.%${q}%,phone.ilike.%${q}%`)
         .order('created_at', { ascending: false })
         .limit(10),
@@ -69,7 +69,7 @@ export default async function AdminSearchPage({ searchParams }: PageProps<'/admi
                   <td>{o.customer_name}</td>
                   <td className={styles.num}>{o.total_ghs === null ? '–' : formatPrice(o.total_ghs)}</td>
                   <td>
-                    <StatusBadge status={o.status as OrderStatus} />
+                    <StatusBadge status={o.status as OrderStatus} cancelReason={o.cancel_reason} needsReview={o.needs_review} />
                   </td>
                 </tr>
               ))}

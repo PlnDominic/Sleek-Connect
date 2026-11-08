@@ -67,6 +67,7 @@
 --   20261126090000_remove_shop_by_age.sql
 --   20261127090000_remove_default_delivery_areas.sql
 --   20261128090000_neutral_light_tints.sql
+--   20261129090000_keep_orders_with_live_payments.sql
 --   seed.reference.sql (categories, age groups and delivery settings; no sample products)
 
 -- ===========================================================================
@@ -18807,6 +18808,39 @@ update public.categories set tint = case tint when '#E3F0EC' then '#EEEFF1' when
 where tint in ('#E3F0EC', '#EDF5F2', '#E8EEF5', '#F5F7FA');
 update public.products set tint = case tint when '#E3F0EC' then '#EEEFF1' when '#EDF5F2' then '#F4F5F6' when '#E8EEF5' then '#EEEFF1' when '#F5F7FA' then '#F6F6F7' else tint end
 where tint in ('#E3F0EC', '#EDF5F2', '#E8EEF5', '#F5F7FA');
+
+-- ===========================================================================
+-- 20261129090000_keep_orders_with_live_payments.sql
+-- ===========================================================================
+
+-- An order was cancelled 15 minutes after it was placed even when the customer had started a Mobile Money payment that was still
+-- going through, so a paid order could be left showing "Cancelled". Orders with a payment attempt started in the last 45 minutes
+-- that hasn't been answered yet now keep their reservation; the payment's answer (or the reconcile job) settles them.
+create or replace function public.expire_unpaid_orders()
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_order_id uuid;
+  v_count integer := 0;
+begin
+  for v_order_id in
+    select o.id from public.orders o
+    where o.status = 'pending_payment' and o.reservation_expires_at < now()
+      and not exists (
+        select 1 from public.payments p
+        where p.order_id = o.id and p.status = 'pending' and p.created_at > now() - interval '45 minutes'
+      )
+    for update skip locked
+  loop
+    perform public.release_order_reservation(v_order_id, 'payment_timeout');
+    v_count := v_count + 1;
+  end loop;
+  return v_count;
+end;
+$$;
 
 -- ===========================================================================
 -- seed.reference.sql

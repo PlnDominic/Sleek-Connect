@@ -14,6 +14,8 @@ export const orderViews = {
   refund: { label: 'Refund due', flag: 'refund_due' },
   unpaid: { label: 'Awaiting payment', statuses: ['pending_payment'], notMethod: 'cod' },
   done: { label: 'Completed', statuses: ['delivered', 'cancelled', 'returned'] },
+  // Checkouts that never turned into a sale: the customer didn't pay in time, or the payment was declined. Nothing was taken.
+  abandoned: { label: 'Abandoned', cancelReasons: ['payment_timeout', 'payment_failed'] },
   all: { label: 'All' },
 } as const;
 

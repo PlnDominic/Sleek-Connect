@@ -41,7 +41,7 @@ export default async function Dashboard({ searchParams }: PageProps<'/admin'>) {
     count(db.from('support_cases').select('id', { count: 'exact', head: true }).eq('status', 'open')),
     db.rpc('admin_stock_overview'),
     db.rpc('admin_expiring_batches'),
-    db.from('orders').select('order_number, status, customer_name, total_ghs, created_at').order('created_at', { ascending: false }).limit(6),
+    db.from('orders').select('order_number, status, customer_name, total_ghs, created_at, cancel_reason, needs_review').order('created_at', { ascending: false }).limit(6),
     // Paid orders in the last 30 days, for the sales figures (cancelled and returned ones don't count).
     db
       .from('orders')
@@ -245,7 +245,7 @@ export default async function Dashboard({ searchParams }: PageProps<'/admin'>) {
                     <strong>{formatPriceOr(o.total_ghs as number | null, '–')}</strong>
                   </td>
                   <td>
-                    <StatusBadge status={o.status as OrderStatus} />
+                    <StatusBadge status={o.status as OrderStatus} cancelReason={o.cancel_reason} needsReview={o.needs_review} />
                   </td>
                 </tr>
               ))}

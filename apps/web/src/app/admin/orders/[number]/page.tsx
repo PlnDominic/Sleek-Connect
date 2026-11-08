@@ -6,7 +6,7 @@ import { can, requireStaffPage } from '@/lib/admin/session';
 import { failureReasons, formatDateTime, networkNames, statusLabels, type DeliveryFailureReason, type OrderStatus } from '@/lib/orders';
 import { ActionForm } from '../../ActionForm';
 import { Flash } from '../../Flash';
-import { StatusBadge } from '../../StatusBadge';
+import { cancelledLabel, StatusBadge } from '../../StatusBadge';
 import {
   cancelOrder,
   confirmCodOrder,
@@ -94,7 +94,7 @@ export default async function AdminOrderPage({ params, searchParams }: PageProps
       <div className={styles.pageHead}>
         <div>
           <h1>
-            Order {order.order_number} <StatusBadge status={status} />
+            Order {order.order_number} <StatusBadge status={status} cancelReason={order.cancel_reason} needsReview={order.needs_review} />
           </h1>
           <p className={styles.muted}>
             Placed {formatDateTime(order.created_at)}
@@ -262,7 +262,7 @@ export default async function AdminOrderPage({ params, searchParams }: PageProps
               {status === 'delivered'
                 ? `Delivered to ${order.delivered_to} on ${order.delivered_at ? formatDateTime(order.delivered_at) : ''}.`
                 : status === 'cancelled'
-                  ? `Cancelled${order.cancel_reason ? `: ${order.cancel_reason}` : ''}.`
+                  ? cancelledLabel(order.cancel_reason, order.needs_review).hint
                   : 'Returned to stock after a failed delivery.'}
             </p>
           )}
