@@ -21,6 +21,6 @@ export const darkThemeCss = `html[data-theme="dark"]{color-scheme:dark;--c-on-ac
 
 /**
  * Runs before the page paints so there is no flash: sets data-theme from the shopper's choice (Light, Dark or Auto, kept on this
- * device under "sc-theme"; Dark until they choose otherwise). The admin console keeps its own look.
+ * device under "sc-theme"; Auto, which follows the device, until they choose otherwise). The admin console keeps its own look.
  */
-export const themeScript = `try{var p=location.pathname;if(p.indexOf('/admin')!==0){var c=localStorage.getItem('sc-theme');var d=c===null||c==='dark'||(c==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.setAttribute('data-theme','dark')}}catch(e){}`;
+export const themeScript = `try{var p=location.pathname;if(p.indexOf('/admin')!==0){var c=localStorage.getItem('sc-theme');var d=c==='dark'||((c===null||c==='auto')&&matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.setAttribute('data-theme','dark')}}catch(e){}`;

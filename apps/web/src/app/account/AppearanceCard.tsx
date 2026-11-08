@@ -11,7 +11,7 @@ const options: { value: Choice; label: string }[] = [
   { value: 'auto', label: 'Auto' },
 ];
 
-/** Applies the choice to the page now and keeps it on this device. Dark is the default; Auto follows the phone or computer setting. */
+/** Applies the choice to the page now and keeps it on this device. Auto is the default; it follows the phone or computer setting. */
 function apply(choice: Choice) {
   const dark = choice === 'dark' || (choice === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
   if (dark) document.documentElement.setAttribute('data-theme', 'dark');
@@ -23,9 +23,9 @@ const EVENT = 'sc-theme-change';
 function read(): Choice {
   try {
     const saved = localStorage.getItem(KEY);
-    return saved === 'light' || saved === 'auto' ? saved : 'dark';
+    return saved === 'light' || saved === 'dark' ? saved : 'auto';
   } catch {
-    return 'dark';
+    return 'auto';
   }
 }
 
@@ -40,7 +40,7 @@ function subscribe(listener: () => void) {
 
 /** Light, Dark or Auto for the whole store (the same switch the mobile app has on its Account page). */
 export function AppearanceCard() {
-  const choice = useSyncExternalStore(subscribe, read, () => 'dark' as Choice);
+  const choice = useSyncExternalStore(subscribe, read, () => 'auto' as Choice);
 
   // While on Auto, follow the device when its setting changes.
   useEffect(() => {
