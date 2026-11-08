@@ -133,6 +133,8 @@ async function placeAndPay(client, slug, { deliverIt = true } = {}) {
 
   const ps = await ctx(cat.cookies());
   await go(ps, BASE + '/admin/reviews');
+  // The list is a table; Reject opens the review with its reason box.
+  await ps.locator('tr', { hasText: 'Vitamin C Brightening Serum' }).getByRole('link', { name: /Reject the review/ }).click();
   const item = ps.getByRole('region', { name: /Review of Vitamin C Brightening Serum by Ama O\./ });
   await item.waitFor();
   assert((await item.textContent()).includes('My skin looks brighter') && (await item.textContent()).includes('verified purchase') && !(await item.textContent()).includes(`ama+${stamp}`), 'staff see the review, the short name and “verified purchase”, not the account');
@@ -151,7 +153,7 @@ async function placeAndPay(client, slug, { deliverIt = true } = {}) {
   await pa.getByRole('button', { name: 'Submit review' }).click();
   await pa.getByLabel('Your review', { exact: true }).filter({ hasText: 'Waiting to be checked' }).waitFor();
   await go(ps, BASE + '/admin/reviews');
-  await ps.getByRole('region', { name: /Review of Vitamin C/ }).getByRole('button', { name: 'Publish' }).click();
+  await ps.locator('tr', { hasText: 'Vitamin C' }).getByRole('button', { name: /Publish/ }).click();
   await ps.getByText('Review published.').waitFor();
   assert(true, 'staff publish the edited review');
   assert(await until(async () => { await go(guest, BASE + `/products/${slug}`); return (await reviewsOf(guest).textContent()).includes('absorbs quickly'); }, 20000), 'everyone now sees it on the product page');

@@ -1,7 +1,6 @@
 'use client';
 
-import Image from 'next/image';
-import { useState, useTransition, type ChangeEvent, type ReactNode } from 'react';
+import { useState, useTransition, type ChangeEvent } from 'react';
 import { createBrowserSupabase } from '@/lib/supabase/browser';
 import { Icon } from '@/components/Icon';
 import { setCategoryPhoto, type CategoryPhotoResult } from './actions';
@@ -10,8 +9,8 @@ import styles from '../admin.module.css';
 const TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_BYTES = 5 * 1024 * 1024;
 
-/** The picture for one category: choose a file to upload it (it replaces the current one), or remove it. */
-export function CategoryPhoto({ id, name, url, path, canEdit, actions }: { id: string; name: string; url: string | null; path: string | null; canEdit: boolean; actions?: ReactNode }) {
+/** The photo button in a category's row: choose a file to upload it (it replaces the current one). */
+export function CategoryPhotoButton({ id, name, hasPhoto, path }: { id: string; name: string; hasPhoto: boolean; path: string | null }) {
   const [result, setResult] = useState<CategoryPhotoResult | null>(null);
   const [busy, startTransition] = useTransition();
 
@@ -33,38 +32,21 @@ export function CategoryPhoto({ id, name, url, path, canEdit, actions }: { id: s
   };
 
   return (
-    <section className={styles.panel} aria-label={name}>
-      <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-        {url ? (
-          <Image src={url} alt="" width={160} height={120} style={{ objectFit: 'cover', borderRadius: 12 }} />
-        ) : (
-          <div aria-hidden="true" style={{ width: 160, height: 120, borderRadius: 12, background: 'rgb(11 31 58 / 0.06)' }} />
-        )}
-        <div>
-          <h2>{name}</h2>
-          <p className={styles.muted}>{url ? 'Shown on the home page and in the app.' : 'No photo yet: shoppers see a plain coloured tile.'}</p>
-          {/* One row of icon buttons: the photo, then (from the page) edit, reorder and delete. */}
-          <div className={styles.buttons} style={{ alignItems: 'center' }}>
-            {canEdit && (
-              <label
-                className={styles.iconButton}
-                style={{ cursor: busy ? 'wait' : 'pointer' }}
-                title={url ? 'Replace photo' : 'Upload photo'}
-                aria-label={url ? `Replace photo for ${name}` : `Upload photo for ${name}`}
-              >
-                <Icon name="image" size={16} />
-                <input type="file" accept={TYPES.join(',')} onChange={upload} disabled={busy} hidden />
-              </label>
-            )}
-            {actions}
-          </div>
-          {result && (
-            <p role="status" className={result.ok ? styles.muted : styles.notice}>
-              {result.message}
-            </p>
-          )}
-        </div>
-      </div>
-    </section>
+    <>
+      <label
+        className={styles.iconButton}
+        style={{ cursor: busy ? 'wait' : 'pointer' }}
+        title={hasPhoto ? 'Replace photo' : 'Upload photo'}
+        aria-label={hasPhoto ? `Replace photo for ${name}` : `Upload photo for ${name}`}
+      >
+        <Icon name="image" size={16} />
+        <input type="file" accept={TYPES.join(',')} onChange={upload} disabled={busy} hidden />
+      </label>
+      {result && (
+        <span role="status" className={result.ok ? styles.muted : styles.notice}>
+          {result.message}
+        </span>
+      )}
+    </>
   );
 }
