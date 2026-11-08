@@ -3,7 +3,6 @@
 import type { User } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { createBrowserSupabase } from '@/lib/supabase/browser';
-import { rememberSignInReturn } from '@/lib/sign-in-return';
 
 interface AuthValue {
   user: User | null;
@@ -61,10 +60,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = useCallback(
     async (next = '/account', { consent = true, chooseAccount = false }: { consent?: boolean; chooseAccount?: boolean } = {}) => {
-      // The destination goes in a cookie and the callback address stays plain, so it matches Supabase's redirect allow-list
-      // (see lib/sign-in-return.ts). Without that match Supabase sends everyone, staff included, to the home page.
-      rememberSignInReturn({ next, consent });
       const callback = new URL('/auth/callback', window.location.origin);
+      callback.searchParams.set('next', next);
+      if (consent) callback.searchParams.set('consent', '1');
       const { error } = await createBrowserSupabase().auth.signInWithOAuth({
         provider: 'google',
         options: {

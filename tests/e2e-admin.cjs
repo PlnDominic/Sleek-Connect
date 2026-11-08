@@ -44,10 +44,8 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   await until(() => authorizeUrl);
   const auth = authorizeUrl && new URL(authorizeUrl);
   const redirectTo = auth && new URL(auth.searchParams.get('redirect_to'));
-  assert(auth?.searchParams.get('provider') === 'google' && redirectTo?.pathname === '/auth/callback' && redirectTo.search === '', 'Google sign-in comes back to the plain callback address (it must match Supabase’s redirect allow-list, or Supabase sends staff to the home page)');
-  const remembered = (await anon.context().cookies()).find((c) => c.name === 'sleek_sign_in_return');
-  assert(decodeURIComponent(remembered?.value ?? '') === '0/admin', `and the return cookie sends staff to the console, without shopper consent (${remembered?.value})`);
-  assert(!auth.searchParams.has('prompt'), 'Google picks the signed-in account');
+  assert(auth?.searchParams.get('provider') === 'google' && redirectTo?.pathname === '/auth/callback' && redirectTo.searchParams.get('next') === '/admin', 'Google sign-in returns to the console');
+  assert(!redirectTo.searchParams.has('consent') && !auth.searchParams.has('prompt'), 'staff aren’t asked for shopper consent, and Google picks the signed-in account');
   const failed = await ctx();
   await go(failed, BASE + '/auth/callback?code=bogus&next=/admin');
   assert(failed.url().endsWith('/admin?error=signin') && await failed.getByText('We couldn’t complete that sign-in').isVisible(), 'a failed Google sign-in returns to the staff sign-in with a message');

@@ -67,10 +67,7 @@ async function sessionCookies(email, password) {
   const auth = authorizeUrl && new URL(authorizeUrl);
   const redirectTo = auth && new URL(auth.searchParams.get('redirect_to'));
   assert(auth?.searchParams.get('provider') === 'google', 'redirects to Supabase Google sign-in');
-  // The callback address stays plain so Supabase's redirect allow-list matches it; where to go rides in a cookie.
-  assert(redirectTo?.pathname === '/auth/callback' && redirectTo.search === '', `callback address is plain (${redirectTo})`);
-  const remembered = (await ap.context().cookies()).find((c) => c.name === 'sleek_sign_in_return');
-  assert(decodeURIComponent(remembered?.value ?? '') === '1/bag', `the return cookie carries next and consent (${remembered?.value})`);
+  assert(redirectTo?.pathname === '/auth/callback' && redirectTo.searchParams.get('next') === '/bag' && redirectTo.searchParams.get('consent') === '1', `callback carries next and consent (${redirectTo})`);
   await go(ap, BASE + '/account?error=signin');
   assert((await ap.getByRole('alert').filter({ hasText: 'sign you in' }).count()) === 1, 'sign-in error is shown');
   const cb = await ap.request.get(BASE + '/auth/callback?code=bogus&next=//evil.example', { maxRedirects: 0 });
