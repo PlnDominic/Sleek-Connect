@@ -35,7 +35,10 @@ and deleting the account from the Account tab. Returns, receipts and help open t
    ```
 
    Repeat with `--environment preview` and `--environment development` for test builds.
-5. Run `supabase/migrations/20261028090000_push_notifications.sql` on the database (Supabase → SQL Editor).
+5. Make sure the push-notification migration (`20261028090000`) is applied to the database. Don't paste that file into the SQL
+   Editor: it errors if the tables already exist, and it redefines `queue_order_notifications`, `export_my_data` and
+   `delete_my_account`, which later migrations replace (the old copies would break account deletion). Instead run
+   `supabase db push` (applies pending migrations in order), and check with `supabase migration list --linked`.
 6. On the website's host (Vercel), set `PUSH_PROVIDER=expo`. If you turn on "enhanced push security" in your Expo
    account, also set `EXPO_ACCESS_TOKEN`.
 7. Supabase → Authentication → URL Configuration → Redirect URLs: add `sleekconnect://auth/callback` (needed for Google
