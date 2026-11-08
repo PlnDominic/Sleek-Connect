@@ -16,3 +16,12 @@ export async function setStaff(email: string | null, _: ActionState, form: FormD
   refresh();
   return done(email ? 'Saved.' : 'Added. They can now sign in at /admin with that email address.');
 }
+
+/** Switches a staff member on or off, keeping their role. */
+export async function setStaffActive(email: string, role: StaffRole, active: boolean): Promise<ActionState> {
+  const supabase = await createUserSupabase();
+  const { error } = await supabase.rpc('admin_set_staff', { p_email: email, p_role: role, p_active: active });
+  if (error) return failed(error);
+  refresh();
+  return done(active ? 'They can sign in again.' : 'They can no longer sign in to the admin console.');
+}

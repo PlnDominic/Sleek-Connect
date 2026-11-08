@@ -81,5 +81,14 @@ export async function saveArea(oldName: string | null, _: ActionState, form: For
       sort_order: text(form, 'sort_order'),
     } as Json,
   });
-  return error ? failed(error) : saved(oldName ? 'Area saved.' : 'Area added. Shoppers can choose it at checkout now.');
+  return error ? failed(error) : saved(oldName ? 'Area saved.' : 'Area added.');
+}
+
+/** Switches delivery to an area on or off, keeping its zone and order. */
+export async function setAreaActive(area: { name: string; zone_id: string | null; sort_order: number }, active: boolean): Promise<ActionState> {
+  const supabase = await createUserSupabase();
+  const { error } = await supabase.rpc('admin_save_delivery_area', {
+    p: { old_name: area.name, name: area.name, zone_id: area.zone_id ?? '', is_active: active, sort_order: String(area.sort_order) } as Json,
+  });
+  return error ? failed(error) : saved(active ? 'Delivering to this area.' : 'No longer delivering to this area.');
 }

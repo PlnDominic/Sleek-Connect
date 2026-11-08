@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
+import { Icon } from '@/components/Icon';
 import { can, requireStaffPage } from '@/lib/admin/session';
 import { ActionForm } from '../ActionForm';
-import { deleteZone, saveArea, saveOption, saveRates, saveThreshold, saveZone } from './actions';
+import { deleteZone, saveArea, setAreaActive, saveOption, saveRates, saveThreshold, saveZone } from './actions';
 import styles from '../admin.module.css';
 
 export const metadata: Metadata = { title: 'Delivery' };
 
-export default async function DeliveryPage() {
+export default async function DeliveryPage({ searchParams }: PageProps<'/admin/delivery'>) {
   const staff = await requireStaffPage();
   if (!staff) return null;
   if (!can(staff.role, 'settings.edit')) {
@@ -22,6 +24,10 @@ export default async function DeliveryPage() {
   ]);
   for (const r of [options, zones, rates, areas, settings]) if (r.error) throw r.error;
   const optionIds = options.data!.map((o) => o.id);
+  const { area: areaParam, newArea } = await searchParams;
+  const addingArea = newArea !== undefined;
+  const editingArea = typeof areaParam === 'string' ? areas.data!.find((a) => a.name === areaParam) : undefined;
+  const zoneName = new Map(zones.data!.map((z) => [z.id, z.name]));
 
   return (
     <>
@@ -152,57 +158,114 @@ export default async function DeliveryPage() {
       </section>
 
       <section className={styles.panel} aria-labelledby="areas-title">
-        <h2 id="areas-title">Areas</h2>
-        <p className={styles.muted}>Active areas are offered at checkout.</p>
-        <ActionForm action={saveArea.bind(null, null)} resetOnSuccess>
-          <div className={styles.row}>
-            <label className={styles.field}>
-              <span>New area</span>
-              <input name="name" required maxLength={60} placeholder="e.g. Tema Community 25" />
-            </label>
-            <label className={styles.field}>
-              <span>Zone</span>
-              <select name="zone" defaultValue="">
-                <option value="">Standard fees</option>
-                {zones.data!.map((z) => (
-                  <option key={z.id} value={z.id}>{z.name}</option>
-                ))}
-              </select>
-            </label>
-            <button type="submit" className={styles.secondary}>Add area</button>
+        <div className={styles.panelHead}>
+          <div>
+            <h2 id="areas-title">Areas</h2>
+            <p className={styles.muted}>Shoppers type their own location at checkout. List an area here only to put it in a zone with its own fees.</p>
           </div>
-        </ActionForm>
-        <details className={styles.inline}>
-          <summary>Edit areas ({areas.data!.length})</summary>
-          {areas.data!.map((a) => (
-            <ActionForm key={a.name} action={saveArea.bind(null, a.name)}>
-              <div className={styles.row}>
-                <label className={styles.field}>
-                  <span>Area</span>
-                  <input name="name" required maxLength={60} defaultValue={a.name} />
-                </label>
-                <label className={styles.field}>
-                  <span>Zone</span>
-                  <select name="zone" defaultValue={a.zone_id ?? ''}>
-                    <option value="">Standard fees</option>
-                    {zones.data!.map((z) => (
-                      <option key={z.id} value={z.id}>{z.name}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className={styles.field}>
-                  <span>Order</span>
-                  <input name="sort_order" type="number" defaultValue={a.sort_order} />
-                </label>
-                <label className={styles.check}>
-                  <input type="checkbox" name="active" defaultChecked={a.is_active} />
-                  Delivering here
-                </label>
-                <button type="submit" className={styles.secondary}>Save</button>
-              </div>
-            </ActionForm>
-          ))}
-        </details>
+          <Link href="/admin/delivery?newArea=1#areas-title" className={styles.primary}>
+            Add area
+          </Link>
+        </div>
+
+        {addingArea && (
+          <ActionForm action={saveArea.bind(null, null)} resetOnSuccess>
+            <div className={styles.row}>
+              <label className={styles.field}>
+                <span>New area</span>
+                <input name="name" required maxLength={60} />
+              </label>
+              <label className={styles.field}>
+                <span>Zone</span>
+                <select name="zone" defaultValue="">
+                  <option value="">Standard fees</option>
+                  {zones.data!.map((z) => (
+                    <option key={z.id} value={z.id}>{z.name}</option>
+                  ))}
+                </select>
+              </label>
+              <button type="submit" className={styles.primary}>Add area</button>
+              <Link href="/admin/delivery#areas-title" className={styles.secondary}>Close</Link>
+            </div>
+          </ActionForm>
+        )}
+
+        {editingArea && (
+          <ActionForm action={saveArea.bind(null, editingArea.name)}>
+            <div className={styles.row}>
+              <label className={styles.field}>
+                <span>Area</span>
+                <input name="name" required maxLength={60} defaultValue={editingArea.name} />
+              </label>
+              <label className={styles.field}>
+                <span>Zone</span>
+                <select name="zone" defaultValue={editingArea.zone_id ?? ''}>
+                  <option value="">Standard fees</option>
+                  {zones.data!.map((z) => (
+                    <option key={z.id} value={z.id}>{z.name}</option>
+                  ))}
+                </select>
+              </label>
+              <label className={styles.field}>
+                <span>Order</span>
+                <input name="sort_order" type="number" defaultValue={editingArea.sort_order} />
+              </label>
+              <label className={styles.check}>
+                <input type="checkbox" name="active" defaultChecked={editingArea.is_active} />
+                Delivering here
+              </label>
+              <button type="submit" className={styles.primary}>Save changes</button>
+              <Link href="/admin/delivery#areas-title" className={styles.secondary}>Close</Link>
+            </div>
+          </ActionForm>
+        )}
+
+        {areas.data!.length === 0 ? (
+          <p className={styles.empty}>No areas listed. Every location uses the standard fees.</p>
+        ) : (
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Area</th>
+                  <th>Zone</th>
+                  <th className={styles.num}>Order</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {areas.data!.map((a) => (
+                  <tr key={a.name}>
+                    <td><strong>{a.name}</strong></td>
+                    <td>{a.zone_id ? (zoneName.get(a.zone_id) ?? a.zone_id) : <span className={styles.muted}>Standard fees</span>}</td>
+                    <td className={styles.num}>{a.sort_order}</td>
+                    <td>
+                      <span className={styles.badge} data-tone={a.is_active ? 'good' : undefined}>{a.is_active ? 'Delivering' : 'Paused'}</span>
+                    </td>
+                    <td>
+                      <div className={styles.rowActions}>
+                        <Link href={`/admin/delivery?area=${encodeURIComponent(a.name)}#areas-title`} className={styles.iconButton} title="Edit" aria-label={`Edit ${a.name}`}>
+                          <Icon name="pencil" size={16} />
+                        </Link>
+                        <ActionForm action={setAreaActive.bind(null, { name: a.name, zone_id: a.zone_id, sort_order: a.sort_order }, !a.is_active)}>
+                          <button
+                            type="submit"
+                            className={styles.iconButton}
+                            title={a.is_active ? 'Pause delivery here' : 'Deliver here'}
+                            aria-label={a.is_active ? `Pause delivery to ${a.name}` : `Deliver to ${a.name}`}
+                          >
+                            <Icon name={a.is_active ? 'eyeOff' : 'eye'} size={16} />
+                          </button>
+                        </ActionForm>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </>
   );

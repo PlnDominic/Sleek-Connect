@@ -79,6 +79,7 @@ async function placeOrder(items, { area = 'Osu', pay = true } = {}) {
   await zone.getByLabel('Offer Same day in Outer Accra').uncheck();
   await zone.getByRole('button', { name: 'Save Outer Accra fees' }).click();
   await zone.getByRole('status').filter({ hasText: 'Fees saved.' }).waitFor();
+  await go(staff, BASE + '/admin/delivery?area=Spintex');
   const spintex = staff.locator('form', { has: staff.locator('input[name="name"][value="Spintex"]') });
   await spintex.getByLabel('Zone').selectOption({ label: 'Outer Accra' });
   await spintex.getByRole('button', { name: 'Save' }).click();

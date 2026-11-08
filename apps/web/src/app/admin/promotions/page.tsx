@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { formatPrice } from '@sleek/shared';
+import { Icon } from '@/components/Icon';
 import { getCategories } from '@/lib/catalog';
 import { can, requireStaffPage } from '@/lib/admin/session';
 import { formatDateTime } from '@/lib/orders';
@@ -32,7 +34,7 @@ function conditions(p: Promotion): string {
   return parts.length ? parts.join(' · ') : 'No conditions';
 }
 
-export default async function PromotionsPage() {
+export default async function PromotionsPage({ searchParams }: PageProps<'/admin/promotions'>) {
   const staff = await requireStaffPage();
   if (!staff) return null;
   if (!can(staff.role, 'promotions.manage')) {
@@ -45,6 +47,9 @@ export default async function PromotionsPage() {
   }
   const promos = (data as unknown as Promotion[]) ?? [];
   const cats = categories.map((c) => ({ id: c.id, name: c.name }));
+  const { edit: editParam, new: newParam } = await searchParams;
+  const adding = newParam !== undefined;
+  const editing = typeof editParam === 'string' ? promos.find((p) => p.id === editParam) : undefined;
   const live = promos.filter((p) => stateOf(p).label === 'Live').length;
   const given = promos.reduce((sum, p) => sum + Number(p.discount_given_ghs), 0);
 
@@ -55,6 +60,9 @@ export default async function PromotionsPage() {
           <h1>Promotions</h1>
           <p className={styles.muted}>Promo codes shoppers type at checkout. One code works on one order, and it can’t be combined with another.</p>
         </div>
+        <Link href="/admin/promotions?new=1" className={styles.primary}>
+          New promo code
+        </Link>
       </div>
 
       <section className={styles.panel} aria-label="Summary">
@@ -63,76 +71,119 @@ export default async function PromotionsPage() {
         </p>
       </section>
 
-      <section className={styles.panel} aria-labelledby="new-title">
-        <h2 id="new-title">New promo code</h2>
-        <ActionForm action={savePromotion.bind(null, null)} resetOnSuccess>
-          <PromotionFields categories={cats}>
-            <div className={styles.buttons}>
-              <button type="submit" className={styles.primary}>
-                Create promo code
-              </button>
-            </div>
-          </PromotionFields>
-        </ActionForm>
-      </section>
-
-      {promos.length === 0 ? (
-        <section className={styles.panel}>
-          <p className={styles.empty}>No promo codes yet.</p>
-        </section>
-      ) : (
-        promos.map((p) => {
-          const state = stateOf(p);
-          return (
-            <section key={p.id} className={styles.panel} aria-label={`Promo code ${p.code}`}>
-              <div className={styles.panelHead}>
-                <div>
-                  <h2>
-                    {p.code} <span className={styles.badge} data-tone={state.tone === 'neutral' ? undefined : state.tone}>{state.label}</span>
-                  </h2>
-                  <p className={styles.muted}>
-                    {p.label} · <strong>{what(p)}</strong> · {conditions(p)}
-                  </p>
-                  <p className={styles.muted}>
-                    Used {p.used_count}
-                    {p.max_uses !== null ? ` of ${p.max_uses}` : ''} · {p.orders} paid {p.orders === 1 ? 'order' : 'orders'} · {formatPrice(Number(p.discount_given_ghs))} given
-                    {p.ends_at ? ` · ends ${formatDateTime(p.ends_at)}` : ''}
-                    {Date.parse(p.starts_at) > new Date().getTime() ? ` · starts ${formatDateTime(p.starts_at)}` : ''}
-                  </p>
-                </div>
-              </div>
+      {adding && (
+        <section className={styles.panel} aria-labelledby="new-title">
+          <div className={styles.panelHead}>
+            <h2 id="new-title">New promo code</h2>
+            <Link href="/admin/promotions" className={styles.secondary}>
+              Close
+            </Link>
+          </div>
+          <ActionForm action={savePromotion.bind(null, null)} resetOnSuccess>
+            <PromotionFields categories={cats}>
               <div className={styles.buttons}>
-                <ActionForm action={setPromotionActive.bind(null, p.id, !p.active)}>
-                  <button type="submit" className={styles.secondary}>
-                    {p.active ? 'Switch off' : 'Switch on'}
-                  </button>
-                </ActionForm>
-                {p.used_count === 0 && p.orders === 0 && (
-                  <ActionForm action={deletePromotion.bind(null, p.id)} confirm={`Delete ${p.code}? This can’t be undone.`}>
-                    <button type="submit" className={styles.secondary}>
-                      Delete
-                    </button>
-                  </ActionForm>
-                )}
+                <button type="submit" className={styles.primary}>
+                  Create promo code
+                </button>
               </div>
-              <details>
-                <summary>Edit</summary>
-                <div style={{ marginTop: 12 }}>
-                  <ActionForm action={savePromotion.bind(null, p.id)}>
-                    <PromotionFields promo={p} categories={cats}>
-                      <div className={styles.buttons}>
-                        <button type="submit" className={styles.primary}>
-                          Save changes
-                        </button>
-                      </div>
-                    </PromotionFields>
-                  </ActionForm>
-                </div>
-              </details>
-            </section>
-          );
-        })
+            </PromotionFields>
+          </ActionForm>
+        </section>
       )}
+
+      {editing && (
+        <section className={styles.panel} aria-labelledby="edit-title">
+          <div className={styles.panelHead}>
+            <h2 id="edit-title">Edit {editing.code}</h2>
+            <Link href="/admin/promotions" className={styles.secondary}>
+              Close
+            </Link>
+          </div>
+          <ActionForm action={savePromotion.bind(null, editing.id)}>
+            <PromotionFields promo={editing} categories={cats}>
+              <div className={styles.buttons}>
+                <button type="submit" className={styles.primary}>
+                  Save changes
+                </button>
+              </div>
+            </PromotionFields>
+          </ActionForm>
+        </section>
+      )}
+
+      <section className={styles.panel} aria-label="Promo codes">
+        {promos.length === 0 ? (
+          <p className={styles.empty}>No promo codes yet. Use New promo code to create the first one.</p>
+        ) : (
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Offer</th>
+                  <th>Conditions</th>
+                  <th className={styles.num}>Used</th>
+                  <th className={styles.num}>Given</th>
+                  <th>Dates</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {promos.map((p) => {
+                  const state = stateOf(p);
+                  return (
+                    <tr key={p.id}>
+                      <td>
+                        <strong>{p.code}</strong>
+                        <div className={styles.muted}>{p.label}</div>
+                      </td>
+                      <td>{what(p)}</td>
+                      <td className={styles.muted}>{conditions(p)}</td>
+                      <td className={styles.num}>
+                        {p.used_count}
+                        {p.max_uses !== null ? ` / ${p.max_uses}` : ''}
+                        <div className={styles.muted}>{p.orders} paid {p.orders === 1 ? 'order' : 'orders'}</div>
+                      </td>
+                      <td className={styles.num}>{formatPrice(Number(p.discount_given_ghs))}</td>
+                      <td className={styles.muted}>
+                        {Date.parse(p.starts_at) > new Date().getTime() ? `Starts ${formatDateTime(p.starts_at)}` : p.ends_at ? `Ends ${formatDateTime(p.ends_at)}` : 'No end date'}
+                      </td>
+                      <td>
+                        <span className={styles.badge} data-tone={state.tone === 'neutral' ? undefined : state.tone}>{state.label}</span>
+                      </td>
+                      <td>
+                        <div className={styles.rowActions}>
+                          <Link href={`/admin/promotions?edit=${p.id}`} className={styles.iconButton} title="Edit" aria-label={`Edit ${p.code}`}>
+                            <Icon name="pencil" size={16} />
+                          </Link>
+                          <ActionForm action={setPromotionActive.bind(null, p.id, !p.active)}>
+                            <button
+                              type="submit"
+                              className={styles.iconButton}
+                              title={p.active ? 'Switch off' : 'Switch on'}
+                              aria-label={p.active ? `Switch off ${p.code}` : `Switch on ${p.code}`}
+                            >
+                              <Icon name={p.active ? 'eyeOff' : 'eye'} size={16} />
+                            </button>
+                          </ActionForm>
+                          {p.used_count === 0 && p.orders === 0 && (
+                            <ActionForm action={deletePromotion.bind(null, p.id)} confirm={`Delete ${p.code}? This can’t be undone.`}>
+                              <button type="submit" className={`${styles.iconButton} ${styles.iconDanger}`} title="Delete" aria-label={`Delete ${p.code}`}>
+                                <Icon name="trash" size={16} />
+                              </button>
+                            </ActionForm>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </>
   );
 }

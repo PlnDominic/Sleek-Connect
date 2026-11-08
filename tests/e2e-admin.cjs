@@ -148,7 +148,7 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   const toPack = op.getByRole('link', { name: /To pack/ });
   assert((await toPack.textContent()).includes('1'), 'dashboard counts the order to pack');
   await shot(op, 'admin-dashboard');
-  await go(op, BASE + '/admin/riders');
+  await go(op, BASE + '/admin/riders?new=1');
   await op.getByRole('textbox', { name: 'Name' }).first().fill('Kofi Asante');
   await op.getByRole('textbox', { name: 'Phone' }).first().fill('020 111 2222');
   await op.getByRole('button', { name: 'Add rider' }).click();
@@ -253,7 +253,7 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
 
   // --- Staff management -----------------------------------------------------------------------------------
   const bs = await ctx(boss.cookies());
-  await go(bs, BASE + '/admin/staff');
+  await go(bs, BASE + '/admin/staff?new=1');
   await bs.getByLabel('Staff email').fill(`New.Hire+${stamp}@Example.com`);
   await bs.getByRole('button', { name: 'Add', exact: true }).click();
   await bs.getByText(/Added\. They can now sign in/).waitFor();
