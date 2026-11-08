@@ -100,7 +100,7 @@ Use these as a starting point.
 > • Follow your order from packing to the rider at your door, and get a notification at each step.
 > • Delivery Monday to Saturday.
 >
-> You don't need an account to order. Sign in with your phone number or Google to see your orders on every device.
+> You don't need an account to order. Sign in with Google to see your orders on every device.
 
 **Screenshots (You):** iPhone 6.9″ (1320×2868) and 6.5″ (1284×2778), at least three each; Android phone (1080×1920 or
 larger), at least two; a 1024×500 feature graphic for Google Play. Good screens: Home, a product, the bag, checkout, and

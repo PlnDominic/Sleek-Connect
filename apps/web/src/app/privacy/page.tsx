@@ -43,8 +43,8 @@ export default async function PrivacyPage() {
       body: (
         <ul>
           <li>
-            <strong>Your account.</strong> If you sign in with your phone: your phone number. If you sign in with Google: your email
-            address, name and profile photo from Google. Either way, we record when you confirmed you are 18 or over and accepted our
+            <strong>Your account.</strong> When you sign in with Google: your email
+            address, name and profile photo from Google. We record when you confirmed you are 18 or over and accepted our
             terms. We never see your Google password. If you check out as a guest, we record on the order that you confirmed you are 18
             or over and accepted the terms.
           </li>

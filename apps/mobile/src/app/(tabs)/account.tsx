@@ -3,11 +3,11 @@ import { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { radii, type IconName } from '@sleek/shared';
 import { AppText } from '@/components/AppText';
-import { Button, Card, Field, Notice } from '@/components/Form';
+import { Button, Card, Notice } from '@/components/Form';
 import { Icon } from '@/components/Icon';
 import { Checkbox, useScreenTop } from '@/components/ui';
 import { deleteMyAccount } from '@/lib/account';
-import { normalizeGhanaPhone, useAuth } from '@/lib/auth';
+import { useAuth } from '@/lib/auth';
 import { pushAllowed, registerForPush, unregisterPush } from '@/lib/push';
 import { openSite, siteConfigured } from '@/lib/site';
 import { useColors, useStyles, useTheme, type Palette, type ThemeMode } from '@/theme/theme';
@@ -97,11 +97,8 @@ function AppearanceCard() {
 function SignedOut() {
   const colors = useColors();
   const styles = useStyles(makeStyles);
-  const { sendPhoneOtp, verifyPhoneOtp, signInWithGoogle, recordConsent } = useAuth();
+  const { signInWithGoogle, recordConsent } = useAuth();
   const [agreed, setAgreed] = useState(false);
-  const [phone, setPhone] = useState('');
-  const [code, setCode] = useState('');
-  const [step, setStep] = useState<'phone' | 'code'>('phone');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -116,24 +113,6 @@ function SignedOut() {
       setBusy(false);
     }
   }
-
-  const sendCode = () => {
-    const normalized = normalizeGhanaPhone(phone);
-    if (!normalized) return setError('Enter a valid Ghana number, for example 024 123 4567.');
-    void run(async () => {
-      await sendPhoneOtp(normalized);
-      setPhone(normalized);
-      setStep('code');
-    }, 'We couldn’t send a code to that number. Check the number or try again later.');
-  };
-
-  const confirm = () => {
-    if (!/^\d{6}$/.test(code)) return setError('Enter the six-digit code from the text message.');
-    void run(async () => {
-      await verifyPhoneOtp(phone, code);
-      await recordConsent().catch(() => {});
-    }, 'That code is invalid or expired. Request a new code and try again.');
-  };
 
   const google = () =>
     void run(async () => {
@@ -158,22 +137,7 @@ function SignedOut() {
           </AppText>
         </Pressable>
       </View>
-      {step === 'phone' ? (
-        <>
-          <Field label="Phone number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" autoComplete="tel" placeholder="024 123 4567" />
-          <Button label="Continue with phone" onPress={sendCode} disabled={!agreed} busy={busy} />
-        </>
-      ) : (
-        <>
-          <AppText size={13} color={colors.textMuted}>
-            We sent a six-digit code to {phone}.
-          </AppText>
-          <Field label="Verification code" value={code} onChangeText={setCode} keyboardType="number-pad" autoComplete="sms-otp" textContentType="oneTimeCode" maxLength={6} />
-          <Button label="Verify and sign in" onPress={confirm} disabled={!agreed} busy={busy} />
-          <Button label="Use a different number" kind="secondary" onPress={() => { setStep('phone'); setCode(''); setError(null); }} />
-        </>
-      )}
-      <Button label="Continue with Google" kind="secondary" onPress={google} disabled={!agreed || busy} />
+      <Button label="Continue with Google" onPress={google} disabled={!agreed || busy} />
       {error ? <Notice>{error}</Notice> : null}
     </Card>
   );

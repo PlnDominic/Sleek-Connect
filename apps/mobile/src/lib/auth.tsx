@@ -13,8 +13,6 @@ interface AuthValue {
   loading: boolean;
   /** The shopper has confirmed they are 18 or older and accepted the terms. */
   consented: boolean;
-  sendPhoneOtp: (phone: string) => Promise<void>;
-  verifyPhoneOtp: (phone: string, code: string) => Promise<void>;
   /** Opens Google's sign-in in the browser and returns when the shopper is signed in. False if they closed it. */
   signInWithGoogle: () => Promise<boolean>;
   recordConsent: () => Promise<void>;
@@ -22,14 +20,6 @@ interface AuthValue {
 }
 
 const AuthContext = createContext<AuthValue | null>(null);
-
-/** 024 123 4567 or +233241234567 to +233241234567; anything else is not a Ghana number. */
-export function normalizeGhanaPhone(value: string): string | null {
-  const compact = value.replace(/[\s()-]/g, '');
-  if (/^0\d{9}$/.test(compact)) return `+233${compact.slice(1)}`;
-  if (/^\+233\d{9}$/.test(compact)) return compact;
-  return null;
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -73,16 +63,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [userId]);
 
-  const sendPhoneOtp = useCallback(async (phone: string) => {
-    const { error } = await supabase.auth.signInWithOtp({ phone });
-    if (error) throw error;
-  }, []);
-
-  const verifyPhoneOtp = useCallback(async (phone: string, code: string) => {
-    const { error } = await supabase.auth.verifyOtp({ phone, token: code, type: 'sms' });
-    if (error) throw error;
-  }, []);
-
   const signInWithGoogle = useCallback(async () => {
     const redirectTo = Linking.createURL('auth/callback');
     const { data, error } = await supabase.auth.signInWithOAuth({
@@ -115,8 +95,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const consented = profileLoaded && profile.consented;
 
   const value = useMemo(
-    () => ({ user, loading, consented, sendPhoneOtp, verifyPhoneOtp, signInWithGoogle, recordConsent, signOut }),
-    [user, loading, consented, sendPhoneOtp, verifyPhoneOtp, signInWithGoogle, recordConsent, signOut],
+    () => ({ user, loading, consented, signInWithGoogle, recordConsent, signOut }),
+    [user, loading, consented, signInWithGoogle, recordConsent, signOut],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
