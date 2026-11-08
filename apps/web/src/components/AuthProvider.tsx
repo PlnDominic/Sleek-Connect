@@ -3,6 +3,10 @@
 import type { User } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { createBrowserSupabase } from '@/lib/supabase/browser';
+import { safeNextPath } from '@/lib/safe-redirect';
+
+/** Kept in this tab (not a cookie) while the person is away at Google: where to go afterwards, and whether they agreed to the terms. */
+const RETURN_KEY = 'sc-sign-in-return';
 
 interface AuthValue {
   user: User | null;
@@ -56,8 +60,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [userId]);
 
+  // Back from Google. The callback normally lands on the right page already. When Supabase doesn't recognise the callback address
+  // (its Redirect URLs list) it sends people to the Site URL instead, which is the home page; this puts them back where they were.
+  useEffect(() => {
+    if (!userId) return;
+    let stored: string | null = null;
+    try {
+      stored = sessionStorage.getItem(RETURN_KEY);
+      if (stored) sessionStorage.removeItem(RETURN_KEY);
+    } catch {
+      return;
+    }
+    if (!stored) return;
+    try {
+      const { next, consent } = JSON.parse(stored) as { next?: string; consent?: boolean };
+      const target = safeNextPath(next, '');
+      if (!target || window.location.pathname === target.split(/[?#]/)[0]) return;
+      const recorded = consent ? Promise.resolve(createBrowserSupabase().rpc('record_signup_consent')) : Promise.resolve();
+      void recorded.catch(() => {}).finally(() => window.location.replace(target));
+    } catch {
+      // A value we didn't write: ignore it.
+    }
+  }, [userId]);
+
   const signInWithGoogle = useCallback(
     async (next = '/account', { consent = true, chooseAccount = false }: { consent?: boolean; chooseAccount?: boolean } = {}) => {
+      try {
+        sessionStorage.setItem(RETURN_KEY, JSON.stringify({ next: safeNextPath(next), consent }));
+      } catch {
+        // Storage blocked: the callback address still carries the destination.
+      }
       const callback = new URL('/auth/callback', window.location.origin);
       callback.searchParams.set('next', next);
       if (consent) callback.searchParams.set('consent', '1');
