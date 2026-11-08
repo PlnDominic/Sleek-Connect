@@ -69,10 +69,10 @@ function TabBar({ state, navigateToTab }: TabBarProps) {
                 >
                   <View style={[styles.lens, active && styles.lensActive]}>
                     <View>
-                      <TabIcon name={item.icon} color={active ? colors.accent : colors.tabIdle} active={active} />
+                      <TabIcon name={item.icon} color={active ? colors.ink : colors.tabIdle} active={active} />
                       {item.route === 'bag' && <CountBadge count={count} style={styles.badge} />}
                     </View>
-                    <AppText weight={active ? 'bold' : 'medium'} size={11} color={active ? colors.accent : colors.tabIdle}>
+                    <AppText weight={active ? 'bold' : 'medium'} size={11} color={active ? colors.ink : colors.tabIdle}>
                       {item.label}
                     </AppText>
                   </View>

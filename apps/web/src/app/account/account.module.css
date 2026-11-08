@@ -673,8 +673,8 @@ main.centered .panel {
 }
 
 .navLink[aria-current='page'] {
-  background: var(--c-teal-soft);
-  color: var(--c-accent-deep);
+  background: var(--c-surface-sunken);
+  color: var(--c-ink);
   font-weight: 650;
 }
 

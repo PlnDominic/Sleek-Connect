@@ -98,8 +98,8 @@
 }
 
 .navLink[aria-current='page'] {
-  color: var(--c-accent);
-  border-bottom-color: var(--c-accent);
+  color: var(--c-ink);
+  border-bottom-color: var(--c-ink);
 }
 
 .navLink[data-quiet='true'] {

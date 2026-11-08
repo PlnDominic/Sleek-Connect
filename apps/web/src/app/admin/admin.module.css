@@ -221,7 +221,7 @@ a.card:hover {
 }
 
 .tabs a[aria-current='page'] {
-  border-bottom-color: var(--c-accent);
+  border-bottom-color: var(--c-ink);
   color: var(--c-ink);
   font-weight: 500;
 }

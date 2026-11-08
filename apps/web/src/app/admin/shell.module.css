@@ -117,9 +117,9 @@
 }
 
 .item[aria-current='page'] {
-  background: var(--c-teal-soft);
-  border-color: color-mix(in srgb, var(--c-accent) 18%, transparent);
-  color: var(--c-accent);
+  background: var(--c-surface-sunken);
+  border-color: var(--c-line);
+  color: var(--c-ink);
   font-weight: 600;
 }
 
@@ -136,7 +136,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--c-accent);
+  background: var(--c-ink);
 }
 
 .chevron {
@@ -172,8 +172,8 @@
 }
 
 .children a[aria-current='page'] {
-  background: var(--c-teal-soft);
-  color: var(--c-accent);
+  background: var(--c-surface-sunken);
+  color: var(--c-ink);
   font-weight: 600;
 }
 
