@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Icon } from '@/components/Icon';
 import { can, requireStaffPage } from '@/lib/admin/session';
 import { formatDate } from '@/lib/orders';
 import { ActionForm } from '../ActionForm';
@@ -30,15 +31,15 @@ export default async function SearchesPage({ searchParams }: PageProps<'/admin/s
             searched. Add a product for the popular ones, then remove the word.
           </p>
         </div>
-        <div className={styles.buttons}>
-          {Object.entries(ranges).map(([value, label]) => (
-            <Link key={value} href={`/admin/searches?days=${value}`} className={value === days ? styles.primary : styles.secondary}>
-              {label}
-            </Link>
-          ))}
-        </div>
       </div>
-      <section className={styles.panel}>
+      <nav className={styles.tabs} aria-label="Period">
+        {Object.entries(ranges).map(([value, label]) => (
+          <Link key={value} href={`/admin/searches?days=${value}`} aria-current={value === days ? 'page' : undefined}>
+            {label}
+          </Link>
+        ))}
+      </nav>
+      <section className={styles.panel} aria-label="Searches with no results">
         {rows.length === 0 ? (
           <p className={styles.empty}>No unsuccessful searches in this period.</p>
         ) : (
@@ -50,7 +51,7 @@ export default async function SearchesPage({ searchParams }: PageProps<'/admin/s
                   <th className={styles.num}>Times</th>
                   <th className={styles.num}>Days</th>
                   <th>Last</th>
-                  <th />
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -63,11 +64,21 @@ export default async function SearchesPage({ searchParams }: PageProps<'/admin/s
                     <td className={styles.num}>{r.days_seen}</td>
                     <td>{formatDate(r.last_seen)}</td>
                     <td>
-                      <ActionForm action={clearSearchMiss.bind(null, r.term)}>
-                        <button type="submit" className={styles.secondary}>
-                          Remove
-                        </button>
-                      </ActionForm>
+                      <div className={styles.rowActions}>
+                        <Link href={`/search?q=${encodeURIComponent(r.term)}`} className={styles.iconButton} target="_blank" title="Search the store for this" aria-label={`Search the store for ${r.term}`}>
+                          <Icon name="search" size={16} />
+                        </Link>
+                        {can(staff.role, 'catalogue.edit') && (
+                          <Link href="/admin/products/new" className={styles.iconButton} title="Add a product" aria-label={`Add a product for ${r.term}`}>
+                            <Icon name="plus" size={16} />
+                          </Link>
+                        )}
+                        <ActionForm action={clearSearchMiss.bind(null, r.term)}>
+                          <button type="submit" className={`${styles.iconButton} ${styles.iconDanger}`} title="Remove from the list" aria-label={`Remove ${r.term} from the list`}>
+                            <Icon name="trash" size={16} />
+                          </button>
+                        </ActionForm>
+                      </div>
                     </td>
                   </tr>
                 ))}

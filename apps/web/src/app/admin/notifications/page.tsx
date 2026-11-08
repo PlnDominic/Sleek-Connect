@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Icon } from '@/components/Icon';
 import { requireStaffPage } from '@/lib/admin/session';
 import { formatDateTime } from '@/lib/orders';
 import styles from '../admin.module.css';
@@ -51,18 +52,29 @@ export default async function NotificationsPage({ searchParams }: PageProps<'/ad
       <section className={styles.panel} aria-label={`${status} notifications`}>
         <div className={styles.tableWrap}>
           <table className={styles.table}>
-            <thead><tr><th>Created</th><th>Order</th><th>Template</th><th>Channel</th><th>Recipient</th><th>Attempts</th><th>Status</th><th>Last error</th></tr></thead>
+            <thead><tr><th>Created</th><th>Order</th><th>Template</th><th>Channel</th><th>Recipient</th><th className={styles.num}>Attempts</th><th>Status</th><th>Last error</th><th>Actions</th></tr></thead>
             <tbody>
               {notifications.map((item) => (
                 <tr key={item.id} data-alert={item.status === 'failed' || item.status === 'not_sent' || undefined}>
-                  <td>{formatDateTime(item.created_at)}</td>
-                  <td>{item.orders?.order_number ? <Link href={`/admin/orders/${item.orders.order_number}`}>{item.orders.order_number}</Link> : '–'}</td>
-                  <td>{item.template}</td>
+                  <td className={styles.muted}>{formatDateTime(item.created_at)}</td>
+                  <td>{item.orders?.order_number ? <Link href={`/admin/orders/${item.orders.order_number}`}><strong>{item.orders.order_number}</strong></Link> : '–'}</td>
+                  <td>{item.template.replaceAll('_', ' ')}</td>
                   <td>{item.channel}</td>
                   <td><code>{item.recipient}</code></td>
-                  <td>{item.attempts}</td>
+                  <td className={styles.num}>{item.attempts}</td>
                   <td><span className={styles.badge} data-tone={item.status === 'sent' ? 'good' : item.status === 'failed' || item.status === 'not_sent' ? 'bad' : 'warn'}>{item.status}</span></td>
-                  <td>{item.last_error ?? (item.status === 'queued' ? `Next attempt ${formatDateTime(item.next_attempt_at)}` : '–')}</td>
+                  <td className={styles.muted}>{item.last_error ?? (item.status === 'queued' ? `Next attempt ${formatDateTime(item.next_attempt_at)}` : '–')}</td>
+                  <td>
+                    <div className={styles.rowActions}>
+                      {item.orders?.order_number ? (
+                        <Link href={`/admin/orders/${item.orders.order_number}`} className={styles.iconButton} title="Open the order" aria-label={`Open order ${item.orders.order_number}`}>
+                          <Icon name="eye" size={16} />
+                        </Link>
+                      ) : (
+                        <span className={styles.muted}>–</span>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
