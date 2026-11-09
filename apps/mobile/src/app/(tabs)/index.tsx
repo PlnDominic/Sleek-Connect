@@ -158,6 +158,9 @@ export default function HomeScreen() {
             <SectionHeader title="New arrivals" onSeeAll={arrivals.length ? () => openShop({ department: dept }) : undefined} />
             {all.loading ? (
               <ProductGridSkeleton count={4} />
+            ) : all.error && !all.data ? (
+              // A failed request is not an empty shop: say so, and let the shopper try again.
+              <ErrorState onRetry={() => void all.refetch()} />
             ) : arrivals.length === 0 ? (
               <AppText size={14} color={colors.textMuted}>
                 {emptyShop ? 'We’re stocking the shop. New products are coming very soon.' : `Nothing in ${departmentLabels[dept]} yet. Check back soon.`}
