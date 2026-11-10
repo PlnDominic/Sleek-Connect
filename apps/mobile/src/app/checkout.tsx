@@ -35,6 +35,22 @@ export default function CheckoutScreen() {
   const delivery = useQuery('delivery-config', getDeliveryConfig, 5 * 60_000);
   const payments = useQuery('payment-options', getPaymentOptions, 60_000);
   const [placed, setPlaced] = useState<Placed | null>(null);
+  const { user, loading: authLoading } = useAuth();
+
+  // Like the website: checking out needs a signed-in account, so order updates and the delivery code always reach the customer.
+  if (!placed && items.length > 0 && !authLoading && !user) {
+    return (
+      <View style={[styles.screen, { paddingTop: top, paddingHorizontal: 20 }]}>
+        <Header />
+        <EmptyState
+          icon="user"
+          title="Sign in to check out"
+          message="Sign in with Google so we can send your order updates and delivery code."
+          action={{ label: 'Sign in', onPress: () => router.push('/account') }}
+        />
+      </View>
+    );
+  }
 
   if (items.length === 0 && !placed) {
     return (
@@ -147,7 +163,15 @@ function Details({
     })();
   }, [user]);
 
-  const quotes = useMemo(() => delivery.options.map((o) => ({ option: o, q: quote(delivery, area, o.id, subtotal) })), [delivery, area, subtotal]);
+  // A window with no fee set can't be priced, so it can't be chosen (otherwise the order is placed and then cancelled at payment).
+  const quotes = useMemo(
+    () =>
+      delivery.options.map((o) => {
+        const q = quote(delivery, area, o.id, subtotal);
+        return { option: o, q: q.fee === null ? { ...q, available: false } : q };
+      }),
+    [delivery, area, subtotal],
+  );
   const chosen = quotes.find((x) => x.option.id === optionId);
   const fee = chosen?.q.available ? chosen.q.fee : null;
 

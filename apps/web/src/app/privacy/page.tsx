@@ -45,8 +45,7 @@ export default async function PrivacyPage() {
           <li>
             <strong>Your account.</strong> When you sign in with Google: your email
             address, name and profile photo from Google. We record when you confirmed you are 18 or over and accepted our
-            terms. We never see your Google password. If you check out as a guest, we record on the order that you confirmed you are 18
-            or over and accepted the terms.
+            terms. We never see your Google password. Orders placed before sign-in was required carry the same confirmation, recorded on the order.
           </li>
           <li>
             <strong>Your orders.</strong> The name, phone number, email address (if you give one), area, GhanaPost GPS address and rider directions you give us for

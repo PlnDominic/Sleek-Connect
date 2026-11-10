@@ -60,8 +60,7 @@ export function AccountView({ mode = 'overview' }: { mode?: 'overview' | 'detail
       <section className={styles.panel} aria-labelledby="sign-in-title">
         <h2 id="sign-in-title">Sign in</h2>
         <p className={styles.muted}>
-          Sign in with Google to keep your bag on every device you shop from. You can still check out
-          without an account.
+          Sign in with Google to check out and to keep your bag on every device you shop from.
         </p>
         {consentBox}
         <button

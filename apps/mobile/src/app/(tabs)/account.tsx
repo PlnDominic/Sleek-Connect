@@ -122,7 +122,7 @@ function SignedOut() {
   return (
     <Card title="Sign in">
       <AppText size={13} color={colors.textMuted} style={styles.lh}>
-        Sign in to see your orders on every phone and fill in checkout faster. You can still check out without an account.
+        Sign in with Google to check out, see your orders on every phone and get your delivery code.
       </AppText>
       <Checkbox checked={agreed} onChange={setAgreed} label="I’m 18 or older and accept the Terms of Service and Privacy Notice." />
       <View style={styles.inlineLinks}>

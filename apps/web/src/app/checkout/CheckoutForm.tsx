@@ -160,7 +160,10 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
   const networkLabel = momoNetworks.find((n) => n.id === network)!.label;
   const walletDisplay = wallet.trim() || 'your phone';
   // Prices follow the area's zone and free delivery (the database recalculates them when the order is placed).
-  const quotes = new Map(delivery.options.map((o) => [o.id, quote(delivery, area.trim(), o.id, bag.subtotal)]));
+  // A window with no fee set can't be priced, so it can't be chosen (otherwise the order is placed and then cancelled at payment).
+  const rawQuotes = new Map(delivery.options.map((o) => [o.id, quote(delivery, area.trim(), o.id, bag.subtotal)]));
+  const unpriced = (id: string) => rawQuotes.get(id)!.available && rawQuotes.get(id)!.fee === null;
+  const quotes = new Map(delivery.options.map((o) => [o.id, unpriced(o.id) ? { ...rawQuotes.get(o.id)!, available: false } : rawQuotes.get(o.id)!]));
   const deliveryId = quotes.get(chosenId)?.available ? chosenId : (delivery.options.find((o) => quotes.get(o.id)?.available)?.id ?? '');
   const fee = quotes.get(deliveryId)?.fee ?? null;
   const freeOption = delivery.options.find((o) => o.freeEligible && quotes.get(o.id)?.available);
@@ -343,7 +346,9 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
                           <span>
                             {q.available
                               ? `${estimate(option, now)} · ${q.free ? 'Free' : formatPriceOr(q.fee, 'To be confirmed')}`
-                              : `Not available in ${area.trim() || 'that location'}`}
+                              : unpriced(option.id)
+                                ? 'Not available yet'
+                                : `Not available in ${area.trim() || 'that location'}`}
                           </span>
                         </span>
                       </label>
@@ -514,7 +519,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
           />
         ) : (
           <>
-            <button type="submit" form="checkout-form" className={styles.payButton} disabled={items.length === 0 || placing}>
+            <button type="submit" form="checkout-form" className={styles.payButton} disabled={items.length === 0 || placing || deliveryId === ''}>
               {placing ? 'Placing your order...' : method === 'momo' ? `Pay with ${networkLabel}` : 'Pay by card'}
             </button>
             {error && (

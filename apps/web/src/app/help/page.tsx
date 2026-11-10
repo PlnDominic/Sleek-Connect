@@ -200,7 +200,7 @@ export default async function HelpPage() {
           <Topic id="account" title="Your account">
             <Faq q="Do I need an account?">
               <p>
-                No. You can check out as a guest. Signing in with Google saves your bag across devices and lists your
+                Yes. To check out you sign in with Google, so we can send your order updates and delivery code. It also saves your bag across devices and lists your
                 orders under <Link href="/account/orders">My orders</Link>.
               </p>
             </Faq>

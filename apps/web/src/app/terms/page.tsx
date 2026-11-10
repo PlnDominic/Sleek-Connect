@@ -41,8 +41,7 @@ export default async function TermsPage() {
       title: 'Who can use the store',
       body: (
         <p>
-          You must be 18 or older to create an account or place an order, and we ask you to confirm it when you create an account
-          or check out as a guest. Many of our products are for children; they are meant to be bought and used by an adult. You
+          You must be 18 or older to create an account or place an order, and we ask you to confirm it when you create an account. Many of our products are for children; they are meant to be bought and used by an adult. You
           must give accurate details when you order, including a phone number we can reach on the day of delivery.
         </p>
       ),
