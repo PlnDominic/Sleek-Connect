@@ -10,15 +10,15 @@
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
-    "@sentry/nextjs": "^11.10.0",
+    "@sentry/nextjs": "^11.11.0",
     "@sleek/shared": "*",
     "@supabase/ssr": "^0.12.7",
-    "@supabase/supabase-js": "^2.117.3",
-    "next": "16.4.1",
-    "nodemailer": "^10.3.1",
-    "posthog-js": "^1.444.0",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
+    "@supabase/supabase-js": "^2.119.0",
+    "next": "16.4.5",
+    "nodemailer": "^10.4.0",
+    "posthog-js": "^1.447.3",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "server-only": "^0.0.1"
   },
   "devDependencies": {
@@ -27,7 +27,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.4.1",
+    "eslint-config-next": "16.4.5",
     "typescript": "^5"
   }
 }
