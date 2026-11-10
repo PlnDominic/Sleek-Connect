@@ -7,6 +7,7 @@ import { BagProvider } from '@sleek/shared/bag';
 import { AuthProvider } from '@/lib/auth';
 import { PushSetup } from '@/lib/push';
 import { getDeviceStorage } from '@/lib/storage';
+import { UpdateGate } from '@/lib/update-gate';
 import { fontFiles } from '@/theme/fonts';
 import { ThemeProvider, useTheme } from '@/theme/theme';
 
@@ -38,8 +39,10 @@ function ThemedShell() {
   return (
     <>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-      <PushSetup />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }} />
+      <UpdateGate>
+        <PushSetup />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }} />
+      </UpdateGate>
     </>
   );
 }

@@ -69,6 +69,7 @@
 --   20261128090000_neutral_light_tints.sql
 --   20261129090000_keep_orders_with_live_payments.sql
 --   20261130090000_order_limits_and_app_requirements.sql
+--   20261130100000_return_photos_no_heic.sql
 --   seed.reference.sql (categories, age groups and delivery settings; no sample products)
 
 -- ===========================================================================
@@ -18959,6 +18960,16 @@ begin
   end if;
 end;
 $$;
+
+-- ===========================================================================
+-- 20261130100000_return_photos_no_heic.sql
+-- ===========================================================================
+
+-- Return photos: HEIC/HEIF are no longer accepted. Most desktop browsers cannot show them, so staff could not see the customer's photo.
+-- (An iPhone converts a photo to JPEG by itself when the file picker does not offer HEIC.) Photos already stored are left alone.
+update storage.buckets
+set allowed_mime_types = array['image/jpeg', 'image/png', 'image/webp']
+where id = 'return-photos';
 
 -- ===========================================================================
 -- seed.reference.sql

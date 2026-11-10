@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server';
+import { timingSafeEqual } from 'node:crypto';
 import { createSupabase, supabaseConfig } from '@/lib/supabase/server';
 import { emailProvider, smsProvider } from '@/lib/notifications/providers';
 import { getPaymentProvider } from '@/lib/payments';
 import { missingEnv } from '@/lib/env';
 import { logger, requestId, withRequestId } from '@/lib/observability';
+
+/** Constant-time comparison, so the response time doesn't reveal how much of the secret was right. */
+function sameSecret(given: string, expected: string) {
+  const a = Buffer.from(given);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
 
 function configured(name: string | undefined, provider: unknown) {
   if (!name) return 'disabled';
@@ -78,9 +86,12 @@ export async function GET(request: Request) {
     const environment = { ok: missing.length === 0, missing };
     const issues = integrations.issues + (schema === 'ok' ? 0 : 1) + missing.length;
     const status = issues === 0 ? 'ok' : 'degraded';
-    return withRequestId(
-      NextResponse.json(
-        {
+    // Which integrations are set up and which variables are missing helps an attacker, so the full report needs the cron secret
+    // (the same bearer token the scheduled job uses). Everyone else, including a simple uptime monitor, gets the overall status.
+    const secret = process.env.CRON_SECRET;
+    const detailed = Boolean(secret) && sameSecret(request.headers.get('authorization') ?? '', `Bearer ${secret}`);
+    const body = detailed
+      ? {
           status,
           service: 'sleek-connect-web',
           database: 'ok',
@@ -88,11 +99,9 @@ export async function GET(request: Request) {
           checks: { schema, delivery: launch.delivery, support: launch.support },
           environment,
           checkedAt,
-        },
-        { headers: { 'Cache-Control': 'no-store' } },
-      ),
-      id,
-    );
+        }
+      : { status, service: 'sleek-connect-web', database: 'ok', checkedAt };
+    return withRequestId(NextResponse.json(body, { headers: { 'Cache-Control': 'no-store' } }), id);
   } catch (error) {
     logger.error('health_check_failed', error, { requestId: id });
     return withRequestId(NextResponse.json({ status: 'degraded', service: 'sleek-connect-web', database: 'unavailable', checkedAt, requestId: id }, { status: 503, headers: { 'Cache-Control': 'no-store' } }), id);

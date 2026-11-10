@@ -43,7 +43,11 @@ and deleting the account from the Account tab. Returns, receipts and help open t
    account, also set `EXPO_ACCESS_TOKEN`.
 7. Supabase → Authentication → URL Configuration → Redirect URLs: add `sleekconnect://auth/callback` (needed for Google
    sign-in in a built app).
-8. Supabase → Authentication → Providers → Phone must be on with an SMS provider, as for the website.
+8. Phone sign-in is no longer used (Google only), so the Supabase Phone provider does not need to be on.
+9. **Forcing an update.** Before a database change that would break older builds, release the new build, then raise the minimum:
+   `update public.store_settings set min_app_build = <the new build number>;` (Supabase SQL Editor). Older builds then show
+   "Please update the app" instead of failing. The build number is the Android version code Play shows next to the release (EAS raises it
+   by one each build).
 
 ## Building and testing
 

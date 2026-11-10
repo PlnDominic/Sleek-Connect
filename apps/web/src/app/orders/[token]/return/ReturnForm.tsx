@@ -23,7 +23,9 @@ export interface ReturnableItem {
 
 const MAX_PHOTOS = 3;
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
-const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+// Not HEIC/HEIF: most desktop browsers can't show them, so staff couldn't see the photo. An iPhone converts to JPEG on its own when the
+// picker doesn't list HEIC.
+const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 interface Photo {
   file: File;
@@ -62,7 +64,7 @@ export function ReturnForm({ token, photoFolder, orderNumber, items }: ReturnFor
     const picked = [...(files ?? [])];
     const bad = picked.find((f) => !PHOTO_TYPES.includes(f.type) || f.size > MAX_PHOTO_BYTES);
     if (bad) {
-      setError(`${bad.name} can’t be attached. Use JPEG, PNG, WebP or HEIC photos under 5 MB.`);
+      setError(`${bad.name} can’t be attached. Use JPEG, PNG or WebP photos under 5 MB.`);
       return;
     }
     setPhotos((current) =>

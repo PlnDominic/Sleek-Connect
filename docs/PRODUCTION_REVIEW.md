@@ -9,6 +9,26 @@ real customers or real money; **Medium** = fix soon; **Low** = tidy up.
 
 ---
 
+## Status: what has been fixed in the code (10 Nov 2026)
+
+| Finding | Fix |
+|---|---|
+| `place_order` unthrottled (stock locking, order flooding, email abuse) | Migration `20261130090000`: at most 3 open unpaid orders per phone and per account, 10 orders per phone per hour, 100 units per order (all adjustable in `store_settings`); applies to every way of placing an order. Suite `db-order-limits.cjs`. |
+| Delivery window with no fee found after the order is placed | Checkout (website and app) no longer lets such a window be chosen. |
+| Guest-checkout contradiction | One rule: checkout needs sign-in, on the website and in the app; Help, Terms, Privacy and account text agree. (The database function itself still accepts signed-out callers, now limited by the order limits.) |
+| Old app builds break after a database change | `get_app_requirements()` + a "Please update" screen. Raise the minimum with `update public.store_settings set min_app_build = <build number>;` |
+| App tokens unencrypted, Android backup on | Session now in the secure store (Keystore/Keychain), moved across from the old copy on first use; `allowBackup` is off. Needs a new app build. |
+| Public health page lists integrations and missing variable names | Public answer is status only; the full report needs `Authorization: Bearer <CRON_SECRET>`. External monitors that read `integrations` must send that header. |
+| Dead pay-on-delivery endpoint | `/api/payments/cod` now answers 410. |
+| HEIC return photos unreadable on desktop | HEIC no longer accepted (website and bucket, migration `20261130100000`); iPhones convert to JPEG. |
+| Leftover marketplace cron jobs | Unscheduled by migration `20261130090000`. |
+| No Dependabot | `.github/dependabot.yml` (weekly npm and GitHub Actions updates). |
+
+**Still needs you (settings I cannot change from the code):** Vercel Pro and Static IPs; Hubtel IP whitelist; Supabase plan, backups/PITR
+and **Confirm email**; Google OAuth consent screen "In production"; GitHub branch protection, secret scanning and required checks;
+leftover storage buckets `vendor-assets` and `vendor-ids` (delete through the Storage API); SMS provider; Data Protection Commission
+number; a restore rehearsal; alerts and an uptime monitor.
+
 ## Part 1. The business flow
 
 Sleek Connect is **one store**. It buys from suppliers and sells to shoppers; the shopper's money is the store's own. There are no seller

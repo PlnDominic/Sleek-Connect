@@ -22,18 +22,27 @@ function localEnv() {
 }
 (async () => {
   // --- Health: database, integrations, deployed schema and required environment (items 7, 15, 1-3) ---
-  const health = await get('/api/health');
+  // The full report (integrations, missing variable names) needs the cron secret; without it the endpoint answers with the status only.
+  const secret = process.env.CRON_SECRET || localEnv().CRON_SECRET;
+  const health = await get('/api/health', secret ? { headers: { authorization: `Bearer ${secret}` } } : {});
   assert(health?.ok || health?.status === 200, 'health endpoint responds');
   const healthBody = health ? await health.json().catch(() => ({})) : {};
   assert(['ok', 'degraded'].includes(healthBody.status), 'health response has an explicit status');
   assert(healthBody.database === 'ok', 'health reports database connectivity');
   assert(typeof healthBody.status === 'string' && healthBody.status === 'ok', `health is ok with this environment (${healthBody.status}, schema=${healthBody.checks?.schema}, missing=${JSON.stringify(healthBody.environment?.missing)})`);
-  for (const check of ['payment', 'sms', 'email', 'auth', 'webhook', 'dispatcher', 'jobs']) {
-    assert(typeof healthBody.integrations?.[check] === 'string', `health reports the ${check} integration`);
+  if (secret) {
+    for (const check of ['payment', 'sms', 'email', 'auth', 'webhook', 'dispatcher', 'jobs']) {
+      assert(typeof healthBody.integrations?.[check] === 'string', `health reports the ${check} integration`);
+    }
+    assert(healthBody.checks?.schema === 'ok', 'the deployed schema matches the application (items 1 and 2)');
+    assert(Array.isArray(healthBody.environment?.missing) && healthBody.environment.ok === true, 'every required environment variable is set, by name only (item 3)');
+    assert(typeof healthBody.checks?.delivery === 'string' && typeof healthBody.checks?.support === 'string', 'health reports delivery and support readiness (item 14)');
+  } else {
+    console.log('ok - (no CRON_SECRET given: the detailed health report was not checked)');
   }
-  assert(healthBody.checks?.schema === 'ok', 'the deployed schema matches the application (items 1 and 2)');
-  assert(Array.isArray(healthBody.environment?.missing) && healthBody.environment.ok === true, 'every required environment variable is set, by name only (item 3)');
-  assert(typeof healthBody.checks?.delivery === 'string' && typeof healthBody.checks?.support === 'string', 'health reports delivery and support readiness (item 14)');
+  const publicHealth = await get('/api/health');
+  const publicBody = publicHealth ? await publicHealth.json().catch(() => ({})) : {};
+  assert(publicBody.integrations === undefined && publicBody.environment === undefined && publicBody.checks === undefined, 'the public health answer shows no integration or variable names');
 
   // --- Security headers (item 8) -------------------------------------------------------------------
   for (const path of ['/', '/shop', '/privacy', '/terms']) {
