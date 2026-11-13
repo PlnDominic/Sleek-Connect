@@ -22,7 +22,7 @@ export interface LiveProduct {
 /** GET /api/search/live?q=… : the best matches as the shopper types. Public catalogue data only. */
 export async function GET(request: NextRequest) {
   const id = requestId(request);
-  const limit = rateLimit({ key: `search-live:${clientAddress(request)}`, limit: 180, windowMs: 60_000 });
+  const limit = await rateLimit({ key: `search-live:${clientAddress(request)}`, limit: 180, windowMs: 60_000, shared: false });
   if (!limit.allowed) return rateLimitResponse(limit.retryAfter, id);
   const q = (request.nextUrl.searchParams.get('q') ?? '').trim().slice(0, 60);
   if (q.length < 2) return withRequestId(NextResponse.json({ products: [], total: 0, suggestions: [] }), id);

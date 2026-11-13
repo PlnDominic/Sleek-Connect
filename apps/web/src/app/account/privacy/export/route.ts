@@ -6,7 +6,7 @@ import { logger, requestId, withRequestId } from '@/lib/observability';
 /** GET /account/privacy/export: everything the store holds about the signed-in shopper, as a JSON download (FR-057). */
 export async function GET(request: Request) {
   const id = requestId(request);
-  const limit = rateLimit({ key: `privacy-export:${clientAddress(request)}`, limit: 3, windowMs: 60 * 60_000 });
+  const limit = await rateLimit({ key: `privacy-export:${clientAddress(request)}`, limit: 3, windowMs: 60 * 60_000 });
   if (!limit.allowed) return rateLimitResponse(limit.retryAfter, id);
   const supabase = await createUserSupabase();
   const {

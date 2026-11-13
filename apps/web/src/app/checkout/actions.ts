@@ -4,6 +4,7 @@ import { after } from 'next/server';
 import type { MomoNetwork } from '@sleek/shared';
 import { alertStoreNewOrder, dispatchNotifications } from '@/lib/notifications/dispatch';
 import { logger } from '@/lib/observability';
+import { rateLimitAction } from '@/lib/rate-limit';
 import { startOrderPayment, type PaymentStart } from '@/lib/payments/start';
 import { createUserSupabase } from '@/lib/supabase/server';
 
@@ -43,6 +44,9 @@ export type PlaceOrderResult =
  * client prices are never sent. Signed-in shoppers' orders are linked to their account.
  */
 export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResult> {
+  // A person places a few orders at most; a script places many. Counted across every server instance.
+  const limit = await rateLimitAction({ key: 'place-order', limit: 10, windowMs: 10 * 60_000 });
+  if (!limit.allowed) return { ok: false, error: 'Too many orders from this connection. Please wait a few minutes and try again.' };
   const supabase = await createUserSupabase();
   const { data, error } = await supabase
     .rpc('place_order', {

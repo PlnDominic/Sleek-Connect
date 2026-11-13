@@ -6,7 +6,7 @@ import { createSupabase } from '@/lib/supabase/server';
  * (see public.record_search_miss); nothing about who searched. Always answers 204 so it never gets in the shopper's way.
  */
 export async function POST(request: Request) {
-  const limit = rateLimit({ key: `search-miss:${clientAddress(request)}`, limit: 30, windowMs: 10 * 60_000 });
+  const limit = await rateLimit({ key: `search-miss:${clientAddress(request)}`, limit: 30, windowMs: 10 * 60_000, shared: false });
   if (!limit.allowed) return new Response(null, { status: 204 });
   const body = (await request.json().catch(() => null)) as { q?: unknown } | null;
   const q = typeof body?.q === 'string' ? body.q.slice(0, 80) : '';

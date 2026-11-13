@@ -16,7 +16,7 @@ import { createSupabase } from '@/lib/supabase/server';
  */
 export async function POST(request: Request) {
   const id = requestId(request);
-  const limit = rateLimit({ key: `payment-start:${clientAddress(request)}`, limit: 20, windowMs: 10 * 60_000 });
+  const limit = await rateLimit({ key: `payment-start:${clientAddress(request)}`, limit: 20, windowMs: 10 * 60_000 });
   if (!limit.allowed) return rateLimitResponse(limit.retryAfter, id);
 
   const body = (await request.json().catch(() => null)) as { orderToken?: unknown; method?: unknown; network?: unknown; wallet?: unknown } | null;

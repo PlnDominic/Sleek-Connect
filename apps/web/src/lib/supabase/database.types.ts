@@ -1042,6 +1042,12 @@ isOneToOne: false
 "expire_batches":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
+"purge_rate_limits":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
+"rate_limit_hit":
+{ Args: { p_key: string; p_limit: number; p_window_seconds: number }; Returns: { allowed: boolean; remaining: number; retry_after: number }[]
+                           },
 "expire_unpaid_orders":
 { Args: Record<PropertyKey, never>; Returns: number
                            },

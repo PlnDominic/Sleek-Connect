@@ -10,7 +10,7 @@ import type { Json } from '@/lib/supabase/database.types';
 /** Payment provider notifications. Signature checks and confirm_payment make retries idempotent. */
 export async function POST(request: Request) {
   const id = requestId(request);
-  const limit = rateLimit({ key: `payment-webhook:${clientAddress(request)}`, limit: 120, windowMs: 60_000 });
+  const limit = await rateLimit({ key: `payment-webhook:${clientAddress(request)}`, limit: 120, windowMs: 60_000 });
   if (!limit.allowed) return rateLimitResponse(limit.retryAfter, id);
   const declaredLength = Number(request.headers.get('content-length') ?? 0);
   if (declaredLength > 64 * 1024) return withRequestId(Response.json({ error: 'Webhook payload is too large.', requestId: id }, { status: 413 }), id);

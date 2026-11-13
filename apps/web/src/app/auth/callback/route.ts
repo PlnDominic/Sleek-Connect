@@ -7,7 +7,7 @@ import { safeNextPath } from '@/lib/safe-redirect';
 /** Google sends the shopper back here; exchange the one-time code for a session cookie. */
 export async function GET(request: NextRequest) {
   const id = requestId(request);
-  const limit = rateLimit({ key: `auth-callback:${clientAddress(request)}`, limit: 20, windowMs: 15 * 60_000 });
+  const limit = await rateLimit({ key: `auth-callback:${clientAddress(request)}`, limit: 20, windowMs: 15 * 60_000 });
   if (!limit.allowed) return rateLimitResponse(limit.retryAfter, id);
   const { searchParams } = request.nextUrl;
   const code = searchParams.get('code');

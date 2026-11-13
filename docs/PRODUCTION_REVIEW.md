@@ -19,6 +19,7 @@ real customers or real money; **Medium** = fix soon; **Low** = tidy up.
 | Old app builds break after a database change | `get_app_requirements()` + a "Please update" screen. Raise the minimum with `update public.store_settings set min_app_build = <build number>;` |
 | App tokens unencrypted, Android backup on | Session now in the secure store (Keystore/Keychain), moved across from the old copy on first use; `allowBackup` is off. Needs a new app build. |
 | Public health page lists integrations and missing variable names | Public answer is status only; the full report needs `Authorization: Bearer <CRON_SECRET>`. External monitors that read `integrations` must send that header. |
+| Rate limiter counted per server instance | Shared limiter in the database (`public.rate_limit_hit`, migration `20261201090000`): one count across all instances, no addresses stored, automatic fallback to the old counter if the database is slow. Checkout now has its own limit (10 orders per 10 minutes per connection). Suite `db-rate-limit.cjs`. |
 | Dead pay-on-delivery endpoint | `/api/payments/cod` now answers 410. |
 | HEIC return photos unreadable on desktop | HEIC no longer accepted (website and bucket, migration `20261130100000`); iPhones convert to JPEG. |
 | Leftover marketplace cron jobs | Unscheduled by migration `20261130090000`. |

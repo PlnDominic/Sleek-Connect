@@ -27,9 +27,9 @@
 - Orders are created only by the `public.place_order` function, which prices lines from the database. Never trust
   prices sent by a client.
 - The web app uses the publishable key, except the server-side payment and messaging code (`apps/web/src/lib/payments`,
-  `apps/web/src/lib/notifications`, the payment webhook), which reads `SUPABASE_SECRET_KEY` through
-  `lib/supabase/admin.ts` (`server-only`). Never use the secret key anywhere else, in client code, or in `NEXT_PUBLIC_*`
-  variables.
+  `apps/web/src/lib/notifications`, the payment webhook) and the shared rate limiter (`apps/web/src/lib/rate-limit.ts`, which can only
+  call `public.rate_limit_hit`), which read `SUPABASE_SECRET_KEY` through `lib/supabase/admin.ts` (`server-only`). Never use the secret
+  key anywhere else, in client code, or in `NEXT_PUBLIC_*` variables.
 - Staff changes go only through `public.admin_*` functions, which call `public.require_staff(...)` (active staff with a
   confirmed email, plus the role) and log to `stock_movements` / `audit_log`. Staff sign in with Google or an email and
   password; there is no two-step verification step, by the owner's choice. The admin console runs as the signed-in
@@ -83,6 +83,9 @@
 - Emails go out through `lib/notifications` (`EMAIL_PROVIDER=gmail` uses Nodemailer and an App Password; keep
   `GMAIL_APP_PASSWORD` server-only). The store-alert copy (`STORE_ALERT_EMAIL`) must never contain `delivery_code` or the
   order token link.
+- Rate limiting: `rateLimit()` / `rateLimitAction()` count in `public.rate_limits` through `rate_limit_hit` (service role only, keys are keyed hashes,
+  no addresses stored), so every server instance shares one count; if the database does not answer within 800 ms it falls back to the instance's
+  memory. Pass `shared: false` only for frequent low-risk calls (search). Orders are also limited in the database itself (`orders_throttle`).
 - Anonymous functions that send customer messages or reveal orders (`create_support_case`, `find_order`) are rate
   limited in the database. Keep that in mind for any new public function that queues an SMS.
 
