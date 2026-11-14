@@ -58,7 +58,7 @@ export default async function HomePage() {
       />
       <AnnouncementBar />
       <SiteHeader current="Home" />
-      <main>
+      <main id="main-content">
         <div className={`container ${styles.appTop}`}>
           <Link href="/search" className={styles.appSearch}>
             <Icon name="search" size={18} strokeWidth={2} />

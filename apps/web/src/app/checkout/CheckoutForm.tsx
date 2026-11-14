@@ -238,14 +238,14 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
 
   if (!signedIn && !placed) {
     return (
-      <main className={styles.main}>
+      <main id="main-content" className={styles.main}>
         <p role="status" className={styles.note}>{authLoading ? 'Loading your checkout…' : 'Taking you to sign in…'}</p>
       </main>
     );
   }
 
   return (
-    <main className={styles.main}>
+    <main id="main-content" className={styles.main}>
       <form id="checkout-form" ref={formRef} className={styles.forms} onSubmit={onSubmit}>
         <fieldset disabled={!!placed} className={styles.fieldset}>
           <div className={styles.forms}>

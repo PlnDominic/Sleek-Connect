@@ -37,10 +37,10 @@ export function AccountShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   if (loading || !user) {
     // A guest's saved items (kept on this device) get a normal wide page; the sign-in card is centred.
-    return <main className={`container ${styles.main} ${pathname.startsWith('/saved') ? styles.guestPage : styles.centered}`}>{children}</main>;
+    return <main id="main-content" className={`container ${styles.main} ${pathname.startsWith('/saved') ? styles.guestPage : styles.centered}`}>{children}</main>;
   }
   return (
-    <main className={`container ${styles.shell}`}>
+    <main id="main-content" className={`container ${styles.shell}`}>
       <nav className={styles.sideNav} aria-label="My account">
         {groups.map((group) => (
           <div key={group.title} className={styles.navGroup}>

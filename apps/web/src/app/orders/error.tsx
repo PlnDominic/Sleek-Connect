@@ -17,7 +17,7 @@ export default function OrderError({ error, reset }: { error: Error & { digest?:
   }, [error]);
 
   return (
-    <main style={{ margin: '0 auto', maxWidth: 720, padding: '72px 24px', textAlign: 'center' }}>
+    <main id="main-content" style={{ margin: '0 auto', maxWidth: 720, padding: '72px 24px', textAlign: 'center' }}>
       <p style={{ color: 'var(--c-accent)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Your order</p>
       <h1>We could not load this order</h1>
       <p style={{ color: 'var(--c-text-muted)', lineHeight: 1.7 }}>

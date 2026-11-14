@@ -15,7 +15,7 @@ export default function TrackPage() {
   return (
     <>
       <SiteHeader />
-      <main className={styles.page}>
+      <main id="main-content" className={styles.page}>
         <div className={styles.hero}>
           <div className="container">
             <h1>Track an order</h1>

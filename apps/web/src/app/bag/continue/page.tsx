@@ -35,7 +35,7 @@ export default function ContinuePage({ searchParams }: PageProps<'/bag/continue'
   return (
     <>
       <SiteHeader />
-      <main className={`container ${styles.main}`}>
+      <main id="main-content" className={`container ${styles.main}`}>
         <Suspense fallback={<p role="status">Preparing your checkout…</p>}>
           <Resolve searchParams={searchParams} />
         </Suspense>

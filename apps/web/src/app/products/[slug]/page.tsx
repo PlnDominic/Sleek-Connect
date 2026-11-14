@@ -138,7 +138,7 @@ export default async function ProductPage({ params, searchParams }: PageProps<'/
         </span>
       </nav>
 
-      <main className={`container ${styles.main}`}>
+      <main id="main-content" className={`container ${styles.main}`}>
         <ProductGallery product={product} />
 
         <div className={styles.info}>

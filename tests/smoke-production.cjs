@@ -54,6 +54,7 @@ function localEnv() {
   const csp = home?.headers.get('content-security-policy') || '';
   assert(csp.includes("default-src 'self'") && csp.includes("frame-ancestors 'none'"), 'content security policy restricts sources and framing');
   assert((home?.headers.get('x-frame-options') || '') === 'DENY', 'pages cannot be framed');
+  assert(!home?.headers.get('x-powered-by'), 'responses do not name the framework (no X-Powered-By header)');
   assert((home?.headers.get('referrer-policy') || '') === 'strict-origin-when-cross-origin', 'referrer policy is strict');
   assert((home?.headers.get('permissions-policy') || '').includes('geolocation=()'), 'permissions policy denies unused capabilities');
   assert((home?.headers.get('strict-transport-security') || '').includes('max-age=63072000'), 'HSTS is set (production build)');

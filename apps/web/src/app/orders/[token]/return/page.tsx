@@ -17,7 +17,7 @@ export default function ReturnPage({ params }: PageProps<'/orders/[token]/return
   return (
     <>
       <SiteHeader />
-      <main>
+      <main id="main-content">
         <Suspense fallback={<div className={`container ${styles.main}`}>Loading your order…</div>}>
           <ReturnDetails params={params} />
         </Suspense>

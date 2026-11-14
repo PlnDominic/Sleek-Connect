@@ -23,6 +23,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     page('/help', 0.4, 'monthly'),
     page('/terms', 0.2, 'monthly'),
     page('/privacy', 0.2, 'monthly'),
+    page('/cookies', 0.2, 'monthly'),
     ...products.map((p) => page(`/products/${p.slug}`, 0.8, 'weekly', p.createdAt)),
   ];
 }

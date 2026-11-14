@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function ReceiptPage({ params }: PageProps<'/orders/[token]/receipt'>) {
   return (
-    <main className={styles.page}>
+    <main id="main-content" className={styles.page}>
       <Suspense fallback={<p>Loading your receipt…</p>}>
         <Receipt params={params} />
       </Suspense>

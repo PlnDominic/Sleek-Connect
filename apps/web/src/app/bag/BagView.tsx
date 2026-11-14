@@ -14,7 +14,7 @@ export function BagView() {
   const soldOut = items.filter((i) => i.inStock === false);
 
   return (
-    <main className={`container ${styles.main}`}>
+    <main id="main-content" className={`container ${styles.main}`}>
       <div className={styles.titleRow}>
         <h1>Your bag</h1>
         {count > 0 && (

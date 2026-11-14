@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { Inter } from 'next/font/google';
 import { AnalyticsConsent } from '@/components/AnalyticsConsent';
+import { SkipLink } from '@/components/SkipLink';
 import { AuthProvider } from '@/components/AuthProvider';
 import { CompareProvider } from '@/components/CompareProvider';
 import { WebBagProvider } from '@/components/WebBagProvider';
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
+        <SkipLink />
         {/* usePathname() needs a Suspense boundary so pages can still be prerendered. */}
         <Suspense fallback={null}>
           <AnalyticsConsent />

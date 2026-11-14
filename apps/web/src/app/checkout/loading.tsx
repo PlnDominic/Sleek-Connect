@@ -1,6 +1,6 @@
 export default function CheckoutLoading() {
   return (
-    <main
+    <div role="status"
       aria-busy="true"
       aria-live="polite"
       style={{ margin: '0 auto', maxWidth: 720, padding: '72px 24px', textAlign: 'center' }}
@@ -9,6 +9,6 @@ export default function CheckoutLoading() {
         Checkout
       </p>
       <p style={{ color: 'var(--c-text-muted)', marginTop: 20 }}>Loading checkout…</p>
-    </main>
+    </div>
   );
 }

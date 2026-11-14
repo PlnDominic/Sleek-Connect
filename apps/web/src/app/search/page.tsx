@@ -17,7 +17,7 @@ export default function SearchPage({ searchParams }: PageProps<'/search'>) {
   return (
     <>
       <SiteHeader />
-      <main>
+      <main id="main-content">
         <Suspense fallback={<div className={styles.hero}><div className="container"><h1>Search</h1></div></div>}>
           <SearchResults searchParams={searchParams} />
         </Suspense>

@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 export default function CheckoutError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
-    <main style={{ margin: '0 auto', maxWidth: 720, padding: '72px 24px', textAlign: 'center' }}>
+    <main id="main-content" style={{ margin: '0 auto', maxWidth: 720, padding: '72px 24px', textAlign: 'center' }}>
       <p style={{ color: 'var(--c-accent)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Checkout</p>
       <h1>We could not load checkout</h1>
       <p style={{ color: 'var(--c-text-muted)', lineHeight: 1.7 }}>Your bag is safe. Try again, or return to your bag to review the items before continuing.</p>

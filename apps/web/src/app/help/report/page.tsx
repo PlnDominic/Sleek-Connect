@@ -14,7 +14,7 @@ export default function ReportPage({ searchParams }: PageProps<'/help/report'>) 
   return (
     <>
       <SiteHeader current="Contact" />
-      <main className={styles.page}>
+      <main id="main-content" className={styles.page}>
         <div className={styles.hero}>
           <div className="container">
             <nav aria-label="Breadcrumb" className={styles.breadcrumb}>

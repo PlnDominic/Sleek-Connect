@@ -45,6 +45,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Don't announce "X-Powered-By: Next.js" on every response: it tells a scanner what to look for and is of no use to visitors.
+  poweredByHeader: false,
   // PostHog's endpoints end in a slash (/e/, /decide/), which must reach it as written.
   skipTrailingSlashRedirect: true,
   cacheComponents: true,

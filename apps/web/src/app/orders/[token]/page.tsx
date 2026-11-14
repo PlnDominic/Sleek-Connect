@@ -38,7 +38,7 @@ export default function OrderPage({ params }: PageProps<'/orders/[token]'>) {
   return (
     <>
       <SiteHeader />
-      <main className={`container ${styles.main}`}>
+      <main id="main-content" className={`container ${styles.main}`}>
         <Suspense fallback={<p className={styles.muted}>Loading your order…</p>}>
           <OrderDetails params={params} />
         </Suspense>

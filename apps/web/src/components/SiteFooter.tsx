@@ -33,6 +33,7 @@ const columns = [
       { label: 'Product safety', href: '/help#safety' },
       { label: 'Privacy notice', href: '/privacy' },
       { label: 'Terms of service', href: '/terms' },
+      { label: 'Cookie policy', href: '/cookies' },
     ],
   },
 ];

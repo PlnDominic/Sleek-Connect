@@ -13,6 +13,7 @@ import styles from './help.module.css';
 export const metadata: Metadata = {
   title: 'Help centre',
   description: 'Answers about ordering, payment, delivery, returns and product safety, and how to reach Sleek Connect Store.',
+  alternates: { canonical: '/help' },
 };
 
 const topics = [
@@ -34,7 +35,7 @@ export default async function HelpPage() {
   return (
     <>
       <SiteHeader current="Contact" />
-      <main className={styles.page}>
+      <main id="main-content" className={styles.page}>
         <div className={styles.hero}>
           <div className="container">
             <p className={styles.kicker}>Help centre</p>

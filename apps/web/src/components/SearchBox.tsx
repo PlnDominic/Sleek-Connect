@@ -192,7 +192,8 @@ export function SearchBox({
           setOpen(true);
         }}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
-        aria-controls={showResults ? `${id}-results` : `${id}-recent`}
+        // Only name a list that is on the page: pointing at one that isn't there is an invalid ARIA value.
+        aria-controls={showResults ? `${id}-results` : open && recent.length > 0 && !value ? `${id}-recent` : undefined}
         aria-activedescendant={showResults && active >= 0 ? `${id}-option-${active}` : undefined}
       />
       {searching && <span className={styles.spinner} aria-hidden="true" />}

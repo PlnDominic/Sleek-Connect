@@ -14,7 +14,7 @@ export function LegalPage({ title, intro, updated, sections }: { title: string; 
   return (
     <>
       <SiteHeader />
-      <main>
+      <main id="main-content">
         <div className={styles.hero}>
           <div className="container">
             <h1>{title}</h1>

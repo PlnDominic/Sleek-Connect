@@ -20,7 +20,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
   return (
     <html lang="en-GH">
       <body style={{ margin: 0 }}>
-        <main style={{ margin: '0 auto', maxWidth: 720, padding: '96px 24px', textAlign: 'center' }}>
+        <main id="main-content" style={{ margin: '0 auto', maxWidth: 720, padding: '96px 24px', textAlign: 'center' }}>
           <p style={{ fontFamily: 'system-ui, sans-serif', color: '#8b5e3c', fontWeight: 700 }}>Sleek Connect Store</p>
           <h1 style={{ fontFamily: 'system-ui, sans-serif' }}>We are having trouble loading the store</h1>
           <p style={{ color: '#5f6368', fontFamily: 'system-ui, sans-serif', lineHeight: 1.7 }}>

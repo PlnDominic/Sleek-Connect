@@ -57,7 +57,7 @@ export default async function SkinFinderPage({ searchParams }: PageProps<'/skin-
   return (
     <>
       <SiteHeader />
-      <main className={`container ${styles.page}`}>
+      <main id="main-content" className={`container ${styles.page}`}>
         <h1>Find products for your skin</h1>
         <p className={styles.lead}>
           Three quick choices. We show products made for your skin type. This is a guide, not medical advice: if you have a skin

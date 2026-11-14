@@ -58,7 +58,7 @@ export default async function ShopPage({ params, searchParams }: PageProps<'/sho
   return (
     <>
       <SiteHeader current="Shop" />
-      <main>
+      <main id="main-content">
         <section className={styles.hero}>
           <div className="container">
             <nav aria-label="Breadcrumb" className={styles.breadcrumb}>

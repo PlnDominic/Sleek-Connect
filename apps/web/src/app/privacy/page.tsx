@@ -169,7 +169,8 @@ export default async function PrivacyPage() {
           We use only what the store needs to work: a sign-in session (a cookie) if you sign in, and storage on your device for
           your bag, saved items, products you compared or viewed recently, recent searches and the orders you placed on this
           device. None of it is used to track you. We don’t use advertising or cross-site tracking cookies. When you pay online you
-          are taken to our payment provider’s page, which sets its own cookies under its own notice.
+          are taken to our payment provider’s page, which sets its own cookies under its own notice. The full list is in our{' '}
+          <Link href="/cookies">cookie policy</Link>.
         </p>
       ),
     },
