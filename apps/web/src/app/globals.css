@@ -89,6 +89,11 @@ p {
   top: 12px;
 }
 
+/* The admin console has its own skip link. */
+body:has([data-admin]) > .skip-link {
+  display: none;
+}
+
 main:focus {
   outline: none;
 }

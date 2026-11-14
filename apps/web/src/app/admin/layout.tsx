@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function AdminLayout({ children }: LayoutProps<'/admin'>) {
   return (
-    <div className={styles.root}>
+    <div className={styles.root} data-admin="">
       <Suspense fallback={null}>
         <AdminGate>{children}</AdminGate>
       </Suspense>
