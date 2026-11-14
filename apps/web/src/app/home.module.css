@@ -80,30 +80,6 @@
   border: 1px solid var(--c-line-strong);
 }
 
-.socialProof {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 18px;
-  font-size: 13px;
-  color: var(--c-text-subtle);
-}
-
-.avatars {
-  display: flex;
-}
-
-.avatars span {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--r-pill);
-  border: 2px solid var(--c-surface-hero);
-}
-
-.avatars span + span {
-  margin-left: -10px;
-}
-
 .heroVisual {
   flex: 1 1 560px;
   min-width: 0;
@@ -199,42 +175,6 @@
   background: var(--c-accent);
 }
 
-/* Feature strip */
-.features {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  padding: 30px 0;
-  border-bottom: 1px solid var(--c-line-soft);
-}
-
-.feature {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 6px 16px;
-}
-
-.feature + .feature {
-  border-left: 1px solid var(--c-line);
-}
-
-.featureText {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.featureText strong {
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.featureText span {
-  font-size: 12px;
-  color: var(--c-text-muted);
-}
-
 /* Section scaffolding */
 .section {
   padding-top: 56px;
@@ -264,12 +204,37 @@
   text-decoration: none;
 }
 
-/* Categories */
-.categoryGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  gap: 16px;
+/* Departments */
+
+.deptStrip {
+  display: flex;
+  gap: 10px;
+  padding-top: 28px;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+
+.deptStrip::-webkit-scrollbar {
+  display: none;
+}
+
+.deptChip {
+  flex: none;
+  padding: 9px 16px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.deptChip:hover {
+  border-color: var(--c-accent);
+  color: var(--c-accent);
+}
+
+/* Categories */
 
 .categoryCard {
   position: relative;
@@ -285,7 +250,7 @@
   left: 8px;
   right: 8px;
   bottom: 8px;
-  background: rgba(255, 255, 255, 0.94);
+  background: color-mix(in srgb, var(--c-canvas) 94%, transparent);
   border-radius: var(--r-lg);
   padding: 10px 12px;
   display: flex;
@@ -346,6 +311,10 @@
   color: var(--c-ink);
 }
 
+.rail[data-kind='categories'] .railArrow {
+  top: 78px;
+}
+
 .railPrev {
   left: -22px;
 }
@@ -362,98 +331,6 @@
   .railNext {
     right: -8px;
   }
-}
-
-/* Product card */
-.productCard {
-  position: relative;
-  background: var(--c-surface);
-  border-radius: var(--r-xl);
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.productCardTop {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  height: 24px;
-}
-
-.badge {
-  color: var(--c-canvas);
-  font-size: 11px;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: var(--r-sm);
-}
-
-.saveButton {
-  width: 32px;
-  height: 32px;
-  margin: -6px -6px 0 0;
-  border: 0;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--c-ink);
-}
-
-.productCardImage {
-  width: 100%;
-  height: 160px;
-  border-radius: var(--r-lg);
-}
-
-.productCardName {
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.35;
-}
-
-.priceRow {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.priceRow strong {
-  font-size: 14px;
-}
-
-.priceRow s {
-  font-size: 12px;
-  color: var(--c-text-faint);
-}
-
-.productCardFooter {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  margin-top: auto;
-}
-
-.productCardFooter > span {
-  font-size: 11px;
-  color: var(--c-text-subtle);
-}
-
-.roundAdd {
-  width: 32px;
-  height: 32px;
-  flex: none;
-  border-radius: var(--r-pill);
-  border: 0;
-  background: var(--c-ink);
-  color: var(--c-canvas);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 /* Best sellers */
@@ -544,6 +421,12 @@
   font-weight: 600;
 }
 
+.quickAdd:disabled,
+.squareAdd:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .squareAdd {
   width: 40px;
   height: 40px;
@@ -592,6 +475,20 @@
 
 .promoGift {
   background: var(--c-ink);
+}
+
+.promoLight {
+  background: var(--c-surface);
+  color: var(--c-ink);
+}
+
+.promoLight .promoText {
+  color: var(--c-text-muted);
+}
+
+.promoLight .promoCta {
+  background: var(--c-ink);
+  color: var(--c-canvas);
 }
 
 .promoKicker {
@@ -741,24 +638,347 @@
     display: none;
   }
 
-  .categoryGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-  }
-
   .categoryCard {
     height: 170px;
   }
 
-  .feature + .feature {
-    border-left: 0;
+  .bestCard {
+    flex-direction: column;
+  }
+}
+
+/* Phones: smaller type, a shorter hero, tighter sections and a sideways category row that shows the next tile peeking in. */
+@media (max-width: 640px) {
+  .heroInner {
+    min-height: 0;
+    gap: 0;
   }
 
-  .feature {
-    justify-content: flex-start;
+  .heroCopy {
+    flex-basis: 100%;
+    gap: 12px;
+    padding: 28px 0 8px;
+  }
+
+  .kicker {
+    font-size: 11.5px;
+  }
+
+  .heroTitle {
+    font-size: 30px;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+  }
+
+  .heroLead {
+    font-size: 14.5px;
+    line-height: 1.55;
+  }
+
+  .heroActions {
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .primaryCta,
+  .secondaryCta {
+    height: 44px;
+    font-size: 14px;
+    padding: 0 18px;
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .heroVisual {
+    flex-basis: 100%;
+    height: 330px;
+  }
+
+  .heroBlob {
+    top: 40px;
+    height: 290px;
+  }
+
+  .heroModel {
+    top: 28px;
+    height: 302px;
+    left: 26%;
+    width: 48%;
+  }
+
+  .floatCard {
+    width: 100px;
+    padding: 8px;
+  }
+
+  .floatImage {
+    height: 52px;
+  }
+
+  .floatName {
+    font-size: 10.5px;
+  }
+
+  .floatPrice {
+    font-size: 11.5px;
+  }
+
+  .floatShea {
+    top: 150px;
+  }
+
+  .floatBabyWash {
+    top: 180px;
+  }
+
+  .section {
+    padding-top: 32px;
+  }
+
+  .sectionHeader {
+    margin-bottom: 14px;
+    gap: 6px;
+  }
+
+  .sectionHeader h2 {
+    font-size: 18px;
+  }
+
+  .sectionHeader a {
+    font-size: 12px;
+  }
+
+  .railTrack {
+    grid-auto-columns: 42%;
+    gap: 12px;
+  }
+
+  .railArrow {
+    display: none;
+  }
+
+  .categoryCard {
+    height: 150px;
+  }
+
+  .categoryLabel {
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    padding: 7px 9px;
+  }
+
+  .categoryLabel strong {
+    font-size: 12.5px;
+  }
+
+  .categoryLabel span {
+    font-size: 10.5px;
   }
 
   .bestCard {
+    padding: 14px;
+    gap: 12px;
+    min-height: 0;
+  }
+
+  .bestName,
+  .bestPrice {
+    font-size: 14.5px;
+  }
+
+  .bestSummary,
+  .bestTag {
+    font-size: 11.5px;
+  }
+
+  .promoSection {
+    padding-top: 24px;
+  }
+
+  .promo {
+    padding: 20px;
+    min-height: 0;
+  }
+
+  .promoTitle {
+    font-size: 22px;
+  }
+
+  .promoText,
+  .promoKicker,
+  .promoCta {
+    font-size: 12px;
+  }
+
+  .trustSection {
+    padding-bottom: 32px;
+  }
+
+  .trust {
+    padding: 16px;
+    gap: 12px;
+  }
+}
+
+/* The search pill and "authentic" strip from the mobile app's home screen: phones only. */
+.appTop {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .appTop {
+    display: flex;
     flex-direction: column;
+    gap: 12px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .appSearch {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 48px;
+    padding: 0 16px;
+    border-radius: var(--r-lg);
+    background: var(--c-surface);
+    color: var(--c-text-muted);
+    font-size: 14.5px;
+    text-decoration: none;
+  }
+
+  .appAuthentic {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: var(--r-lg);
+    background: var(--c-teal-soft);
+    font-size: 12px;
+    color: var(--c-teal-ink);
+  }
+
+  .appAuthentic strong {
+    display: block;
+    font-size: 13px;
+    color: var(--c-accent);
+  }
+
+  .appAuthenticIcon {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--r-md);
+    background: var(--c-canvas);
+    color: var(--c-accent);
+  }
+
+  /* The hero becomes the app's rounded teal card: words on the left, the picture on the right. */
+  .hero {
+    background: transparent;
+    padding: 0 24px;
+  }
+
+  .heroInner {
+    position: relative;
+    display: block;
+    min-height: 190px;
+    padding: 22px;
+    border-radius: var(--r-xl);
+    background: var(--c-accent);
+    overflow: hidden;
+  }
+
+  .heroCopy {
+    position: relative;
+    z-index: 1;
+    max-width: 60%;
+    padding: 0;
+    gap: 8px;
+    color: var(--c-canvas);
+  }
+
+  .kicker {
+    color: rgb(255 255 255 / 0.85);
+  }
+
+  .heroTitle {
+    font-size: 22px;
+    line-height: 1.2;
+    color: var(--c-canvas);
+  }
+
+  .heroLead,
+  .secondaryCta {
+    display: none;
+  }
+
+  .primaryCta {
+    align-self: flex-start;
+    flex: none;
+    height: 42px;
+    padding: 0 16px;
+    border-radius: 999px;
+    background: var(--c-canvas);
+    color: var(--c-ink);
+  }
+
+  .primaryCta:hover {
+    background: var(--c-canvas);
+    color: var(--c-ink);
+  }
+
+  .heroVisual {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 42%;
+    height: auto;
+  }
+
+  .heroBlob,
+  .floatCard,
+  .heroDots {
+    display: none;
+  }
+
+  .heroModel {
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+
+  /* Categories: smaller tiles with just the name. */
+  .rail[data-kind='categories'] .railTrack {
+    grid-auto-columns: 34%;
+    gap: 10px;
+  }
+
+  .categoryCard {
+    height: 118px;
+  }
+
+  .categoryLabel span {
+    display: none;
+  }
+
+  .categoryLabel {
+    padding: 6px 8px;
+  }
+
+  /* New arrivals: the app's two-column grid. */
+  .rail:not([data-kind='categories']) .railTrack {
+    display: grid;
+    grid-auto-flow: row;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-columns: auto;
+    overflow: visible;
+    gap: 12px;
   }
 }

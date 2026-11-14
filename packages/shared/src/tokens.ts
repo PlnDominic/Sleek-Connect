@@ -3,51 +3,89 @@
  * Web exposes these as CSS custom properties; mobile reads them directly.
  */
 export const colors = {
-  ink: '#111111',
+  ink: '#0B1F3A',
   canvas: '#FFFFFF',
 
-  // Brand accent (beauty, primary actions, active states)
-  accent: '#D43C0C',
-  accentDeep: '#B33209',
-  accentWarm: '#E2552C',
-  accentBlob: '#D9472A',
-  accentBlobLight: '#F07A5E',
+  // Brand accent: teal (primary actions, highlights, active states). Midnight navy is `ink`; white is `canvas`.
+  accent: '#0F766E',
+  accentDeep: '#0B5D57',
+  accentWarm: '#2BB3A6',
+  accentBlob: '#14857C',
+  accentBlobLight: '#5FC2B8',
 
   // Kids & safety accent
   teal: '#0F766E',
   tealInk: '#134E48',
   tealSoft: '#E3F0EC',
-  tealPale: '#EDF5F2',
+  tealPale: '#F4F5F6',
   tealMuted: '#9CC9C1',
 
   gold: '#F2B53A',
-  blush: '#F4E3D7',
+  blush: '#EEEFF1',
 
   // Neutrals
-  surface: '#F5F5F5',
-  surfaceHero: '#F4F4F4',
-  surfaceSunken: '#EAEAEA',
-  surfaceMap: '#EFEFEF',
-  line: '#EBEBEB',
-  lineSoft: '#EFEFEF',
-  lineStrong: '#DDDDDD',
-  lineInactive: '#CCCCCC',
-  lineTrack: '#E0E0E0',
-  textBody: '#444444',
-  textSubtle: '#555555',
-  textMuted: '#666666',
-  textFaint: '#777777',
-  textDisabled: '#888888',
-  textPlaceholder: '#999999',
+  surface: '#F6F6F7',
+  surfaceHero: '#F4F4F5',
+  surfaceSunken: '#E9E9EB',
+  surfaceMap: '#EFEFF1',
+  line: '#E6E6E9',
+  lineSoft: '#EEEEF0',
+  lineStrong: '#D9D9DE',
+  lineInactive: '#C3CCD9',
+  lineTrack: '#DFDFE4',
+  textBody: '#2F3E57',
+  textSubtle: '#41506A',
+  textMuted: '#55617A',
+  textFaint: '#66728A',
+  textDisabled: '#8791A3',
+  textPlaceholder: '#98A1B1',
 
   // On dark surfaces
-  onDark: '#CFCFCF',
-  onDarkMuted: '#D6D6D6',
-  darkLine: '#2A2A2A',
+  onDark: '#CBD5E4',
+  onDarkMuted: '#D5DDEA',
+  darkLine: '#23395A',
 
   // Decorative skin-tone swatches used for the social-proof avatars
   avatar: ['#C9A38A', '#7E5A45', '#A9785B', '#5C3F30'],
 } as const;
+
+/**
+ * The dark scheme for the website, the same look as the mobile app's dark theme: a true black canvas with charcoal surfaces and a
+ * brighter teal. Roles flip with the scheme (`ink` becomes the light text colour), so ink-on-canvas pairs stay legible.
+ */
+export const darkColors: Partial<Record<keyof typeof colors, string>> = {
+  ink: '#F2F2F2',
+  canvas: '#000000',
+  accent: '#2BB3A6',
+  accentDeep: '#7FD6CC',
+  accentWarm: '#5FC2B8',
+  accentBlob: '#14857C',
+  accentBlobLight: '#2BB3A6',
+  teal: '#2BB3A6',
+  tealInk: '#BFE9E3',
+  tealSoft: '#0F2321',
+  tealPale: '#0B1B1A',
+  tealMuted: '#2F6B65',
+  blush: '#1C1C1E',
+  surface: '#111111',
+  surfaceHero: '#1A1A1A',
+  surfaceSunken: '#0A0A0A',
+  surfaceMap: '#161616',
+  line: '#262626',
+  lineSoft: '#1C1C1C',
+  lineStrong: '#333333',
+  lineInactive: '#444444',
+  lineTrack: '#2A2A2A',
+  textBody: '#D4D4D4',
+  textSubtle: '#BDBDBD',
+  textMuted: '#A0A0A0',
+  textFaint: '#8E8E8E',
+  textDisabled: '#6B6B6B',
+  textPlaceholder: '#707070',
+  onDark: '#333333',
+  onDarkMuted: '#4A4A4A',
+  darkLine: '#D4D4D4',
+};
 
 export const radii = {
   sm: 4,

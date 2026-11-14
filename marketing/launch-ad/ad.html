@@ -1,0 +1,821 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Sleek Connect – Seamlessly Yours</title>
+<style>
+  @font-face { font-family: J; font-weight: 400; src: url(assets/PlusJakartaSans_400Regular.ttf); }
+  @font-face { font-family: J; font-weight: 500; src: url(assets/PlusJakartaSans_500Medium.ttf); }
+  @font-face { font-family: J; font-weight: 600; src: url(assets/PlusJakartaSans_600SemiBold.ttf); }
+  @font-face { font-family: J; font-weight: 700; src: url(assets/PlusJakartaSans_700Bold.ttf); }
+  @font-face { font-family: J; font-weight: 800; src: url(assets/PlusJakartaSans_800ExtraBold.ttf); }
+
+  :root {
+    --navy: #0B1F3A; --ink: #06101F; --teal: #0F766E; --teal2: #2BB3A6; --teal3: #5FC2B8;
+    --paper: #FFFFFF; --mist: #F3F6F9; --muted: #55617A;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #000; overflow: hidden; }
+  body { font-family: J, system-ui, sans-serif; color: #fff; -webkit-font-smoothing: antialiased; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--ink); transform-origin: 0 0; }
+  body.vertical #stage { width: 1080px; height: 1920px; }
+  .abs { position: absolute; left: 0; top: 0; }
+  .center { position: absolute; left: 0; top: 0; will-change: transform, opacity; }
+  img { display: block; }
+
+  /* ---------- background ---------- */
+  #bg { position: absolute; inset: 0; }
+  .glow { position: absolute; border-radius: 50%; filter: blur(120px); opacity: .55; }
+  #glowA { width: 900px; height: 900px; background: #0F766E; }
+  #glowB { width: 800px; height: 800px; background: #13345F; }
+  #vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.65) 100%); pointer-events: none; }
+  #grain { position: absolute; inset: 0; opacity: .045; mix-blend-mode: overlay; pointer-events: none; }
+
+  /* ---------- ribbons ---------- */
+  svg.full { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+
+  /* ---------- hook ---------- */
+  .hookWord { position: absolute; left: 0; top: 0; font-weight: 800; font-size: 200px; letter-spacing: -6px; line-height: 1; white-space: nowrap; }
+  .hookWord .dot { color: var(--teal2); }
+  .hookCard { position: absolute; width: 440px; height: 560px; border-radius: 36px; overflow: hidden; box-shadow: 0 40px 120px rgba(0,0,0,.55); }
+  .hookCard img { width: 100%; height: 100%; object-fit: cover; }
+  #hookLine { position: absolute; font-weight: 800; font-size: 150px; letter-spacing: -5px; line-height: 1.02; white-space: nowrap; text-align: center; }
+  #hookLine em { font-style: normal; color: var(--teal2); }
+
+  /* ---------- captions ---------- */
+  .cap { position: absolute; width: 470px; }
+  .cap .eyebrow { display: flex; align-items: center; gap: 14px; font-weight: 700; font-size: 22px; letter-spacing: 6px; color: var(--teal2); text-transform: uppercase; }
+  .cap .eyebrow b { display: inline-flex; width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--teal2); align-items: center; justify-content: center; letter-spacing: 0; font-size: 20px; }
+  .cap h2 { margin-top: 26px; font-weight: 800; font-size: 82px; line-height: 1.02; letter-spacing: -3px; }
+  .cap h2 .ln { display: block; overflow: hidden; padding-bottom: 6px; }
+  .cap h2 .ln > span { display: inline-block; }
+  .cap h2 em { font-style: normal; color: var(--teal2); }
+  .cap p { margin-top: 26px; font-weight: 500; font-size: 27px; line-height: 1.4; color: rgba(255,255,255,.66); max-width: 440px; }
+  body.vertical .cap { width: 920px; text-align: center; }
+  body.vertical .cap .eyebrow { justify-content: center; }
+  body.vertical .cap h2 { font-size: 104px; }
+  body.vertical .cap p { margin-left: auto; margin-right: auto; max-width: 820px; font-size: 32px; }
+
+  #steps { position: absolute; display: flex; gap: 10px; }
+  #steps i { display: block; width: 64px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.16); overflow: hidden; }
+  #steps i u { display: block; height: 100%; width: 0; background: var(--teal2); }
+
+  /* ---------- desktop browser ---------- */
+  #desk { width: 1200px; height: 750px; margin-left: -600px; margin-top: -375px; border-radius: 22px; background: #fff; overflow: hidden;
+    box-shadow: 0 60px 160px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.08); transform-style: preserve-3d; }
+  .chrome { height: 46px; background: #EEF1F5; display: flex; align-items: center; padding: 0 18px; gap: 8px; border-bottom: 1px solid #DCE2EB; }
+  .chrome .d { width: 13px; height: 13px; border-radius: 50%; }
+  .url { margin-left: 120px; flex: 1; max-width: 640px; height: 30px; border-radius: 15px; background: #fff; color: #41506A; font-size: 15px; font-weight: 500;
+    display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .url svg { width: 13px; height: 13px; }
+  .viewport { position: relative; height: 704px; overflow: hidden; background: #fff; color: var(--navy); }
+  .nav { height: 70px; display: flex; align-items: center; padding: 0 44px; gap: 34px; border-bottom: 1px solid #ECF0F5; position: relative; z-index: 2; background: #fff; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 21px; letter-spacing: -.4px; margin-right: 18px; }
+  .brand img { width: 34px; height: 34px; object-fit: contain; }
+  .nav a { font-weight: 600; font-size: 15px; color: #2F3E57; position: relative; padding: 6px 2px; }
+  .nav a.on { color: var(--teal); }
+  .nav a .ul { position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; background: var(--teal); transform-origin: left; }
+  .navR { margin-left: auto; display: flex; align-items: center; gap: 18px; }
+  .search { width: 210px; height: 38px; border-radius: 19px; background: #F3F6F9; display: flex; align-items: center; padding: 0 14px; gap: 8px; color: #8791A3; font-size: 14px; }
+  .ico { width: 22px; height: 22px; }
+  .page { position: absolute; left: 0; right: 0; top: 70px; bottom: 0; }
+  .hero { position: absolute; inset: 0; background: linear-gradient(180deg, #F3F6F9, #fff); }
+  .heroTxt { position: absolute; left: 64px; top: 92px; width: 520px; }
+  .kicker { font-weight: 700; font-size: 13px; letter-spacing: 3px; color: var(--teal); }
+  .heroTxt h1 { margin-top: 16px; font-weight: 800; font-size: 64px; line-height: 1.02; letter-spacing: -2px; }
+  .heroTxt h1 .ln { display: block; overflow: hidden; }
+  .heroTxt h1 .ln > span { display: inline-block; }
+  .heroTxt p { margin-top: 18px; font-size: 17px; line-height: 1.5; color: #55617A; font-weight: 500; }
+  .btns { margin-top: 28px; display: flex; gap: 12px; }
+  .btn { height: 50px; padding: 0 26px; border-radius: 25px; display: inline-flex; align-items: center; font-weight: 700; font-size: 16px; }
+  .btn.solid { background: var(--navy); color: #fff; }
+  .btn.line { border: 1.5px solid #C3CCD9; color: var(--navy); }
+  .blob { position: absolute; right: 70px; top: 46px; width: 470px; height: 560px; }
+  .blob .b { position: absolute; inset: 40px 0 0 30px; border-radius: 48% 52% 44% 56% / 55% 45% 55% 45%; background: var(--teal); }
+  .blob .m { position: absolute; left: 60px; top: 0; width: 380px; height: 520px; border-radius: 190px 190px 30px 30px; overflow: hidden; }
+  .blob .m img { width: 100%; height: 100%; object-fit: cover; }
+  .floatCard { position: absolute; background: #fff; border-radius: 16px; padding: 10px; display: flex; gap: 10px; align-items: center; box-shadow: 0 18px 40px rgba(11,31,58,.16); width: 210px; }
+  .floatCard img { width: 52px; height: 52px; border-radius: 10px; object-fit: cover; }
+  .floatCard b { display: block; font-size: 13px; font-weight: 700; line-height: 1.25; }
+  .floatCard span { font-size: 13px; color: var(--teal); font-weight: 700; }
+
+  .shop { position: absolute; inset: 0; background: #fff; padding: 30px 44px; }
+  .crumb { font-size: 14px; color: #8791A3; font-weight: 500; }
+  .shop h1 { font-size: 46px; font-weight: 800; letter-spacing: -1.5px; margin-top: 6px; }
+  .chips { display: flex; gap: 10px; margin-top: 18px; }
+  .chip { height: 38px; padding: 0 18px; border-radius: 19px; border: 1.5px solid #DCE2EB; display: inline-flex; align-items: center; font-weight: 600; font-size: 14px; color: #2F3E57; }
+  .chip.on { background: var(--navy); border-color: var(--navy); color: #fff; }
+  .grid { display: flex; gap: 22px; margin-top: 26px; }
+  .card { width: 256px; border-radius: 18px; background: #fff; position: relative; }
+  .card .im { height: 250px; border-radius: 16px; overflow: hidden; background: #F3F6F9; position: relative; }
+  .card .im img { width: 100%; height: 100%; object-fit: cover; }
+  .card .heart { position: absolute; right: 12px; top: 12px; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.92); display: flex; align-items: center; justify-content: center; }
+  .card .nm { margin-top: 14px; font-weight: 700; font-size: 16px; line-height: 1.3; }
+  .card .pr { margin-top: 6px; font-weight: 800; font-size: 17px; color: var(--teal); }
+  .card .tag { position: absolute; left: 12px; top: 12px; background: var(--navy); color: #fff; font-size: 11px; font-weight: 700; padding: 5px 9px; border-radius: 8px; letter-spacing: .5px; }
+
+  .orderPage { position: absolute; inset: 0; background: #fff; padding: 40px 64px; }
+  .orderPage .okBig { width: 92px; height: 92px; border-radius: 50%; background: var(--teal); display: flex; align-items: center; justify-content: center; }
+  .orderPage h1 { margin-top: 24px; font-size: 52px; font-weight: 800; letter-spacing: -1.5px; }
+  .orderPage p { margin-top: 10px; font-size: 18px; color: #55617A; font-weight: 500; }
+  .track { display: flex; gap: 8px; margin-top: 34px; width: 760px; }
+  .track > div { flex: 1; }
+  .track i { display: block; height: 8px; border-radius: 4px; background: var(--teal); }
+  .track span { display: block; margin-top: 10px; font-size: 14px; font-weight: 700; }
+  .orderLine { margin-top: 34px; display: flex; gap: 18px; align-items: center; padding: 18px; border-radius: 18px; background: #F3F6F9; width: 760px; }
+  .orderLine img { width: 74px; height: 74px; border-radius: 12px; object-fit: cover; }
+
+  #cursor { position: absolute; left: 0; top: 0; width: 34px; height: 34px; z-index: 20; }
+  #cursor .ring { position: absolute; left: -26px; top: -26px; width: 52px; height: 52px; border-radius: 50%; border: 3px solid var(--teal2); }
+
+  /* ---------- phone ---------- */
+  #phone { width: 410px; height: 850px; margin-left: -205px; margin-top: -425px; border-radius: 66px; background: #1A1D22; padding: 13px;
+    box-shadow: 0 60px 160px rgba(0,0,0,.65), inset 0 0 0 2px #3A3F47, 0 0 0 1px rgba(255,255,255,.1); }
+  .screen { position: relative; width: 100%; height: 100%; border-radius: 54px; overflow: hidden; background: #000; color: #F2F2F2; }
+  .island { position: absolute; left: 50%; top: 12px; width: 120px; height: 34px; margin-left: -60px; border-radius: 17px; background: #000; z-index: 30; }
+  .status { position: absolute; left: 0; right: 0; top: 0; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 6px 34px 0; font-size: 15px; font-weight: 700; z-index: 25; }
+  .scr { position: absolute; inset: 0; padding-top: 60px; }
+  .pTop { display: flex; align-items: center; justify-content: space-between; padding: 6px 22px 12px; }
+  .round { width: 42px; height: 42px; border-radius: 21px; background: #161616; display: flex; align-items: center; justify-content: center; position: relative; }
+  .badge { position: absolute; right: -4px; top: -4px; min-width: 22px; height: 22px; border-radius: 11px; background: var(--teal2); color: #000; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; padding: 0 6px; }
+  .pImg { margin: 0 18px; height: 330px; border-radius: 28px; overflow: hidden; }
+  .pImg img { width: 100%; height: 100%; object-fit: cover; }
+  .pBody { padding: 20px 24px 0; }
+  .pKick { font-size: 12px; font-weight: 700; letter-spacing: 2px; color: var(--teal2); }
+  .pName { margin-top: 8px; font-size: 25px; font-weight: 800; letter-spacing: -.5px; line-height: 1.15; }
+  .pPrice { margin-top: 8px; font-size: 22px; font-weight: 800; color: var(--teal2); }
+  .sizes { display: flex; gap: 10px; margin-top: 18px; }
+  .size { height: 44px; padding: 0 20px; border-radius: 22px; border: 1.5px solid #333; display: flex; align-items: center; font-weight: 700; font-size: 15px; position: relative; overflow: hidden; }
+  .size .fill { position: absolute; inset: 0; background: #F2F2F2; border-radius: 22px; }
+  .size span { position: relative; }
+  .cta { position: absolute; left: 20px; right: 20px; bottom: 36px; height: 60px; border-radius: 30px; background: var(--teal2); color: #000; font-weight: 800; font-size: 18px;
+    display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .toast { position: absolute; left: 24px; right: 24px; bottom: 112px; height: 52px; border-radius: 16px; background: #1A1A1A; display: flex; align-items: center; gap: 10px; padding: 0 16px; font-weight: 700; font-size: 15px; }
+  .toast i { width: 26px; height: 26px; border-radius: 13px; background: var(--teal2); display: flex; align-items: center; justify-content: center; }
+
+  .ttl { padding: 8px 24px 0; font-size: 30px; font-weight: 800; letter-spacing: -.6px; }
+  .sect { margin: 18px 20px 0; padding: 16px; border-radius: 22px; background: #111; }
+  .sect h4 { font-size: 12px; font-weight: 700; letter-spacing: 2px; color: #A0A0A0; }
+  .field { margin-top: 10px; height: 50px; border-radius: 14px; background: #1A1A1A; border: 1.5px solid #333; display: flex; align-items: center; padding: 0 14px; font-size: 16px; font-weight: 600; gap: 8px; }
+  .field.on { border-color: var(--teal2); }
+  .caret { width: 2px; height: 22px; background: var(--teal2); }
+  .opt { margin-top: 10px; height: 60px; border-radius: 16px; background: #1A1A1A; border: 1.5px solid #262626; display: flex; align-items: center; padding: 0 14px; gap: 12px; font-weight: 700; font-size: 16px; }
+  .opt small { display: block; font-size: 12px; color: #A0A0A0; font-weight: 500; margin-top: 2px; }
+  .opt .rad { margin-left: auto; width: 24px; height: 24px; border-radius: 12px; border: 2px solid #444; display: flex; align-items: center; justify-content: center; }
+  .opt .rad u { width: 12px; height: 12px; border-radius: 6px; background: var(--teal2); }
+  .momo { width: 36px; height: 36px; border-radius: 10px; background: #FFCC00; display: flex; align-items: center; justify-content: center; color: #000; font-weight: 800; font-size: 11px; }
+  .cash { width: 36px; height: 36px; border-radius: 10px; background: #1F3B2E; display: flex; align-items: center; justify-content: center; }
+  .sumRow { display: flex; justify-content: space-between; margin: 16px 24px 0; font-size: 15px; color: #A0A0A0; font-weight: 600; }
+  .sumRow b { color: #F2F2F2; font-size: 18px; }
+
+  .sheetDim { position: absolute; inset: 0; background: rgba(0,0,0,.6); z-index: 40; }
+  .sheet { position: absolute; left: 10px; right: 10px; bottom: 10px; height: 430px; border-radius: 40px; background: #1C1C1E; z-index: 41; padding: 26px 24px; text-align: center; }
+  .sheet .grab { width: 44px; height: 5px; border-radius: 3px; background: #444; margin: 0 auto 18px; }
+  .sheet .mm { width: 64px; height: 64px; border-radius: 18px; background: #FFCC00; margin: 0 auto; display: flex; align-items: center; justify-content: center; color: #000; font-weight: 800; font-size: 16px; }
+  .sheet h3 { margin-top: 16px; font-size: 22px; font-weight: 800; }
+  .sheet .amt { margin-top: 6px; font-size: 40px; font-weight: 800; letter-spacing: -1px; }
+  .sheet .to { font-size: 15px; color: #A0A0A0; font-weight: 600; }
+  .pin { display: flex; justify-content: center; gap: 16px; margin-top: 26px; }
+  .pin i { width: 18px; height: 18px; border-radius: 9px; border: 2px solid #555; position: relative; }
+  .pin i u { position: absolute; inset: -2px; border-radius: 9px; background: #F2F2F2; }
+  .okWrap { position: absolute; left: 0; right: 0; top: 150px; display: flex; flex-direction: column; align-items: center; }
+  .ok { width: 110px; height: 110px; border-radius: 55px; background: var(--teal2); display: flex; align-items: center; justify-content: center; }
+  .okRing { position: absolute; top: 0; width: 110px; height: 110px; border-radius: 55px; border: 3px solid var(--teal2); }
+  .okWrap b { margin-top: 18px; font-size: 22px; font-weight: 800; }
+
+  .map { position: relative; margin: 14px 18px 0; height: 380px; border-radius: 28px; overflow: hidden; background: #0C0C0C; }
+  .map svg { position: absolute; inset: 0; }
+  .pinHome { position: absolute; width: 44px; height: 44px; border-radius: 22px; background: #F2F2F2; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 8px rgba(242,242,242,.12); }
+  .rider { position: absolute; left: 0; top: 0; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 23px; background: var(--teal2); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 10px rgba(43,179,166,.22); }
+  .eta { position: absolute; left: 16px; top: 16px; padding: 8px 14px; border-radius: 14px; background: rgba(20,20,20,.9); font-size: 14px; font-weight: 700; }
+  .eta b { color: var(--teal2); }
+  .stages { margin: 18px 22px 0; }
+  .stg { display: flex; align-items: center; gap: 14px; height: 50px; font-weight: 700; font-size: 16px; color: #6B6B6B; }
+  .stg .dot { width: 28px; height: 28px; border-radius: 14px; border: 2px solid #333; display: flex; align-items: center; justify-content: center; position: relative; }
+  .stg .dot u { position: absolute; inset: -2px; border-radius: 14px; background: var(--teal2); display: flex; align-items: center; justify-content: center; }
+  .stg.done { color: #F2F2F2; }
+  .code { margin: 8px 20px 0; padding: 14px 16px; border-radius: 18px; background: #111; display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 14px; color: #A0A0A0; }
+  .code b { color: #F2F2F2; font-size: 24px; letter-spacing: 8px; }
+
+  .notif { position: absolute; left: 10px; right: 10px; top: 10px; z-index: 35; border-radius: 26px; background: rgba(40,40,44,.96); padding: 14px 16px; display: flex; gap: 12px; }
+  .notif img { width: 40px; height: 40px; border-radius: 10px; background: #fff; object-fit: contain; padding: 3px; }
+  .notif .t { font-size: 13px; color: #A0A0A0; font-weight: 600; display: flex; justify-content: space-between; width: 100%; }
+  .notif b { display: block; font-size: 15px; margin-top: 2px; color: #fff; }
+  .notif p { font-size: 14px; color: #D4D4D4; margin-top: 2px; font-weight: 500; }
+
+  .tap { position: absolute; left: 0; top: 0; width: 70px; height: 70px; margin: -35px 0 0 -35px; border-radius: 35px; background: rgba(255,255,255,.35); border: 2px solid rgba(255,255,255,.7); z-index: 50; }
+
+  /* ---------- fly card ---------- */
+  #fly { width: 256px; height: 330px; margin-left: -128px; margin-top: -165px; border-radius: 22px; overflow: hidden; background: #fff; box-shadow: 0 40px 100px rgba(0,0,0,.5); z-index: 30; }
+  #fly img { width: 100%; height: 250px; object-fit: cover; }
+  #fly div { padding: 12px 14px; color: var(--navy); font-weight: 700; font-size: 16px; }
+
+  /* ---------- both ---------- */
+  #bothTitle { position: absolute; font-weight: 800; font-size: 80px; letter-spacing: -3px; line-height: 1.02; text-align: center; white-space: nowrap; }
+  #bothTitle em { font-style: normal; color: var(--teal2); }
+  #pills { position: absolute; display: flex; gap: 14px; }
+  .pill { height: 56px; padding: 0 24px; border-radius: 28px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 21px; white-space: nowrap; }
+  .pill i { width: 10px; height: 10px; border-radius: 5px; background: var(--teal2); }
+
+  /* ---------- end card ---------- */
+  #end { position: absolute; inset: 0; background: #fff; overflow: hidden; }
+  #endLogo { position: absolute; width: 520px; }
+  #endUrl { position: absolute; font-weight: 800; font-size: 46px; letter-spacing: -1px; color: var(--navy); white-space: nowrap; }
+  #endSub { position: absolute; font-weight: 600; font-size: 24px; color: #55617A; white-space: nowrap; letter-spacing: .5px; }
+  #endBtn { position: absolute; height: 74px; padding: 0 40px; border-radius: 37px; background: var(--navy); color: #fff; font-weight: 800; font-size: 26px; display: flex; align-items: center; gap: 12px; white-space: nowrap; }
+  #flash { position: absolute; inset: 0; background: #fff; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="bg"><div id="glowA" class="glow"></div><div id="glowB" class="glow"></div></div>
+
+  <!-- the teal thread -->
+  <svg id="ribbons" class="full" width="1920" height="1080">
+    <defs>
+      <linearGradient id="rg" x1="0" x2="1" y1="0" y2="0">
+        <stop offset="0" stop-color="#0F766E" /><stop offset=".55" stop-color="#2BB3A6" /><stop offset="1" stop-color="#5FC2B8" />
+      </linearGradient>
+    </defs>
+    <path id="rHook" fill="none" stroke="url(#rg)" stroke-linecap="round" />
+    <path id="rHook2" fill="none" stroke="#2BB3A6" stroke-linecap="round" opacity=".35" />
+  </svg>
+
+  <!-- hook -->
+  <div id="hook">
+    <div class="hookCard center" id="hc0"><img src="assets/hero-model.jpg" /></div>
+    <div class="hookCard center" id="hc1"><img src="assets/vitamin-c-serum.jpg" /></div>
+    <div class="hookCard center" id="hc2"><img src="assets/baby-wash.jpg" /></div>
+    <div class="hookCard center" id="hc3"><img src="assets/gift-collection.jpg" /></div>
+    <div class="hookWord" id="hw0">Beauty<span class="dot">.</span></div>
+    <div class="hookWord" id="hw1">Skincare<span class="dot">.</span></div>
+    <div class="hookWord" id="hw2">Baby<span class="dot">.</span></div>
+    <div class="hookWord" id="hw3">Gifts<span class="dot">.</span></div>
+    <div id="hookLine"><span id="hl1">All in</span><br /><span id="hl2"><em>one place.</em></span></div>
+  </div>
+
+  <!-- captions -->
+  <div class="cap" id="cap0"><div class="eyebrow"><b>1</b>Browse</div><h2><span class="ln"><span>Browse on</span></span><span class="ln"><span>the <em>web.</em></span></span></h2><p>Beauty, home, fashion and everything for little ones.</p></div>
+  <div class="cap" id="cap1"><div class="eyebrow"><b>2</b>Find</div><h2><span class="ln"><span>Find your</span></span><span class="ln"><span><em>favourites.</em></span></span></h2><p>Every product checked and authentic.</p></div>
+  <div class="cap" id="cap2"><div class="eyebrow"><b>3</b>Add</div><h2><span class="ln"><span>Add to bag</span></span><span class="ln"><span>in <em>one tap.</em></span></span></h2><p>Your bag follows you from laptop to phone.</p></div>
+  <div class="cap" id="cap3"><div class="eyebrow"><b>4</b>Pay</div><h2><span class="ln"><span>Pay with</span></span><span class="ln"><span><em>MoMo.</em></span></span></h2><p>Or pay cash to the rider on delivery.</p></div>
+  <div class="cap" id="cap4"><div class="eyebrow"><b>5</b>Track</div><h2><span class="ln"><span>Track it to</span></span><span class="ln"><span>your <em>door.</em></span></span></h2><p>Live updates and a code only you hold.</p></div>
+  <div id="steps"><i><u></u></i><i><u></u></i><i><u></u></i><i><u></u></i><i><u></u></i></div>
+
+  <!-- desktop -->
+  <div id="desk" class="center">
+    <div class="chrome">
+      <span class="d" style="background:#FF5F57"></span><span class="d" style="background:#FEBC2E"></span><span class="d" style="background:#28C840"></span>
+      <div class="url"><svg viewBox="0 0 24 24" fill="none" stroke="#41506A" stroke-width="2.4"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span id="urlText">www.sleekconnectstore.com</span></div>
+    </div>
+    <div class="viewport">
+      <div class="nav">
+        <div class="brand"><img src="assets/logo-mark.png" />Sleek Connect</div>
+        <a id="navBeauty">Beauty<span class="ul" id="navUl"></span></a><a>Baby &amp; Kids</a><a>Home &amp; Groceries</a><a>Fashion</a>
+        <div class="navR">
+          <div class="search"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#8791A3" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Search products</div>
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B1F3A" stroke-width="1.8"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B1F3A" stroke-width="1.8"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+        </div>
+      </div>
+      <div class="page" id="pgHome">
+        <div class="hero">
+          <div class="heroTxt">
+            <div class="kicker" id="hk">TRENDING NOW</div>
+            <h1><span class="ln"><span id="h1a">Glow Products</span></span><span class="ln"><span id="h1b">You'll Love</span></span></h1>
+            <p id="hp">Beauty, home, fashion and everything for little ones, curated for modern families in Ghana.</p>
+            <div class="btns" id="hbtn"><span class="btn solid">Shop Now</span><span class="btn line">Shop Baby &amp; Kids</span></div>
+          </div>
+          <div class="blob" id="blob"><div class="b" id="blobB"></div><div class="m"><img id="blobImg" src="assets/hero-model.jpg" /></div>
+            <div class="floatCard" id="fc1" style="left:-70px;top:300px"><img src="assets/vitamin-c-serum.jpg" /><div><b>Vitamin C Serum</b><span>GHS 220</span></div></div>
+            <div class="floatCard" id="fc2" style="right:-30px;top:90px"><img src="assets/matte-lip-colour.jpg" /><div><b>Velvet Matte Lip</b><span>GHS 75</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="page" id="pgShop">
+        <div class="shop">
+          <div class="crumb">Home / Beauty</div>
+          <h1>Beauty</h1>
+          <div class="chips"><span class="chip on">All</span><span class="chip">Skincare</span><span class="chip">Makeup</span><span class="chip">Hair care</span><span class="chip">Fragrance</span></div>
+          <div class="grid">
+            <div class="card" id="cd0"><div class="im"><img src="assets/vitamin-c-serum.jpg" /><span class="tag">BESTSELLER</span><span class="heart"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B1F3A" stroke-width="1.8"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></span></div><div class="nm">Vitamin C Brightening Serum</div><div class="pr">GHS 220</div></div>
+            <div class="card" id="cd1"><div class="im"><img src="assets/shea-body-butter.jpg" /></div><div class="nm">Whipped Shea Body Butter</div><div class="pr">GHS 145</div></div>
+            <div class="card" id="cd2"><div class="im"><img src="assets/matte-lip-colour.jpg" /></div><div class="nm">Velvet Matte Lip Colour</div><div class="pr">GHS 75</div></div>
+            <div class="card" id="cd3"><div class="im"><img src="assets/flash-sale.jpg" /></div><div class="nm">Argan Hair Oil, 250 ml</div><div class="pr">GHS 130</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="page" id="pgOrder">
+        <div class="orderPage">
+          <div class="okBig"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+          <h1>Delivered. Enjoy!</h1>
+          <p>Handed over at East Legon, Accra · Code confirmed</p>
+          <div class="track"><div><i></i><span>Confirmed</span></div><div><i></i><span>Packed</span></div><div><i></i><span>On the way</span></div><div><i></i><span>Delivered</span></div></div>
+          <div class="orderLine"><img src="assets/vitamin-c-serum.jpg" /><div><b style="font-size:18px">Vitamin C Brightening Serum</b><div style="color:#55617A;font-weight:600;margin-top:4px">30 ml · GHS 220 · Paid with Mobile Money</div></div></div>
+        </div>
+      </div>
+      <div id="cursor"><div class="ring" id="cRing"></div>
+        <svg width="34" height="34" viewBox="0 0 24 24"><path d="M4 2.5l15 8.6-6.6 1.6 3.9 7.2-2.7 1.4-3.9-7.2L4 19z" fill="#0B1F3A" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- phone -->
+  <div id="phone" class="center">
+    <div class="screen" id="screen">
+      <div class="island"></div>
+      <div class="status"><span>9:41</span><span style="display:flex;gap:6px;align-items:center">
+        <svg width="18" height="12" viewBox="0 0 18 12" fill="#fff"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+        <svg width="26" height="13" viewBox="0 0 26 13"><rect x=".5" y=".5" width="22" height="12" rx="3.5" fill="none" stroke="#fff" opacity=".5"/><rect x="2.5" y="2.5" width="16" height="8" rx="2" fill="#fff"/><rect x="23.5" y="4" width="2" height="5" rx="1" fill="#fff" opacity=".5"/></svg></span></div>
+
+      <!-- product -->
+      <div class="scr" id="sProduct">
+        <div class="pTop">
+          <div class="round"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#F2F2F2" stroke-width="2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></div>
+          <div class="round" id="bagBtn"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#F2F2F2" stroke-width="1.8"><path d="M6.3 8h11.4a1 1 0 0 1 1 .9l.9 9.5a2 2 0 0 1-2 2.2H6.4a2 2 0 0 1-2-2.2l.9-9.5a1 1 0 0 1 1-.9z"/><path d="M8.8 10.4V7.6a3.2 3.2 0 0 1 6.4 0v2.8"/></svg><span class="badge" id="badge">1</span></div>
+        </div>
+        <div class="pImg" id="pImg"><img src="assets/vitamin-c-serum.jpg" /></div>
+        <div class="pBody" id="pBody">
+          <div class="pKick">SKINCARE · AUTHENTIC</div>
+          <div class="pName">Vitamin C Brightening Serum</div>
+          <div class="pPrice">GHS 220</div>
+          <div class="sizes"><div class="size" id="size30"><div class="fill" id="sizeFill"></div><span id="sizeTxt">30 ml</span></div></div>
+        </div>
+        <div class="toast" id="toast"><i><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>Added to your bag</div>
+        <div class="cta" id="ctaAdd"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.2"><path d="M6.3 8h11.4a1 1 0 0 1 1 .9l.9 9.5a2 2 0 0 1-2 2.2H6.4a2 2 0 0 1-2-2.2l.9-9.5a1 1 0 0 1 1-.9z"/><path d="M8.8 10.4V7.6a3.2 3.2 0 0 1 6.4 0v2.8"/></svg>Add to bag</div>
+        <div class="center" id="miniFly" style="width:70px;height:70px;margin:-35px 0 0 -35px;border-radius:16px;overflow:hidden;z-index:20"><img src="assets/vitamin-c-serum.jpg" style="width:100%;height:100%;object-fit:cover" /></div>
+      </div>
+
+      <!-- checkout -->
+      <div class="scr" id="sCheckout">
+        <div class="ttl">Checkout</div>
+        <div class="sect"><h4>DELIVER TO</h4><div class="field on" id="addr"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#2BB3A6" stroke-width="2"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></svg><span id="addrTxt"></span><span class="caret" id="caret"></span></div></div>
+        <div class="sect"><h4>PAYMENT</h4>
+          <div class="opt" id="optMomo"><span class="momo">MoMo</span><div>Mobile Money<small>MTN, Telecel, AirtelTigo</small></div><span class="rad"><u id="radMomo"></u></span></div>
+          <div class="opt" id="optCod"><span class="cash"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#2BB3A6" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/></svg></span><div>Pay on delivery<small>Cash to the rider</small></div><span class="rad"></span></div>
+        </div>
+        <div class="sumRow"><span>Vitamin C Serum · 30 ml</span><b>GHS 220.00</b></div>
+        <div class="cta" id="ctaPay">Pay GHS 220.00</div>
+        <div class="sheetDim" id="dim"></div>
+        <div class="sheet" id="sheet">
+          <div class="grab"></div>
+          <div id="sheetAsk">
+            <div class="mm">MoMo</div>
+            <h3>Approve payment</h3>
+            <div class="amt">GHS 220.00</div>
+            <div class="to">to Sleek Connect</div>
+            <div class="pin"><i><u id="pin0"></u></i><i><u id="pin1"></u></i><i><u id="pin2"></u></i><i><u id="pin3"></u></i></div>
+          </div>
+          <div class="okWrap" id="okWrap"><div class="okRing" id="okRing"></div><div class="ok" id="okDot"><svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path id="okPath" d="M5 12.5l4.5 4.5L19 7.5" stroke-dasharray="24" /></svg></div><b>Payment confirmed</b></div>
+        </div>
+      </div>
+
+      <!-- tracking -->
+      <div class="scr" id="sTrack">
+        <div class="ttl">Your order</div>
+        <div class="map">
+          <svg width="348" height="380" viewBox="0 0 348 380">
+            <g stroke="#1E1E1E" stroke-width="14" fill="none" stroke-linecap="round">
+              <path d="M-10 70 H360"/><path d="M-10 200 H360"/><path d="M-10 320 H360"/><path d="M60 -10 V390"/><path d="M190 -10 V390"/><path d="M300 -10 V390"/><path d="M-10 380 L360 20"/>
+            </g>
+            <g fill="#141414"><rect x="78" y="88" width="94" height="94" rx="8"/><rect x="208" y="88" width="74" height="94" rx="8"/><rect x="78" y="218" width="94" height="84" rx="8"/><rect x="208" y="218" width="74" height="84" rx="8"/></g>
+            <path id="route" d="M40 345 C 60 300, 30 250, 90 205 S 200 210, 205 150 S 250 80, 300 60" fill="none" stroke="#2BB3A6" stroke-width="7" stroke-linecap="round"/>
+          </svg>
+          <div class="pinHome" style="left:278px;top:38px"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.2" stroke-linejoin="round"><path d="M4 11 12 4.2l8 6.8V19a1.8 1.8 0 0 1-1.8 1.8H5.8A1.8 1.8 0 0 1 4 19z"/></svg></div>
+          <div class="rider" id="rider"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17h6l3-7h3M9 10h4"/></svg></div>
+          <div class="eta" id="eta">Arriving in <b id="etaMin">12 min</b></div>
+        </div>
+        <div class="stages">
+          <div class="stg" id="st0"><span class="dot"><u></u></span>Confirmed</div>
+          <div class="stg" id="st1"><span class="dot"><u></u></span>Packed</div>
+          <div class="stg" id="st2"><span class="dot"><u></u></span>On the way</div>
+          <div class="stg" id="st3"><span class="dot"><u></u></span>Delivered</div>
+        </div>
+        <div class="code"><span>Delivery code</span><b>4821</b></div>
+        <div class="notif" id="notif"><img src="assets/logo-mark.png" /><div style="flex:1"><div class="t"><span>SLEEK CONNECT</span><span>now</span></div><b>Your order is on the way</b><p>Show code 4821 to your rider.</p></div></div>
+      </div>
+
+      <div class="tap" id="tap"></div>
+    </div>
+  </div>
+
+  <div id="fly" class="center"><img src="assets/vitamin-c-serum.jpg" /><div>Vitamin C Brightening Serum</div></div>
+
+  <div id="bothTitle"><span id="bt1">Shop on the web.</span><br /><span id="bt2"><em>Or in your pocket.</em></span></div>
+  <div id="pills"><span class="pill"><i></i>Mobile Money</span><span class="pill"><i></i>Pay on delivery</span><span class="pill"><i></i>Live tracking</span></div>
+
+  <svg id="wipe" class="full" width="1920" height="1080"><path id="wipePath" fill="none" stroke="url(#rg)" stroke-linecap="round" /></svg>
+
+  <div id="end">
+    <img id="endLogo" src="assets/logo-full.jpg" />
+    <div id="endUrl">www.sleekconnectstore.com</div>
+    <div id="endSub">Shop on the web or in the Sleek Connect app</div>
+    <svg id="endSwoosh" class="full" width="1920" height="1080"><path id="endPath" fill="none" stroke="url(#rg)" stroke-linecap="round" stroke-width="10" /></svg>
+  </div>
+
+  <div id="vignette"></div>
+  <canvas id="grain" width="480" height="270"></canvas>
+  <div id="flash"></div>
+</div>
+
+<script>
+/* ============================================================
+   Timing: 120 BPM, one beat = 0.5 s. Every cue below lands on a beat or half beat.
+   ============================================================ */
+const VERTICAL = location.hash.includes('vertical');
+if (VERTICAL) document.body.classList.add('vertical');
+const W = VERTICAL ? 1080 : 1920, H = VERTICAL ? 1920 : 1080;
+const DURATION = 30;
+
+const $ = (id) => document.getElementById(id);
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, k) => a + (b - a) * k;
+const E = {
+  lin: (x) => x,
+  outCubic: (x) => 1 - Math.pow(1 - x, 3),
+  inCubic: (x) => x * x * x,
+  inOutCubic: (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2),
+  outExpo: (x) => (x >= 1 ? 1 : 1 - Math.pow(2, -10 * x)),
+  inExpo: (x) => (x <= 0 ? 0 : Math.pow(2, 10 * x - 10)),
+  inOutExpo: (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x < 0.5 ? Math.pow(2, 20 * x - 10) / 2 : (2 - Math.pow(2, -20 * x + 10)) / 2),
+  outBack: (x) => { const c1 = 1.6, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); },
+  outElastic: (x) => (x <= 0 ? 0 : x >= 1 ? 1 : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * ((2 * Math.PI) / 3)) + 1),
+};
+/** 0..1 progress of t between a and b, eased. */
+const P = (t, a, b, e = E.outCubic) => e(clamp((t - a) / (b - a)));
+/** fade in over [a,b], hold, fade out over [c,d]. */
+const win = (t, a, b, c, d, ei = E.outCubic, eo = E.inCubic) => (t < c ? P(t, a, b, ei) : 1 - P(t, c, d, eo));
+
+function put(el, { x = 0, y = 0, s = 1, sx, sy, r = 0, o, rx = 0, ry = 0, z = 0, blur, persp } = {}) {
+  const sc = sx !== undefined || sy !== undefined ? `scale(${sx ?? s},${sy ?? s})` : `scale(${s})`;
+  el.style.transform = `${persp ? `perspective(${persp}px) ` : ''}translate3d(${x}px,${y}px,${z}px) rotateX(${rx}deg) rotateY(${ry}deg) rotate(${r}deg) ${sc}`;
+  if (o !== undefined) { el.style.opacity = o; el.style.visibility = o <= 0.001 ? 'hidden' : 'visible'; }
+  if (blur !== undefined) el.style.filter = blur > 0.05 ? `blur(${blur}px)` : 'none';
+}
+const show = (el, o) => { el.style.opacity = o; el.style.visibility = o <= 0.001 ? 'hidden' : 'visible'; };
+
+/* ---------- layout: where things sit in each format ---------- */
+const L = VERTICAL
+  ? { deskX: 540, deskY: 1270, deskS: 0.8, phoneX: 540, phoneY: 1300, phoneS: 1.08, capX: 80, capY: 250, stepsX: 540 - 175, stepsY: 1840 }
+  : { deskX: 1270, deskY: 560, deskS: 0.97, phoneX: 1300, phoneY: 545, phoneS: 1, capX: 140, capY: 300, stepsX: 140, stepsY: 900 };
+
+/* ---------- grain ---------- */
+const g = $('grain'), gx = g.getContext('2d');
+const grainFrames = [];
+for (let f = 0; f < 6; f++) {
+  const img = gx.createImageData(480, 270);
+  let seed = 1234 + f * 999;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  for (let i = 0; i < img.data.length; i += 4) { const v = rnd() * 255; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; }
+  grainFrames.push(img);
+}
+g.style.width = W + 'px'; g.style.height = H + 'px';
+
+/* ---------- ribbon paths (built for the current format) ---------- */
+function swoosh(y0, amp) {
+  // A wide S-curve like the logo's swoosh, from off-screen left to off-screen right.
+  return `M ${-200} ${y0 + amp} C ${W * 0.25} ${y0 + amp * 1.6}, ${W * 0.35} ${y0 - amp * 1.2}, ${W * 0.55} ${y0 - amp * 0.2} S ${W * 0.85} ${y0 + amp * 0.9}, ${W + 200} ${y0 - amp}`;
+}
+$('ribbons').setAttribute('width', W); $('ribbons').setAttribute('height', H);
+$('wipe').setAttribute('width', W); $('wipe').setAttribute('height', H);
+$('endSwoosh').setAttribute('width', W); $('endSwoosh').setAttribute('height', H);
+const rHook = $('rHook'), rHook2 = $('rHook2'), wipe = $('wipePath'), endPath = $('endPath');
+rHook.setAttribute('d', swoosh(H * 0.5, VERTICAL ? 120 : 140)); rHook.setAttribute('stroke-width', 26);
+rHook2.setAttribute('d', swoosh(H * 0.5 + 60, VERTICAL ? 110 : 120)); rHook2.setAttribute('stroke-width', 8);
+wipe.setAttribute('d', swoosh(H * 0.5, VERTICAL ? 260 : 200)); wipe.setAttribute('stroke-width', VERTICAL ? 2600 : 1500);
+const hookLen = rHook.getTotalLength(), hook2Len = rHook2.getTotalLength(), wipeLen = wipe.getTotalLength();
+const route = $('route'), routeLen = route.getTotalLength();
+
+/* ---------- static positions that depend on the format ---------- */
+['cap0', 'cap1', 'cap2', 'cap3', 'cap4'].forEach((id) => { $(id).style.left = L.capX + 'px'; $(id).style.top = L.capY + 'px'; });
+$('steps').style.left = L.stepsX + 'px'; $('steps').style.top = L.stepsY + 'px';
+
+/* ---------- the frame ---------- */
+function seek(t) {
+  t = clamp(t, 0, DURATION);
+
+  /* background: slow drift, colour shifts with the story */
+  const drift = t / DURATION;
+  put($('glowA'), { x: lerp(-300, W - 600, drift) + Math.sin(t * 0.6) * 80, y: lerp(H * 0.55, H * 0.1, drift) });
+  put($('glowB'), { x: lerp(W - 500, -200, drift), y: lerp(-200, H * 0.5, drift) + Math.cos(t * 0.5) * 60 });
+  gx.putImageData(grainFrames[Math.floor(t * 30) % 6], 0, 0);
+
+  /* ======================= HOOK 0–3 s ======================= */
+  const hookOn = t < 3.6;
+  show($('hook'), hookOn ? 1 : 0);
+  // the thread draws itself, then thins out as the words land
+  const rd = P(t, 0.05, 1.1, E.inOutCubic);
+  rHook.style.strokeDasharray = hookLen; rHook.style.strokeDashoffset = hookLen * (1 - rd);
+  rHook2.style.strokeDasharray = hook2Len; rHook2.style.strokeDashoffset = hook2Len * (1 - P(t, 0.2, 1.3, E.inOutCubic));
+  const rOut = P(t, 2.6, 3.2, E.inCubic);
+  rHook.style.opacity = rHook2.style.opacity = t < 3.3 ? 1 - rOut : 0;
+  rHook.setAttribute('stroke-width', 26 * (1 - 0.6 * P(t, 1.0, 1.6)));
+
+  const beats = [0.9, 1.4, 1.9, 2.4];
+  for (let i = 0; i < 4; i++) {
+    const a = beats[i], b = beats[i] + 0.5;
+    const w = $('hw' + i), c = $('hc' + i);
+    const inK = P(t, a, a + 0.28, E.outExpo);
+    const outK = i < 3 ? P(t, b - 0.12, b + 0.02, E.inCubic) : P(t, 2.82, 2.96, E.inCubic);
+    const vis = t >= a && (i < 3 ? t < b + 0.02 : t < 2.96);
+    const wx = VERTICAL ? W / 2 - 40 : 170, wy = VERTICAL ? H * 0.68 : H / 2 - 100;
+    w.style.left = '0px';
+    const wWidth = w.offsetWidth;
+    put(w, {
+      x: VERTICAL ? wx - wWidth / 2 + 40 : wx,
+      y: wy + lerp(120, 0, inK) - outK * 80,
+      s: lerp(1.25, 1, inK),
+      o: vis ? inK * (1 - outK) : 0,
+      blur: (1 - inK) * 12 + outK * 10,
+    });
+    const tilt = [-6, 5, -4, 6][i];
+    const cx = VERTICAL ? W / 2 : W - 560, cy = VERTICAL ? H * 0.36 : H / 2;
+    put(c, {
+      x: cx + lerp(260, 0, inK) - outK * 140,
+      y: cy + lerp(40, 0, inK),
+      r: lerp(tilt * 3, tilt, inK),
+      s: lerp(0.7, 1, inK) * (1 + 0.04 * P(t, a, a + 0.5, E.lin)),
+      o: vis ? Math.min(1, inK * 1.3) * (1 - outK) : 0,
+    });
+    c.style.marginLeft = '-220px'; c.style.marginTop = '-280px';
+  }
+  // "All in one place."
+  const hl = $('hookLine');
+  const hlIn = P(t, 2.92, 3.2, E.outExpo);
+  hl.style.left = W / 2 + 'px'; hl.style.top = H / 2 + 'px';
+  if (VERTICAL) hl.style.fontSize = '130px';
+  const hlOut = P(t, 3.3, 3.55, E.inExpo);
+  put(hl, { x: -hl.offsetWidth / 2, y: -hl.offsetHeight / 2 + lerp(60, 0, hlIn), s: lerp(0.9, 1, hlIn) * (1 + hlOut * 0.6), o: t < 2.9 ? 0 : hlIn * (1 - hlOut), blur: hlOut * 18 });
+
+  /* ======================= CAPTIONS ======================= */
+  const capTimes = [[3.5, 6.0], [6.0, 10.0], [10.0, 14.0], [14.0, 18.5], [18.5, 24.0]];
+  capTimes.forEach(([a, b], i) => {
+    const el = $('cap' + i);
+    const k = P(t, a + 0.05, a + 0.6, E.outExpo), out = i < 4 ? P(t, b - 0.05, b + 0.25, E.inCubic) : P(t, 23.7, 24.1, E.inCubic);
+    const on = t >= a && t < b + 0.3;
+    show(el, on ? 1 : 0);
+    if (!on) return;
+    el.querySelector('.eyebrow').style.opacity = k * (1 - out);
+    put(el.querySelector('.eyebrow'), { x: lerp(-30, 0, k) });
+    el.querySelectorAll('.ln > span').forEach((s, j) => {
+      const kk = P(t, a + 0.12 + j * 0.1, a + 0.75 + j * 0.1, E.outExpo);
+      put(s, { y: lerp(110, 0, kk) - out * 110 });
+    });
+    const pk = P(t, a + 0.35, a + 0.9);
+    put(el.querySelector('p'), { y: lerp(20, 0, pk), o: pk * (1 - out) });
+  });
+  // progress segments
+  const stOn = win(t, 3.4, 3.8, 23.8, 24.2);
+  put($('steps'), { o: stOn, y: lerp(20, 0, P(t, 3.4, 3.9)) });
+  $('steps').querySelectorAll('u').forEach((u, i) => {
+    const [a, b] = capTimes[i];
+    u.style.width = 100 * P(t, a, b, E.lin) + '%';
+  });
+
+  /* ======================= DESKTOP ======================= */
+  const desk = $('desk');
+  const dIn = P(t, 3.45, 4.3, E.outExpo);
+  // Scene 2 -> 3 hand-off: the laptop slides away as the card flies into the phone.
+  const dAway = P(t, 9.4, 10.4, E.inOutCubic);
+  // It comes back for the "both" scene.
+  const dBack = P(t, 24.0, 24.9, E.outExpo);
+  const dGone = P(t, 26.8, 27.2, E.inCubic);
+  let dx = L.deskX, dy = L.deskY, ds = L.deskS, drx = 0, dry = 0, dO = 0;
+  if (t < 10.6) {
+    dx = L.deskX + (VERTICAL ? 0 : 0) - dAway * (VERTICAL ? 1300 : 1700);
+    dy = L.deskY + lerp(500, 0, dIn);
+    ds = L.deskS * lerp(0.82, 1, dIn) * (1 + 0.02 * P(t, 4, 9.4, E.lin)) * (1 - 0.25 * dAway);
+    drx = lerp(28, 0, dIn) + 0;
+    dry = lerp(0, -4, P(t, 4, 9.4, E.inOutCubic)) + dAway * 20;
+    dO = t < 3.45 ? 0 : 1;
+  } else if (t >= 24.0) {
+    dx = VERTICAL ? 540 : lerp(-700, 760, dBack);
+    dy = VERTICAL ? lerp(1900, 1180, dBack) : 615;
+    ds = (VERTICAL ? 0.7 : 0.74) * (1 + 0.02 * P(t, 24.5, 27, E.lin));
+    dry = VERTICAL ? 0 : lerp(25, 8, dBack);
+    drx = VERTICAL ? lerp(20, 4, dBack) : 0;
+    dO = 1 - dGone;
+  }
+  put(desk, { x: dx, y: dy, s: ds, rx: drx, ry: dry, o: dO, persp: 2400 });
+
+  // home page
+  const home = $('pgHome'), shop = $('pgShop'), order = $('pgOrder');
+  const toShop = P(t, 6.0, 6.6, E.inOutExpo);
+  put(home, { x: -toShop * 1200, o: 1 });
+  put(shop, { x: (1 - toShop) * 1200, o: 1 });
+  show(order, t >= 24 ? 1 : 0);
+  ['h1a', 'h1b'].forEach((id, j) => put($(id), { y: lerp(90, 0, P(t, 3.5 + j * 0.12, 4.2 + j * 0.12, E.outExpo)) }));
+  put($('hk'), { o: P(t, 3.4, 3.9), x: lerp(-20, 0, P(t, 3.4, 3.9)) });
+  put($('hp'), { o: P(t, 3.8, 4.3), y: lerp(16, 0, P(t, 3.8, 4.3)) });
+  put($('hbtn'), { o: P(t, 3.95, 4.4), y: lerp(16, 0, P(t, 3.95, 4.4)) });
+  put($('blobB'), { s: lerp(0.3, 1, P(t, 3.5, 4.3, E.outBack)), r: t * 6 });
+  put($('blobImg'), { s: lerp(1.25, 1.03, P(t, 3.4, 5.5, E.outCubic)) });
+  put($('fc1'), { y: lerp(60, 0, P(t, 4.1, 4.7, E.outBack)) + Math.sin(t * 2.2) * 6, o: P(t, 4.1, 4.5) });
+  put($('fc2'), { y: lerp(60, 0, P(t, 4.3, 4.9, E.outBack)) + Math.cos(t * 2) * 6, o: P(t, 4.3, 4.7) });
+  // nav underline after the click
+  put($('navUl'), { sx: P(t, 5.75, 6.1, E.outExpo), sy: 1 });
+  $('navBeauty').classList.toggle('on', t >= 5.75);
+  // shop grid cards
+  for (let i = 0; i < 4; i++) {
+    const k = P(t, 6.3 + i * 0.09, 6.9 + i * 0.09, E.outExpo);
+    let lift = 0, sc = 1;
+    if (i === 0) { lift = -14 * P(t, 7.75, 8.0, E.outBack); sc = 1 + 0.04 * P(t, 7.75, 8.0) - 0.06 * P(t, 8.45, 8.55) + 0.06 * P(t, 8.55, 8.75, E.outBack); }
+    put($('cd' + i), { y: lerp(80, 0, k) + lift, s: sc, o: i === 0 && t > 8.75 ? 0 : k });
+    $('cd0').style.boxShadow = `0 ${20 * -lift / 14}px ${40 * -lift / 14}px rgba(11,31,58,${0.18 * -lift / 14})`;
+  }
+
+  // cursor (inside the browser's page area)
+  const cur = $('cursor');
+  const cPath = [
+    [4.4, 980, 640], [5.6, 228, 38],   // to "Beauty"
+    [6.9, 600, 420], [7.75, 160, 300], // over the serum card
+    [8.7, 168, 306],
+  ];
+  let cxp = 980, cyp = 640;
+  for (let i = 0; i < cPath.length - 1; i++) {
+    const [t0, x0, y0] = cPath[i], [t1, x1, y1] = cPath[i + 1];
+    if (t >= t0) { const k = P(t, t0, t1, E.inOutCubic); cxp = lerp(x0, x1, k); cyp = lerp(y0, y1, k); }
+  }
+  const press = (tc) => 1 - 0.18 * Math.sin(Math.PI * P(t, tc - 0.08, tc + 0.12, E.lin));
+  put(cur, { x: cxp, y: cyp, s: press(5.75) * press(8.5), o: win(t, 4.4, 4.7, 8.7, 8.9) });
+  const ringK = t < 7 ? P(t, 5.75, 6.25) : P(t, 8.5, 9.0);
+  put($('cRing'), { s: lerp(0.3, 1.6, ringK), o: (t >= 5.75 && t < 6.25) || (t >= 8.5 && t < 9.0) ? 1 - ringK : 0 });
+
+  // the serum card flies out of the laptop into the phone (match cut)
+  const fly = $('fly');
+  const fK = P(t, 8.75, 10.3, E.inOutExpo);
+  const deskCardX = L.deskX + (-600 + 44 + 128) * L.deskS, deskCardY = L.deskY + (-375 + 46 + 70 + 30 + 160 + 125 + 40) * L.deskS;
+  const phoneImgX = L.phoneX, phoneImgY = L.phoneY - 425 + 13 + 60 + 60 + 165;
+  put(fly, {
+    x: lerp(deskCardX, phoneImgX, fK) + Math.sin(fK * Math.PI) * (VERTICAL ? -160 : -60),
+    y: lerp(deskCardY, phoneImgY, fK) - Math.sin(fK * Math.PI) * (VERTICAL ? 160 : 220),
+    s: lerp(1, 1.4, fK) * (1 + Math.sin(fK * Math.PI) * 0.25),
+    r: Math.sin(fK * Math.PI) * -10,
+    o: t >= 8.75 && t < 10.45 ? 1 - P(t, 10.25, 10.45) : 0,
+  });
+
+  /* ======================= PHONE ======================= */
+  const phone = $('phone');
+  const pIn = P(t, 9.4, 10.4, E.outExpo);
+  const pOut = P(t, 26.8, 27.2, E.inCubic);
+  let px = L.phoneX, py = L.phoneY, ps = L.phoneS, pry = 0, prz = 0;
+  if (t < 24) {
+    px = L.phoneX + lerp(VERTICAL ? 0 : 900, 0, pIn);
+    py = L.phoneY + (VERTICAL ? lerp(900, 0, pIn) : 0);
+    pry = lerp(-35, 0, pIn) + Math.sin(t * 0.8) * 2.5;
+    prz = Math.sin(t * 0.6) * 1.2;
+    ps = L.phoneS * (1 + 0.025 * Math.sin(t * 0.5));
+    // a small push-in on the payment and delivery moments
+    ps *= 1 + 0.06 * win(t, 16.3, 16.8, 18.0, 18.5, E.inOutCubic, E.inOutCubic) + 0.05 * win(t, 22.6, 23.1, 23.6, 24.0, E.inOutCubic, E.inOutCubic);
+  } else {
+    const k = P(t, 24.0, 24.9, E.outExpo);
+    px = VERTICAL ? lerp(L.phoneX, 780, k) : lerp(L.phoneX, 1330, k);
+    py = VERTICAL ? lerp(L.phoneY, 1270, k) : lerp(L.phoneY, 635, k);
+    ps = VERTICAL ? lerp(L.phoneS, 0.72, k) : lerp(1, 0.7, k);
+    pry = VERTICAL ? 0 : lerp(0, -10, k);
+  }
+  put(phone, { x: px, y: py, s: ps, ry: pry, r: prz, o: t < 9.4 ? 0 : 1 - pOut, persp: 2000 });
+
+  // phone screens: product -> checkout -> tracking
+  const toCheckout = P(t, 13.9, 14.4, E.inOutExpo);
+  const toTrack = P(t, 18.4, 18.9, E.inOutExpo);
+  put($('sProduct'), { x: -toCheckout * 384, o: t < 14.5 ? 1 : 0 });
+  put($('sCheckout'), { x: (1 - toCheckout) * 384 - toTrack * 384, o: t > 13.8 && t < 19 ? 1 : 0 });
+  put($('sTrack'), { x: (1 - toTrack) * 384, o: t > 18.3 ? 1 : 0 });
+
+  // product page
+  put($('pImg'), { s: lerp(1.08, 1, P(t, 10.0, 11.0)) });
+  put($('pBody'), { y: lerp(40, 0, P(t, 10.2, 10.9, E.outExpo)), o: P(t, 10.2, 10.7) });
+  const sizeK = P(t, 11.0, 11.3, E.outExpo);
+  put($('sizeFill'), { s: sizeK, o: 1 });
+  $('sizeTxt').style.color = sizeK > 0.5 ? '#000' : '#F2F2F2';
+  put($('ctaAdd'), { s: 1 - 0.06 * Math.sin(Math.PI * P(t, 12.0, 12.25, E.lin)), y: lerp(100, 0, P(t, 10.4, 10.9, E.outExpo)) });
+  // a mini product flies into the bag
+  const mf = P(t, 12.15, 12.75, E.inOutCubic);
+  put($('miniFly'), { x: lerp(192, 340, mf), y: lerp(250, 30, mf) - Math.sin(mf * Math.PI) * 90, s: lerp(1.6, 0.35, mf), r: mf * 30, o: t >= 12.15 && t < 12.8 ? 1 : 0 });
+  put($('badge'), { s: t < 12.75 ? 0 : E.outElastic(P(t, 12.75, 13.4, E.lin)), o: t < 12.75 ? 0 : 1 });
+  put($('bagBtn'), { s: 1 + 0.18 * Math.sin(Math.PI * P(t, 12.72, 12.95, E.lin)) });
+  put($('toast'), { y: lerp(40, 0, P(t, 12.8, 13.1, E.outBack)), o: win(t, 12.8, 13.0, 13.7, 13.9) });
+
+  // checkout: typing the address
+  const addr = 'East Legon, Accra';
+  const typed = Math.round(addr.length * P(t, 14.5, 15.3, E.lin));
+  $('addrTxt').textContent = addr.slice(0, typed);
+  $('caret').style.opacity = t < 15.6 ? (Math.floor(t * 4) % 2 === 0 || (t > 14.5 && t < 15.3) ? 1 : 0) : 0;
+  $('addr').classList.toggle('on', t < 15.6);
+  const momoK = P(t, 15.75, 16.0, E.outBack);
+  put($('radMomo'), { s: momoK, o: t >= 15.75 ? 1 : 0 });
+  $('optMomo').style.borderColor = t >= 15.75 ? '#2BB3A6' : '#262626';
+  put($('ctaPay'), { s: 1 - 0.06 * Math.sin(Math.PI * P(t, 16.25, 16.5, E.lin)) });
+  // MoMo sheet
+  const sh = P(t, 16.5, 16.95, E.outExpo), shOut = P(t, 18.1, 18.4, E.inCubic);
+  show($('dim'), (t >= 16.5 ? sh : 0) * (1 - shOut));
+  put($('sheet'), { y: lerp(460, 0, sh) + shOut * 460, o: t >= 16.5 && t < 18.45 ? 1 : 0 });
+  for (let i = 0; i < 4; i++) put($('pin' + i), { s: E.outBack(P(t, 16.9 + i * 0.15, 17.05 + i * 0.15, E.lin)), o: t >= 16.9 + i * 0.15 ? 1 : 0 });
+  const okK = P(t, 17.5, 17.85, E.outBack);
+  show($('sheetAsk'), 1 - P(t, 17.45, 17.6));
+  put($('okWrap'), { s: lerp(0.6, 1, okK), o: t >= 17.5 ? P(t, 17.5, 17.65) : 0 });
+  $('okPath').style.strokeDashoffset = 24 * (1 - P(t, 17.6, 17.95, E.outCubic));
+  put($('okRing'), { s: lerp(1, 2.2, P(t, 17.55, 18.2)), o: t >= 17.55 ? 1 - P(t, 17.55, 18.2) : 0 });
+
+  // tracking
+  const rK = P(t, 18.9, 19.7, E.inOutCubic);
+  route.style.strokeDasharray = routeLen; route.style.strokeDashoffset = routeLen * (1 - rK);
+  const ride = P(t, 19.9, 22.9, E.inOutCubic);
+  const pt = route.getPointAtLength(routeLen * ride);
+  put($('rider'), { x: pt.x, y: pt.y, s: t < 19.7 ? 0 : E.outBack(P(t, 19.7, 20.0, E.lin)) * (1 - 0.15 * P(t, 22.9, 23.2)), o: t < 23.3 ? 1 : 1 - P(t, 23.3, 23.5) });
+  $('etaMin').textContent = t < 22.9 ? Math.max(1, Math.ceil(12 * (1 - ride))) + ' min' : 'Arrived';
+  const stT = [18.9, 19.2, 19.9, 22.95];
+  stT.forEach((s, i) => {
+    const el = $('st' + i), k = P(t, s, s + 0.25, E.outBack);
+    el.classList.toggle('done', t >= s);
+    put(el.querySelector('u'), { s: k, o: t >= s ? 1 : 0 });
+    const pulse = i === 2 && t > 19.9 && t < 22.95 ? 1 + 0.12 * Math.sin((t - 19.9) * 8) : 1;
+    put(el.querySelector('.dot'), { s: pulse });
+  });
+  put($('notif'), { y: lerp(-140, 0, P(t, 20.4, 20.8, E.outExpo)) - P(t, 22.2, 22.5, E.inCubic) * 160, o: t >= 20.4 && t < 22.55 ? 1 : 0 });
+
+  // phone taps
+  const taps = [[11.0, 110, 548], [12.0, 192, 762], [15.75, 330, 323], [16.25, 192, 762], [16.9, 130, 600], [17.05, 250, 600], [17.2, 160, 610], [17.35, 220, 600]];
+  let tapO = 0, tapS = 0, tx = 0, ty = 0;
+  taps.forEach(([tt, x, y]) => {
+    if (t >= tt - 0.05 && t < tt + 0.35) { const k = P(t, tt - 0.05, tt + 0.35, E.outCubic); tapO = 1 - k; tapS = lerp(0.4, 1.3, k); tx = x; ty = y; }
+  });
+  put($('tap'), { x: tx, y: ty, s: tapS, o: tapO });
+
+  /* ======================= BOTH 24–27 s ======================= */
+  const bt = $('bothTitle');
+  bt.style.left = W / 2 + 'px'; bt.style.top = (VERTICAL ? 300 : 52) + 'px';
+  if (VERTICAL) bt.style.fontSize = '96px';
+  const b1 = P(t, 24.3, 24.8, E.outExpo), b2 = P(t, 24.6, 25.1, E.outExpo), bOut = P(t, 26.7, 27.0, E.inCubic);
+  show(bt, t >= 24.2 && t < 27.1 ? 1 : 0);
+  put(bt, { x: -bt.offsetWidth / 2, o: 1 - bOut });
+  put($('bt1'), { y: lerp(40, 0, b1), o: b1 });
+  put($('bt2'), { y: lerp(40, 0, b2), o: b2 });
+  $('bt1').style.display = $('bt2').style.display = 'inline-block';
+  const pills = $('pills');
+  pills.style.left = W / 2 + 'px'; pills.style.top = (VERTICAL ? 600 : 985) + 'px';
+  if (VERTICAL) { pills.style.flexDirection = 'column'; pills.style.alignItems = 'center'; }
+  const pk = P(t, 25.2, 25.7, E.outBack);
+  put(pills, { x: -pills.offsetWidth / 2, y: lerp(30, 0, pk), o: t < 25.2 ? 0 : pk * (1 - bOut) });
+
+  /* ======================= WIPE + END CARD ======================= */
+  const wK = P(t, 26.75, 27.35, E.inOutExpo);
+  wipe.style.strokeDasharray = wipeLen; wipe.style.strokeDashoffset = wipeLen * (1 - wK);
+  show($('wipe'), t >= 26.75 && t < 27.5 ? 1 : 0);
+  const end = $('end');
+  show(end, t >= 27.3 ? 1 : 0);
+  const logo = $('endLogo');
+  const lw = VERTICAL ? 600 : 470;
+  logo.style.width = lw + 'px';
+  const lk = P(t, 27.35, 28.2, E.outExpo);
+  const lh = lw * (735 / 580);
+  logo.style.left = (W / 2 - lw / 2) + 'px';
+  logo.style.top = (VERTICAL ? 380 : 60) + 'px';
+  put(logo, { s: lerp(0.86, 1, lk) * (1 + 0.025 * P(t, 28.2, 30, E.lin)), o: lk, blur: (1 - lk) * 14, y: lerp(30, 0, lk) });
+  const url = $('endUrl'), sub = $('endSub');
+  const uk = P(t, 28.0, 28.5, E.outExpo), sk = P(t, 28.25, 28.75, E.outExpo);
+  const baseY = (VERTICAL ? 380 : 60) + lh + (VERTICAL ? 60 : 24);
+  url.style.left = W / 2 + 'px'; url.style.top = baseY + 'px';
+  if (VERTICAL) url.style.fontSize = '54px';
+  put(url, { x: -url.offsetWidth / 2, y: lerp(24, 0, uk), o: uk });
+  sub.style.left = W / 2 + 'px'; sub.style.top = baseY + (VERTICAL ? 86 : 64) + 'px';
+  if (VERTICAL) sub.style.fontSize = '30px';
+  put(sub, { x: -sub.offsetWidth / 2, y: lerp(24, 0, sk), o: sk });
+  // a thin swoosh underlines the URL
+  endPath.setAttribute('d', `M ${W / 2 - (VERTICAL ? 420 : 380)} ${baseY + (VERTICAL ? 210 : 140)} C ${W / 2 - 150} ${baseY + (VERTICAL ? 250 : 175)}, ${W / 2 + 150} ${baseY + (VERTICAL ? 170 : 110)}, ${W / 2 + (VERTICAL ? 420 : 380)} ${baseY + (VERTICAL ? 200 : 135)}`);
+  const eLen = endPath.getTotalLength();
+  endPath.style.strokeDasharray = eLen; endPath.style.strokeDashoffset = eLen * (1 - P(t, 28.4, 29.2, E.inOutCubic));
+
+  // flashes on the two big hits
+  show($('flash'), t >= 2.92 && t < 3.25 ? 0.16 * (1 - P(t, 2.92, 3.25)) : 0);
+  $('flash').style.background = '#fff';
+
+  /* vignette only on dark scenes */
+  show($('vignette'), t < 27.3 ? 1 : 0);
+}
+
+/* ---------- preview controls ---------- */
+window.seek = seek;
+window.DURATION = DURATION;
+window.W = W; window.H = H;
+let playing = !location.search.includes('render'), t0 = performance.now(), cur = 0;
+function fit() {
+  if (location.search.includes('render')) return;
+  const s = Math.min(innerWidth / W, innerHeight / H);
+  $('stage').style.transform = `scale(${s})`;
+}
+addEventListener('resize', fit);
+addEventListener('keydown', (e) => {
+  if (e.code === 'Space') { playing = !playing; t0 = performance.now() - cur * 1000; }
+  if (e.code === 'ArrowRight') { cur = Math.min(DURATION, cur + 0.5); t0 = performance.now() - cur * 1000; seek(cur); }
+  if (e.code === 'ArrowLeft') { cur = Math.max(0, cur - 0.5); t0 = performance.now() - cur * 1000; seek(cur); }
+});
+function loop() {
+  if (playing) { cur = ((performance.now() - t0) / 1000) % DURATION; seek(cur); }
+  requestAnimationFrame(loop);
+}
+document.fonts.ready.then(() => { fit(); seek(0); if (!location.search.includes('render')) loop(); window.READY = true; });
+</script>
+</body>
+</html>

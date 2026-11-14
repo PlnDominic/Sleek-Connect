@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { Icon } from '@/components/Icon';
 import { Logo } from '@/components/Logo';
 import { SiteFooter } from '@/components/SiteFooter';
+import { getDeliveryConfig } from '@/lib/catalog';
+import { getPaymentProvider } from '@/lib/payments';
 import { CheckoutForm } from './CheckoutForm';
 import styles from './checkout.module.css';
 
@@ -9,7 +12,10 @@ export const metadata: Metadata = {
   title: 'Checkout',
 };
 
-export default function CheckoutPage() {
+export default async function CheckoutPage() {
+  const delivery = await getDeliveryConfig();
+  const provider = getPaymentProvider();
+
   return (
     <div className={styles.page}>
       <header className={styles.header}>
@@ -17,7 +23,9 @@ export default function CheckoutPage() {
           <Logo size={22} />
           <ol aria-label="Checkout steps" className={styles.steps}>
             <li className={styles.stepDone}>
-              <span className={styles.stepMark}>✓</span>Bag
+              <Link href="/bag" className={styles.stepLink}>
+                <span className={styles.stepMark}>✓</span>Bag
+              </Link>
             </li>
             <li aria-hidden="true" className={styles.stepSep}>
               ›
@@ -38,7 +46,7 @@ export default function CheckoutPage() {
           </span>
         </div>
       </header>
-      <CheckoutForm />
+      <CheckoutForm delivery={delivery} payments={{ card: provider?.supportsCard ?? false, hosted: provider?.hostedCheckout ?? false }} />
       <SiteFooter />
     </div>
   );
