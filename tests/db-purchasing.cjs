@@ -76,7 +76,7 @@ const stamp = Date.now();
   const bal = (await fin.rpc('admin_supplier_balances')).data.find((b) => b.supplier_id === supplier);
   assert(Number(bal.received_cost_ghs) === 10 * 12.5 + 3 * 20 + 2 * 10 && Number(bal.owed_ghs) === Number(bal.received_cost_ghs), 'the supplier balance is what was received at cost');
   assert((await errOf(ops.rpc('admin_supplier_balances')))?.code === '42501', 'operations staff cannot see what is owed');
-  const paid = await fin.rpc('admin_record_supplier_payment', { p_supplier_id: supplier, p_amount: 100, p_method: 'momo', p_reference: 'MM1' });
+  const paid = await fin.rpc('admin_record_supplier_payment', { p_supplier_id: supplier, p_amount: 100, p_paid_on: null, p_method: 'momo', p_reference: 'MM1', p_note: null });
   assert(!paid.error, 'finance can record a payment');
   assert(Number((await fin.rpc('admin_supplier_balances')).data.find((b) => b.supplier_id === supplier).owed_ghs) === Number(bal.owed_ghs) - 100, 'and the amount owed goes down');
   assert((await errOf(fin.rpc('admin_record_supplier_payment', { p_supplier_id: supplier, p_amount: 0, p_method: 'momo' })))?.message.includes('amount'), 'a payment needs an amount');
