@@ -9,7 +9,7 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
 function* sources(dir) {
   for (const entry of fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true })) {
-    const rel = path.join(dir, entry.name);
+    const rel = path.posix.join(dir, entry.name); // forward slashes on Windows too, so the endsWith/includes checks below match
     if (entry.isDirectory()) yield* sources(rel);
     else if (/\.(ts|tsx)$/.test(entry.name)) yield rel;
   }

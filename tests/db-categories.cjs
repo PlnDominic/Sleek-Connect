@@ -28,11 +28,6 @@ const stamp = Date.now();
   assert(!(await cat.rpc('admin_save_category', { p: { id: 'nail-care', name: 'Nails & Polish', department: 'beauty' } })).error, 'a category can be renamed');
   assert(sql(`select name from public.categories where id = 'nail-care'`) === 'Nails & Polish', 'the new name is saved');
 
-  // The store sells general merchandise: other departments exist, and a new category starts with the neutral picture kind
-  const phones = await cat.rpc('admin_save_category', { p: { name: 'Phones', department: 'electronics' } });
-  assert(!phones.error && sql(`select department || '|' || kind from public.categories where id = '${phones.data}'`) === 'electronics|box', 'categories can go in the electronics department, with the neutral picture kind');
-  assert(!(await cat.rpc('admin_save_category', { p: { name: 'Gym Gear', department: 'sports' } })).error && !(await cat.rpc('admin_save_category', { p: { name: 'Gifts', department: 'general' } })).error, 'and in sports and general');
-
   // Order
   const before = sql(`select string_agg(id, ',' order by sort_order, name) from public.categories`).split(',');
   assert(before[before.length - 1] === 'nail-care', 'a new category goes last');
@@ -40,6 +35,11 @@ const stamp = Date.now();
   const after = sql(`select string_agg(id, ',' order by sort_order, name) from public.categories`).split(',');
   assert(after[after.length - 2] === 'nail-care' && after[after.length - 1] === before[before.length - 2], 'and swaps places with the one before it');
   assert(!(await cat.rpc('admin_move_category', { p_id: after[0], p_direction: -1 })).error, 'moving the first one earlier does nothing');
+
+  // The store sells general merchandise: other departments exist, and a new category starts with the neutral picture kind
+  const phones = await cat.rpc('admin_save_category', { p: { name: 'Phones', department: 'electronics' } });
+  assert(!phones.error && sql(`select department || '|' || kind from public.categories where id = '${phones.data}'`) === 'electronics|box', 'categories can go in the electronics department, with the neutral picture kind');
+  assert(!(await cat.rpc('admin_save_category', { p: { name: 'Gym Gear', department: 'sports' } })).error && !(await cat.rpc('admin_save_category', { p: { name: 'Gifts', department: 'general' } })).error, 'and in sports and general');
 
   // Department and delete rules
   const used = sql(`select category_id from public.products where category_id is not null limit 1`);

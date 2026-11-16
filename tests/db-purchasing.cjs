@@ -15,8 +15,8 @@ const stamp = Date.now();
     people[k] = (await staffSession(`${k}+${stamp}@example.com`)).client;
   }
   const { boss, ops, fin, cat } = people;
-  const sku = sql(`select p.id || '|' || s.code from public.products p join public.product_sizes s on s.product_id = p.id
-                   where p.department <> 'beauty' and p.kids_filter is distinct from 'bath' limit 1`);
+  const sku = sql(`select p.id || '|' || i.size_code from public.products p join public.inventory_levels i on i.product_id = p.id
+                   where p.department <> 'beauty' and p.kids_filter is distinct from 'bath' order by p.slug limit 1`);
   const [productId, size] = sku.split('|');
   const supplier = (await boss.rpc('admin_save_supplier', { p: { name: `PO Supplier ${stamp}` } })).data;
   const line = (qty, cost) => ({ product_id: productId, size_code: size, quantity: qty, unit_cost_ghs: cost });

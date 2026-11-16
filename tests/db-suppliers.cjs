@@ -45,7 +45,7 @@ const stamp = Date.now();
   assert(after.phone === '0241111111' && after.tin === 'C0001234567', 'and that leaves the tax number alone');
 
   // Receiving stock from a supplier
-  const sku = sql(`select p.id || '|' || s.code from public.products p join public.product_sizes s on s.product_id = p.id where p.department <> 'beauty' and p.kids_filter is distinct from 'bath' limit 1`);
+  const sku = sql(`select p.id || '|' || i.size_code from public.products p join public.inventory_levels i on i.product_id = p.id where p.department <> 'beauty' and p.kids_filter is distinct from 'bath' order by p.slug limit 1`);
   const [productId, size] = sku.split('|');
   assert((await errOf(cat.rpc('admin_receive_stock_from', { p_product_id: productId, p_size_code: size, p_batch_code: 'T-1', p_expires_on: null, p_quantity: 5, p_supplier_id: id })))?.code === '42501', 'catalogue staff cannot receive stock');
   assert((await errOf(ops.rpc('admin_receive_stock_from', { p_product_id: productId, p_size_code: size, p_batch_code: 'T-1', p_expires_on: null, p_quantity: 5, p_supplier_id: '00000000-0000-0000-0000-000000000000' })))?.message.includes('Choose a supplier'), 'the supplier must exist');
