@@ -19,7 +19,7 @@ const png = Buffer.from('89504e470d0a1a0a0000000d4948445200000001000000010806000
   const id = 'skincare';
 
   assert((await errOf(anon.rpc('admin_set_category_photo', { p_id: id })))?.code !== undefined, 'guests cannot change a category photo');
-  assert((await errOf(ops.rpc('admin_set_category_photo', { p_id: id })))?.code === '42501', 'operations staff cannot either');
+  assert((await errOf(ops.rpc('admin_set_category_photo', { p_id: id, p_path: null })))?.code === '42501', 'operations staff cannot either');
   assert((await errOf(cat.rpc('admin_set_category_photo', { p_id: 'nope', p_path: null })))?.message.includes('no longer exists'), 'the category must exist');
   assert((await errOf(cat.rpc('admin_set_category_photo', { p_id: id, p_path: `categories/${id}/missing.png` })))?.message.includes('didn'), 'the file must really be uploaded');
 
@@ -30,7 +30,7 @@ const png = Buffer.from('89504e470d0a1a0a0000000d4948445200000001000000010806000
   assert(!(await cat.rpc('admin_set_category_photo', { p_id: id, p_path: path })).error, 'catalogue staff can set the photo');
   const shown = (await anon.from('categories').select('photo_path').eq('id', id).single()).data;
   assert(shown?.photo_path === path, 'shoppers can read it');
-  assert(!(await cat.rpc('admin_set_category_photo', { p_id: id })).error && !(await anon.from('categories').select('photo_path').eq('id', id).single()).data.photo_path, 'and it can be removed');
+  assert(!(await cat.rpc('admin_set_category_photo', { p_id: id, p_path: null })).error && !(await anon.from('categories').select('photo_path').eq('id', id).single()).data.photo_path, 'and it can be removed');
   await cat.storage.from('product-images').remove([path]);
 
   console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll category photo checks passed');

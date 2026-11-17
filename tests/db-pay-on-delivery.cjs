@@ -23,7 +23,7 @@ async function place(method, opts = {}) {
 
 (async () => {
   sql("update public.delivery_options set fee_ghs = 30 where id = 'same_day'");
-  sql('update public.store_settings set require_delivery_code = true, free_delivery_threshold_ghs = null');
+  sql('update public.store_settings set require_delivery_code = true, free_delivery_threshold_ghs = null, pay_on_delivery_enabled = true'); // off by default since migration 20261123090000
   const users = {};
   for (const [k, role] of [['admin', 'admin'], ['ops', 'operations'], ['ro', 'read_only']]) {
     users[k] = await createUser(`cod-${k}+${stamp}@example.com`, undefined, { full_name: k });
@@ -71,7 +71,7 @@ async function place(method, opts = {}) {
   assert(stock() === `${oh1 - 1}/${rs1 - 1}`, 'the reservation became a sale');
   assert(sql(`select count(*) from public.stock_movements where order_id = '${a.id}' and reason = 'sold'`) === '1', 'the sale is in the stock ledger');
   assert(sql(`select count(*) from public.audit_log where action = 'order.cod_confirmed' and entity_id = '${a.id}'`) === '1', 'the confirmation is audited');
-  assert(sql(`select string_agg(channel, ',' order by channel) from public.notifications where order_id = '${a.id}' and template = 'order_confirmed' and payload ->> 'pay_on_delivery' = 'true'`) === 'email,sms', 'the shopper is told, by text and email');
+  assert(sql(`select string_agg(channel::text, ',' order by channel) from public.notifications where order_id = '${a.id}' and template = 'order_confirmed' and payload ->> 'pay_on_delivery' = 'true'`) === 'email,sms', 'the shopper is told, by text and email');
   const { data: view } = await anon.rpc('get_order', { p_order_token: a.order_token });
   assert(view.cod_confirmed_at && view.paid_at === null && /^\d{4}$/.test(view.delivery_code ?? ''), 'the order page shows when it was confirmed, and the delivery code, though nothing is paid');
   assert((await errOf(S.ops.rpc('admin_confirm_cod_order', { p_order_id: a.id })))?.message.includes('paid'), 'it cannot be confirmed twice');

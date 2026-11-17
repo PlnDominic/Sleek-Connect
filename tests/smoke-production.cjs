@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const base = (process.argv[2] || process.env.SMOKE_BASE_URL || 'http://localhost:3000').replace(/\/$/, '');
+const base = (/^https?:/.test(process.argv[2] || '') ? process.argv[2] : process.env.SMOKE_BASE_URL || 'http://localhost:3000').replace(/\/$/, '');
 const isLocal = /^https?:\/\/(localhost|127\.0\.0\.1)(:|$)/.test(base);
 let failures = 0;
 const assert = (condition, message) => {
@@ -93,7 +93,8 @@ function localEnv() {
   const robots = await get('/robots.txt');
   const robotsText = robots ? await robots.text() : '';
   assert(robots?.ok && robotsText.includes('Sitemap:'), 'robots.txt points to a sitemap');
-  assert(robotsText.includes('Disallow: /admin'), 'robots.txt excludes admin routes');
+  // /admin is deliberately not listed (robots.txt is public; it is kept out by noindex, checked above): see app/robots.ts.
+  assert(robotsText.includes('Disallow: /checkout') && !robotsText.includes('/admin'), 'robots.txt excludes shopper routes and does not advertise admin');
   const sitemap = await get('/sitemap.xml');
   const sitemapText = sitemap ? await sitemap.text() : '';
   assert(sitemap?.ok && sitemapText.includes('/privacy') && sitemapText.includes('/terms'), 'sitemap includes legal routes');

@@ -1,6 +1,6 @@
 // Launch acceptance checks for items 11–15. Runs against a fresh local Supabase database.
-const { sql, admin, createClient } = require('./lib.cjs');
-const anon = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, { auth: { persistSession: false } });
+const { URL_, KEY, sql, admin, createClient } = require('./lib.cjs');
+const anon = createClient(URL_, KEY, { auth: { persistSession: false } });
 let failures = 0;
 const assert = (condition, message) => {
   if (!condition) { failures++; console.error('FAIL:', message); }
@@ -10,6 +10,9 @@ const errOf = async (promise) => (await promise).error;
 
 (async () => {
   sql("update public.delivery_options set fee_ghs = 30 where id in ('standard', 'same_day')");
+
+  // The seed ships delivery fees unset (the owner sets them), and place_order refuses an option without one.
+  sql('update public.delivery_options set fee_ghs = 0 where fee_ghs is null');
 
   // RLS and grants: secrets and operational tables are never public.
   assert((await errOf(anon.from('payments').select('id').limit(1))), 'anonymous clients cannot read payments');
@@ -29,7 +32,7 @@ const errOf = async (promise) => (await promise).error;
     p_items: [{ slug: 'argan-hair-oil', quantity: 1 }],
     p_is_gift: false,
   });
-  assert(blocked.error?.code === '22023' && blocked.error.message.includes('not available'), 'disabled zone delivery option is rejected');
+  assert(blocked.error?.code === '22023' && /not available|isn't available/.test(blocked.error.message), 'disabled zone delivery option is rejected');
   sql("update public.delivery_areas set zone_id = null where name = 'Osu'");
   sql("delete from public.delivery_rates where zone_id = 'launch-test'");
   sql("delete from public.delivery_zones where id = 'launch-test'");
@@ -83,6 +86,8 @@ const errOf = async (promise) => (await promise).error;
   assert(Array.isArray(cleared.data) && cleared.data.length === 0, `the product passes the compliance validator once its fields are complete (${JSON.stringify(cleared.data)})`);
 
   // Promo codes: they work, and only one can be applied to an order.
+  // The last-unit check above leaves nothing free; the promo order below needs stock.
+  sql("update public.inventory_levels i set on_hand = 25, reserved = 0 from public.products p where p.id = i.product_id and p.slug = 'argan-hair-oil'");
   sql("insert into public.promotions (code, label, kind, value) values ('TEST-TEN', 'Ten percent', 'percent', 10), ('TEST-SHIP', 'Free delivery', 'free_delivery', 0) on conflict (code) do nothing");
   const promoOrder = await anon.rpc('place_order', {
     p_customer: { adult_confirmed: true, name: 'Promo Test', phone: '0241234567', area: 'Osu' },

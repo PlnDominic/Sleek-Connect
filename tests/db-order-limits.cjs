@@ -18,6 +18,8 @@ const cancelAll = () => sql("update public.orders set status = 'cancelled' where
 const ordersFor = (digits) => Number(sql(`select count(*) from public.orders where right(regexp_replace(phone, '\\D', '', 'g'), 9) = '${digits}'`));
 
 (async () => {
+  // The seed ships delivery fees unset (the owner sets them), and place_order refuses an option without one.
+  sql("update public.delivery_options set fee_ghs = 0 where id = 'standard'");
   // Open orders waiting for payment, counted by phone number however it is typed.
   setLimits(2, 1000, 1000);
   assert(!(await order('024 123 4567')).error, 'first order from a number is placed');

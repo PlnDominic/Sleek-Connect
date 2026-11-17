@@ -13,7 +13,8 @@ const stamp = Date.now();
     people[k] = (await staffSession(`${k}+${stamp}@example.com`)).client;
   }
   const { cat, ops } = people;
-  const word = `zxq${stamp}`;
+  // Letters only: record_search_miss drops terms with 5+ digits in a row (they could be phone numbers).
+  const word = `zxq${String(stamp).replace(/\d/g, (d) => 'abcdefghij'[d])}`;
 
   // Guests can report a miss; it is counted by normalised words
   assert(!(await anon.rpc('record_search_miss', { p_query: `  ${word.toUpperCase()}  oil ` })).error, 'a guest can report a search that found nothing');

@@ -35,7 +35,7 @@ const stamp = Date.now();
   assert(!(await cat.rpc('admin_delete_product', { p_id: copy.data })).error, 'a draft copy with no stock can be deleted');
   assert(Number(sql(`select count(*) from public.products where id = '${copy.data}'`)) === 0, 'and it is gone');
 
-  const ordered = sql(`select id from public.products where id <> '${id}' order by slug limit 1`);
+  const ordered = sql(`select id from public.products where id not in ('${id}', '${copy.data}', '${second.data}') order by slug limit 1`);
   sql(`update public.stock_batches set quantity = 0 where product_id = '${ordered}'; update public.inventory_levels set on_hand = 0 where product_id = '${ordered}';
        alter table public.orders disable trigger user;
        with o as (insert into public.orders (customer_name, phone, area, delivery_option_id, payment_method, subtotal_ghs)
@@ -44,7 +44,7 @@ const stamp = Date.now();
        select o.id, '${ordered}', 'x', 10, 1, 10 from o;
        alter table public.orders enable trigger user;`);
   assert((await errOf(cat.rpc('admin_delete_product', { p_id: ordered })))?.message.includes('customer order'), 'a product on a customer order cannot be deleted');
-  assert(!(await cat.rpc('admin_delete_product', { p_id: second.data })).error, 'the second copy can be');
+  { const del = await cat.rpc('admin_delete_product', { p_id: second.data }); assert(!del.error, `the second copy can be (${del.error?.message})`); }
 
   console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll product action checks passed');
   process.exit(failures ? 1 : 0);
