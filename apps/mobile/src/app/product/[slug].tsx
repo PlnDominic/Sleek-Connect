@@ -150,9 +150,7 @@ function ProductView({ product }: { product: Product }) {
 
           <View style={styles.facts}>
             <Fact icon="shieldCheck" iconColor={colors.teal} title="Verified authentic">
-              {compliance?.regulatoryReference
-                ? `From an authorised distributor · FDA reg. ${compliance.regulatoryReference}`
-                : 'From an authorised distributor'}
+              From an authorised distributor
             </Fact>
             <Fact icon="calendar" title="Batch and expiry checked">
               Printed on your receipt for the unit we pack

@@ -84,7 +84,6 @@ export function ProductInfoTabs({ product }: { product: Product }) {
         {active === 'safety' && (
           <div className={styles.factGrid}>
             {details?.recommendedAge && <Fact label="Recommended age" value={details.recommendedAge} />}
-            {compliance?.regulatoryReference && <Fact label="FDA Ghana registration" value={compliance.regulatoryReference} />}
             {compliance?.countryOfOrigin && <Fact label="Made in" value={compliance.countryOfOrigin} />}
             {details?.warnings && <Fact label="Warnings" value={details.warnings} small />}
           </div>
