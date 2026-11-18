@@ -195,11 +195,10 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   await ct.getByRole('button', { name: 'Create product' }).click();
   await ct.waitForURL('**/admin/products/*?done=*');
   assert(await ct.getByText(/Product created as a draft/).isVisible(), 'new product starts as a draft');
-  assert((await ct.locator('p').filter({ hasText: 'Needed before it can go on the store' }).textContent()).includes('FDA registration number'), 'missing compliance fields listed');
+  assert((await ct.locator('p').filter({ hasText: 'Needed before it can go on the store' }).textContent()).includes('description'), 'missing fields listed');
   await ct.getByRole('textbox', { name: /Brand/ }).fill('Accra Botanics');
   await ct.getByRole('textbox', { name: 'Description' }).fill('A refreshing moringa mist.');
   await ct.getByRole('textbox', { name: /Ingredients/ }).fill('Aqua, Moringa Oleifera Leaf Extract');
-  await ct.getByRole('textbox', { name: 'FDA registration number' }).fill('FDA/CB.24-777');
   await ct.getByRole('checkbox', { name: 'Show on the store' }).check();
   await ct.getByRole('button', { name: 'Save changes' }).click();
   await ct.getByText('Saved. It’s live on the store.').waitFor();
@@ -208,7 +207,6 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   await go(store, BASE + '/products/moringa-face-mist');
   assert(await store.getByRole('heading', { name: 'Moringa Face Mist' }).isVisible(), 'published product appears on the store');
   await store.getByRole('tab', { name: 'Safety & age' }).click();
-  assert(await store.getByText('FDA/CB.24-777').isVisible(), 'product page shows the FDA number from the catalogue');
   // CSV import
   const csv = 'slug,name,brand,department,category,kind,price,description,ingredients,warnings,country_of_origin,regulatory_reference,sizes,publish\n' +
     'neem-soap,Neem Soap,Accra Botanics,beauty,skincare,jar,,Gentle neem soap.,"Sodium Palmate, Neem Oil",External use only.,Ghana,FDA/CB.24-778,"*100:100 g:30;200:200 g:55",yes\n' +

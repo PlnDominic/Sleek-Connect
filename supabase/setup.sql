@@ -71,6 +71,7 @@
 --   20261130090000_order_limits_and_app_requirements.sql
 --   20261130100000_return_photos_no_heic.sql
 --   20261201090000_shared_rate_limit.sql
+--   20261202090000_no_fda_number_required.sql
 --   seed.reference.sql (categories, age groups and delivery settings; no sample products)
 
 -- ===========================================================================
@@ -19038,6 +19039,36 @@ $$;
 revoke all on function public.purge_rate_limits() from public, anon, authenticated;
 
 select cron.schedule('purge-rate-limits', '*/10 * * * *', 'select public.purge_rate_limits()');
+
+-- ===========================================================================
+-- 20261202090000_no_fda_number_required.sql
+-- ===========================================================================
+
+-- The FDA registration number is no longer asked for in Admin → Products and no longer blocks publishing. A product now needs only a category
+-- and a description. The column stays, so numbers already entered still show on the product page.
+
+create or replace function public.product_publish_problems(p_product_id uuid)
+returns text[]
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  p public.products%rowtype;
+  v_missing text[] := '{}'::text[];
+begin
+  select * into p from public.products where id = p_product_id;
+  if not found then
+    return array['product not found'];
+  end if;
+
+  if p.category_id is null then v_missing := v_missing || 'category'::text; end if;
+  if coalesce(btrim(p.details ->> 'description'), '') = '' then v_missing := v_missing || 'description'::text; end if;
+  if p.recalled_at is not null then v_missing := v_missing || 'recall lifted'::text; end if;
+  return v_missing;
+end;
+$$;
 
 -- ===========================================================================
 -- seed.reference.sql

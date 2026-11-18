@@ -70,7 +70,7 @@ const status = (id) => sql(`select status from public.orders where id = '${id}'`
   assert((await errOf(S.ops.rpc('admin_save_product', { p: draft })))?.code === '42501', 'operations cannot edit the catalogue');
   const { data: saved, error: saveErr } = await S.cat.rpc('admin_save_product', { p: draft });
   assert(!saveErr && saved.published === false && saved.slug === 'rosehip-face-oil', `incomplete product saved as a draft (${saveErr?.message})`);
-  assert(['description', 'FDA registration number'].every((x) => saved.problems.includes(x)) && !saved.problems.includes('brand'), `only the necessary missing fields are listed (${saved.problems})`);
+  assert(saved.problems.includes('description') && !saved.problems.includes('FDA registration number') && !saved.problems.includes('brand'), `only the necessary missing fields are listed (${saved.problems})`);
   assert((await anon.from('products').select('id').eq('slug', 'rosehip-face-oil')).data.length === 0, 'draft not visible to shoppers');
   assert((await S.ro.from('products').select('id').eq('slug', 'rosehip-face-oil')).data.length === 1, 'draft visible to staff');
   const full = { ...draft, id: saved.id, brand: 'Glow Lab', description: 'Cold-pressed rosehip oil.', ingredients: 'Rosa Canina Seed Oil', warnings: 'For external use only.', country_of_origin: 'Ghana', regulatory_reference: 'FDA/CB.123', sizes: [{ code: '15', label: '15 ml', price_ghs: 90 }, { code: '30', label: '30 ml', price_ghs: 150, is_default: true }] };
@@ -78,8 +78,8 @@ const status = (id) => sql(`select status from public.orders where id = '${id}'`
   assert(pub.published === true && pub.problems.length === 0, 'complete product publishes');
   assert(sql(`select price_ghs || ' ' || (select string_agg(code || ':' || is_default, ',' order by sort_order) from public.product_sizes where product_id = p.id) from public.products p where id = '${saved.id}'`) === '150.00 15:false,30:true', 'sizes saved with chosen default');
   assert(sql(`select string_agg(size_code || '=' || on_hand, ',' order by size_code) from public.inventory_levels where product_id = '${saved.id}'`) === '15=0,30=0', 'stock rows created per size');
-  const { data: pub2 } = await S.cat.rpc('admin_save_product', { p: { ...full, regulatory_reference: '', price_ghs: 0, sizes: [{ code: '30', label: '30 ml', price_ghs: 160 }] } });
-  assert(pub2.published === false && pub2.problems.includes('FDA registration number'), 'clearing a required field takes the product off the store');
+  const { data: pub2 } = await S.cat.rpc('admin_save_product', { p: { ...full, description: '', price_ghs: 0, sizes: [{ code: '30', label: '30 ml', price_ghs: 160 }] } });
+  assert(pub2.published === false && pub2.problems.includes('description'), 'clearing a required field takes the product off the store');
   assert((await S.admin.from('audit_log').select('action, details').eq('entity_id', saved.id)).data.some((r) => r.action === 'product.price_changed'), 'price change audited');
   assert((await errOf(S.cat.rpc('admin_save_product', { p: { ...full, id: undefined, name: 'Copy', slug: 'rosehip-face-oil' } })))?.message.includes('already uses'), 'duplicate web address refused');
   await S.cat.rpc('admin_save_product', { p: full });

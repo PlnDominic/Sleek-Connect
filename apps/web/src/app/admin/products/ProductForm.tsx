@@ -37,8 +37,8 @@ const PHOTO_MAX = 8;
 const codeFor = (s: SizePayload) => s.code || s.label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
 /**
- * Only what a product needs: its name, where it sits, its price (and sizes if it has them), a description, and for cosmetics the FDA
- * number. Everything else the product already has (highlights, skin types, size guide…) is kept untouched in hidden fields, so editing
+ * Only what a product needs: its name, where it sits, its price (and sizes if it has them), a description.
+ * Everything else the product already has (highlights, skin types, size guide…) is kept untouched in hidden fields, so editing
  * a product here never erases it.
  */
 export function ProductForm({ product, categories, sizeGuideId, problems, canEdit }: ProductFormProps) {
@@ -189,11 +189,9 @@ export function ProductForm({ product, categories, sizeGuideId, problems, canEdi
           {field('description', 'Description', <textarea name="description" rows={3} defaultValue={product?.description} />)}
           <div className={styles.row}>
             {field('brand', 'Brand (optional)', <input name="brand" defaultValue={product?.brand} />)}
-            {cosmetic &&
-              field('regulatory_reference', 'FDA registration number', <input name="regulatory_reference" defaultValue={product?.regulatory_reference} />, 'Needed for cosmetics')}
           </div>
           {cosmetic && field('ingredients', 'Ingredients (optional)', <textarea name="ingredients" rows={2} defaultValue={product?.ingredients} />, 'As printed on the pack')}
-          {!cosmetic && <input type="hidden" name="regulatory_reference" value={product?.regulatory_reference ?? ''} />}
+          <input type="hidden" name="regulatory_reference" value={product?.regulatory_reference ?? ''} />
           {!cosmetic && <input type="hidden" name="ingredients" value={product?.ingredients ?? ''} />}
         </section>
 
