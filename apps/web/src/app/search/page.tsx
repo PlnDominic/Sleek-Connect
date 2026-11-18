@@ -114,7 +114,7 @@ async function SearchResults({ searchParams }: { searchParams: PageProps<'/searc
             </h2>
             <div className={styles.grid}>
               {popular.map((p) => (
-                <ProductCard key={p.slug} product={p} />
+                <ProductCard key={p.slug} product={p} showCompare={false} />
               ))}
             </div>
           </section>
