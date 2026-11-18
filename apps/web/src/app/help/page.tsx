@@ -171,8 +171,7 @@ export default async function HelpPage() {
           <Topic id="authenticity" title="Authenticity promise">
             <Faq q="Are your products genuine?">
               <p>
-                Yes. We buy only from brands and their authorised distributors. Beauty and bath products show their Ghana
-                FDA registration number. If anything you buy from us isn’t genuine, we refund you in full.
+                Yes. We buy only from brands and their authorised distributors. If anything you buy from us isn’t genuine, we refund you in full.
               </p>
             </Faq>
             <Faq q="How can I check the batch and expiry date?">
