@@ -295,6 +295,19 @@
   scroll-snap-align: start;
 }
 
+/* Desktop: new arrivals fill two rows, scrolling sideways in pairs. */
+@media (min-width: 641px) {
+  .rail:not([data-kind='categories']) .railTrack {
+    grid-template-rows: repeat(2, auto);
+    row-gap: 24px;
+  }
+
+  .rail:not([data-kind='categories']) .railArrow {
+    top: 50%;
+    margin-top: -22px;
+  }
+}
+
 .railArrow {
   position: absolute;
   top: 112px;
