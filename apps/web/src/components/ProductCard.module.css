@@ -73,17 +73,23 @@
   align-items: center;
   gap: 8px;
   margin-top: auto;
+  padding-top: 4px;
 }
 
 .productCardFooter > span {
+  min-width: 0;
   font-size: 11px;
   color: var(--c-text-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .roundAdd {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   flex: none;
+  margin-left: auto;
   border-radius: var(--r-pill);
   border: 0;
   background: var(--c-ink);
