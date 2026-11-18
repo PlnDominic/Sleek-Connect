@@ -353,6 +353,17 @@
   gap: 20px;
 }
 
+/* Desktop: best sellers are two rows of three. */
+@media (min-width: 1100px) {
+  .bestGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .bestGrid > :nth-child(n + 7) {
+    display: none;
+  }
+}
+
 .bestCard {
   background: var(--c-surface);
   border-radius: var(--r-xl);
@@ -423,18 +434,6 @@
   margin-top: 8px;
 }
 
-.quickAdd {
-  flex: 1;
-  height: 40px;
-  border-radius: var(--r-md);
-  border: 0;
-  background: var(--c-ink);
-  color: var(--c-canvas);
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.quickAdd:disabled,
 .squareAdd:disabled {
   opacity: 0.45;
   cursor: not-allowed;

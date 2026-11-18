@@ -263,9 +263,6 @@ function BestSellers({ products }: { products: Product[] }) {
               </span>
               <span className={styles.bestSummary}>{p.summary}</span>
               <div className={styles.bestActions}>
-                <AddToBagButton product={p} disabled={p.inStock === false} className={styles.quickAdd}>
-                  {p.inStock === false ? 'Sold out' : 'Quick Add'}
-                </AddToBagButton>
                 <AddToBagButton
                   product={p}
                   disabled={p.inStock === false}
