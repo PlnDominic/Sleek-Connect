@@ -24,7 +24,7 @@ export function ProductInfoTabs({ product }: { product: Product }) {
   const hasContent: Record<TabId, boolean> = {
     ingredients: Boolean(compliance?.ingredients || details?.freeFrom?.length),
     safety: Boolean(
-      details?.recommendedAge || compliance?.regulatoryReference || compliance?.countryOfOrigin || details?.warnings,
+      details?.recommendedAge || compliance?.countryOfOrigin || details?.warnings,
     ),
     batch: batches.length > 0 || Boolean(compliance?.periodAfterOpening),
     use: Boolean(details?.howToUse),
