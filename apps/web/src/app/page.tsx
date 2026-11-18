@@ -235,7 +235,7 @@ function NewArrivals({ products }: { products: Product[] }) {
       <SectionHeader title="New Arrivals" linkLabel="View All New Arrivals" href="/shop?sort=newest" />
       <NewArrivalsRail>
         {products.map((p) => (
-          <ProductCard key={p.slug} product={p} />
+          <ProductCard key={p.slug} product={p} showCompare={false} />
         ))}
       </NewArrivalsRail>
     </section>

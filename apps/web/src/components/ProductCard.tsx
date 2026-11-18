@@ -8,7 +8,7 @@ import { CompareButton } from './CompareButton';
 import styles from './ProductCard.module.css';
 
 /** Product tile used in the home page rails and listing grids. */
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product, showCompare = true }: { product: Product; showCompare?: boolean }) {
   const soldOut = product.inStock === false;
   return (
     <article className={styles.productCard}>
@@ -50,7 +50,7 @@ export function ProductCard({ product }: { product: Product }) {
           <Icon name="bag" size={15} strokeWidth={2} />
         </AddToBagButton>
       </div>
-      <CompareButton product={product} />
+      {showCompare && <CompareButton product={product} />}
     </article>
   );
 }
