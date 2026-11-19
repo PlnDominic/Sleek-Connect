@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { estimate, formatPrice, momoNetworks, quote, type DeliveryConfig, type MomoNetwork } from '@sleek/shared';
 import { useBag } from '@sleek/shared/bag';
+import { AppleButton, GoogleButton } from '@/components/SocialButtons';
 import { AppText } from '@/components/AppText';
 import { Button, Card, Checkbox, Choices, Field, Notice } from '@/components/Form';
 import { ProductImage } from '@/components/ProductImage';
@@ -248,8 +249,8 @@ function Details({
                 <AppText weight="bold" size={14}>
                   Or sign in
                 </AppText>
-                {appleAvailable ? <Button label="Continue with Apple" kind="secondary" disabled={!adult || signingIn} onPress={() => void signInThen(signInWithApple)} /> : null}
-                <Button label="Continue with Google" kind="secondary" disabled={!adult || signingIn} onPress={() => void signInThen(signInWithGoogle)} />
+                {appleAvailable ? <AppleButton disabled={!adult || signingIn} onPress={() => void signInThen(signInWithApple)} /> : null}
+                <GoogleButton disabled={!adult || signingIn} onPress={() => void signInThen(signInWithGoogle)} />
               </>
             ) : null}
           </Card>

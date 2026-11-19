@@ -1,5 +1,6 @@
 'use client';
 
+import { AppleMark, GoogleMark } from '@/components/AuthMarks';
 import Link from 'next/link';
 import { useEffect, useRef, useState, useTransition, type FormEvent, type ReactNode } from 'react';
 import { formatPrice, formatPriceOr, momoNetworks, type MomoNetwork } from '@sleek/shared';
@@ -249,7 +250,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
                 <div className={styles.guestSignIn}>
                   <button
                     type="button"
-                    className={styles.guestButton}
+                    className={`${styles.guestButton} ${styles.guestGoogle}`}
                     disabled={!adult || signInBusy}
                     onClick={() => {
                       setSignInBusy(true);
@@ -259,12 +260,13 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
                       });
                     }}
                   >
+                    <GoogleMark />
                     Continue with Google
                   </button>
                   {process.env.NEXT_PUBLIC_APPLE_SIGN_IN === 'true' && (
                     <button
                       type="button"
-                      className={styles.guestButton}
+                      className={`${styles.guestButton} ${styles.guestApple}`}
                       disabled={!adult || signInBusy}
                       onClick={() => {
                         setSignInBusy(true);
@@ -274,6 +276,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
                         });
                       }}
                     >
+                      <AppleMark />
                       Continue with Apple
                     </button>
                   )}

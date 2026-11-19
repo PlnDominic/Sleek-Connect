@@ -1,4 +1,6 @@
 import { router } from 'expo-router';
+import Constants from 'expo-constants';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { formatPrice, radii } from '@sleek/shared';
 import { MAX_ITEM_QTY, useBag, type ResolvedBagItem } from '@sleek/shared/bag';
@@ -6,14 +8,18 @@ import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
 import { ProductImage } from '@/components/ProductImage';
 import { EmptyState } from '@/components/States';
-import { BackButton, BottomBar, useScreenTop } from '@/components/ui';
+import { BackButton, BottomBar } from '@/components/ui';
 import { useColors, useStyles, type Palette } from '@/theme/theme';
 
 /** Right-hand drawer over a dimmed page; tapping the dimmed part closes it. */
 export default function BagScreen() {
   const styles = useStyles(makeStyles);
+  const insets = useSafeAreaInsets();
+  // Inside a transparent modal the safe-area inset can read 0, so fall back to the status bar height.
+  const statusBar = Math.max(insets.top, Constants.statusBarHeight ?? 0);
   return (
-    <View style={styles.overlay}>
+    // The whole overlay starts below the status bar, so neither the dim layer nor the drawer covers the time and signal.
+    <View style={[styles.overlay, { paddingTop: statusBar }]}>
       <Pressable accessibilityRole="button" accessibilityLabel="Close bag" onPress={() => router.back()} style={styles.backdrop} />
       <View style={styles.panel}>
         <BagPanel />
@@ -25,7 +31,7 @@ export default function BagScreen() {
 function BagPanel() {
   const colors = useColors();
   const styles = useStyles(makeStyles);
-  const top = useScreenTop();
+  const top = 16; // the drawer already starts below the status bar
   const { items, count, subtotal, setQty, remove } = useBag();
   const soldOut = items.filter((i) => i.inStock === false);
 
@@ -193,8 +199,8 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     width: '88%',
     maxWidth: 440,
     backgroundColor: colors.canvas,
-    borderTopLeftRadius: radii.xl,
-    borderBottomLeftRadius: radii.xl,
+    borderTopLeftRadius: 28,
+    borderBottomLeftRadius: 28,
     overflow: 'hidden',
   },
   screen: {

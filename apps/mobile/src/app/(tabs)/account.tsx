@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { radii, type IconName } from '@sleek/shared';
+import { AppleButton, GoogleButton } from '@/components/SocialButtons';
 import { AppText } from '@/components/AppText';
 import { Button, Card, Notice } from '@/components/Form';
 import { Icon } from '@/components/Icon';
@@ -142,8 +143,8 @@ function SignedOut() {
           </AppText>
         </Pressable>
       </View>
-      {appleAvailable ? <Button label="Continue with Apple" onPress={apple} disabled={!agreed || busy} /> : null}
-      <Button label="Continue with Google" onPress={google} disabled={!agreed || busy} />
+      {appleAvailable ? <AppleButton onPress={apple} disabled={!agreed || busy} /> : null}
+      <GoogleButton onPress={google} disabled={!agreed || busy} />
       {error ? <Notice>{error}</Notice> : null}
     </Card>
   );
