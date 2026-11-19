@@ -2,6 +2,7 @@ import { Link } from 'expo-router';
 import { memo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { formatPrice, radii, type Product } from '@sleek/shared';
+import { useBag } from '@sleek/shared/bag';
 import { useSaved } from '@/lib/saved';
 import { AppText } from './AppText';
 import { Icon } from './Icon';
@@ -13,6 +14,7 @@ export const ProductTile = memo(function ProductTile({ product }: { product: Pro
   const colors = useColors();
   const styles = useStyles(makeStyles);
   const { slugs, toggle } = useSaved();
+  const { add } = useBag();
   const saved = slugs.includes(product.slug);
   const soldOut = product.inStock === false;
   const tagColor = product.department === 'kids' ? colors.teal : colors.accentDeep;
@@ -26,6 +28,17 @@ export const ProductTile = memo(function ProductTile({ product }: { product: Pro
         >
           <View>
             <ProductImage image={product.image} photo={product.photos?.[0]?.url} tint={product.tint} kind={product.kind} style={styles.image} />
+            {soldOut ? null : (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Add ${product.name} to bag`}
+                onPress={() => add(product)}
+                hitSlop={6}
+                style={styles.cart}
+              >
+                <Icon name="bag" size={18} color={colors.canvas} />
+              </Pressable>
+            )}
             {soldOut ? (
               <View style={styles.soldOut}>
                 <AppText weight="bold" size={12}>
@@ -114,6 +127,17 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
   },
   was: {
     textDecorationLine: 'line-through',
+  },
+  cart: {
+    position: 'absolute',
+    right: 8,
+    bottom: 8,
+    width: 36,
+    height: 36,
+    borderRadius: radii.pill,
+    backgroundColor: colors.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   heart: {
     position: 'absolute',

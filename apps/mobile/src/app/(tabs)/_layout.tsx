@@ -1,4 +1,4 @@
-import { Tabs } from 'expo-router';
+import { router, Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Platform, Pressable, StyleSheet, View } from 'react-native';
@@ -62,6 +62,7 @@ function TabBar({ state, navigateToTab }: TabBarProps) {
                   accessibilityState={{ selected: active }}
                   accessibilityLabel={item.route === 'bag' ? `Bag, ${count} ${count === 1 ? 'item' : 'items'}` : item.label}
                   onPress={() => {
+                    if (item.route === 'bag') return router.push('/bag');
                     const route = state.routes.find((r) => r.name === item.route);
                     if (route) navigateToTab(route.key);
                   }}
@@ -92,7 +93,6 @@ export default function TabsLayout() {
       <Tabs.Screen name="index" />
       <Tabs.Screen name="shop" />
       <Tabs.Screen name="saved" />
-      <Tabs.Screen name="bag" />
       <Tabs.Screen name="account" />
     </Tabs>
   );

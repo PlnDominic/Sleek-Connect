@@ -6,10 +6,23 @@ import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
 import { ProductImage } from '@/components/ProductImage';
 import { EmptyState } from '@/components/States';
-import { useScreenTop } from '@/components/ui';
+import { BackButton, BottomBar, useScreenTop } from '@/components/ui';
 import { useColors, useStyles, type Palette } from '@/theme/theme';
 
+/** Right-hand drawer over a dimmed page; tapping the dimmed part closes it. */
 export default function BagScreen() {
+  const styles = useStyles(makeStyles);
+  return (
+    <View style={styles.overlay}>
+      <Pressable accessibilityRole="button" accessibilityLabel="Close bag" onPress={() => router.back()} style={styles.backdrop} />
+      <View style={styles.panel}>
+        <BagPanel />
+      </View>
+    </View>
+  );
+}
+
+function BagPanel() {
   const colors = useColors();
   const styles = useStyles(makeStyles);
   const top = useScreenTop();
@@ -19,9 +32,12 @@ export default function BagScreen() {
   if (items.length === 0) {
     return (
       <ScrollView style={styles.screen} contentContainerStyle={[styles.content, { paddingTop: top }]}>
-        <AppText weight="semibold" size={22} accessibilityRole="header">
-          Your bag
-        </AppText>
+        <View style={styles.titleRow}>
+          <BackButton fallback="/" label="Close bag" />
+          <AppText weight="semibold" size={22} accessibilityRole="header">
+            Your bag
+          </AppText>
+        </View>
         <EmptyState
           icon="bag"
           title="Your bag is empty"
@@ -36,7 +52,8 @@ export default function BagScreen() {
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={[styles.content, { paddingTop: top }]}>
         <View style={styles.titleRow}>
-          <AppText weight="semibold" size={22} accessibilityRole="header">
+          <BackButton fallback="/" label="Close bag" />
+          <AppText weight="semibold" size={22} accessibilityRole="header" style={styles.flex}>
             Your bag
           </AppText>
           <AppText size={14} color={colors.textMuted}>
@@ -74,7 +91,7 @@ export default function BagScreen() {
         </View>
       </ScrollView>
 
-      <View style={styles.bar}>
+      <BottomBar>
         <Pressable
           accessibilityRole="button"
           accessibilityState={{ disabled: soldOut.length > 0 }}
@@ -86,7 +103,7 @@ export default function BagScreen() {
             Checkout · {formatPrice(subtotal)}
           </AppText>
         </Pressable>
-      </View>
+      </BottomBar>
     </View>
   );
 }
@@ -164,13 +181,29 @@ function Step({ label, onPress, disabled, symbol }: { label: string; onPress: ()
 }
 
 const makeStyles = (colors: Palette) => StyleSheet.create({
+  overlay: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+  },
+  panel: {
+    width: '88%',
+    maxWidth: 440,
+    backgroundColor: colors.canvas,
+    borderTopLeftRadius: radii.xl,
+    borderBottomLeftRadius: radii.xl,
+    overflow: 'hidden',
+  },
   screen: {
     flex: 1,
     backgroundColor: colors.canvas,
   },
   content: {
     paddingHorizontal: 20,
-    paddingBottom: 120,
+    paddingBottom: 130,
     gap: 18,
   },
   flex: {
@@ -178,8 +211,8 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
   },
   titleRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 8,
   },
   notice: {
     flexDirection: 'row',
@@ -254,17 +287,6 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  bar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    padding: 16,
-    paddingHorizontal: 20,
-    backgroundColor: colors.canvas,
-    borderTopWidth: 1,
-    borderTopColor: colors.line,
   },
   cta: {
     height: 54,

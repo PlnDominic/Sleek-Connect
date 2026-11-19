@@ -41,7 +41,10 @@ function ThemedShell() {
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <UpdateGate>
         <PushSetup />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }} />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }}>
+          {/* The bag is a drawer: it slides in from the right over a dimmed page. */}
+          <Stack.Screen name="bag" options={{ presentation: 'transparentModal', animation: 'slide_from_right', contentStyle: { backgroundColor: 'transparent' } }} />
+        </Stack>
       </UpdateGate>
     </>
   );
