@@ -785,3 +785,271 @@
     gap: 12px;
   }
 }
+
+/* ---------- Apple design: the product page ---------- */
+.breadcrumb a {
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  color: var(--c-accent);
+}
+
+.mainImage {
+  border-radius: 28px;
+  box-shadow: 0 0 0 0.5px color-mix(in srgb, var(--c-ink) 8%, transparent), 0 24px 60px rgba(0, 0, 0, 0.08);
+  animation: imageIn 0.9s var(--ease-apple) both;
+}
+
+@keyframes imageIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.newBadge {
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  background: color-mix(in srgb, var(--c-ink) 82%, transparent);
+}
+
+.thumb {
+  border: 0;
+  border-radius: 16px;
+  box-shadow: 0 0 0 0.5px color-mix(in srgb, var(--c-ink) 10%, transparent);
+  transition: transform 0.4s var(--ease-spring), box-shadow 0.25s var(--ease-apple), opacity 0.25s;
+  opacity: 0.8;
+}
+
+.thumb:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+.thumb[aria-pressed='true'] {
+  border: 0;
+  opacity: 1;
+  box-shadow: 0 0 0 2.5px var(--c-accent);
+}
+
+.brand {
+  color: var(--c-accent);
+}
+
+.title {
+  font-weight: 700;
+  font-size: clamp(30px, 4.4vw, 46px);
+  line-height: 1.06;
+  letter-spacing: -0.032em;
+}
+
+.description {
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.price {
+  font-size: clamp(30px, 3.6vw, 38px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.save {
+  border: 0;
+  background: color-mix(in srgb, var(--c-ink) 6%, transparent);
+}
+
+.save[data-saved] {
+  background: color-mix(in srgb, var(--c-accent) 14%, transparent);
+}
+
+.chip {
+  border-radius: 999px;
+  padding: 6px 12px;
+}
+
+/* Sizes: a segmented, pill-shaped picker. */
+.sizes {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sizeButton {
+  height: 46px;
+  border: 0;
+  background: color-mix(in srgb, var(--c-ink) 6%, transparent);
+  border-radius: 999px;
+  transition: transform 0.35s var(--ease-spring), background-color 0.25s var(--ease-apple), color 0.25s;
+}
+
+.sizeButton:hover:not([aria-pressed='true']) {
+  background: color-mix(in srgb, var(--c-ink) 11%, transparent);
+}
+
+.sizeButton[aria-pressed='true'] {
+  border: 0;
+  background: var(--c-accent);
+  color: var(--c-on-accent, #fff);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--c-accent) 36%, transparent);
+}
+
+.sizeButton[data-sold-out='true'][aria-pressed='true'] {
+  border: 0;
+}
+
+.qty {
+  border: 0;
+  height: 56px;
+  background: color-mix(in srgb, var(--c-ink) 6%, transparent);
+  border-radius: 999px;
+}
+
+.qty button {
+  border-radius: 999px;
+}
+
+.addButton,
+.momoButton {
+  height: 56px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: -0.012em;
+}
+
+.addButton:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+
+.momoButton {
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--c-accent) 38%, transparent);
+}
+
+.momoButton:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.giftOption {
+  border: 0;
+  background: color-mix(in srgb, var(--c-ink) 5%, transparent);
+  border-radius: 18px;
+}
+
+.serviceBox,
+.fact {
+  border-radius: 20px;
+}
+
+.fact {
+  border: 0;
+  background: var(--c-surface);
+}
+
+.tablist {
+  display: inline-flex;
+  max-width: 100%;
+  overflow-x: auto;
+  gap: 2px;
+  padding: 4px;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c-ink) 6%, transparent);
+  scrollbar-width: none;
+}
+
+.tab {
+  height: 40px;
+  flex: none;
+  background: transparent;
+  transition: background-color 0.3s var(--ease-apple), color 0.3s, box-shadow 0.3s;
+}
+
+.tab[aria-selected='true'] {
+  background: var(--c-canvas);
+  color: var(--c-ink);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.tabPanel {
+  animation: panelIn 0.5s var(--ease-apple) both;
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.relatedTitle {
+  font-weight: 700;
+  font-size: clamp(24px, 3.4vw, 32px);
+  letter-spacing: -0.03em;
+}
+
+.relatedImage {
+  border-radius: 22px;
+  transition: transform 0.5s var(--ease-spring), box-shadow 0.35s var(--ease-apple);
+}
+
+@media (hover: hover) {
+  .relatedCard:hover .relatedImage {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12);
+  }
+}
+
+/* Big screens: the gallery stays in view while you read the details. */
+@media (min-width: 961px) {
+  .gallery {
+    position: sticky;
+    top: 96px;
+    align-self: flex-start;
+  }
+}
+
+/* Phones and tablets: the buy buttons float at the bottom of the screen in a glass bar while you scroll the details. */
+@media (max-width: 960px) {
+  .buyRow {
+    position: sticky;
+    bottom: 12px;
+    z-index: 20;
+    padding: 10px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--c-canvas) 78%, transparent);
+    -webkit-backdrop-filter: saturate(180%) blur(22px);
+    backdrop-filter: saturate(180%) blur(22px);
+    box-shadow: 0 0 0 0.5px color-mix(in srgb, var(--c-ink) 12%, transparent), 0 12px 36px rgba(0, 0, 0, 0.14);
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .buyRow .qty {
+    height: 48px;
+  }
+
+  .buyRow .addButton,
+  .buyRow .momoButton {
+    height: 48px;
+    font-size: 15px;
+    flex: 1 1 0;
+    padding: 0 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mainImage,
+  .tabPanel {
+    animation: none;
+  }
+}

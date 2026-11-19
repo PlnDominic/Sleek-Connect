@@ -212,14 +212,14 @@ export default async function ProductPage({ params, searchParams }: PageProps<'/
         </div>
       </main>
 
-      <section className={`container ${styles.tabsSection}`}>
+      <section data-reveal className={`container ${styles.tabsSection}`}>
         <ProductInfoTabs product={product} />
       </section>
 
       <ProductReviews slug={product.slug} summary={summary} reviews={reviews} page={reviewPage} minRating={minRating} />
       <ProductQuestions slug={product.slug} questions={questions} />
 
-      <section className={`container ${styles.relatedSection}`}>
+      <section data-reveal className={`container ${styles.relatedSection}`}>
         <h2 className={styles.relatedTitle}>You may also like</h2>
         <div className={styles.relatedGrid}>
           {related.map((r) => (

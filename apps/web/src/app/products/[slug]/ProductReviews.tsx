@@ -10,7 +10,7 @@ const date = new Intl.DateTimeFormat('en-GH', { day: 'numeric', month: 'long', y
 /** Customer reviews: the summary, each published review, and the form for people who received the product. */
 export function ProductReviews({ slug, summary, reviews, page = 1, minRating = 0 }: { slug: string; summary: ReviewSummary; reviews: Review[]; page?: number; minRating?: number }) {
   return (
-    <section id="reviews" className={`container ${styles.section}`} aria-labelledby="reviews-title">
+    <section data-reveal id="reviews" className={`container ${styles.section}`} aria-labelledby="reviews-title">
       <h2 id="reviews-title" className={styles.title}>
         Customer reviews
       </h2>
