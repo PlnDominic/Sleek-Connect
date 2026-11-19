@@ -19,6 +19,7 @@ interface AuthValue {
    * `chooseAccount`: make Google ask which account to use, even if the browser is signed in to just one.
    */
   signInWithGoogle: (next?: string, options?: { consent?: boolean; chooseAccount?: boolean }) => Promise<void>;
+  signInWithApple: (next?: string, options?: { consent?: boolean }) => Promise<void>;
   recordConsent: () => Promise<void>;
   signOut: () => Promise<void>;
   signOutEverywhere: () => Promise<void>;
@@ -83,8 +84,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [userId]);
 
-  const signInWithGoogle = useCallback(
-    async (next = '/account', { consent = true, chooseAccount = false }: { consent?: boolean; chooseAccount?: boolean } = {}) => {
+  const signInWith = useCallback(
+    async (
+      provider: 'google' | 'apple',
+      next = '/account',
+      { consent = true, chooseAccount = false }: { consent?: boolean; chooseAccount?: boolean } = {},
+    ) => {
       try {
         sessionStorage.setItem(RETURN_KEY, JSON.stringify({ next: safeNextPath(next), consent }));
       } catch {
@@ -94,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       callback.searchParams.set('next', next);
       if (consent) callback.searchParams.set('consent', '1');
       const { error } = await createBrowserSupabase().auth.signInWithOAuth({
-        provider: 'google',
+        provider,
         options: {
           redirectTo: callback.toString(),
           ...(chooseAccount && { queryParams: { prompt: 'select_account' } }),
@@ -103,6 +108,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
     },
     [],
+  );
+  const signInWithGoogle = useCallback(
+    (next?: string, options?: { consent?: boolean; chooseAccount?: boolean }) => signInWith('google', next, options),
+    [signInWith],
+  );
+  const signInWithApple = useCallback(
+    (next?: string, options?: { consent?: boolean }) => signInWith('apple', next, options),
+    [signInWith],
   );
 
   const recordConsent = useCallback(async () => {
@@ -141,8 +154,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const consented = profileLoaded && profile.consented;
 
   const value = useMemo(
-    () => ({ user, loading, consented, signInWithGoogle, recordConsent, signOut, signOutEverywhere, updateProfile, updateNotificationPreferences }),
-    [user, loading, consented, signInWithGoogle, recordConsent, signOut, signOutEverywhere, updateProfile, updateNotificationPreferences],
+    () => ({ user, loading, consented, signInWithGoogle, signInWithApple, recordConsent, signOut, signOutEverywhere, updateProfile, updateNotificationPreferences }),
+    [user, loading, consented, signInWithGoogle, signInWithApple, recordConsent, signOut, signOutEverywhere, updateProfile, updateNotificationPreferences],
   );
 
   return <AuthContext value={value}>{children}</AuthContext>;

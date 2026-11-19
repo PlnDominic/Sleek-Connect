@@ -97,8 +97,20 @@ function Details({
   const colors = useColors();
   const styles = useStyles(makeStyles);
   const top = useScreenTop();
-  const { user, consented } = useAuth();
+  const { user, consented, appleAvailable, signInWithApple, signInWithGoogle, recordConsent } = useAuth();
   const [adult, setAdult] = useState(false);
+  const [signingIn, setSigningIn] = useState(false);
+  async function signInThen(method: () => Promise<boolean>) {
+    setSigningIn(true);
+    setError(null);
+    try {
+      if (await method()) await recordConsent().catch(() => {});
+    } catch {
+      setError('We couldn’t sign you in. Please try again.');
+    } finally {
+      setSigningIn(false);
+    }
+  }
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState(user?.email ?? '');
@@ -211,11 +223,35 @@ function Details({
       <ScrollView contentContainerStyle={[styles.content, { paddingTop: top }]} keyboardShouldPersistTaps="handled">
         <Header />
 
-        {!user ? (
-          <Card title="Checkout as guest">
-            <AppText size={13} color={colors.textMuted}>
-              You don’t need an account to buy.
-            </AppText>
+        {!(user && consented) ? (
+          <Card title={user ? 'One more step' : 'Checkout as guest'}>
+            {!user ? (
+              <AppText size={13} color={colors.textMuted}>
+                You don’t need an account to buy. Fill in your details and pay, or sign in below.
+              </AppText>
+            ) : null}
+            <Checkbox checked={adult} onChange={setAdult}>
+              <AppText size={13}>
+                I’m 18 or older and I accept the{' '}
+                <AppText size={13} weight="semibold" onPress={() => void Linking.openURL(siteAddress('/terms'))}>
+                  Terms of Service
+                </AppText>{' '}
+                and{' '}
+                <AppText size={13} weight="semibold" onPress={() => void Linking.openURL(siteAddress('/privacy'))}>
+                  Privacy notice
+                </AppText>
+                .
+              </AppText>
+            </Checkbox>
+            {!user ? (
+              <>
+                <AppText weight="bold" size={14}>
+                  Or sign in
+                </AppText>
+                {appleAvailable ? <Button label="Continue with Apple" kind="secondary" disabled={!adult || signingIn} onPress={() => void signInThen(signInWithApple)} /> : null}
+                <Button label="Continue with Google" kind="secondary" disabled={!adult || signingIn} onPress={() => void signInThen(signInWithGoogle)} />
+              </>
+            ) : null}
           </Card>
         ) : null}
 
@@ -293,23 +329,6 @@ function Details({
           <Field label="Promo code (optional)" value={promo} onChangeText={setPromo} autoCapitalize="characters" />
         </Card>
 
-        {!(user && consented) ? (
-          <Card>
-            <Checkbox checked={adult} onChange={setAdult}>
-              <AppText size={13}>
-                I’m 18 or older and I accept the{' '}
-                <AppText size={13} weight="semibold" onPress={() => void Linking.openURL(siteAddress('/terms'))}>
-                  Terms of Service
-                </AppText>{' '}
-                and{' '}
-                <AppText size={13} weight="semibold" onPress={() => void Linking.openURL(siteAddress('/privacy'))}>
-                  Privacy notice
-                </AppText>
-                .
-              </AppText>
-            </Checkbox>
-          </Card>
-        ) : null}
 
         <Card>
           <Row label="Subtotal" value={formatPrice(subtotal)} />

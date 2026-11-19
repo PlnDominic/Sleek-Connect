@@ -660,14 +660,49 @@
   font-size: 14px;
 }
 
-.guestBanner > div {
+.guestBanner {
+  flex-direction: column;
+  align-items: stretch;
+  padding: 18px;
+}
+
+.guestChoices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.guestChoices > div {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .guestBanner span {
   color: var(--c-text-muted);
+}
+
+.guestSignIn {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.guestButton {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--c-line-strong);
+  background: var(--c-canvas);
+  color: var(--c-ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.guestButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .guestLink {

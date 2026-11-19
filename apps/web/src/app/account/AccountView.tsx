@@ -13,7 +13,7 @@ export function AccountView({ mode = 'overview' }: { mode?: 'overview' | 'detail
   const params = useSearchParams();
   const router = useRouter();
   const next = safeNextPath(params.get('next'));
-  const { user, loading, consented, signInWithGoogle, recordConsent, signOut, signOutEverywhere, updateProfile, updateNotificationPreferences } = useAuth();
+  const { user, loading, consented, signInWithGoogle, signInWithApple, recordConsent, signOut, signOutEverywhere, updateProfile, updateNotificationPreferences } = useAuth();
   const { count } = useBag();
   const [agreed, setAgreed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -72,6 +72,16 @@ export function AccountView({ mode = 'overview' }: { mode?: 'overview' | 'detail
           <GoogleMark />
           Continue with Google
         </button>
+        {process.env.NEXT_PUBLIC_APPLE_SIGN_IN === 'true' && (
+          <button
+            type="button"
+            className={styles.google}
+            disabled={!agreed || busy}
+            onClick={() => run(() => signInWithApple(next), "We couldn't reach Apple. Please try again.")}
+          >
+            Continue with Apple
+          </button>
+        )}
         {error && (
           <p role="alert" className={styles.error}>
             {error}

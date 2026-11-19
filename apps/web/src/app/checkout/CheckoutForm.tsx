@@ -51,7 +51,8 @@ const paidStatuses: OrderStatus['status'][] = ['paid', 'packed', 'out_for_delive
 
 export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
   const bag = useBag();
-  const { user, consented, loading: authLoading } = useAuth();
+  const { user, consented, loading: authLoading, signInWithGoogle, signInWithApple } = useAuth();
+  const [signInBusy, setSignInBusy] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   // Typed by the shopper; one that matches a delivery area we list picks up that area's fee.
   const [area, setArea] = useState('');
@@ -234,16 +235,60 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
   return (
     <main id="main-content" className={styles.main}>
       <form id="checkout-form" ref={formRef} className={styles.forms} onSubmit={onSubmit}>
-        {!user && !authLoading && !placed && (
-          <div className={styles.guestBanner}>
-            <div>
-              <strong>Checkout as guest</strong>
-              <span>You don&apos;t need an account to buy.</span>
+        {!signedIn && !authLoading && !placed && (
+          <section className={styles.guestBanner} aria-labelledby="guest-title">
+            {!user ? (
+            <div className={styles.guestChoices}>
+              <div>
+                <strong id="guest-title">Checkout as guest</strong>
+                <span>You don&apos;t need an account to buy. Fill in the details below and pay.</span>
+              </div>
+              <div>
+                <strong>Or sign in</strong>
+                <span>Use your saved details and keep your orders in one place.</span>
+                <div className={styles.guestSignIn}>
+                  <button
+                    type="button"
+                    className={styles.guestButton}
+                    disabled={!adult || signInBusy}
+                    onClick={() => {
+                      setSignInBusy(true);
+                      signInWithGoogle('/checkout').catch(() => {
+                        setSignInBusy(false);
+                        setError('We couldn’t reach Google. Please try again.');
+                      });
+                    }}
+                  >
+                    Continue with Google
+                  </button>
+                  {process.env.NEXT_PUBLIC_APPLE_SIGN_IN === 'true' && (
+                    <button
+                      type="button"
+                      className={styles.guestButton}
+                      disabled={!adult || signInBusy}
+                      onClick={() => {
+                        setSignInBusy(true);
+                        signInWithApple('/checkout').catch(() => {
+                          setSignInBusy(false);
+                          setError('We couldn’t reach Apple. Please try again.');
+                        });
+                      }}
+                    >
+                      Continue with Apple
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
-            <Link href="/account?next=/checkout" className={styles.guestLink}>
-              Have an account? Sign in
-            </Link>
-          </div>
+            ) : null}
+            <label className={styles.giftCheck}>
+              <input type="checkbox" checked={adult} onChange={(e) => setAdult(e.target.checked)} />
+              <span>
+                I&apos;m 18 or older and accept the <Link href="/terms" target="_blank">Terms of Service</Link> and{' '}
+                <Link href="/privacy" target="_blank">Privacy Notice</Link>.
+              </span>
+            </label>
+          </section>
         )}
         <fieldset disabled={!!placed} className={styles.fieldset}>
           <div className={styles.forms}>
@@ -318,15 +363,6 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
                 <label className={styles.giftCheck}>
                   <input type="checkbox" checked={saveAddress} onChange={(e) => setSaveAddress(e.target.checked)} />
                   Save this address to my account
-                </label>
-              )}
-              {!signedIn && (
-                <label className={styles.giftCheck}>
-                  <input type="checkbox" checked={adult} onChange={(e) => setAdult(e.target.checked)} required />
-                  <span>
-                    I&apos;m 18 or older and accept the <Link href="/terms" target="_blank">Terms of Service</Link> and{' '}
-                    <Link href="/privacy" target="_blank">Privacy Notice</Link>.
-                  </span>
                 </label>
               )}
               <fieldset className={styles.fieldset}>
