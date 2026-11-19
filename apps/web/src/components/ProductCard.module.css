@@ -109,3 +109,38 @@
   font-weight: 700;
   color: var(--c-accent-deep);
 }
+
+/* Apple: softer, larger corners, a gentle lift on hover and a springy press. */
+.productCard {
+  border-radius: 22px;
+  box-shadow: 0 0 0 0.5px color-mix(in srgb, var(--c-ink) 8%, transparent);
+  transition: transform 0.45s var(--ease-spring), box-shadow 0.35s var(--ease-apple);
+}
+
+@media (hover: hover) {
+  .productCard:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0 0 0.5px color-mix(in srgb, var(--c-ink) 8%, transparent), 0 16px 36px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.productCard:active {
+  transform: scale(0.985);
+}
+
+.productCardImage {
+  border-radius: 16px;
+  transition: transform 0.6s var(--ease-apple);
+}
+
+@media (hover: hover) {
+  .productCard:hover .productCardImage {
+    transform: scale(1.03);
+  }
+}
+
+.roundAdd {
+  width: 36px;
+  height: 36px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}

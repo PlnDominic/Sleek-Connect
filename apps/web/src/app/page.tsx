@@ -209,7 +209,7 @@ function Departments({ categories }: { categories: Category[] }) {
 
 function Categories({ categories }: { categories: Category[] }) {
   return (
-    <section id="categories" className={`container ${styles.section}`}>
+    <section data-reveal id="categories" className={`container ${styles.section}`}>
       <SectionHeader title="Shop by Categories" linkLabel="View All Categories" href="/shop" />
       <NewArrivalsRail label="categories">
         {categories.map((c) => (
@@ -231,7 +231,7 @@ function Categories({ categories }: { categories: Category[] }) {
 
 function NewArrivals({ products }: { products: Product[] }) {
   return (
-    <section id="new-arrivals" className={`container ${styles.section}`}>
+    <section data-reveal id="new-arrivals" className={`container ${styles.section}`}>
       <SectionHeader title="New Arrivals" linkLabel="View All New Arrivals" href="/shop?sort=newest" />
       <NewArrivalsRail>
         {products.map((p) => (
@@ -244,7 +244,7 @@ function NewArrivals({ products }: { products: Product[] }) {
 
 function BestSellers({ products }: { products: Product[] }) {
   return (
-    <section id="best-sellers" className={`container ${styles.section}`}>
+    <section data-reveal id="best-sellers" className={`container ${styles.section}`}>
       <SectionHeader title="Best Sellers" linkLabel="View All Best Sellers" href="/shop" />
       <div className={styles.bestGrid}>
         {products.map((p) => (
@@ -284,7 +284,7 @@ const promoThemes = { sale: styles.promoSale, gift: styles.promoGift, light: sty
 
 function Promotions({ banners }: { banners: Banner[] }) {
   return (
-    <section className={`container ${styles.promoSection}`}>
+    <section data-reveal className={`container ${styles.promoSection}`}>
       <div className={styles.promoGrid}>
         {banners.map((b) => (
           <div key={b.id} className={`${styles.promo} ${promoThemes[b.theme]}`}>
@@ -314,7 +314,7 @@ const trust: { icon: IconName; title: string; sub: string }[] = [
 
 function TrustBar() {
   return (
-    <section className={`container ${styles.trustSection}`}>
+    <section data-reveal className={`container ${styles.trustSection}`}>
       <div className={styles.trust}>
         {trust.map((t) => (
           <div key={t.title} className={styles.trustItem}>

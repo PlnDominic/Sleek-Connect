@@ -465,3 +465,11 @@
     font-size: 14px;
   }
 }
+
+/* Apple: a frosted, translucent navigation bar. */
+.header {
+  background: color-mix(in srgb, var(--c-canvas) 76%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(22px);
+  backdrop-filter: saturate(180%) blur(22px);
+  border-bottom: 0.5px solid color-mix(in srgb, var(--c-ink) 14%, transparent);
+}

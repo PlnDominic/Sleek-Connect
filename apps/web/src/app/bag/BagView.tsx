@@ -43,7 +43,7 @@ export function BagView() {
             {items.map((item) => {
               const label = item.sizeLabel ? `${item.name}, ${item.sizeLabel}` : item.name;
               return (
-                <li key={`${item.slug}-${item.sizeId ?? ''}`} className={styles.line}>
+                <li data-reveal key={`${item.slug}-${item.sizeId ?? ''}`} className={styles.line}>
                   <ProductImage
                     image={item.image}
                     photo={item.photo}
