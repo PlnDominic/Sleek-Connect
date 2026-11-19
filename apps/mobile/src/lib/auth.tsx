@@ -1,9 +1,11 @@
 import type { Session, User } from '@supabase/supabase-js';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { AppState, Platform } from 'react-native';
+import { siteAddress, siteConfigured } from './site';
 import { supabase } from './supabase';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -69,13 +71,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [userId]);
 
   const signInWithGoogle = useCallback(async () => {
-    const redirectTo = Linking.createURL('auth/callback');
+    const returnTo = Linking.createURL('auth/callback');
+    // Expo Go's address changes with the network and is not on Supabase's allow list, so route through the website, which is.
+    const viaSite = Constants.executionEnvironment === ExecutionEnvironment.StoreClient && siteConfigured;
+    const redirectTo = viaSite ? `${siteAddress('/auth/mobile')}?to=${encodeURIComponent(returnTo)}` : returnTo;
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo, skipBrowserRedirect: true, queryParams: { prompt: 'select_account' } },
     });
     if (error || !data.url) throw error ?? new Error('No sign-in address');
-    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+    const result = await WebBrowser.openAuthSessionAsync(data.url, returnTo);
     if (result.type !== 'success') return false;
     const code = new URL(result.url).searchParams.get('code');
     if (!code) throw new Error('Google did not return a sign-in code');
