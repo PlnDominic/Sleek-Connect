@@ -10,13 +10,20 @@
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@sentry/nextjs": "^11.10.0",
     "@sleek/shared": "*",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.3",
     "next": "16.4.1",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "nodemailer": "^10.3.1",
+    "posthog-js": "^1.444.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

@@ -1,0 +1,206 @@
+import type { ReactNode } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, TextInput, View, type StyleProp, type TextInputProps, type ViewStyle } from 'react-native';
+import { radii } from '@sleek/shared';
+import { fonts } from '@/theme/fonts';
+import { AppText } from './AppText';
+import { useColors, useStyles, type Palette } from '@/theme/theme';
+
+/** A labelled text box. */
+export function Field({ label, hint, style, ...input }: { label: string; hint?: string; style?: StyleProp<ViewStyle> } & TextInputProps) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
+  return (
+    <View style={[styles.field, style]}>
+      <AppText weight="semibold" size={13}>
+        {label}
+      </AppText>
+      <TextInput
+        accessibilityLabel={label}
+        placeholderTextColor={colors.textPlaceholder}
+        {...input}
+        style={[styles.input, input.multiline && styles.multiline]}
+      />
+      {hint ? (
+        <AppText size={12} color={colors.textMuted}>
+          {hint}
+        </AppText>
+      ) : null}
+    </View>
+  );
+}
+
+interface ButtonProps {
+  label: string;
+  onPress: () => void;
+  kind?: 'primary' | 'secondary' | 'danger';
+  disabled?: boolean;
+  busy?: boolean;
+  style?: StyleProp<ViewStyle>;
+  children?: ReactNode;
+}
+
+export function Button({ label, onPress, kind = 'primary', disabled, busy, style, children }: ButtonProps) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
+  const off = disabled || busy;
+  const color = off ? colors.textMuted : kind === 'primary' ? colors.canvas : kind === 'danger' ? colors.danger : colors.ink;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ disabled: !!off, busy: !!busy }}
+      disabled={off}
+      onPress={onPress}
+      style={({ pressed }) => [styles.button, kind === 'primary' ? styles.primary : styles.secondary, off && styles.off, pressed && { opacity: 0.85 }, style]}
+    >
+      {busy ? <ActivityIndicator color={colors.textMuted} /> : children}
+      <AppText weight="bold" size={16} color={color}>
+        {label}
+      </AppText>
+    </Pressable>
+  );
+}
+
+/** One choice out of a few, shown as chips. */
+export function Choices<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: T;
+  options: { id: T; label: string; sub?: string; disabled?: boolean }[];
+  onChange: (id: T) => void;
+}) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
+  return (
+    <View style={styles.field}>
+      <AppText weight="semibold" size={13}>
+        {label}
+      </AppText>
+      <View accessibilityRole="radiogroup" accessibilityLabel={label} style={styles.choices}>
+        {options.map((o) => {
+          const on = o.id === value;
+          return (
+            <Pressable
+              key={o.id}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: on, disabled: o.disabled }}
+              disabled={o.disabled}
+              onPress={() => onChange(o.id)}
+              style={[styles.choice, on && styles.choiceOn, o.disabled && { opacity: 0.4 }]}
+            >
+              <AppText weight="semibold" size={14} color={on ? colors.canvas : colors.ink}>
+                {o.label}
+              </AppText>
+              {o.sub ? (
+                <AppText size={12} color={on ? colors.canvas : colors.textMuted}>
+                  {o.sub}
+                </AppText>
+              ) : null}
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+/** A tick box with a sentence beside it. Pressing the sentence ticks it too. */
+export function Checkbox({ checked, onChange, children }: { checked: boolean; onChange: (checked: boolean) => void; children: ReactNode }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
+  return (
+    <Pressable
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked }}
+      onPress={() => onChange(!checked)}
+      style={styles.checkbox}
+      hitSlop={6}
+    >
+      <View style={[styles.box, checked && styles.boxOn]}>
+        {checked ? (
+          <AppText weight="bold" size={14} color={colors.canvas}>
+            ✓
+          </AppText>
+        ) : null}
+      </View>
+      <View style={{ flex: 1 }}>{children}</View>
+    </Pressable>
+  );
+}
+
+/** A white card with a heading. */
+export function Card({ title, children }: { title?: string; children: ReactNode }) {
+  const styles = useStyles(makeStyles);
+  return (
+    <View style={styles.card}>
+      {title ? (
+        <AppText weight="bold" size={15} accessibilityRole="header">
+          {title}
+        </AppText>
+      ) : null}
+      {children}
+    </View>
+  );
+}
+
+/** A message the shopper must see: an error or a heads-up. */
+export function Notice({ children, tone = 'warn' }: { children: ReactNode; tone?: 'warn' | 'good' }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
+  return (
+    <View style={[styles.notice, tone === 'good' && styles.noticeGood]} accessibilityRole="alert">
+      <AppText size={13} color={tone === 'good' ? colors.tealInk : colors.accentDeep} style={{ flex: 1 }}>
+        {children}
+      </AppText>
+    </View>
+  );
+}
+
+const makeStyles = (colors: Palette) => StyleSheet.create({
+  checkbox: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, minHeight: 44, paddingVertical: 4 },
+  box: { width: 24, height: 24, borderRadius: 6, borderWidth: 1.5, borderColor: colors.lineStrong, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.canvas },
+  boxOn: { backgroundColor: colors.ink, borderColor: colors.ink },
+  field: { gap: 6 },
+  input: {
+    minHeight: 48,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: colors.lineStrong,
+    borderRadius: radii.lg,
+    backgroundColor: colors.canvas,
+    color: colors.ink,
+    fontFamily: fonts.regular,
+    fontSize: 15,
+  },
+  multiline: { minHeight: 80, paddingTop: 12, textAlignVertical: 'top' },
+  button: {
+    minHeight: 52,
+    borderRadius: radii.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 18,
+  },
+  primary: { backgroundColor: colors.accent },
+  secondary: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.lineStrong },
+  off: { backgroundColor: colors.surfaceSunken, borderColor: colors.surfaceSunken },
+  choices: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  choice: {
+    minHeight: 44,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.lineStrong,
+    backgroundColor: colors.canvas,
+    justifyContent: 'center',
+  },
+  choiceOn: { backgroundColor: colors.accent, borderColor: colors.accent },
+  card: { gap: 14, padding: 18, borderRadius: radii.xl, backgroundColor: colors.canvas },
+  notice: { padding: 12, borderRadius: radii.lg, backgroundColor: colors.warnSoft, flexDirection: 'row' },
+  noticeGood: { backgroundColor: colors.tealSoft },
+});

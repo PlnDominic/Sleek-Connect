@@ -1,51 +1,97 @@
+/*
+ * Checkout, in the Apple design language: grouped inset cards on a quiet background, large title, frosted translucent navigation,
+ * filled inputs with soft focus rings, 12–22px continuous-feeling corners, hairline separators, spring easing and scroll-linked motion.
+ * Motion is progressive: browsers without scroll-driven animations just show the page; reduced-motion turns it all off.
+ */
+
 .page {
-  background: var(--c-surface);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --bg: var(--c-surface);
+  --card: var(--c-canvas);
+  --fill: color-mix(in srgb, var(--c-ink) 5%, transparent);
+  --fill-strong: color-mix(in srgb, var(--c-ink) 9%, transparent);
+  --hairline: color-mix(in srgb, var(--c-ink) 12%, transparent);
+  --ring: color-mix(in srgb, var(--c-accent) 30%, transparent);
+  --r-card: 22px;
+  --r-ctl: 14px;
+  background: var(--bg);
   min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', var(--font-sans), system-ui, sans-serif;
+  letter-spacing: -0.011em;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Header */
+:global(html[data-theme='dark']) .page {
+  --bg: var(--c-canvas);
+  --card: var(--c-surface);
+}
+
+/* ---------- Navigation bar: frosted glass with a scroll-progress hairline ---------- */
 .header {
-  background: var(--c-canvas);
-  border-bottom: 1px solid var(--c-line);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: color-mix(in srgb, var(--c-canvas) 74%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(22px);
+  backdrop-filter: saturate(180%) blur(22px);
+  border-bottom: 0.5px solid var(--hairline);
+}
+
+.header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.5px;
+  height: 2px;
+  background: var(--c-accent);
+  transform-origin: 0 50%;
+  transform: scaleX(0);
 }
 
 .headerInner {
   max-width: 1228px;
   margin: 0 auto;
-  padding: 18px 24px;
+  padding: 12px 24px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px 16px;
 }
 
 .steps {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 3px;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
+  gap: 2px;
+  background: var(--fill);
+  border-radius: 999px;
+  font-size: 13px;
   font-weight: 600;
 }
 
 .steps li {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
+  padding: 6px 14px 6px 8px;
+  border-radius: 999px;
+  transition: background 0.4s var(--ease), color 0.4s var(--ease), box-shadow 0.4s var(--ease);
 }
 
 .stepMark {
-  width: 24px;
-  height: 24px;
-  border-radius: var(--r-pill);
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .stepDone {
@@ -55,6 +101,20 @@
 .stepDone .stepMark {
   background: var(--c-teal);
   color: var(--c-canvas);
+}
+
+.stepLink {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.steps li.stepCurrent {
+  background: var(--card);
+  color: var(--c-ink);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 3px 10px rgba(0, 0, 0, 0.06);
 }
 
 .stepCurrent .stepMark {
@@ -71,7 +131,7 @@
 }
 
 .stepSep {
-  color: var(--c-text-placeholder);
+  display: none !important;
 }
 
 .secure {
@@ -79,17 +139,38 @@
   align-items: center;
   gap: 6px;
   font-size: 13px;
+  font-weight: 500;
   color: var(--c-text-muted);
 }
 
-/* Layout */
+/* ---------- Large title ---------- */
+.titleBar {
+  max-width: 1228px;
+  margin: 0 auto;
+  padding: 28px 24px 0;
+}
+
+.title {
+  font-size: clamp(32px, 5vw, 44px);
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.subtitle {
+  margin-top: 6px;
+  font-size: 17px;
+  color: var(--c-text-muted);
+}
+
+/* ---------- Layout ---------- */
 .main {
   max-width: 1228px;
   margin: 0 auto;
-  padding: 32px 24px 64px;
+  padding: 24px 24px 80px;
   display: flex;
   flex-wrap: wrap;
-  gap: 28px;
+  gap: 24px;
   align-items: flex-start;
 }
 
@@ -102,20 +183,22 @@
 }
 
 .panel {
-  background: var(--c-canvas);
-  border-radius: var(--r-xl);
+  background: var(--card);
+  border-radius: var(--r-card);
   padding: 28px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 20px;
+  box-shadow: 0 0 0 0.5px var(--hairline), 0 8px 30px rgba(0, 0, 0, 0.04);
 }
 
 .panelTitle {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 22px;
+  letter-spacing: -0.022em;
 }
 
-/* Fields */
+/* ---------- Fields: filled, borderless, soft focus ring ---------- */
 .fieldGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -125,23 +208,53 @@
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
 }
 
 .field label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
+  color: var(--c-text-muted);
+  letter-spacing: -0.005em;
 }
 
 .field input,
-.field select {
-  height: 50px;
-  border: 1px solid var(--c-line-strong);
-  border-radius: var(--r-xxl);
-  padding: 0 14px;
-  font-size: 15px;
-  background: var(--c-canvas);
+.field select,
+.field textarea {
+  height: 52px;
+  border: 1.5px solid transparent;
+  border-radius: var(--r-ctl);
+  padding: 0 16px;
+  font-size: 17px;
+  background: var(--fill);
+  color: var(--c-ink);
   width: 100%;
+  outline: none;
+  transition: background 0.25s var(--ease), border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
+}
+
+.field input:hover,
+.field select:hover,
+.field textarea:hover {
+  background: var(--fill-strong);
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  background: var(--card);
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+.field input::placeholder {
+  color: var(--c-text-placeholder);
+}
+
+.field textarea {
+  min-height: 96px;
+  padding: 14px 16px;
+  resize: vertical;
 }
 
 .field select {
@@ -161,12 +274,19 @@
 }
 
 .legend {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
+  color: var(--c-text-muted);
   margin-bottom: 10px;
   padding: 0;
 }
 
+.field small {
+  color: var(--c-text-muted);
+  font-size: 13px;
+}
+
+/* ---------- Selectable cards (delivery window, networks, payment) ---------- */
 .windowGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -174,61 +294,148 @@
 }
 
 .choice {
+  position: relative;
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  border: 1px solid var(--c-line-strong);
-  border-radius: var(--r-lg);
-  padding: 14px;
+  background: var(--fill);
+  border: 1.5px solid transparent;
+  border-radius: 16px;
+  padding: 16px;
   cursor: pointer;
+  transition: transform 0.35s var(--ease-spring), background 0.25s var(--ease), border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
+}
+
+.choice:hover {
+  background: var(--fill-strong);
+}
+
+.choice:active {
+  transform: scale(0.975);
 }
 
 .choice[data-checked='true'] {
-  border: 2px solid var(--c-ink);
+  background: color-mix(in srgb, var(--c-accent) 9%, var(--card));
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 4px var(--ring);
 }
 
-.choice input {
-  width: 18px;
-  height: 18px;
-  margin: 2px 0 0;
-  accent-color: var(--c-ink);
+.choice[data-disabled='true'] {
+  opacity: 0.5;
 }
 
 .choice strong {
   display: block;
-  font-size: 15px;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .choice span span {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--c-text-muted);
+}
+
+/* Round radios and rounded-square checkboxes, drawn to match iOS controls. */
+.choice input,
+.payHeader input,
+.network input,
+.giftCheck input,
+.saveWallet input {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: 1px 0 0;
+  border-radius: 999px;
+  border: 1.5px solid var(--c-text-placeholder);
+  background: var(--card);
+  display: grid;
+  place-content: center;
+  transition: background 0.25s var(--ease), border-color 0.25s var(--ease), transform 0.35s var(--ease-spring);
+}
+
+.giftCheck input,
+.saveWallet input {
+  border-radius: 7px;
+}
+
+.choice input::after,
+.payHeader input::after,
+.network input::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--c-on-accent, #fff);
+  transform: scale(0);
+  transition: transform 0.35s var(--ease-spring);
+}
+
+.giftCheck input::after,
+.saveWallet input::after {
+  content: '';
+  width: 6px;
+  height: 11px;
+  border: solid var(--c-on-accent, #fff);
+  border-width: 0 2.5px 2.5px 0;
+  transform: translateY(-1px) rotate(45deg) scale(0);
+  transition: transform 0.35s var(--ease-spring);
+}
+
+.choice input:checked,
+.payHeader input:checked,
+.network input:checked,
+.giftCheck input:checked,
+.saveWallet input:checked {
+  background: var(--c-accent);
+  border-color: var(--c-accent);
+  transform: scale(1.05);
+}
+
+.choice input:checked::after,
+.payHeader input:checked::after,
+.network input:checked::after {
+  transform: scale(1);
+}
+
+.giftCheck input:checked::after,
+.saveWallet input:checked::after {
+  transform: translateY(-1px) rotate(45deg) scale(1);
+}
+
+.choice input:focus-visible,
+.payHeader input:focus-visible,
+.network input:focus-visible,
+.giftCheck input:focus-visible,
+.saveWallet input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--ring);
 }
 
 /* Payment */
 .payOption {
-  border: 1px solid var(--c-line-strong);
-  border-radius: var(--r-xl);
-  padding: 20px;
+  background: var(--fill);
+  border: 1.5px solid transparent;
+  border-radius: 18px;
+  padding: 18px 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  transition: background 0.3s var(--ease), border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
 }
 
 .payOption[data-checked='true'] {
-  border: 2px solid var(--c-accent);
+  background: color-mix(in srgb, var(--c-accent) 7%, var(--card));
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 4px var(--ring);
 }
 
 .payHeader {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   cursor: pointer;
-}
-
-.payHeader input {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--c-accent);
 }
 
 .payText {
@@ -236,22 +443,26 @@
 }
 
 .payText strong {
-  font-size: 16px;
+  font-size: 17px;
+  font-weight: 600;
 }
 
 .payText span {
   display: block;
-  font-size: 13px;
+  margin-top: 2px;
+  font-size: 14px;
   color: var(--c-text-muted);
 }
 
 .payIcon {
   display: flex;
   color: var(--c-text-muted);
+  transition: color 0.3s var(--ease), transform 0.4s var(--ease-spring);
 }
 
 .payOption[data-checked='true'] .payIcon {
   color: var(--c-accent);
+  transform: scale(1.12);
 }
 
 .networks {
@@ -263,43 +474,50 @@
 .network {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   height: 46px;
-  padding: 0 16px;
-  border-radius: var(--r-xxl);
-  border: 1px solid var(--c-line-strong);
+  padding: 0 16px 0 12px;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1.5px solid var(--hairline);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 15px;
   cursor: pointer;
+  transition: transform 0.35s var(--ease-spring), border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
+}
+
+.network:active {
+  transform: scale(0.96);
 }
 
 .network[data-checked='true'] {
-  border: 2px solid var(--c-ink);
-}
-
-.network input {
-  accent-color: var(--c-ink);
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 4px var(--ring);
 }
 
 .walletField {
   max-width: 360px;
 }
 
-/* Summary */
+/* ---------- Summary: sticks beside the form on large screens ---------- */
 .summary {
   flex: 1 1 376px;
   min-width: 0;
-  background: var(--c-canvas);
-  border-radius: var(--r-xl);
+  position: sticky;
+  top: 84px;
+  background: var(--card);
+  border-radius: var(--r-card);
   padding: 28px;
   display: flex;
   flex-direction: column;
   gap: 18px;
+  box-shadow: 0 0 0 0.5px var(--hairline), 0 12px 40px rgba(0, 0, 0, 0.06);
 }
 
 .summaryTitle {
-  font-weight: 600;
-  font-size: 20px;
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: -0.022em;
 }
 
 .line {
@@ -312,25 +530,29 @@
   width: 64px;
   height: 64px;
   flex: none;
-  border-radius: var(--r-lg);
+  border-radius: 14px;
 }
 
 .lineText {
   flex: 1;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .lineText strong {
   display: block;
+  font-weight: 600;
 }
 
 .lineText span {
   color: var(--c-text-muted);
+  font-size: 14px;
 }
 
 .linePrice {
-  font-size: 15px;
+  font-size: 16px;
+  font-weight: 600;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .promo {
@@ -341,33 +563,49 @@
 .promo input {
   flex: 1;
   min-width: 0;
-  height: 46px;
-  border: 1px solid var(--c-line-strong);
-  border-radius: var(--r-xxl);
-  padding: 0 14px;
+  height: 48px;
+  border: 1.5px solid transparent;
+  border-radius: var(--r-ctl);
+  padding: 0 16px;
+  font-size: 16px;
+  background: var(--fill);
+  outline: none;
+  transition: background 0.25s var(--ease), border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
+}
+
+.promo input:focus {
+  background: var(--card);
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 4px var(--ring);
 }
 
 .promo button {
-  height: 46px;
-  padding: 0 16px;
-  border-radius: var(--r-xxl);
-  border: 1px solid var(--c-ink);
-  background: var(--c-canvas);
+  height: 48px;
+  padding: 0 20px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--fill-strong);
+  color: var(--c-ink);
   font-weight: 600;
+  font-size: 15px;
+  transition: transform 0.3s var(--ease-spring), background 0.25s var(--ease);
+}
+
+.promo button:hover {
+  background: color-mix(in srgb, var(--c-ink) 14%, transparent);
+}
+
+.promo button:active {
+  transform: scale(0.95);
 }
 
 .giftCheck {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 15px;
+  line-height: 1.4;
   cursor: pointer;
-}
-
-.giftCheck input {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--c-accent);
 }
 
 .totals {
@@ -375,9 +613,10 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  font-size: 15px;
-  border-top: 1px solid var(--c-line);
+  font-size: 16px;
+  border-top: 0.5px solid var(--hairline);
   padding-top: 16px;
+  font-variant-numeric: tabular-nums;
 }
 
 .totals div {
@@ -394,29 +633,49 @@
 }
 
 .totals .totalRow {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 700;
-  border-top: 1px solid var(--c-line);
-  padding-top: 12px;
+  letter-spacing: -0.02em;
+  border-top: 0.5px solid var(--hairline);
+  padding-top: 14px;
 }
 
 .totals .totalRow dt {
   color: var(--c-ink);
 }
 
+/* Primary action: a full-width pill with a springy press. */
 .payButton {
   height: 56px;
-  border-radius: var(--r-lg);
+  border-radius: 999px;
   border: 0;
   background: var(--c-accent);
-  color: var(--c-canvas);
-  font-weight: 700;
-  font-size: 16px;
+  color: var(--c-on-accent, #fff);
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: -0.012em;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--c-accent) 38%, transparent);
+  transition: transform 0.35s var(--ease-spring), box-shadow 0.3s var(--ease), filter 0.2s var(--ease), opacity 0.2s;
+}
+
+.payButton:hover:not(:disabled) {
+  filter: brightness(1.06);
+  box-shadow: 0 12px 30px color-mix(in srgb, var(--c-accent) 46%, transparent);
+}
+
+.payButton:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.payButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--ring);
 }
 
 .payButton:disabled {
-  opacity: 0.7;
+  opacity: 0.55;
   cursor: default;
+  box-shadow: none;
 }
 
 .note {
@@ -425,22 +684,368 @@
   color: var(--c-text-muted);
 }
 
+/* ---------- Status panels ---------- */
 .statusPanel {
   background: var(--c-ink);
   color: var(--c-canvas);
-  border-radius: var(--r-xl);
-  padding: 18px;
+  border-radius: 20px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  animation: pop 0.6s var(--ease-spring) both;
 }
 
 .statusPanel strong {
-  font-size: 15px;
+  font-size: 17px;
+  font-weight: 600;
 }
 
 .statusPanel span {
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.5;
   color: var(--c-on-dark-muted);
+}
+
+.statusPanel[data-tone='success'] {
+  background: var(--c-teal);
+}
+
+.statusPanel[data-tone='success'] span {
+  color: var(--c-canvas);
+}
+
+.statusPanel[data-tone='success'] strong {
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+
+.statusPanel[data-tone='problem'] {
+  background: var(--c-accent-deep);
+}
+
+.statusPanel[data-tone='problem'] span {
+  color: var(--c-canvas);
+}
+
+.statusLink {
+  color: var(--c-canvas);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.statusLink:hover {
+  color: var(--c-canvas);
+}
+
+.retry {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  height: 42px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--c-canvas);
+  color: var(--c-ink);
+  font-weight: 600;
+  font-size: 15px;
+  transition: transform 0.3s var(--ease-spring);
+}
+
+.retry:active {
+  transform: scale(0.95);
+}
+
+.error {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--c-accent-deep);
+  animation: pop 0.45s var(--ease-spring) both;
+}
+
+.saveWallet {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.saveOffer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 12px;
+  margin-top: 4px;
+  border-top: 0.5px solid rgba(255, 255, 255, 0.3);
+}
+
+/* ---------- Guest or sign in ---------- */
+.guestBanner {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px;
+  border-radius: var(--r-card);
+  background: var(--card);
+  box-shadow: 0 0 0 0.5px var(--hairline), 0 8px 30px rgba(0, 0, 0, 0.04);
+  font-size: 15px;
+}
+
+.guestChoices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.guestChoices > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px;
+  border-radius: 18px;
+  background: var(--fill);
+}
+
+.guestChoices > div:first-child {
+  background: color-mix(in srgb, var(--c-accent) 9%, var(--card));
+  box-shadow: inset 0 0 0 1.5px var(--c-accent);
+}
+
+.guestChoices strong {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.guestBanner span {
+  color: var(--c-text-muted);
+  line-height: 1.4;
+}
+
+.guestSignIn {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.guestButton {
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--card);
+  color: var(--c-ink);
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 0 0 0.5px var(--hairline), 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s var(--ease-spring), opacity 0.2s var(--ease);
+}
+
+.guestButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.guestGoogle {
+  background: #fff;
+  color: #1f1f1f;
+  box-shadow: 0 0 0 1px #747775;
+}
+
+.guestApple {
+  background: #000;
+  color: #fff;
+  box-shadow: none;
+}
+
+.guestButton:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.guestButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.guestLink {
+  color: var(--c-ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* ---------- Motion ---------- */
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(26px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes progress {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes titleAway {
+  to {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+}
+
+/* On first paint every card eases in, one after the other. */
+.panel,
+.guestBanner,
+.summary {
+  animation: rise 0.7s var(--ease) both;
+}
+
+.guestBanner {
+  animation-delay: 0.05s;
+}
+
+.forms > :nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.forms > :nth-child(3) {
+  animation-delay: 0.16s;
+}
+
+.summary {
+  animation-delay: 0.14s;
+}
+
+/* Where the browser supports it, motion follows the scroll instead. */
+@supports (animation-timeline: view()) {
+  .panel,
+  .guestBanner {
+    animation: rise linear both;
+    animation-delay: 0s;
+    animation-timeline: view();
+    animation-range: entry 0% entry 42%;
+  }
+
+  .header::after {
+    animation: progress linear both;
+    animation-timeline: scroll(root block);
+  }
+
+  .titleBar {
+    animation: titleAway linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 220px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .guestBanner,
+  .summary,
+  .statusPanel,
+  .error,
+  .titleBar,
+  .header::after {
+    animation: none !important;
+  }
+
+  .header::after {
+    transform: none;
+    display: none;
+  }
+
+  .page :global(*) {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- Phones ---------- */
+@media (max-width: 640px) {
+  .headerInner {
+    padding: 10px 16px;
+  }
+
+  .steps {
+    font-size: 12px;
+  }
+
+  .steps li {
+    padding: 5px 10px 5px 6px;
+    gap: 5px;
+  }
+
+  .secure {
+    display: none;
+  }
+
+  .titleBar {
+    padding: 20px 20px 0;
+  }
+
+  .subtitle {
+    font-size: 15px;
+  }
+
+  .main {
+    padding: 16px 16px 56px;
+    gap: 16px;
+  }
+
+  .forms {
+    gap: 16px;
+  }
+
+  .panel,
+  .summary,
+  .guestBanner {
+    padding: 20px;
+    gap: 16px;
+  }
+
+  .guestChoices > div {
+    padding: 16px;
+  }
+
+  .panelTitle,
+  .summaryTitle {
+    font-size: 20px;
+  }
+
+  .fieldGrid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .summary {
+    position: static;
+  }
+
+  /* 16px+ inputs stop iOS Safari zooming the page on focus. */
+  .field input,
+  .field select,
+  .field textarea {
+    font-size: 17px;
+  }
 }

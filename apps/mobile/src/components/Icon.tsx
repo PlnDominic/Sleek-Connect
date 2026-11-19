@@ -1,5 +1,6 @@
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
-import { colors, icons, type IconName } from '@sleek/shared';
+import { icons, type IconName } from '@sleek/shared';
+import { useColors } from '@/theme/theme';
 
 interface IconProps {
   name: IconName;
@@ -8,7 +9,9 @@ interface IconProps {
   strokeWidth?: number;
 }
 
-export function Icon({ name, size = 20, color = colors.ink, strokeWidth = 1.8 }: IconProps) {
+export function Icon({ name, size = 20, color: colorProp, strokeWidth = 1.8 }: IconProps) {
+  const colors = useColors();
+  const color = colorProp ?? colors.ink;
   const def = icons[name];
   const filled = 'filled' in def && def.filled;
   return (

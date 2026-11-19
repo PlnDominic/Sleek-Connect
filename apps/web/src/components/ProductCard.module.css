@@ -1,0 +1,213 @@
+.productCard {
+  position: relative;
+  background: var(--c-surface);
+  border-radius: var(--r-xl);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  border: 1px solid transparent;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+@media (hover: hover) {
+  .productCard:hover {
+    border-color: var(--c-line);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+    transform: translateY(-2px);
+  }
+}
+
+.productCardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  height: 24px;
+}
+
+.badge {
+  color: var(--c-canvas);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--r-sm);
+}
+
+.saveButton[data-saved] {
+  color: var(--c-accent);
+}
+
+.saveButton {
+  width: 32px;
+  height: 32px;
+  margin: -6px -6px 0 0;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--c-ink);
+}
+
+.productCardImage {
+  width: 100%;
+  height: 160px;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+
+.productCardName {
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.7em;
+}
+
+@media (min-width: 901px) {
+  .productCardImage {
+    height: 190px;
+  }
+
+  .productCardName {
+    font-size: 14px;
+  }
+
+  .priceRow strong {
+    font-size: 15px;
+  }
+}
+
+.priceRow {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.priceRow strong {
+  font-size: 14px;
+}
+
+.priceRow s {
+  font-size: 12px;
+  color: var(--c-text-faint);
+}
+
+.productCardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.productCardFooter > span {
+  min-width: 0;
+  font-size: 11px;
+  color: var(--c-text-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.roundAdd {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  margin-left: auto;
+  border-radius: var(--r-pill);
+  border: 0;
+  background: var(--c-ink);
+  color: var(--c-canvas);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.roundAdd:disabled {
+  background: var(--c-line-strong);
+  cursor: not-allowed;
+}
+
+.soldOut {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--c-accent-deep);
+}
+
+/* Apple: softer, larger corners, a gentle lift on hover and a springy press. */
+.productCard {
+  border-radius: 22px;
+  box-shadow: 0 0 0 0.5px color-mix(in srgb, var(--c-ink) 8%, transparent);
+  transition: transform 0.45s var(--ease-spring), box-shadow 0.35s var(--ease-apple);
+}
+
+@media (hover: hover) {
+  .productCard:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0 0 0.5px color-mix(in srgb, var(--c-ink) 8%, transparent), 0 16px 36px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.productCard:active {
+  transform: scale(0.985);
+}
+
+.productCardImage {
+  border-radius: 16px;
+  transition: transform 0.6s var(--ease-apple);
+}
+
+@media (hover: hover) {
+  .productCard:hover .productCardImage {
+    transform: scale(1.03);
+  }
+}
+
+.roundAdd {
+  width: 36px;
+  height: 36px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+/* The add-to-bag button sits in the bottom-right corner of the photo, inset evenly from both edges. */
+.media {
+  position: relative;
+}
+
+.media .roundAdd {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  z-index: 2;
+  background: color-mix(in srgb, var(--c-canvas) 82%, transparent);
+  color: var(--c-ink);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  backdrop-filter: saturate(180%) blur(14px);
+  box-shadow: 0 0 0 0.5px color-mix(in srgb, var(--c-ink) 14%, transparent), 0 6px 16px rgba(0, 0, 0, 0.16);
+  transition: transform 0.35s var(--ease-spring), background-color 0.25s var(--ease-apple), color 0.25s;
+}
+
+.media .roundAdd:hover:not(:disabled) {
+  background: var(--c-accent);
+  color: var(--c-on-accent, #fff);
+  transform: scale(1.08);
+}
+
+.media .roundAdd:disabled {
+  background: color-mix(in srgb, var(--c-canvas) 70%, transparent);
+  color: var(--c-text-placeholder);
+}
+
+.productCardFooter {
+  min-height: 16px;
+}
