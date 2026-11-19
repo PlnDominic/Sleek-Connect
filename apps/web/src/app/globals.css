@@ -19,7 +19,8 @@ body {
   flex-direction: column;
   background: var(--c-canvas);
   color: var(--c-ink);
-  font-family: var(--font-sans), sans-serif;
+  /* Apple's system typeface (San Francisco) on iPhone, iPad and Mac; Inter everywhere else. */
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 

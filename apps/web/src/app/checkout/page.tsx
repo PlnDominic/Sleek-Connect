@@ -46,6 +46,10 @@ export default async function CheckoutPage() {
           </span>
         </div>
       </header>
+      <div className={styles.titleBar}>
+        <h1 className={styles.title}>Checkout</h1>
+        <p className={styles.subtitle}>Delivery, payment and a quick look at your order.</p>
+      </div>
       <CheckoutForm delivery={delivery} payments={{ card: provider?.supportsCard ?? false, hosted: provider?.hostedCheckout ?? false }} />
       <SiteFooter />
     </div>
