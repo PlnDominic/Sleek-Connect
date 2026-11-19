@@ -452,3 +452,227 @@
     gap: 12px;
   }
 }
+
+/* ---------- Apple design: the shop listing ---------- */
+@media (min-width: 641px) {
+  .hero {
+    padding: 36px 0 28px;
+  }
+
+  .hero h1 {
+    font-size: clamp(32px, 5vw, 48px);
+    line-height: 1.05;
+    font-weight: 700;
+    letter-spacing: -0.032em;
+  }
+
+  .hero p {
+    font-size: 17px;
+  }
+}
+
+.hero h1 {
+  animation: listingIn 0.8s var(--ease-apple) both;
+}
+
+.hero p {
+  animation: listingIn 0.8s 0.08s var(--ease-apple) both;
+}
+
+.breadcrumb a {
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  color: var(--c-accent);
+}
+
+@keyframes listingIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Department and category chips: one soft, pill-shaped segmented row. */
+.subnav {
+  gap: 6px;
+}
+
+.subnav a {
+  border: 0;
+  background: color-mix(in srgb, var(--c-ink) 6%, transparent);
+  padding: 9px 16px;
+  transition: transform 0.35s var(--ease-spring), background-color 0.25s var(--ease-apple), color 0.25s;
+}
+
+.subnav a:hover {
+  background: color-mix(in srgb, var(--c-ink) 11%, transparent);
+  color: var(--c-ink);
+}
+
+.subnav a:active {
+  transform: scale(0.95);
+}
+
+.subnav a[aria-current='page'] {
+  background: var(--c-accent);
+  color: var(--c-on-accent, #fff);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--c-accent) 34%, transparent);
+}
+
+.chips a {
+  border: 0;
+  background: color-mix(in srgb, var(--c-ink) 6%, transparent);
+  transition: transform 0.35s var(--ease-spring), background-color 0.25s;
+}
+
+.chips a:active {
+  transform: scale(0.95);
+}
+
+/* Filters: a rounded grouped card that follows you down the page on large screens. */
+@media (min-width: 861px) {
+  .filters {
+    top: 96px;
+    padding: 20px 20px 8px;
+    border-radius: 22px;
+    background: var(--c-surface);
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+}
+
+.facet {
+  border-top: 0.5px solid color-mix(in srgb, var(--c-ink) 12%, transparent);
+}
+
+.facet:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.option {
+  min-height: 28px;
+}
+
+.option input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 7px;
+  border: 1.5px solid var(--c-text-placeholder);
+  background: var(--c-canvas);
+  display: grid;
+  place-content: center;
+  transition: background-color 0.25s var(--ease-apple), border-color 0.25s, transform 0.35s var(--ease-spring);
+}
+
+.option input::after {
+  content: '';
+  width: 5px;
+  height: 10px;
+  border: solid var(--c-on-accent, #fff);
+  border-width: 0 2.5px 2.5px 0;
+  transform: translateY(-1px) rotate(45deg) scale(0);
+  transition: transform 0.35s var(--ease-spring);
+}
+
+.option input:checked {
+  background: var(--c-accent);
+  border-color: var(--c-accent);
+  transform: scale(1.05);
+}
+
+.option input:checked::after {
+  transform: translateY(-1px) rotate(45deg) scale(1);
+}
+
+.apply {
+  border-radius: 999px;
+  background: var(--c-accent);
+  color: var(--c-on-accent, #fff);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--c-accent) 34%, transparent);
+}
+
+.clear {
+  color: var(--c-accent);
+  text-decoration: none;
+}
+
+.filterCount {
+  background: var(--c-accent);
+}
+
+/* Toolbar and sort */
+.count {
+  font-size: 15px;
+}
+
+.sort select {
+  height: 42px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c-ink) 6%, transparent);
+  font-weight: 600;
+}
+
+/* Results */
+.grid {
+  gap: 18px;
+}
+
+.cell {
+  min-width: 0;
+  display: flex;
+}
+
+.cell > * {
+  flex: 1;
+}
+
+.empty {
+  border-radius: 22px;
+}
+
+.pagination {
+  justify-content: center;
+  gap: 8px;
+  margin-top: 36px;
+}
+
+.pagination a {
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c-ink) 6%, transparent);
+  transition: transform 0.35s var(--ease-spring), background-color 0.25s;
+}
+
+.pagination a:hover {
+  background: color-mix(in srgb, var(--c-ink) 12%, transparent);
+  color: var(--c-ink);
+}
+
+.pagination a:active {
+  transform: scale(0.94);
+}
+
+.pagination a[aria-current='page'] {
+  background: var(--c-accent);
+  color: var(--c-on-accent, #fff);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--c-accent) 34%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero h1,
+  .hero p {
+    animation: none;
+  }
+}

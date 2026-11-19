@@ -144,3 +144,39 @@
   height: 36px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
 }
+
+/* The add-to-bag button sits in the bottom-right corner of the photo, inset evenly from both edges. */
+.media {
+  position: relative;
+}
+
+.media .roundAdd {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  z-index: 2;
+  background: color-mix(in srgb, var(--c-canvas) 82%, transparent);
+  color: var(--c-ink);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  backdrop-filter: saturate(180%) blur(14px);
+  box-shadow: 0 0 0 0.5px color-mix(in srgb, var(--c-ink) 14%, transparent), 0 6px 16px rgba(0, 0, 0, 0.16);
+  transition: transform 0.35s var(--ease-spring), background-color 0.25s var(--ease-apple), color 0.25s;
+}
+
+.media .roundAdd:hover:not(:disabled) {
+  background: var(--c-accent);
+  color: var(--c-on-accent, #fff);
+  transform: scale(1.08);
+}
+
+.media .roundAdd:disabled {
+  background: color-mix(in srgb, var(--c-canvas) 70%, transparent);
+  color: var(--c-text-placeholder);
+}
+
+.productCardFooter {
+  min-height: 16px;
+}

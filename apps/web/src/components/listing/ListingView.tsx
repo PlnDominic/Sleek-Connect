@@ -78,7 +78,9 @@ export function ListingView({ path, listing, filters, sorts, keep = {}, empty }:
         ) : (
           <div className={styles.grid}>
             {listing.products.map((p) => (
-              <ProductCard key={p.slug} product={p} showCompare={false} />
+              <div key={p.slug} data-reveal className={styles.cell}>
+                <ProductCard product={p} showCompare={false} />
+              </div>
             ))}
           </div>
         )}
