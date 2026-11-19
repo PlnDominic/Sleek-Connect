@@ -97,7 +97,7 @@ function AppearanceCard() {
 function SignedOut() {
   const colors = useColors();
   const styles = useStyles(makeStyles);
-  const { signInWithGoogle, recordConsent } = useAuth();
+  const { signInWithGoogle, appleAvailable, signInWithApple, recordConsent } = useAuth();
   const [agreed, setAgreed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -119,10 +119,15 @@ function SignedOut() {
       if (await signInWithGoogle()) await recordConsent().catch(() => {});
     }, 'We couldn’t sign you in with Google. Please try again.');
 
+  const apple = () =>
+    void run(async () => {
+      if (await signInWithApple()) await recordConsent().catch(() => {});
+    }, 'We couldn’t sign you in with Apple. Please try again.');
+
   return (
     <Card title="Sign in">
       <AppText size={13} color={colors.textMuted} style={styles.lh}>
-        Sign in with Google to check out, see your orders on every phone and get your delivery code.
+        Sign in to check out, see your orders on every phone and get your delivery code.
       </AppText>
       <Checkbox checked={agreed} onChange={setAgreed} label="I’m 18 or older and accept the Terms of Service and Privacy Notice." />
       <View style={styles.inlineLinks}>
@@ -137,6 +142,7 @@ function SignedOut() {
           </AppText>
         </Pressable>
       </View>
+      {appleAvailable ? <Button label="Continue with Apple" onPress={apple} disabled={!agreed || busy} /> : null}
       <Button label="Continue with Google" onPress={google} disabled={!agreed || busy} />
       {error ? <Notice>{error}</Notice> : null}
     </Card>

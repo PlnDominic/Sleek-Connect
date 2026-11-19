@@ -169,3 +169,11 @@ providers act for us); encrypted in transit: yes; users can ask for deletion: ye
 - **Data safety:** as in "Privacy answers" above. **Account deletion URL:** `https://sleekconnectstore.com/account/privacy` (needs sign-in) plus the in-app Delete my account.
 - **Financial features:** none (payments go through Hubtel; the app is not a bank, loan or investment product).
 - **News, health, government declarations:** not applicable.
+
+## Sign in with Apple (App Store guideline 4.8)
+
+The app offers Google, so the App Store requires an equivalent option: the iPhone app shows **Continue with Apple** next to Google.
+**You:** (1) developer.apple.com → Identifiers → `com.sleekconnect.store` → tick **Sign in with Apple** and save (EAS picks the capability up
+on the next build). (2) Supabase → Authentication → Providers → **Apple**: turn it on and add `com.sleekconnect.store` under *Authorized Client IDs*
+(the native app needs no secret key). (3) Apple also requires revoking the Apple sign-in link when an account is deleted; see the open item in
+the release checklist below.

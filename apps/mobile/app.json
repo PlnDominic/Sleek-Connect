@@ -12,7 +12,8 @@
       "supportsTablet": false,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "usesAppleSignIn": true
     },
     "android": {
       "package": "com.sleekconnect.store",
@@ -54,7 +55,8 @@
           "defaultChannel": "default"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-apple-authentication"
     ],
     "scheme": "sleekconnect",
     "experiments": {

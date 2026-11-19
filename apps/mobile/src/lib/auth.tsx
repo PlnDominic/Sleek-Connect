@@ -1,8 +1,9 @@
 import type { Session, User } from '@supabase/supabase-js';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import { supabase } from './supabase';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -15,6 +16,10 @@ interface AuthValue {
   consented: boolean;
   /** Opens Google's sign-in in the browser and returns when the shopper is signed in. False if they closed it. */
   signInWithGoogle: () => Promise<boolean>;
+  /** True on iPhones that can use Sign in with Apple. */
+  appleAvailable: boolean;
+  /** Shows Apple's sign-in sheet and signs the shopper in. False if they cancelled. */
+  signInWithApple: () => Promise<boolean>;
   recordConsent: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -79,6 +84,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return true;
   }, []);
 
+  const [appleAvailable, setAppleAvailable] = useState(false);
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+    void AppleAuthentication.isAvailableAsync().then(setAppleAvailable, () => setAppleAvailable(false));
+  }, []);
+
+  const signInWithApple = useCallback(async () => {
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [AppleAuthentication.AppleAuthenticationScope.EMAIL],
+      });
+      if (!credential.identityToken) throw new Error('Apple did not return an identity token');
+      const { error } = await supabase.auth.signInWithIdToken({ provider: 'apple', token: credential.identityToken });
+      if (error) throw error;
+      return true;
+    } catch (e) {
+      if ((e as { code?: string }).code === 'ERR_REQUEST_CANCELED') return false;
+      throw e;
+    }
+  }, []);
+
   const recordConsent = useCallback(async () => {
     if (!userId) return;
     const { error } = await supabase.rpc('record_signup_consent');
@@ -95,8 +121,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const consented = profileLoaded && profile.consented;
 
   const value = useMemo(
-    () => ({ user, loading, consented, signInWithGoogle, recordConsent, signOut }),
-    [user, loading, consented, signInWithGoogle, recordConsent, signOut],
+    () => ({ user, loading, consented, signInWithGoogle, appleAvailable, signInWithApple, recordConsent, signOut }),
+    [user, loading, consented, signInWithGoogle, appleAvailable, signInWithApple, recordConsent, signOut],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
