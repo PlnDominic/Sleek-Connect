@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { formatPriceOr, radii, statusShort } from '@sleek/shared';
 import { AppText } from '@/components/AppText';
 import { Button, Card, Field, Notice } from '@/components/Form';
+import { EmptyState } from '@/components/States';
 import { TrackingBar } from '@/components/TrackingBar';
 import { BackButton, useScreenTop } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
@@ -52,37 +53,56 @@ export default function OrdersScreen() {
       </View>
 
       {user && (
-        <Card title="Your account">
+        <>
+          <AppText weight="bold" size={12} color={colors.textMuted} style={styles.sectionLabel}>
+            YOUR ORDERS
+          </AppText>
           {mine.loading ? (
             <AppText size={14} color={colors.textMuted}>
               Loading…
             </AppText>
           ) : (mine.data ?? []).length === 0 ? (
-            <AppText size={14} color={colors.textMuted}>
-              You haven’t placed any orders with this account yet.
-            </AppText>
+            <EmptyState
+              icon="box"
+              title="No orders yet"
+              message="Orders you place with this account will appear here."
+              action={{ label: 'Start shopping', onPress: () => router.push('/shop') }}
+            />
           ) : (
             (mine.data ?? []).map((o) => <OrderRow key={o.order_token} order={o} />)
           )}
-        </Card>
+        </>
       )}
 
       {onThisPhone.length > 0 && (
-        <Card title="Opened on this phone">
-          {onThisPhone.map((r) => (
-            <Pressable key={r.token} accessibilityRole="link" onPress={() => router.push({ pathname: '/orders/[token]', params: { token: r.token } })} style={styles.simpleRow}>
-              <AppText weight="semibold" size={15}>
-                Order {r.orderNumber}
-              </AppText>
-              <AppText weight="semibold" size={13} color={colors.accent}>
-                Track
-              </AppText>
-            </Pressable>
-          ))}
-        </Card>
+        <>
+          <AppText weight="bold" size={12} color={colors.textMuted} style={styles.sectionLabel}>
+            OPENED ON THIS PHONE
+          </AppText>
+          <View style={styles.group}>
+            {onThisPhone.map((r) => (
+              <Pressable
+                key={r.token}
+                accessibilityRole="link"
+                onPress={() => router.push({ pathname: '/orders/[token]', params: { token: r.token } })}
+                style={({ pressed }) => [styles.phoneRow, pressed && { opacity: 0.7 }]}
+              >
+                <AppText weight="semibold" size={15}>
+                  Order {r.orderNumber}
+                </AppText>
+                <AppText weight="semibold" size={13} color={colors.accent}>
+                  Track ›
+                </AppText>
+              </Pressable>
+            ))}
+          </View>
+        </>
       )}
 
-      <Card title="Find an order">
+      <AppText weight="bold" size={12} color={colors.textMuted} style={styles.sectionLabel}>
+        FIND AN ORDER
+      </AppText>
+      <Card>
         <AppText size={13} color={colors.textMuted}>
           You don’t need an account. Use the order number from your text message and the phone number used at checkout.
         </AppText>
@@ -106,33 +126,43 @@ function OrderRow({ order }: { order: OrderSummary }) {
       style={styles.orderRow}
     >
       <View style={styles.simpleRow}>
-        <View>
-          <AppText weight="bold" size={15}>
+        <View style={styles.flex}>
+          <AppText weight="bold" size={16}>
             Order {order.order_number}
           </AppText>
           <AppText size={12} color={colors.textMuted}>
             {formatDate(order.created_at)} · {order.item_count} {order.item_count === 1 ? 'item' : 'items'}
           </AppText>
         </View>
-        <View style={styles.right}>
-          <AppText weight="semibold" size={12} color={colors.accent}>
+        <View style={styles.pill}>
+          <AppText weight="bold" size={11} color={colors.accentDeep}>
             {statusShort[order.status]}
-          </AppText>
-          <AppText weight="bold" size={14}>
-            {formatPriceOr(order.total_ghs, 'To be confirmed')}
           </AppText>
         </View>
       </View>
       <TrackingBar status={order.status} compact />
+      <View style={styles.totalRow}>
+        <AppText size={13} color={colors.textMuted}>
+          Total
+        </AppText>
+        <AppText weight="bold" size={16}>
+          {formatPriceOr(order.total_ghs, 'To be confirmed')}
+        </AppText>
+      </View>
     </Pressable>
   );
 }
 
 const makeStyles = (colors: Palette) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.surface },
-  content: { paddingHorizontal: 20, paddingBottom: 40, gap: 16 },
+  content: { paddingHorizontal: 20, paddingBottom: 40, gap: 14 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   simpleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 44 },
-  orderRow: { gap: 10, paddingVertical: 10, borderTopWidth: 1, borderTopColor: colors.line, borderRadius: radii.sm },
-  right: { alignItems: 'flex-end' },
+  flex: { flex: 1 },
+  sectionLabel: { letterSpacing: 0.8, paddingLeft: 4, marginBottom: -6 },
+  orderRow: { gap: 14, padding: 16, borderRadius: radii.xl, backgroundColor: colors.canvas },
+  pill: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: radii.pill, backgroundColor: colors.surface },
+  totalRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.line },
+  group: { borderRadius: radii.xl, backgroundColor: colors.canvas, overflow: 'hidden' },
+  phoneRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 56, paddingHorizontal: 16, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.line },
 });

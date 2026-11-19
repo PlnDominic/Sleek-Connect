@@ -1,3 +1,4 @@
+import { siteAddress, siteConfigured } from './site';
 import { supabase } from './supabase';
 
 /**
@@ -6,6 +7,14 @@ import { supabase } from './supabase';
  * Returns a message for the shopper when it can't go ahead, or null once the account is gone.
  */
 export async function deleteMyAccount(): Promise<string | null> {
+  // Apple requires that deleting an account also ends the Apple ID's link with the app. Do it first; if Apple can't be reached, nothing is deleted.
+  const { data: session } = await supabase.auth.getSession();
+  const isApple = session.session?.user.app_metadata.provider === 'apple' || session.session?.user.identities?.some((i) => i.provider === 'apple');
+  if (isApple && siteConfigured) {
+    const reply = await fetch(siteAddress('/api/account/apple-revoke'), { method: 'POST', headers: { Authorization: `Bearer ${session.session?.access_token}` } }).catch(() => null);
+    if (!reply || !reply.ok) return 'We couldn’t reach Apple to end your Apple sign-in, so nothing was deleted. Please try again.';
+  }
+
   const { data: blocker } = await supabase.rpc('account_deletion_blocker');
   if (blocker) return blocker as string;
 

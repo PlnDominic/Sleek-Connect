@@ -101,8 +101,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         requestedScopes: [AppleAuthentication.AppleAuthenticationScope.EMAIL],
       });
       if (!credential.identityToken) throw new Error('Apple did not return an identity token');
-      const { error } = await supabase.auth.signInWithIdToken({ provider: 'apple', token: credential.identityToken });
+      const { data, error } = await supabase.auth.signInWithIdToken({ provider: 'apple', token: credential.identityToken });
       if (error) throw error;
+      // Lets the website keep the means to revoke this Apple link if the account is deleted later (best effort).
+      if (credential.authorizationCode && data.session) {
+        void fetch(siteAddress('/api/account/apple-link'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session.access_token}` },
+          body: JSON.stringify({ authorizationCode: credential.authorizationCode }),
+        }).catch(() => {});
+      }
       return true;
     } catch (e) {
       if ((e as { code?: string }).code === 'ERR_REQUEST_CANCELED') return false;

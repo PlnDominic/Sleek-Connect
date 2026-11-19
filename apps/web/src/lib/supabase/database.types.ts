@@ -1033,6 +1033,12 @@ isOneToOne: false
 "delete_my_account":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"save_apple_refresh_token":
+{ Args: { "p_token": string }; Returns: undefined
+                           },
+"take_apple_refresh_token":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
 "delete_my_review":
 { Args: { "p_slug": string }; Returns: undefined
                            },

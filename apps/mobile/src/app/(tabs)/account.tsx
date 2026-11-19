@@ -42,12 +42,17 @@ export default function AccountScreen() {
 
       <AppearanceCard />
 
+      <AppText weight="bold" size={12} color={colors.textMuted} style={styles.sectionLabel}>
+        SHOPPING AND HELP
+      </AppText>
       <View style={styles.list}>
         <LinkRow icon="box" title="Your orders" text="Track an order, or find one by its number" onPress={() => router.push('/orders')} />
         {siteLinks.map((l) => (
           <LinkRow key={l.path} icon={l.icon} title={l.title} text={l.text} onPress={() => void openSite(l.path)} disabled={!siteConfigured} />
         ))}
       </View>
+
+      {user ? <AccountActions /> : null}
     </ScrollView>
   );
 }
@@ -152,15 +157,68 @@ function SignedOut() {
 
 function SignedIn() {
   const colors = useColors();
-  const { user, consented, recordConsent, signOut } = useAuth();
+  const styles = useStyles(makeStyles);
+  const { user, consented, recordConsent } = useAuth();
   const [agreed, setAgreed] = useState(false);
   const [notifying, setNotifying] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     void pushAllowed().then(setNotifying);
   }, []);
+
+  return (
+    <>
+      <View style={styles.profile}>
+        <View style={styles.avatar}>
+          <AppText weight="bold" size={22} color={colors.canvas}>
+            {(user?.email ?? user?.phone ?? 'S').replace(/^\+/, '').charAt(0).toUpperCase()}
+          </AppText>
+        </View>
+        <View style={styles.flex}>
+          <AppText weight="bold" size={16} numberOfLines={1}>
+            {user?.phone ? `+${user.phone.replace(/^\+/, '')}` : (user?.email ?? 'Your account')}
+          </AppText>
+          <AppText size={13} color={colors.textMuted}>
+            Signed in
+          </AppText>
+        </View>
+      </View>
+
+      {!consented && (
+        <Card title="One more step">
+          <Checkbox checked={agreed} onChange={setAgreed} label="I’m 18 or older and accept the Terms of Service and Privacy Notice." />
+          <Button label="Confirm" onPress={() => void recordConsent().catch(() => setError('We couldn’t save that. Please try again.'))} disabled={!agreed} />
+        </Card>
+      )}
+
+      <Card title="Order updates on this phone">
+        <AppText size={13} color={colors.textMuted}>
+          {notifying ? 'We’ll notify you when an order is packed, on its way and delivered.' : 'Get a notification when an order is packed, on its way and delivered.'}
+        </AppText>
+        {notifying ? (
+          <Button
+            label="Turn off"
+            kind="secondary"
+            onPress={() => void unregisterPush().then(() => setNotifying(false))}
+          />
+        ) : (
+          <Button label="Turn on" kind="secondary" onPress={() => void registerForPush().then((r) => setNotifying(r === 'granted'))} />
+        )}
+      </Card>
+
+      {error ? <Notice>{error}</Notice> : null}
+    </>
+  );
+}
+
+/** Sign out and delete: kept at the very bottom, away from the everyday options. */
+function AccountActions() {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
+  const { signOut } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   function confirmSignOut() {
     Alert.alert('Sign out?', 'Your bag stays on this phone.', [
@@ -192,37 +250,15 @@ function SignedIn() {
   }
 
   return (
-    <>
-      <Card title="You’re signed in">
-        <AppText size={14}>{user?.phone ? `+${user.phone.replace(/^\+/, '')}` : (user?.email ?? 'Your account')}</AppText>
-      </Card>
-
-      {!consented && (
-        <Card title="One more step">
-          <Checkbox checked={agreed} onChange={setAgreed} label="I’m 18 or older and accept the Terms of Service and Privacy Notice." />
-          <Button label="Confirm" onPress={() => void recordConsent().catch(() => setError('We couldn’t save that. Please try again.'))} disabled={!agreed} />
-        </Card>
-      )}
-
-      <Card title="Order updates on this phone">
-        <AppText size={13} color={colors.textMuted}>
-          {notifying ? 'We’ll notify you when an order is packed, on its way and delivered.' : 'Get a notification when an order is packed, on its way and delivered.'}
-        </AppText>
-        {notifying ? (
-          <Button
-            label="Turn off"
-            kind="secondary"
-            onPress={() => void unregisterPush().then(() => setNotifying(false))}
-          />
-        ) : (
-          <Button label="Turn on" kind="secondary" onPress={() => void registerForPush().then((r) => setNotifying(r === 'granted'))} />
-        )}
-      </Card>
-
+    <View style={styles.actions}>
       {error ? <Notice>{error}</Notice> : null}
       <Button label="Sign out" kind="secondary" onPress={confirmSignOut} />
-      <Button label="Delete my account" kind="danger" onPress={confirmDelete} busy={busy} />
-    </>
+      <Pressable accessibilityRole="button" disabled={busy} onPress={confirmDelete} style={({ pressed }) => [styles.deleteLink, (pressed || busy) && { opacity: 0.6 }]}>
+        <AppText weight="semibold" size={14} color={colors.danger}>
+          {busy ? 'Deleting…' : 'Delete my account'}
+        </AppText>
+      </Pressable>
+    </View>
   );
 }
 
@@ -263,7 +299,12 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
   segmentOn: { backgroundColor: colors.ink },
   lh: { lineHeight: 19 },
   inlineLinks: { flexDirection: 'row', gap: 18 },
-  list: { borderTopWidth: 1, borderTopColor: colors.line },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 68, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.line },
-  icon: { width: 44, height: 44, borderRadius: radii.lg, backgroundColor: colors.canvas, alignItems: 'center', justifyContent: 'center' },
+  sectionLabel: { letterSpacing: 0.8, marginTop: 4, marginBottom: -8, paddingLeft: 4 },
+  list: { borderRadius: radii.xl, backgroundColor: colors.canvas, overflow: 'hidden' },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 68, paddingVertical: 12, paddingHorizontal: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.line },
+  profile: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: radii.xl, backgroundColor: colors.canvas },
+  avatar: { width: 52, height: 52, borderRadius: radii.pill, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
+  actions: { gap: 6, marginTop: 10 },
+  deleteLink: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  icon: { width: 44, height: 44, borderRadius: radii.lg, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
 });

@@ -6,7 +6,7 @@ marked **You**.
 
 ## What the app does today
 
-Browse and search the live catalogue (light and dark themes, switchable in Account), bag and saved items on the phone, sign in (phone code or Google), checkout with
+Browse and search the live catalogue (light and dark themes, switchable in Account), bag and saved items on the phone, sign in (Google, and Apple on iPhone), checkout with
 Mobile Money inside the app, order tracking, pay again or cancel before packing, push notifications for order updates,
 and deleting the account from the Account tab. Returns, receipts and help open the website.
 
@@ -72,8 +72,8 @@ eas build --profile production --platform all        # what you submit to the st
 - **Payments:** reviewers will try to check out. Connect the real payment provider (Hubtel). The test provider is for automated tests only and is
   refused on Vercel production. Physical goods are paid for outside the stores' own purchase
   systems, which both stores allow.
-- **Sign-in for reviewers:** they can't receive a text message. In Supabase → Authentication → Providers → Phone, add a
-  **test phone number with a fixed code** (for example `233240000000` and `123456`), and put it in the review notes.
+- **Sign-in for reviewers:** the app signs in with Google and Sign in with Apple only (no phone code). Reviewers use **Continue with Apple**
+  with their own Apple ID; no demo account is needed. Ordering also works for Google sign-in testers. Mention this in the review notes.
 - Fill in `BUSINESS_NAME`, `BUSINESS_ADDRESS` and the other business details on the website so the privacy notice and
   terms are complete (the stores ask for a working privacy policy URL).
 - The app lets people delete their account (Account → Delete my account), which the App Store requires.
@@ -155,15 +155,14 @@ providers act for us); encrypted in transit: yes; users can ask for deletion: ye
 ### App Store review notes (paste into "Notes")
 
 > Sleek Connect Store sells beauty, baby and home products delivered in Accra, Ghana. You can browse and order without an account.
-> To test sign-in use the phone number +233 24 000 0000 with the code 123456 (a fixed test number). Payment is by Mobile Money
+> To sign in, tap Account, accept the terms, and use "Continue with Apple" with any Apple ID (no demo account is needed). Payment is by Mobile Money
 > prompt; physical goods are paid for outside In-App Purchase, as the guidelines allow. Account deletion: Account → Delete my account.
 > Privacy policy: https://sleekconnectstore.com/privacy
 
-(Create that test number in Supabase → Authentication → Providers → Phone → test phone numbers first.)
 
 ### Google Play Console answers
 
-- **App access:** "All or some functionality is restricted", with the same test phone number and code.
+- **App access:** "All or some functionality is restricted": checkout needs a Google account; give Play a test Google account (the store owner can create one).
 - **Ads:** no ads. **Target audience:** 18 and over (checkout asks shoppers to confirm they are 18 or older).
 - **Content rating:** answer the questionnaire honestly: no violence, no user-generated content, no gambling; it is a shopping app.
 - **Data safety:** as in "Privacy answers" above. **Account deletion URL:** `https://sleekconnectstore.com/account/privacy` (needs sign-in) plus the in-app Delete my account.
@@ -175,5 +174,10 @@ providers act for us); encrypted in transit: yes; users can ask for deletion: ye
 The app offers Google, so the App Store requires an equivalent option: the iPhone app shows **Continue with Apple** next to Google.
 **You:** (1) developer.apple.com → Identifiers → `com.sleekconnect.store` → tick **Sign in with Apple** and save (EAS picks the capability up
 on the next build). (2) Supabase → Authentication → Providers → **Apple**: turn it on and add `com.sleekconnect.store` under *Authorized Client IDs*
-(the native app needs no secret key). (3) Apple also asks apps to revoke the Apple sign-in link when an Apple-signed-in account is deleted; that needs a server-side
-call with an Apple key and is not built yet.
+(the native app needs no secret key). (3) **Account deletion** also revokes the Apple link, as App Store guideline 5.1.1(v) requires: right after an Apple
+sign-in the app sends Apple's authorization code to the website (`POST /api/account/apple-link`), which exchanges it for a refresh token and stores it
+(`apple_sign_in_tokens`, no direct access); deleting the account first calls `POST /api/account/apple-revoke`, which revokes it at Apple. **You:** at
+developer.apple.com → Keys, create a key with **Sign in with Apple** enabled (download the `.p8` once), then set `APPLE_TEAM_ID` (Membership page),
+`APPLE_KEY_ID` (the key's id) and `APPLE_PRIVATE_KEY` (the `.p8` text, line breaks written as `
+`) on Vercel. Without them the step is skipped
+(and Apple will see the link still active, so set them before submitting). Run `supabase db push` for migration `20261203090000`.

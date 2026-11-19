@@ -91,6 +91,7 @@ reset_db; suite "database: purchasing, stock counts, supplier payments, profit" 
 reset_db; suite "database: supplier register and stock receipts" db-suppliers.cjs
 reset_db; suite "database: limits on placing orders, minimum app version" db-order-limits.cjs
 reset_db; suite "database: shared rate limiter" db-rate-limit.cjs
+reset_db; suite "database: Sign in with Apple revocation tokens" db-apple-revocation.cjs
 suite "email: Gmail sender (Nodemailer)" unit-email.cjs
 suite "payments: Hubtel provider" unit-hubtel.cjs
 suite "privacy: what Sentry and PostHog may receive" unit-telemetry.cjs
