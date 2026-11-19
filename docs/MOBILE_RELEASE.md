@@ -175,5 +175,5 @@ providers act for us); encrypted in transit: yes; users can ask for deletion: ye
 The app offers Google, so the App Store requires an equivalent option: the iPhone app shows **Continue with Apple** next to Google.
 **You:** (1) developer.apple.com → Identifiers → `com.sleekconnect.store` → tick **Sign in with Apple** and save (EAS picks the capability up
 on the next build). (2) Supabase → Authentication → Providers → **Apple**: turn it on and add `com.sleekconnect.store` under *Authorized Client IDs*
-(the native app needs no secret key). (3) Apple also requires revoking the Apple sign-in link when an account is deleted; see the open item in
-the release checklist below.
+(the native app needs no secret key). (3) Apple also asks apps to revoke the Apple sign-in link when an Apple-signed-in account is deleted; that needs a server-side
+call with an Apple key and is not built yet.
