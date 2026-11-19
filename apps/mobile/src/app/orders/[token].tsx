@@ -9,6 +9,7 @@ import { TrackingBar } from '@/components/TrackingBar';
 import { BackButton, useScreenTop } from '@/components/ui';
 import { getDeliveryConfig, getPaymentOptions, openPaymentPage, requestPayment } from '@/lib/checkout';
 import { cancelOrder, formatDate, formatDateTime, getOrder, rememberOrder, type CustomerOrder } from '@/lib/orders';
+import { useAuth } from '@/lib/auth';
 import { pushAllowed, registerForPush } from '@/lib/push';
 import { useQuery } from '@/lib/query';
 import { openSite } from '@/lib/site';
@@ -69,6 +70,7 @@ function Header({ title = 'Your order' }: { title?: string }) {
 
 function OrderView({ order, token, onChanged }: { order: CustomerOrder; token: string; onChanged: () => void }) {
   const colors = useColors();
+  const { user, loading: authLoading } = useAuth();
   const styles = useStyles(makeStyles);
   const top = useScreenTop();
   const delivery = useQuery('delivery-config', getDeliveryConfig, 5 * 60_000);
@@ -134,6 +136,15 @@ function OrderView({ order, token, onChanged }: { order: CustomerOrder; token: s
               : ''}
             Pay {formatPriceOr(order.total_ghs, 'the total')} in cash to the rider when it arrives.
           </AppText>
+        </Card>
+      ) : null}
+
+      {!user && !authLoading ? (
+        <Card title="Want it quicker next time?">
+          <AppText size={13} color={colors.textMuted}>
+            Save your delivery details and see all your orders on every phone. It takes a few seconds.
+          </AppText>
+          <Button label="Save my details" kind="secondary" onPress={() => router.push('/account')} />
         </Card>
       ) : null}
 

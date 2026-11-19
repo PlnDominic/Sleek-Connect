@@ -199,11 +199,12 @@ const statusPanel = (page) => page.locator('aside:visible').getByRole('status').
   assert((await page.getByRole('radio', { name: /Pay on delivery/ }).count()) === 0, 'pay on delivery is not offered at checkout');
   assert(await page.getByRole('radio', { name: /Debit or credit card/ }).count() === 1, 'card is offered');
 
-  // Signed-out visitors are sent to sign in, and come back to checkout afterwards.
+  // Signed-out visitors can check out as a guest: a banner says so, and they confirm they are 18 or older.
   const visitor = await (await browser.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
   await go(visitor, BASE + '/checkout');
-  await visitor.waitForURL(/\/account\?next=\/checkout/);
-  assert(true, 'checkout sends a signed-out visitor to sign in first');
+  await visitor.getByText('Checkout as guest').waitFor();
+  assert(await visitor.getByText(/You don.t need an account to buy/).isVisible(), 'guest checkout shows its tagline');
+  assert(await visitor.getByLabel(/18 or older/).count() === 1, 'a guest confirms they are 18 or older');
   await go(page, BASE + '/checkout');
   assert((await page.getByLabel(/18 or older/).count()) === 0, 'the checkout page has no 18+ box');
 

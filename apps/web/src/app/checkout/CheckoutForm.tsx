@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, useTransition, type FormEvent, type ReactNode } from 'react';
 import { formatPrice, formatPriceOr, momoNetworks, type MomoNetwork } from '@sleek/shared';
 import { useBag, type ResolvedBagItem } from '@sleek/shared/bag';
@@ -53,7 +52,6 @@ const paidStatuses: OrderStatus['status'][] = ['paid', 'packed', 'out_for_delive
 export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
   const bag = useBag();
   const { user, consented, loading: authLoading } = useAuth();
-  const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   // Typed by the shopper; one that matches a delivery area we list picks up that area's fee.
   const [area, setArea] = useState('');
@@ -107,10 +105,8 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
 
   // Signed-in shoppers can pick a saved address; the default one fills the form.
   const signedIn = Boolean(user && consented);
-  // Checkout needs an account: anyone not signed in (or not yet confirmed) is sent to sign in, then brought straight back here.
-  useEffect(() => {
-    if (!authLoading && !signedIn) router.replace('/account?next=/checkout');
-  }, [authLoading, signedIn, router]);
+  // Anyone can check out as a guest. Guests confirm they are 18 or older and accept the terms here; signed-in shoppers did that when they signed up.
+  const [adult, setAdult] = useState(false);
   useEffect(() => {
     if (!signedIn) return;
     let cancelled = false;
@@ -185,9 +181,8 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
     const form = new FormData(event.currentTarget);
     const text = (name: string) => String(form.get(name) ?? '').trim();
     const orderedItems = bag.items;
-    // Checkout is for signed-in shoppers, who confirmed they are 18 or older and accepted the terms when they created their account.
-    if (!signedIn) {
-      setError('Please sign in to place your order.');
+    if (!signedIn && !adult) {
+      setError('Please confirm that you are 18 or older and accept the terms.');
       return;
     }
     track('checkout_submitted', { payment_method: method, items: orderedItems.reduce((n, i) => n + i.qty, 0) });
@@ -201,7 +196,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
           area: text('area'),
           ghanapostGps: text('gps') || undefined,
           directions: text('directions') || undefined,
-          adultConfirmed: true,
+          adultConfirmed: signedIn || adult,
         },
         deliveryOption: deliveryId,
         payment: method === 'momo' ? { method: 'momo', network, wallet } : { method },
@@ -236,17 +231,20 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
     setCardNotice(false);
   };
 
-  if (!signedIn && !placed) {
-    return (
-      <main id="main-content" className={styles.main}>
-        <p role="status" className={styles.note}>{authLoading ? 'Loading your checkout…' : 'Taking you to sign in…'}</p>
-      </main>
-    );
-  }
-
   return (
     <main id="main-content" className={styles.main}>
       <form id="checkout-form" ref={formRef} className={styles.forms} onSubmit={onSubmit}>
+        {!user && !authLoading && !placed && (
+          <div className={styles.guestBanner}>
+            <div>
+              <strong>Checkout as guest</strong>
+              <span>You don&apos;t need an account to buy.</span>
+            </div>
+            <Link href="/account?next=/checkout" className={styles.guestLink}>
+              Have an account? Sign in
+            </Link>
+          </div>
+        )}
         <fieldset disabled={!!placed} className={styles.fieldset}>
           <div className={styles.forms}>
             <section className={styles.panel}>
@@ -320,6 +318,15 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
                 <label className={styles.giftCheck}>
                   <input type="checkbox" checked={saveAddress} onChange={(e) => setSaveAddress(e.target.checked)} />
                   Save this address to my account
+                </label>
+              )}
+              {!signedIn && (
+                <label className={styles.giftCheck}>
+                  <input type="checkbox" checked={adult} onChange={(e) => setAdult(e.target.checked)} required />
+                  <span>
+                    I&apos;m 18 or older and accept the <Link href="/terms" target="_blank">Terms of Service</Link> and{' '}
+                    <Link href="/privacy" target="_blank">Privacy Notice</Link>.
+                  </span>
                 </label>
               )}
               <fieldset className={styles.fieldset}>
@@ -512,6 +519,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
 
         {placed ? (
           <OrderProgress
+            signedIn={signedIn}
             order={placed}
             live={live}
             prompt={`Approve the ${networkLabel} prompt sent to ${walletDisplay} with your PIN. We never see your PIN.`}
@@ -553,11 +561,12 @@ interface OrderProgressProps {
   order: PlacedOrder;
   live: OrderStatus | null;
   prompt: string;
+  signedIn: boolean;
   onRetry: () => void;
 }
 
 /** What happened to the order after it was placed, kept up to date from the server. */
-function OrderProgress({ order, live, prompt, onRetry }: OrderProgressProps) {
+function OrderProgress({ order, live, prompt, signedIn, onRetry }: OrderProgressProps) {
   const status = live?.status ?? 'pending_payment';
   // With a hosted payment page, the shopper is sent there straight away (the button is there if the browser blocks it).
   const checkoutUrl = order.payment.kind === 'requested' ? order.payment.checkoutUrl : undefined;
@@ -576,9 +585,15 @@ function OrderProgress({ order, live, prompt, onRetry }: OrderProgressProps) {
         <Link href={`/orders/${order.orderToken}`} className={styles.retry}>
           View order, receipt and delivery updates
         </Link>
-        <Link href={`/account?next=${encodeURIComponent(`/orders/${order.orderToken}`)}`} className={styles.statusLink}>
-          Create an account to keep this order with your history
-        </Link>
+        {!signedIn && (
+          <span className={styles.saveOffer}>
+            <strong>Want it quicker next time?</strong>
+            <span>Save your delivery details and see all your orders in one place. It takes a few seconds.</span>
+            <Link href={`/account?next=${encodeURIComponent(`/orders/${order.orderToken}`)}`} className={styles.statusLink}>
+              Save my details
+            </Link>
+          </span>
+        )}
       </div>
     );
   }

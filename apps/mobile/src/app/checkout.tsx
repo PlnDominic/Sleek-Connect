@@ -35,22 +35,6 @@ export default function CheckoutScreen() {
   const delivery = useQuery('delivery-config', getDeliveryConfig, 5 * 60_000);
   const payments = useQuery('payment-options', getPaymentOptions, 60_000);
   const [placed, setPlaced] = useState<Placed | null>(null);
-  const { user, loading: authLoading } = useAuth();
-
-  // Like the website: checking out needs a signed-in account, so order updates and the delivery code always reach the customer.
-  if (!placed && items.length > 0 && !authLoading && !user) {
-    return (
-      <View style={[styles.screen, { paddingTop: top, paddingHorizontal: 20 }]}>
-        <Header />
-        <EmptyState
-          icon="user"
-          title="Sign in to check out"
-          message="Sign in with Google so we can send your order updates and delivery code."
-          action={{ label: 'Sign in', onPress: () => router.push('/account') }}
-        />
-      </View>
-    );
-  }
 
   if (items.length === 0 && !placed) {
     return (
@@ -226,6 +210,14 @@ function Details({
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={[styles.content, { paddingTop: top }]} keyboardShouldPersistTaps="handled">
         <Header />
+
+        {!user ? (
+          <Card title="Checkout as guest">
+            <AppText size={13} color={colors.textMuted}>
+              You don’t need an account to buy.
+            </AppText>
+          </Card>
+        ) : null}
 
         <Card title={`Your order · ${count} ${count === 1 ? 'item' : 'items'}`}>
           {items.map((item) => (
