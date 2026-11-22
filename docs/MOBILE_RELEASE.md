@@ -85,10 +85,10 @@ Use these as a starting point.
 | Field | Text |
 | --- | --- |
 | Name | Sleek Connect Store |
-| Subtitle (App Store, 30 characters) | Beauty and baby, delivered |
-| Short description (Google Play, 80 characters) | Beauty, kids and home essentials delivered across Accra. Pay with Mobile Money. |
+| Subtitle (App Store, 30 characters) | Everything, delivered in Accra |
+| Short description (Google Play, 80 characters) | Shop everyday products and get them delivered across Accra. Pay with MoMo. |
 | Category | Shopping |
-| Keywords | beauty, skincare, baby, kids, Accra, Ghana, delivery, mobile money, MoMo, shop |
+| Keywords | shop, store, online shopping, Accra, Ghana, delivery, mobile money, MoMo, deals, essentials |
 | Support URL | `https://<your website>/help` |
 | Privacy policy URL | `https://<your website>/privacy` |
 | Marketing URL | `https://<your website>` |
@@ -96,7 +96,7 @@ Use these as a starting point.
 
 **Long description**
 
-> Sleek Connect Store brings authentic beauty, kids and home products to your door in Accra.
+> Sleek Connect Store is a general online store: a wide range of everyday products, delivered to your door in Accra.
 >
 > • Browse and search the whole range, with filters, sizes and clear stock.
 > • Every product is checked for authenticity, with batch and expiry details on your receipt.
@@ -154,7 +154,7 @@ providers act for us); encrypted in transit: yes; users can ask for deletion: ye
 
 ### App Store review notes (paste into "Notes")
 
-> Sleek Connect Store sells beauty, baby and home products delivered in Accra, Ghana. You can browse and order without an account.
+> Sleek Connect Store is a general online store selling a wide range of products, delivered in Accra, Ghana. You can browse and order without an account.
 > To sign in, tap Account, accept the terms, and use "Continue with Apple" with any Apple ID (no demo account is needed). Payment is by Mobile Money
 > prompt; physical goods are paid for outside In-App Purchase, as the guidelines allow. Account deletion: Account → Delete my account.
 > Privacy policy: https://sleekconnectstore.com/privacy
