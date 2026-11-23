@@ -132,6 +132,9 @@ async function deliver(S, o, rider) {
   const find = async (n, p) => (await anon.rpc('find_order', { p_order_number: n, p_phone: p })).data;
   assert(await find(o1.order_number, '+233 24 555 0101') === o1.order_token, 'lookup matches the phone in another format');
   assert(await find(o1.order_number.toLowerCase(), '0245550101') === o1.order_token, 'order number is case-insensitive');
+  assert(/^SC-\d{10}$/.test(o1.order_number) && Number(o1.order_number.slice(3)) >= 1000000000, 'order numbers are unpredictable 10-digit numbers, not a counting sequence');
+  assert(sql('select count(distinct order_number) = count(*) from public.orders') === 't', 'every order number is unique');
+  assert((await anon.rpc('new_order_number')).error, 'shoppers cannot call the order number generator');
   assert(await find(o1.order_number, '024 555 0102') === null, 'wrong phone finds nothing');
   assert(await find(o1.order_number, '555') === null, 'too-short phone finds nothing');
   assert((await anon.from('order_lookup_failures').select('key')).error || (await anon.from('order_lookup_failures').select('key')).data.length === 0, 'lookup failures are private');

@@ -23,7 +23,8 @@ const errOf = async (promise) => (await promise).error;
 
   // Delivery configuration fails closed in the database, not only in the checkout UI.
   sql("insert into public.delivery_zones (id, name, sort_order) values ('launch-test', 'Launch Test', 999)");
-  sql("update public.delivery_areas set zone_id = 'launch-test' where name = 'Osu'");
+  // The areas list is optional now (shoppers type their area), so the zone rule only applies to an area we list.
+  sql("insert into public.delivery_areas (name, zone_id) values ('Osu', 'launch-test') on conflict (name) do update set zone_id = 'launch-test'");
   sql("insert into public.delivery_rates (zone_id, option_id, fee_ghs, is_available) values ('launch-test', 'same_day', 35, false)");
   const blocked = await anon.rpc('place_order', {
     p_customer: { adult_confirmed: true, name: 'Launch Test', phone: '0241234567', area: 'Osu' },
@@ -33,7 +34,7 @@ const errOf = async (promise) => (await promise).error;
     p_is_gift: false,
   });
   assert(blocked.error?.code === '22023' && /not available|isn't available/.test(blocked.error.message), 'disabled zone delivery option is rejected');
-  sql("update public.delivery_areas set zone_id = null where name = 'Osu'");
+  sql("delete from public.delivery_areas where name = 'Osu'");
   sql("delete from public.delivery_rates where zone_id = 'launch-test'");
   sql("delete from public.delivery_zones where id = 'launch-test'");
 

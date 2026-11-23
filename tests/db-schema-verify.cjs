@@ -33,6 +33,11 @@ const report = async () => (await anon.rpc('verify_launch_schema')).data;
   r = await report();
   assert(r.ok === true, 'putting everything back makes it pass again');
 
+  // The helper that answers "may this role run that function?" is not a public tool: it would let anyone map the admin functions.
+  const probe = await anon.rpc('verify_fn_privilege', { p_role: 'anon', p_function: 'admin_save_rider', p_privilege: 'EXECUTE' });
+  assert(probe.error && probe.data == null, 'shoppers cannot ask which roles may run which functions');
+  assert((await report()).ok === true, 'and the launch schema check still works without them calling it directly');
+
   console.log(failures ? `\n${failures} check(s) FAILED` : '\nAll schema verification checks passed');
   process.exit(failures ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(1); });

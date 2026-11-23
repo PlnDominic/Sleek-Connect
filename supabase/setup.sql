@@ -73,6 +73,10 @@
 --   20261201090000_shared_rate_limit.sql
 --   20261202090000_no_fda_number_required.sql
 --   20261203090000_apple_sign_in_revocation.sql
+--   20261204090000_harden_order_lookup.sql
+--   20261205090000_reinstate_paid_after_timeout.sql
+--   20261206090000_audit_reinstated_orders.sql
+--   20261207090000_notifications_no_public_grants.sql
 --   seed.reference.sql (categories, age groups and delivery settings; no sample products)
 
 -- ===========================================================================
@@ -19130,6 +19134,198 @@ revoke all on function public.save_apple_refresh_token(text) from public, anon, 
 revoke all on function public.take_apple_refresh_token() from public, anon, authenticated;
 grant execute on function public.save_apple_refresh_token(text) to authenticated;
 grant execute on function public.take_apple_refresh_token() to authenticated;
+
+-- ===========================================================================
+-- 20261204090000_harden_order_lookup.sql
+-- ===========================================================================
+
+-- Security audit fixes.
+--
+-- 1. Order numbers were SC-1001, SC-1002, ... so anyone who knew a shopper's phone number could walk through the numbers with
+--    find_order (8 misses an hour per phone) and recover the order page link. New orders now get an unpredictable number of the
+--    same shape (SC-<10 digits>), which keeps every screen, email and test that expects SC-<digits> working. Orders already placed
+--    keep their numbers.
+-- 2. verify_fn_privilege(role, function, privilege) answers "may this role run that function?" for any function. It is only an
+--    internal helper of verify_launch_schema(), which is a security definer function and keeps working, so the public roles
+--    no longer need to call it directly.
+
+create or replace function public.new_order_number()
+returns text
+language plpgsql
+volatile
+set search_path = ''
+as $$
+declare
+  v_number text;
+begin
+  loop
+    -- 32 bits from the database's secure random source (gen_random_uuid), shifted into 10 digits.
+    v_number := 'SC-' || (1000000000 + (('x' || substr(md5(gen_random_uuid()::text), 1, 8))::bit(32)::bigint))::text;
+    exit when not exists (select 1 from public.orders o where o.order_number = v_number);
+  end loop;
+  return v_number;
+end;
+$$;
+
+-- Only the order-placing function (which runs as the table owner) fills this default in; shoppers never call it.
+revoke all on function public.new_order_number() from public, anon, authenticated;
+
+alter table public.orders alter column order_number set default public.new_order_number();
+
+revoke execute on function public.verify_fn_privilege(text, text, text) from public, anon, authenticated;
+grant execute on function public.verify_fn_privilege(text, text, text) to service_role;
+
+-- ===========================================================================
+-- 20261205090000_reinstate_paid_after_timeout.sql
+-- ===========================================================================
+
+-- A shopper who paid on Hubtel after the 15-minute reservation timer ran out (or after a first attempt was reported failed and they
+-- retried) found their paid order "Cancelled": the late "paid" notification only flagged it for review, or was ignored. When money
+-- arrives for an order the timer or a failed answer cancelled, put the order back to paid if the stock is still there; otherwise leave it flagged for a refund.
+create or replace function public.confirm_payment(
+  p_provider text,
+  p_reference text,
+  p_status text,
+  p_amount_ghs numeric,
+  p_event jsonb default null
+)
+returns table (order_number text, order_status public.order_status, payment_status public.payment_status)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_payment public.payments%rowtype;
+  v_order public.orders%rowtype;
+  v_reinstate boolean := false;
+begin
+  if p_status not in ('succeeded', 'failed') then
+    raise exception 'Unknown payment status %.', p_status using errcode = '22023';
+  end if;
+
+  select * into v_payment from public.payments p
+  where p.provider = p_provider and p.provider_reference = p_reference
+  for update;
+  if not found then
+    raise exception 'Unknown payment %.', p_reference using errcode = '22023';
+  end if;
+
+  select * into v_order from public.orders o where o.id = v_payment.order_id for update;
+
+  -- A "failed" answer is not final: a shopper can retry on Hubtel's page and pay. Only a repeat of the same answer changes nothing.
+  if v_payment.status = 'succeeded' or (v_payment.status = 'failed' and p_status = 'failed') then
+    return query select v_order.order_number, v_order.status, v_payment.status;
+    return;
+  end if;
+
+  update public.payments p
+  set status = p_status::public.payment_status, last_event = p_event
+  where p.id = v_payment.id;
+
+  if p_status = 'failed' then
+    perform public.release_order_reservation(v_order.id, 'payment_failed');
+  elsif p_amount_ghs is distinct from v_payment.amount_ghs then
+    update public.orders o set needs_review = true where o.id = v_order.id;
+  else
+    if v_order.status = 'cancelled' and v_order.cancel_reason in ('payment_timeout', 'payment_failed') then
+      -- Paid after the timer (or an earlier failed answer) cancelled the order: reinstate it only if every line is still in stock.
+      v_reinstate := not exists (
+        select 1
+        from (
+          select oi.product_id, coalesce(oi.size_code, '') as size_code, sum(oi.quantity)::integer as quantity
+          from public.order_items oi
+          where oi.order_id = v_order.id and oi.product_id is not null
+          group by oi.product_id, coalesce(oi.size_code, '')
+        ) held
+        left join public.inventory_levels i on i.product_id = held.product_id and i.size_code = held.size_code
+        where i.product_id is null or i.on_hand - i.reserved < held.quantity
+      );
+      if v_reinstate then
+        -- The timer already released the reservation, so take the stock straight from on_hand.
+        with held as (
+          select oi.product_id, coalesce(oi.size_code, '') as size_code, sum(oi.quantity)::integer as quantity
+          from public.order_items oi
+          where oi.order_id = v_order.id and oi.product_id is not null
+          group by oi.product_id, coalesce(oi.size_code, '')
+        ),
+        sold as (
+          update public.inventory_levels i
+          set on_hand = i.on_hand - held.quantity
+          from held
+          where i.product_id = held.product_id and i.size_code = held.size_code
+          returning i.product_id, i.size_code, held.quantity
+        )
+        insert into public.stock_movements (product_id, size_code, reason, quantity, sellable_change, order_id)
+        select sold.product_id, sold.size_code, 'sold', 0, -sold.quantity, v_order.id from sold;
+
+        update public.orders o set status = 'paid', paid_at = now(), cancel_reason = null where o.id = v_order.id;
+      else
+        update public.orders o set needs_review = true where o.id = v_order.id;
+      end if;
+    elsif v_order.status = 'pending_payment' then
+      with held as (
+        select oi.product_id, coalesce(oi.size_code, '') as size_code, sum(oi.quantity)::integer as quantity
+        from public.order_items oi
+        where oi.order_id = v_order.id and oi.product_id is not null
+        group by oi.product_id, coalesce(oi.size_code, '')
+      ),
+      sold as (
+        update public.inventory_levels i
+        set on_hand = i.on_hand - held.quantity, reserved = i.reserved - held.quantity
+        from held
+        where i.product_id = held.product_id and i.size_code = held.size_code
+        returning i.product_id, i.size_code, held.quantity
+      )
+      insert into public.stock_movements (product_id, size_code, reason, quantity, sellable_change, order_id)
+      select sold.product_id, sold.size_code, 'sold', 0, -sold.quantity, v_order.id from sold;
+
+      update public.orders o set status = 'paid', paid_at = now() where o.id = v_order.id;
+    else
+      update public.orders o set needs_review = true where o.id = v_order.id;
+    end if;
+  end if;
+
+  return query
+  select o.order_number, o.status, p.status
+  from public.orders o join public.payments p on p.order_id = o.id
+  where p.id = v_payment.id;
+end;
+$$;
+
+-- ===========================================================================
+-- 20261206090000_audit_reinstated_orders.sql
+-- ===========================================================================
+
+-- An order the timer (or a failed answer) cancelled and a later payment put back to paid is written to the audit log, so staff can
+-- see why a "cancelled" order became paid. The shopper's confirmation message is queued by the normal status-change trigger.
+create function public.audit_reinstated_order()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.audit('order_reinstated_after_payment', 'order', new.id::text,
+    jsonb_build_object('order_number', new.order_number, 'earlier_cancel_reason', old.cancel_reason));
+  return null;
+end;
+$$;
+
+revoke all on function public.audit_reinstated_order() from public, anon, authenticated;
+
+create trigger orders_audit_reinstated
+  after update of status on public.orders
+  for each row when (old.status = 'cancelled' and new.status = 'paid')
+  execute function public.audit_reinstated_order();
+
+-- ===========================================================================
+-- 20261207090000_notifications_no_public_grants.sql
+-- ===========================================================================
+
+-- Customer messages (phone numbers, emails, order links) were protected by row level security alone: the public roles still held
+-- table privileges. Take the privileges away too, so a missing policy can never expose them. The server and the database
+-- functions use the service role and the table owner, which are unaffected.
+revoke all on public.notifications from anon, authenticated;
 
 -- ===========================================================================
 -- seed.reference.sql
