@@ -13,11 +13,13 @@ import { useDebounced } from '@/lib/useDebounced';
 import { fonts } from '@/theme/fonts';
 import { useColors, useStyles, type Palette } from '@/theme/theme';
 
-type Sort = 'newest' | 'price-asc' | 'price-desc' | 'saving';
+type Sort = 'newest' | 'price-asc' | 'price-desc' | 'saving' | 'rating' | 'popular';
 const sorts: { id: Sort; label: string }[] = [
   { id: 'newest', label: 'Newest' },
   { id: 'price-asc', label: 'Price: low' },
   { id: 'price-desc', label: 'Price: high' },
+  { id: 'popular', label: 'Best selling' },
+  { id: 'rating', label: 'Top rated' },
   { id: 'saving', label: 'Biggest saving' },
 ];
 
@@ -59,6 +61,8 @@ export default function ShopScreen() {
       list = list.filter((p) => rank.has(p.slug)).sort((a, b) => rank.get(a.slug)! - rank.get(b.slug)!);
     } else if (sort === 'price-asc') list = [...list].sort((a, b) => a.price - b.price);
     else if (sort === 'price-desc') list = [...list].sort((a, b) => b.price - a.price);
+    else if (sort === 'popular') list = [...list].sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0));
+    else if (sort === 'rating') list = [...list].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0) || (b.reviewCount ?? 0) - (a.reviewCount ?? 0));
     else if (sort === 'saving') list = [...list].sort((a, b) => saving(b) - saving(a));
     if (department) list = list.filter((p) => p.department === department);
     if (category) list = list.filter((p) => p.category === category);

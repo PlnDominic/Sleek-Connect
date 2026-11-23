@@ -56,6 +56,11 @@ export const ProductTile = memo(function ProductTile({ product }: { product: Pro
           <AppText weight="semibold" size={11} color={tagColor} numberOfLines={1}>
             {product.tag}
           </AppText>
+          {product.reviewCount ? (
+            <AppText size={12} color={colors.textMuted}>
+              ★ {product.rating?.toFixed(1)} ({product.reviewCount})
+            </AppText>
+          ) : null}
           <AppText weight="bold" size={14} style={styles.name} numberOfLines={2}>
             {product.name}
           </AppText>

@@ -20,7 +20,7 @@ import styles from './home.module.css';
 export const metadata: Metadata = { alternates: { canonical: '/' } };
 
 export default async function HomePage() {
-  const [{ categories, newArrivals, bestSellers }, { hero, promos, heroProducts }] = await Promise.all([
+  const [{ categories, newArrivals, bestSellers, deals }, { hero, promos, heroProducts }] = await Promise.all([
     getHomeCatalog(),
     getHomeContent(),
   ]);
@@ -77,6 +77,7 @@ export default async function HomePage() {
         <Hero banner={hero ?? defaultHero} products={heroProducts} />
         <Departments categories={categories} />
         <Categories categories={categories} />
+        {deals.length > 0 && <Deals products={deals} />}
         <NewArrivals products={newArrivals} />
         <BestSellers products={bestSellers} />
         {promos.length > 0 && <Promotions banners={promos} />}
@@ -228,6 +229,19 @@ function Categories({ categories }: { categories: Category[] }) {
   );
 }
 
+
+function Deals({ products }: { products: Product[] }) {
+  return (
+    <section data-reveal id="deals" className={`container ${styles.section}`}>
+      <SectionHeader title="Deals" linkLabel="See all deals" href="/shop?sale=1&sort=saving" />
+      <NewArrivalsRail>
+        {products.map((p) => (
+          <ProductCard key={p.slug} product={p} showCompare={false} />
+        ))}
+      </NewArrivalsRail>
+    </section>
+  );
+}
 
 function NewArrivals({ products }: { products: Product[] }) {
   return (

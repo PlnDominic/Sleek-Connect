@@ -124,7 +124,7 @@ async function Results({ scope, path, searchParams }: { scope: Scope; path: stri
       path={path}
       listing={listing}
       filters={filters}
-      sorts={['featured', 'newest', 'rating', 'popular', 'price-asc', 'price-desc']}
+      sorts={['featured', 'newest', 'rating', 'popular', 'saving', 'price-asc', 'price-desc']}
       empty={
         <>
           <h3>No products match these filters</h3>

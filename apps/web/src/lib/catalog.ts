@@ -42,15 +42,18 @@ export async function getHomeCatalog() {
   cacheLife('minutes');
   cacheTag('catalog');
 
-  const [categoryRows, newArrivals, bestSellers] = await Promise.all([
+  const [categoryRows, newArrivals, bestSellers, everything] = await Promise.all([
     createSupabase().from('categories').select('*').order('sort_order').then(unwrap),
     slotProducts('home_new_arrivals'),
     slotProducts('home_best_sellers'),
+    allPublishedProducts(),
   ]);
+  // Products with an old price crossed out, for the Deals rail.
+  const deals = everything.filter((p) => p.was !== undefined && p.was > p.price && p.inStock !== false).slice(0, 8);
 
   const categories: Category[] = categoryRows.map((r) => categoryFromRow(r, photoBase));
 
-  return { categories, newArrivals, bestSellers };
+  return { categories, newArrivals, bestSellers, deals };
 }
 
 export async function getProductsBySlugs(slugs: string[]): Promise<Product[]> {

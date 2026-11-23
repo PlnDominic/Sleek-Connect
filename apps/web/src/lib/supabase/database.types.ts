@@ -1156,6 +1156,9 @@ isOneToOne: false
               "role": Database["public"]['Enums']["staff_role"]
             }[]
                            },
+"new_order_number":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
 "owns_return_photo":
 { Args: { "p_name": string }; Returns: boolean
                            },

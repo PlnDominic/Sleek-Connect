@@ -17,6 +17,7 @@ export const sortOptions = {
   'price-desc': 'Price: high to low',
   rating: 'Top rated',
   popular: 'Best selling',
+  saving: 'Biggest saving',
 } as const;
 export type SortKey = keyof typeof sortOptions;
 
@@ -121,6 +122,9 @@ export interface Listing {
   inStockCount: number;
 }
 
+/** The share taken off the old price (0 when the product isn't discounted). */
+const saving = (p: Product) => (p.was !== undefined && p.was > p.price ? (p.was - p.price) / p.was : 0);
+
 /** Filters, sorts and pages a set of products. `rank` orders "featured" or "relevance" results. */
 export function buildListing(
   scope: Product[],
@@ -140,6 +144,8 @@ export function buildListing(
         return (b.createdAt ?? '').localeCompare(a.createdAt ?? '') || byName(a, b);
       case 'rating':
         return (b.rating ?? 0) - (a.rating ?? 0) || (b.reviewCount ?? 0) - (a.reviewCount ?? 0) || byName(a, b);
+      case 'saving':
+        return saving(b) - saving(a) || byName(a, b);
       case 'popular':
         return (b.popularity ?? 0) - (a.popularity ?? 0) || byName(a, b);
       default:

@@ -79,8 +79,17 @@ export async function getHome(): Promise<HomeContent> {
 
 /** Every published product, newest first. The catalogue is small, so the app filters it on the device. */
 export async function getAllProducts(): Promise<Product[]> {
-  const rows = check(await supabase.from('products').select(productSelect).order('created_at', { ascending: false }));
-  return (rows as unknown[]).map(toProduct);
+  const [rows, metrics] = await Promise.all([
+    supabase.from('products').select(productSelect).order('created_at', { ascending: false }),
+    // Average rating, review count and sales rank; if this can't be read the shop still shows, just without ratings.
+    supabase.rpc('get_product_discovery_metrics' as never),
+  ]);
+  const bySlug = new Map(((metrics.data ?? []) as { slug: string; average_rating: number; review_count: number; popularity: number }[]).map((m) => [m.slug, m]));
+  return (check(rows) as unknown[]).map((row) => {
+    const product = toProduct(row);
+    const m = bySlug.get(product.slug);
+    return m ? { ...product, rating: Number(m.average_rating), reviewCount: m.review_count, popularity: Number(m.popularity) } : product;
+  });
 }
 
 export async function getProduct(slug: string): Promise<Product | null> {
