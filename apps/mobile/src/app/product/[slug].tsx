@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState, type ReactNode } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
-import { formatPrice, getSize, isAvailable, radii, unitPrice, type IconName, type Product } from '@sleek/shared';
+import { estimate, formatPrice, getSize, isAvailable, quote, radii, unitPrice, type IconName, type Product } from '@sleek/shared';
 import { useBag } from '@sleek/shared/bag';
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
@@ -9,6 +9,8 @@ import { ProductImage } from '@/components/ProductImage';
 import { EmptyState, ErrorState, Skeleton } from '@/components/States';
 import { BackButton, BottomBar, IconButton, TrustChip, useScreenTop } from '@/components/ui';
 import { getProduct } from '@/lib/catalog';
+import { getDeliveryConfig } from '@/lib/checkout';
+import { getProductReviews } from '@/lib/reviews';
 import { useQuery } from '@/lib/query';
 import { useSaved } from '@/lib/saved';
 import { useColors, useStyles, type Palette } from '@/theme/theme';
@@ -68,6 +70,8 @@ function ProductView({ product }: { product: Product }) {
     return product.sizes?.find((s) => s.inStock !== false)?.id ?? preferred;
   });
   const [added, setAdded] = useState(false);
+  const reviews = useQuery(`reviews:${product.slug}`, () => getProductReviews(product.slug));
+  const delivery = useQuery('delivery-config', getDeliveryConfig, 5 * 60_000);
 
   useEffect(() => {
     if (!added) return;
@@ -82,6 +86,16 @@ function ProductView({ product }: { product: Product }) {
   const price = unitPrice(product, sizeId);
   const compliance = product.compliance;
   const batches = product.currentBatches ?? [];
+  const rating = reviews.data;
+
+  // The cheapest standard delivery fee and how long it takes, so the price isn't a surprise at checkout.
+  const config = delivery.data;
+  const fees = (config?.options ?? []).map((o) => ({ option: o, fee: quote(config!, '', o.id, price).fee })).filter((o) => o.fee !== null);
+  const cheapest = fees.sort((a, b) => a.fee! - b.fee!)[0];
+  const deliveryTitle = cheapest ? `Delivery from ${formatPrice(cheapest.fee!)}` : 'Delivery';
+  const deliveryText = cheapest
+    ? `${estimate(cheapest.option, new Date())}${config?.freeThreshold ? `. Free on orders of ${formatPrice(config.freeThreshold)} or more.` : ''}`
+    : 'The delivery fee is shown at checkout.';
 
   return (
     <View style={styles.screen}>
@@ -108,6 +122,14 @@ function ProductView({ product }: { product: Product }) {
             <AppText weight="semibold" size={22} style={styles.title} accessibilityRole="header">
               {product.name}
             </AppText>
+            {rating && rating.count > 0 && (
+              <AppText weight="semibold" size={14} accessibilityLabel={`Rated ${rating.average.toFixed(1)} out of 5 from ${rating.count} reviews`}>
+                ★ {rating.average.toFixed(1)}{' '}
+                <AppText size={14} color={colors.textMuted}>
+                  ({rating.count} {rating.count === 1 ? 'review' : 'reviews'})
+                </AppText>
+              </AppText>
+            )}
             <View style={styles.chips}>
               {highlights.map((h) => (
                 <TrustChip key={h} label={h} />
@@ -149,15 +171,17 @@ function ProductView({ product }: { product: Product }) {
           )}
 
           <View style={styles.facts}>
-            <Fact icon="shieldCheck" iconColor={colors.teal} title="Verified authentic">
-              From an authorised distributor
+            <Fact icon="truck" title={deliveryTitle}>
+              {deliveryText}
             </Fact>
-            <Fact icon="calendar" title="Batch and expiry checked">
-              Printed on your receipt for the unit we pack
+            <Fact icon="shieldCheck" iconColor={colors.teal} title="Checked before dispatch" last={batches.length === 0}>
+              We check every order before it leaves us
             </Fact>
-            <Fact icon="truck" title="Delivery across Accra" last>
-              Tracked from our shelf to your door
-            </Fact>
+            {batches.length > 0 && (
+              <Fact icon="calendar" title="Batch and expiry checked" last>
+                Printed on your receipt for the unit we pack
+              </Fact>
+            )}
           </View>
 
           {(details?.description || product.summary) && (
@@ -177,6 +201,25 @@ function ProductView({ product }: { product: Product }) {
               ]
                 .filter(Boolean)
                 .join('\n')}
+            </Accordion>
+          )}
+          {rating && rating.count > 0 && (
+            <Accordion title={`Reviews (${rating.count})`}>
+              <View style={styles.reviews}>
+                {rating.reviews.map((r) => (
+                  <View key={r.id} style={styles.review}>
+                    <AppText weight="bold" size={13}>
+                      {'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)} {r.title ?? ''}
+                    </AppText>
+                    <AppText size={13} color={colors.textMuted}>
+                      {r.body}
+                    </AppText>
+                    <AppText size={12} color={colors.textFaint}>
+                      {r.displayName}
+                    </AppText>
+                  </View>
+                ))}
+              </View>
             </Accordion>
           )}
           <Accordion title="Returns" last>
@@ -321,11 +364,14 @@ function Accordion({ title, children, initiallyOpen, last }: { title: string; ch
         </AppText>
         <Icon name={open ? 'chevronDown' : 'chevronRight'} size={16} strokeWidth={2} />
       </Pressable>
-      {open && (
-        <AppText size={13} color={colors.textMuted} style={styles.accordionBody}>
-          {children}
-        </AppText>
-      )}
+      {open &&
+        (typeof children === 'string' ? (
+          <AppText size={13} color={colors.textMuted} style={styles.accordionBody}>
+            {children}
+          </AppText>
+        ) : (
+          <View style={styles.accordionBody}>{children}</View>
+        ))}
     </View>
   );
 }
@@ -445,6 +491,8 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     alignItems: 'center',
     minHeight: 44,
   },
+  reviews: { gap: 14 },
+  review: { gap: 2 },
   accordionBody: {
     marginTop: 6,
     lineHeight: 21,

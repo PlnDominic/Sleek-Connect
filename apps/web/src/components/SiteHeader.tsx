@@ -22,7 +22,7 @@ export async function AnnouncementBar() {
       )}
       <span className={chrome.announceItem}>
         <Icon name="shieldCheck" size={15} strokeWidth={2} />
-        100% authentic, batch-checked products
+        Every order checked before dispatch
       </span>
     </div>
   );

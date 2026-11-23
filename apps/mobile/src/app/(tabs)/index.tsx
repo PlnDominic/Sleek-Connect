@@ -97,10 +97,10 @@ export default function HomeScreen() {
         </View>
         <View style={styles.flex}>
           <AppText weight="bold" size={14} color={colors.teal}>
-            100% authentic, every order
+            Checked before dispatch
           </AppText>
           <AppText size={13} color={colors.tealInk}>
-            Every order checked before dispatch
+            We check every order before it leaves us
           </AppText>
         </View>
       </View>

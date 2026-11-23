@@ -9,6 +9,8 @@ import { Icon } from '@/components/Icon';
 import { ProductImage } from '@/components/ProductImage';
 import { EmptyState } from '@/components/States';
 import { BackButton, BottomBar } from '@/components/ui';
+import { getDeliveryConfig } from '@/lib/checkout';
+import { useQuery } from '@/lib/query';
 import { useColors, useStyles, type Palette } from '@/theme/theme';
 
 /** Right-hand drawer over a dimmed page; tapping the dimmed part closes it. */
@@ -34,6 +36,9 @@ function BagPanel() {
   const top = 16; // the drawer already starts below the status bar
   const { items, count, subtotal, setQty, remove } = useBag();
   const soldOut = items.filter((i) => i.inStock === false);
+  const delivery = useQuery('delivery-config', getDeliveryConfig, 5 * 60_000).data;
+  // Only worth showing when some delivery option really becomes free at the threshold.
+  const threshold = delivery?.options.some((o) => o.freeEligible) ? delivery.freeThreshold : null;
 
   if (items.length === 0) {
     return (
@@ -91,6 +96,16 @@ function BagPanel() {
               {formatPrice(subtotal)}
             </AppText>
           </View>
+          {threshold !== null && threshold > 0 && (
+            <View style={styles.free}>
+              <AppText weight="semibold" size={13} color={subtotal >= threshold ? colors.teal : colors.ink}>
+                {subtotal >= threshold ? 'You’ve got free delivery' : `Add ${formatPrice(threshold - subtotal)} more for free delivery`}
+              </AppText>
+              <View style={styles.freeTrack}>
+                <View style={[styles.freeFill, { width: `${Math.min(100, (subtotal / threshold) * 100)}%` }]} />
+              </View>
+            </View>
+          )}
           <AppText size={12} color={colors.textMuted}>
             Delivery is added at checkout. Prices are confirmed again when you place your order.
           </AppText>
@@ -187,6 +202,9 @@ function Step({ label, onPress, disabled, symbol }: { label: string; onPress: ()
 }
 
 const makeStyles = (colors: Palette) => StyleSheet.create({
+  free: { gap: 6 },
+  freeTrack: { height: 6, borderRadius: 3, backgroundColor: colors.line, overflow: 'hidden' },
+  freeFill: { height: 6, borderRadius: 3, backgroundColor: colors.teal },
   overlay: {
     flex: 1,
     flexDirection: 'row',

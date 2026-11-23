@@ -69,8 +69,8 @@ export default async function HomePage() {
               <Icon name="shieldCheck" size={20} strokeWidth={2} />
             </span>
             <span>
-              <strong>100% authentic, every order</strong>
-              <span>Every order checked before dispatch</span>
+              <strong>Checked before dispatch</strong>
+              <span>We check every order before it leaves us</span>
             </span>
           </div>
         </div>
@@ -306,7 +306,7 @@ function Promotions({ banners }: { banners: Banner[] }) {
 }
 
 const trust: { icon: IconName; title: string; sub: string }[] = [
-  { icon: 'shieldCheck', title: '100% Authentic', sub: 'From authorised distributors only' },
+  { icon: 'shieldCheck', title: 'Checked before dispatch', sub: 'Every order checked and packed by us' },
   { icon: 'truck', title: 'Fast Delivery', sub: 'Tracked from packing to door' },
   { icon: 'lock', title: 'Secure Checkout', sub: 'MoMo and card, safely processed' },
   { icon: 'smile', title: 'Customer Support', sub: 'Chat, call or WhatsApp us' },

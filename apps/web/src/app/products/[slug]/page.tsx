@@ -159,7 +159,7 @@ export default async function ProductPage({ params, searchParams }: PageProps<'/
           <div className={styles.chips}>
             <span className={styles.chip}>
               <Icon name="shieldCheck" size={14} strokeWidth={2.2} />
-              Verified authentic
+              Checked before dispatch
             </span>
             {highlights.map((h) => (
               <span key={h} className={styles.chip}>
