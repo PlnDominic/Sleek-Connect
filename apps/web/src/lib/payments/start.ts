@@ -58,7 +58,7 @@ export async function startOrderPayment(
     // A timeout or dropped connection doesn't tell us the provider refused: it may have created the checkout. Leave the payment
     // pending; the reservation timer, the callback or the reconcile job settles it. Only a clear refusal releases the stock now.
     if (cause instanceof Error && ['TimeoutError', 'AbortError', 'TypeError'].includes(cause.name)) {
-      return { kind: 'failed', reason: 'We couldn’t confirm the payment prompt. If you were charged, your order will update shortly; otherwise please try again.' };
+      return { kind: 'failed', reason: 'We couldnâ€™t confirm the payment prompt. If you were charged, your order will update shortly; otherwise please try again.' };
     }
     const { error: releaseError } = await admin.rpc('confirm_payment', {
       p_provider: provider.name,
