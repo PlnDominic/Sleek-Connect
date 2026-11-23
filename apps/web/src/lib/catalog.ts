@@ -37,17 +37,31 @@ async function slotProducts(slot: string): Promise<Product[]> {
   return rows.flatMap((r) => (r.products ? [toProduct(r.products as ProductRow)] : []));
 }
 
+/** Adds each product's average rating, review count and sales rank (the shop lists do the same), so cards can show stars. */
+async function withMetrics(products: Product[]): Promise<Product[]> {
+  const { data } = await createSupabase().rpc('get_product_discovery_metrics' as never);
+  const bySlug = new Map(((data ?? []) as unknown as { slug: string; average_rating: number; review_count: number; popularity: number }[]).map((m) => [m.slug, m]));
+  return products.map((p) => {
+    const m = bySlug.get(p.slug);
+    return m ? { ...p, rating: Number(m.average_rating), reviewCount: m.review_count, popularity: Number(m.popularity) } : p;
+  });
+}
+
 export async function getHomeCatalog() {
   'use cache';
   cacheLife('minutes');
   cacheTag('catalog');
 
-  const [categoryRows, newArrivals, bestSellers, everything] = await Promise.all([
+  const [categoryRows, newArrivalsRaw, bestSellersRaw, everythingRaw] = await Promise.all([
     createSupabase().from('categories').select('*').order('sort_order').then(unwrap),
     slotProducts('home_new_arrivals'),
     slotProducts('home_best_sellers'),
     allPublishedProducts(),
   ]);
+  const everything = await withMetrics(everythingRaw);
+  const rated = new Map(everything.map((p) => [p.slug, p]));
+  const newArrivals = newArrivalsRaw.map((p) => rated.get(p.slug) ?? p);
+  const bestSellers = bestSellersRaw.map((p) => rated.get(p.slug) ?? p);
   // Products with an old price crossed out, for the Deals rail.
   const deals = everything.filter((p) => p.was !== undefined && p.was > p.price && p.inStock !== false).slice(0, 8);
 
@@ -88,7 +102,7 @@ export async function getRelatedProducts(excludeSlug: string): Promise<Product[]
   cacheLife('minutes');
   cacheTag('catalog');
 
-  const [curated, target, all] = await Promise.all([slotProducts('product_related'), getProduct(excludeSlug), allPublishedProducts()]);
+  const [curated, target, all] = await Promise.all([slotProducts('product_related'), getProduct(excludeSlug), allPublishedProducts().then(withMetrics)]);
   const selected = new Map<string, Product>();
   curated.filter((p) => p.slug !== excludeSlug).forEach((p) => selected.set(p.slug, p));
   if (target) {
