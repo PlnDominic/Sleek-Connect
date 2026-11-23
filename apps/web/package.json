@@ -14,7 +14,7 @@
     "@sleek/shared": "*",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.3",
-    "next": "16.4.1",
+    "next": "^16.4.6",
     "nodemailer": "^10.3.1",
     "posthog-js": "^1.444.0",
     "react": "19.3.0",
