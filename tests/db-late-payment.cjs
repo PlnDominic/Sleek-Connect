@@ -29,6 +29,8 @@ const anon = createClient(URL_, KEY, { auth: { persistSession: false } });
   assert(sql(`select status from public.orders where id = '${oid}'`) === 'paid', 'late payment reinstates the order as paid');
   assert(sql(`select cancel_reason is null and paid_at is not null from public.orders where id = '${oid}'`) === 't', 'cancel reason cleared, paid_at set');
   assert(Number(onHand()) === before - 1, 'stock taken once');
+  assert(sql(`select count(*) from public.audit_log where action = 'order_reinstated_after_payment' and entity_id = '${oid}'`) === '1', 'reinstatement is audited');
+  assert(sql(`select count(*) from public.notifications where order_id = '${oid}' and template = 'order_confirmed'`) !== '0', 'shopper gets the order confirmation');
 
   // A first attempt reported failed, then the shopper retried and paid: the order comes back too.
   const second = (await anon.rpc('place_order', {
