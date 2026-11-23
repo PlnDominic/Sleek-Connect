@@ -32,6 +32,11 @@ export function ProductCard({ product, showCompare = true }: { product: Product;
           sizes="(max-width: 600px) 50vw, 200px"
           className={styles.productCardImage}
         />
+        {product.reviewCount ? (
+          <span className={styles.ratingBadge} aria-label={`Rated ${product.rating?.toFixed(1)} out of 5 from ${product.reviewCount} reviews`}>
+            ★ {product.rating?.toFixed(1)} <span>({product.reviewCount})</span>
+          </span>
+        ) : null}
         <AddToBagButton
           product={product}
           disabled={soldOut}
@@ -44,7 +49,6 @@ export function ProductCard({ product, showCompare = true }: { product: Product;
       <Link href={`/products/${product.slug}`} className={styles.productCardName}>
         {product.name}
       </Link>
-      {product.reviewCount ? <span style={{ color: 'var(--c-accent)', fontSize: 12 }}>★ {product.rating?.toFixed(1)} ({product.reviewCount})</span> : null}
       <span className={styles.priceRow}>
         <strong>{formatPrice(product.price)}</strong>
         {product.was && <s>{formatPrice(product.was)}</s>}

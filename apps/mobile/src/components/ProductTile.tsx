@@ -39,6 +39,13 @@ export const ProductTile = memo(function ProductTile({ product }: { product: Pro
                 <Icon name="bag" size={18} color={colors.canvas} />
               </Pressable>
             )}
+            {!soldOut && product.reviewCount ? (
+              <View style={styles.rating} accessibilityLabel={`Rated ${product.rating?.toFixed(1)} out of 5 from ${product.reviewCount} reviews`}>
+                <AppText weight="bold" size={11}>
+                  ★ {product.rating?.toFixed(1)} ({product.reviewCount})
+                </AppText>
+              </View>
+            ) : null}
             {soldOut ? (
               <View style={styles.soldOut}>
                 <AppText weight="bold" size={12}>
@@ -56,11 +63,6 @@ export const ProductTile = memo(function ProductTile({ product }: { product: Pro
           <AppText weight="semibold" size={11} color={tagColor} numberOfLines={1}>
             {product.tag}
           </AppText>
-          {product.reviewCount ? (
-            <AppText size={12} color={colors.textMuted}>
-              ★ {product.rating?.toFixed(1)} ({product.reviewCount})
-            </AppText>
-          ) : null}
           <AppText weight="bold" size={14} style={styles.name} numberOfLines={2}>
             {product.name}
           </AppText>
@@ -109,6 +111,15 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     left: 10,
     top: 10,
     backgroundColor: colors.accent,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: radii.pill,
+  },
+  rating: {
+    position: 'absolute',
+    left: 10,
+    bottom: 10,
+    backgroundColor: colors.canvas,
     paddingVertical: 3,
     paddingHorizontal: 8,
     borderRadius: radii.pill,
