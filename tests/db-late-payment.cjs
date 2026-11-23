@@ -29,5 +29,23 @@ const anon = createClient(URL_, KEY, { auth: { persistSession: false } });
   assert(sql(`select status from public.orders where id = '${oid}'`) === 'paid', 'late payment reinstates the order as paid');
   assert(sql(`select cancel_reason is null and paid_at is not null from public.orders where id = '${oid}'`) === 't', 'cancel reason cleared, paid_at set');
   assert(Number(onHand()) === before - 1, 'stock taken once');
+
+  // A first attempt reported failed, then the shopper retried and paid: the order comes back too.
+  const second = (await anon.rpc('place_order', {
+    p_customer: { adult_confirmed: true, name: 'Ama Owusu', phone: '024 123 4567', area: 'Osu' },
+    p_delivery_option: 'same_day',
+    p_payment: { method: 'momo', network: 'mtn', wallet: '024 765 4321' },
+    p_items: [{ slug: 'wooden-stacking-blocks', quantity: 1 }], p_is_gift: false,
+  }).single()).data;
+  const ref2 = `T-${second.order_number}`;
+  await admin.rpc('start_payment', { p_order_token: second.order_token, p_provider: 'test', p_reference: ref2 });
+  await admin.rpc('confirm_payment', { p_provider: 'test', p_reference: ref2, p_status: 'failed', p_amount_ghs: 0 });
+  const oid2 = sql(`select id from public.orders where order_number = '${second.order_number}'`);
+  assert(sql(`select status from public.orders where id = '${oid2}'`) === 'cancelled', 'failed answer cancels the order');
+  await admin.rpc('confirm_payment', { p_provider: 'test', p_reference: ref2, p_status: 'failed', p_amount_ghs: 0 });
+  assert(sql(`select status from public.orders where id = '${oid2}'`) === 'cancelled', 'repeated failed answer changes nothing');
+  await admin.rpc('confirm_payment', { p_provider: 'test', p_reference: ref2, p_status: 'succeeded', p_amount_ghs: second.total_ghs });
+  assert(sql(`select status from public.orders where id = '${oid2}'`) === 'paid', 'payment after a failed answer reinstates the order');
+  assert(sql(`select status from public.payments where provider_reference = '${ref2}'`) === 'succeeded', 'payment recorded as succeeded');
   process.exit(failures ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(1); });

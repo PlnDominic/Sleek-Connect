@@ -1,6 +1,6 @@
--- A shopper who paid on Hubtel after the 15-minute reservation timer ran out found their paid order "Cancelled": the timer
--- cancelled it, and the late "paid" notification only flagged it for review. When money arrives for an order the timer
--- cancelled, put the order back to paid if the stock is still there; otherwise leave it flagged for a refund.
+-- A shopper who paid on Hubtel after the 15-minute reservation timer ran out (or after a first attempt was reported failed and they
+-- retried) found their paid order "Cancelled": the late "paid" notification only flagged it for review, or was ignored. When money
+-- arrives for an order the timer or a failed answer cancelled, put the order back to paid if the stock is still there; otherwise leave it flagged for a refund.
 create or replace function public.confirm_payment(
   p_provider text,
   p_reference text,
@@ -31,7 +31,8 @@ begin
 
   select * into v_order from public.orders o where o.id = v_payment.order_id for update;
 
-  if v_payment.status in ('succeeded', 'failed') then
+  -- A "failed" answer is not final: a shopper can retry on Hubtel's page and pay. Only a repeat of the same answer changes nothing.
+  if v_payment.status = 'succeeded' or (v_payment.status = 'failed' and p_status = 'failed') then
     return query select v_order.order_number, v_order.status, v_payment.status;
     return;
   end if;
@@ -45,8 +46,8 @@ begin
   elsif p_amount_ghs is distinct from v_payment.amount_ghs then
     update public.orders o set needs_review = true where o.id = v_order.id;
   else
-    if v_order.status = 'cancelled' and v_order.cancel_reason = 'payment_timeout' then
-      -- Paid after the timer cancelled the order: reinstate it only if every line is still in stock.
+    if v_order.status = 'cancelled' and v_order.cancel_reason in ('payment_timeout', 'payment_failed') then
+      -- Paid after the timer (or an earlier failed answer) cancelled the order: reinstate it only if every line is still in stock.
       v_reinstate := not exists (
         select 1
         from (

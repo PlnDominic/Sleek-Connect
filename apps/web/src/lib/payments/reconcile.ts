@@ -20,22 +20,23 @@ export async function reconcilePendingPayments(limit = 25): Promise<{ checked: n
     .from('payments')
     .select('provider_reference')
     .eq('provider', provider.name)
-    // "expired" too: when an order times out its unanswered payment is marked expired, and money can still arrive afterwards
-    // (confirm_payment then records it and flags the cancelled order for review).
-    .in('status', ['pending', 'expired'])
+    // "expired" and "failed" too: money can still arrive after an order timed out or a first attempt was reported failed
+    // (confirm_payment then puts the cancelled order back to paid when the stock is still there).
+    .in('status', ['pending', 'expired', 'failed'])
     .lt('created_at', new Date(now - 2 * 60_000).toISOString())
     .gt('created_at', new Date(now - 3 * 24 * 60 * 60_000).toISOString())
-    .order('created_at', { ascending: true })
+    // Newest first: old abandoned checkouts stay unpaid for days and must not crowd out a recent payment whose callback was lost.
+    .order('created_at', { ascending: false })
     .limit(limit);
   if (error) {
     logger.error('payment_reconcile_lookup_failed', error, {});
     return { checked: 0, confirmed: 0 };
   }
   let confirmed = 0;
-  for (const { provider_reference: reference } of data ?? []) {
+  const check = async (reference: string) => {
     try {
       const verified = await provider.verify({ reference, status: 'succeeded', amountGhs: 0, event: {} });
-      if (!verified || verified.status !== 'succeeded') continue;
+      if (!verified || verified.status !== 'succeeded') return;
       const { error: confirmError } = await admin.rpc('confirm_payment', {
         p_provider: provider.name,
         p_reference: verified.reference,
@@ -48,6 +49,9 @@ export async function reconcilePendingPayments(limit = 25): Promise<{ checked: n
     } catch (cause) {
       logger.warn('payment_reconcile_check_failed', { reference, reason: cause instanceof Error ? cause.message : 'unknown' });
     }
-  }
+  };
+  const references = (data ?? []).map((row) => row.provider_reference);
+  // Five at a time: one slow Hubtel answer must not hold up the rest of the run.
+  for (let i = 0; i < references.length; i += 5) await Promise.all(references.slice(i, i + 5).map(check));
   return { checked: data?.length ?? 0, confirmed };
 }
