@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { city, departmentLabels, formatPrice } from '@sleek/shared';
+import { departmentLabels, formatPrice } from '@sleek/shared';
 import { Icon } from '@/components/Icon';
 import { JsonLd } from '@/components/JsonLd';
 import { ProductImage } from '@/components/ProductImage';
@@ -10,7 +10,7 @@ import { Stars } from '@/components/Stars';
 import { SiteFooter } from '@/components/SiteFooter';
 import { CompactHeader } from '@/components/SiteHeader';
 import { getDeliveryConfig, getProduct, getRelatedProducts, getSizeGuide, getStoreInfo, listProductSlugs } from '@/lib/catalog';
-import { estimate } from '@/lib/delivery';
+import { estimate, quote } from '@/lib/delivery';
 import { getProductQuestions, getProductReviews } from '@/lib/reviews';
 import { defaultShareImage, siteName, siteUrl } from '@/lib/site';
 import { SizeGuideChart } from './SizeGuideChart';
@@ -115,6 +115,10 @@ export default async function ProductPage({ params, searchParams }: PageProps<'/
     itemListElement: crumbs.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.name, item: `${base}${c.path}` })),
   };
 
+  // The cheapest standard delivery fee for this price, so the total isn't a surprise at checkout.
+  const fees = delivery.options.map((o) => quote(delivery, '', o.id, product.price).fee).filter((f): f is number => f !== null);
+  const cheapestFee = fees.length ? Math.min(...fees) : undefined;
+
   return (
     <>
       <JsonLd data={productData} />
@@ -177,10 +181,10 @@ export default async function ProductPage({ params, searchParams }: PageProps<'/
               <Icon name="truck" size={22} />
               <span>
                 <strong>
-                  Delivery across {city}
+                  {cheapestFee === undefined ? 'Delivery' : `Delivery from ${formatPrice(cheapestFee)}`}
                 </strong>{' '}
                 <Link href="/help#delivery" className={styles.serviceLink}>
-                  Delivery areas
+                  Where we deliver
                 </Link>
                 <br />
                 <span className={styles.muted}>

@@ -8,7 +8,7 @@ import { Icon } from '@/components/Icon';
 import { ProductImage } from '@/components/ProductImage';
 import styles from './bag.module.css';
 
-export function BagView() {
+export function BagView({ freeFrom }: { freeFrom: number | null }) {
   const { items, count, subtotal, syncing, setQty, remove } = useBag();
   const { user, consented } = useAuth();
   const soldOut = items.filter((i) => i.inStock === false);
@@ -114,6 +114,12 @@ export function BagView() {
                 <dd>Calculated at checkout</dd>
               </div>
             </dl>
+            {freeFrom !== null && freeFrom > 0 && (
+              <div className={styles.free}>
+                <strong>{subtotal >= freeFrom ? 'You’ve got free delivery' : `Add ${formatPrice(freeFrom - subtotal)} more for free delivery`}</strong>
+                <progress value={Math.min(subtotal, freeFrom)} max={freeFrom} aria-label="Progress to free delivery" />
+              </div>
+            )}
             {soldOut.length > 0 ? (
               <span className={`${styles.primary} ${styles.disabled}`} aria-disabled="true">
                 Checkout
