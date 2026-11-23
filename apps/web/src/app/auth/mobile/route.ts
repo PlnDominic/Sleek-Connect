@@ -11,9 +11,10 @@ function appAddress(value: string | null): URL | null {
   if (!value) return null;
   try {
     const url = new URL(value);
-    if (url.protocol === 'sleekconnect:') return url;
-    // Expo Go during development: only addresses on the developer's own network.
-    if (url.protocol === 'exp:' && PRIVATE_HOST.test(url.hostname)) return url;
+    // Only the app's sign-in return screen, never another screen or path of the app.
+    if (url.protocol === 'sleekconnect:' && url.hostname === 'auth' && url.pathname === '/callback') return url;
+    // Expo Go during development: only addresses on the developer's own network, and only the same return screen.
+    if (url.protocol === 'exp:' && PRIVATE_HOST.test(url.hostname) && url.pathname.endsWith('/--/auth/callback')) return url;
   } catch {
     // fall through
   }

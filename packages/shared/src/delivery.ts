@@ -30,11 +30,30 @@ export interface DeliveryQuote {
   free: boolean;
 }
 
+const sameText = (value: string) => value.trim().replace(/\s+/g, ' ').toLowerCase();
+
+/**
+ * The listed area a typed location means, ignoring capitals and extra spaces ("east  legon" → "East Legon"). The database matches area names exactly,
+ * so checkout sends this spelling instead of what was typed; a location that isn't on the list comes back trimmed and unchanged.
+ */
+export function canonicalArea(config: DeliveryConfig, typed: string): string {
+  const wanted = sameText(typed);
+  return config.areas.find((a) => sameText(a.name) === wanted)?.name ?? typed.trim();
+}
+
+/** Listed areas that contain what has been typed so far (at least two letters), best matches first, for the shopper to tap or pick. */
+export function suggestAreas(config: DeliveryConfig, typed: string, limit = 5): string[] {
+  const wanted = sameText(typed);
+  if (wanted.length < 2) return [];
+  const names = config.areas.map((a) => a.name).filter((n) => sameText(n).includes(wanted) && sameText(n) !== wanted);
+  return names.sort((a, b) => Number(sameText(b).startsWith(wanted)) - Number(sameText(a).startsWith(wanted)) || a.localeCompare(b)).slice(0, limit);
+}
+
 /** What an option costs for an area and bag subtotal. Mirrors `place_order`, which has the final say. */
 export function quote(config: DeliveryConfig, areaName: string, optionId: string, subtotal: number): DeliveryQuote {
   const option = config.options.find((o) => o.id === optionId);
   if (!option) return { available: false, fee: null, free: false };
-  const zoneId = config.areas.find((a) => a.name === areaName)?.zoneId ?? null;
+  const zoneId = config.areas.find((a) => a.name === canonicalArea(config, areaName))?.zoneId ?? null;
   const rate = zoneId ? config.rates.find((r) => r.zoneId === zoneId && r.optionId === optionId) : undefined;
   if (rate && !rate.available) return { available: false, fee: null, free: false };
   const free = option.freeEligible && config.freeThreshold !== null && subtotal >= config.freeThreshold;

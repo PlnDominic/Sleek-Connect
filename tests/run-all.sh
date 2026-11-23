@@ -97,6 +97,8 @@ suite "payments: Hubtel provider" unit-hubtel.cjs
 suite "privacy: what Sentry and PostHog may receive" unit-telemetry.cjs
 suite "privacy: no trackers, no cookies of our own" unit-privacy-guard.cjs
 suite "safety: test payment and console messages are off on the live site" unit-dev-modes.cjs
+suite "safety: caller address and mobile sign-in return address" unit-address-and-mobile-return.cjs
+suite "checkout: typed delivery areas match the listed ones" unit-delivery-area.cjs
 suite "security: sign-in redirects stay on this site" unit-safe-redirect.cjs
 suite "build: server action files export only async functions" unit-server-actions.cjs
 suite "admin: the settings page shows error reporting first" unit-admin-settings.cjs

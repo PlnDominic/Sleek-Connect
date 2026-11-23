@@ -28,13 +28,15 @@ function prune(now: number) {
 }
 
 /**
- * The caller's address. On Vercel the platform sets these headers itself (a caller cannot choose them), so `x-vercel-forwarded-for` is
- * preferred; the others are for other hosts and local runs.
+ * The caller's address. On Vercel the platform sets `x-vercel-forwarded-for` itself (a caller cannot choose it). `x-forwarded-for` and
+ * `x-real-ip` are only trusted off Vercel (local runs, tests): on Vercel a request that reached us without the platform header shares the
+ * "unknown" bucket instead of letting the caller pick its own address and dodge the limit.
  */
 export function addressFrom(read: (name: string) => string | null | undefined) {
   const vercel = read('x-vercel-forwarded-for')?.split(',')[0]?.trim();
-  const forwarded = read('x-forwarded-for')?.split(',')[0]?.trim();
-  return vercel || forwarded || read('x-real-ip') || 'unknown';
+  if (vercel) return vercel;
+  if (process.env.VERCEL) return 'unknown';
+  return read('x-forwarded-for')?.split(',')[0]?.trim() || read('x-real-ip') || 'unknown';
 }
 
 export function clientAddress(request: Request) {

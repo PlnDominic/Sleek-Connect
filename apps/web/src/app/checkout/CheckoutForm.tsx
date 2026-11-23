@@ -3,7 +3,7 @@
 import { AppleMark, GoogleMark } from '@/components/AuthMarks';
 import Link from 'next/link';
 import { useEffect, useRef, useState, useTransition, type FormEvent, type ReactNode } from 'react';
-import { formatPrice, formatPriceOr, momoNetworks, type MomoNetwork } from '@sleek/shared';
+import { canonicalArea, formatPrice, formatPriceOr, momoNetworks, type MomoNetwork } from '@sleek/shared';
 import { useBag, type ResolvedBagItem } from '@sleek/shared/bag';
 import { useAuth } from '@/components/AuthProvider';
 import { Icon } from '@/components/Icon';
@@ -195,7 +195,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
           name: text('name'),
           phone: text('phone'),
           email: text('email') || undefined,
-          area: text('area'),
+          area: canonicalArea(delivery, text('area')),
           ghanapostGps: text('gps') || undefined,
           directions: text('directions') || undefined,
           adultConfirmed: signedIn || adult,
@@ -344,9 +344,17 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
                     required
                     maxLength={80}
                     autoComplete="address-level2"
+                    placeholder="Your area, e.g. East Legon"
+                    list="delivery-areas"
                     value={area}
                     onChange={(e) => setArea(e.target.value)}
+                    onBlur={() => setArea((v) => canonicalArea(delivery, v))}
                   />
+                  <datalist id="delivery-areas">
+                    {delivery.areas.map((a) => (
+                      <option key={a.name} value={a.name} />
+                    ))}
+                  </datalist>
                 </Field>
                 <Field id="gps" label="GhanaPost GPS address">
                   <input id="gps" name="gps" type="text" maxLength={20} />
@@ -525,7 +533,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
                 Promo code
               </label>
               <input id="promo" type="text" placeholder="Promo code" value={promoCode} onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoMessage(null); }} />
-              <button type="button" onClick={() => setPromoMessage(promoCode.trim() ? 'We’ll validate this code when your order is placed.' : 'Enter a promo code first.')}>Apply</button>
+              <button type="button" onClick={() => setPromoMessage(promoCode.trim() ? 'We check this code when you place your order. The exact amount to pay is shown next, and nothing is charged until you approve it.' : 'Enter a promo code first.')}>Apply</button>
             </div>
             {promoMessage && <p className={styles.note} role="status">{promoMessage}</p>}
             <label className={styles.giftCheck}>
@@ -550,8 +558,14 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
               <dd>−{formatPrice(placed.discount)}</dd>
             </div>
           )}
+          {!placed && promoCode.trim() && (
+            <div>
+              <dt>Promo code <span className={styles.muted}>({promoCode.trim()})</span></dt>
+              <dd>Taken off when you order</dd>
+            </div>
+          )}
           <div className={styles.totalRow}>
-            <dt>Total</dt>
+            <dt>{!placed && promoCode.trim() ? 'Total before promo code' : 'Total'}</dt>
             <dd>{formatPriceOr(total, 'To be confirmed')}</dd>
           </div>
         </dl>

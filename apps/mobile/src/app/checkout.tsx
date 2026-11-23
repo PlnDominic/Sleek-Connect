@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { estimate, formatPrice, momoNetworks, quote, type DeliveryConfig, type MomoNetwork } from '@sleek/shared';
+import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { canonicalArea, estimate, formatPrice, momoNetworks, quote, suggestAreas, type DeliveryConfig, type MomoNetwork } from '@sleek/shared';
 import { useBag } from '@sleek/shared/bag';
 import { AppleButton, GoogleButton } from '@/components/SocialButtons';
 import { AppText } from '@/components/AppText';
@@ -53,10 +53,14 @@ export default function CheckoutScreen() {
       </View>
     );
   }
-  return placed ? (
-    <Waiting placed={placed} onRetryDetails={() => setPlaced(null)} />
-  ) : (
-    <Details delivery={delivery.data} card={payments.data?.card ?? false} items={items} count={count} subtotal={subtotal} onPlaced={setPlaced} />
+  // The form stays mounted (hidden) while the payment is awaited, so a payment that fails brings the shopper back to a form that is still filled in.
+  return (
+    <>
+      <View style={placed ? styles.hidden : styles.screen}>
+        <Details delivery={delivery.data} card={payments.data?.card ?? false} items={items} count={count} subtotal={subtotal} onPlaced={setPlaced} />
+      </View>
+      {placed ? <Waiting placed={placed} onRetryDetails={() => setPlaced(null)} /> : null}
+    </>
   );
 }
 
@@ -171,6 +175,9 @@ function Details({
   );
   const chosen = quotes.find((x) => x.option.id === optionId);
   const fee = chosen?.q.available ? chosen.q.fee : null;
+  // Listed areas that match what has been typed; tapping one fills in the exact spelling the store prices by.
+  const areaSuggestions = useMemo(() => suggestAreas(delivery, area), [delivery, area]);
+  const nothingPriced = area.trim() !== '' && !quotes.some((x) => x.q.available);
 
   // Pay on delivery needs a known total, and may be capped by the store.
   const codSetting = delivery.payOnDelivery;
@@ -193,7 +200,7 @@ function Details({
     setBusy(true);
     try {
       const order = await placeOrder({
-        customer: { name: name.trim(), phone: phone.trim(), email: email.trim() || undefined, area: area.trim(), ghanapostGps: gps.trim() || undefined, directions: directions.trim() || undefined, adultConfirmed: !!(user && consented) || adult },
+        customer: { name: name.trim(), phone: phone.trim(), email: email.trim() || undefined, area: canonicalArea(delivery, area), ghanapostGps: gps.trim() || undefined, directions: directions.trim() || undefined, adultConfirmed: !!(user && consented) || adult },
         deliveryOption: optionId,
         payment: cod ? { cod: true } : cardPay ? { card: true } : { network, wallet: wallet.trim() },
         items: items.map((i) => ({ slug: i.slug, size: i.sizeId, quantity: i.qty })),
@@ -279,7 +286,21 @@ function Details({
           <Field label="Full name" value={name} onChangeText={setName} autoComplete="name" textContentType="name" />
           <Field label="Phone number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" autoComplete="tel" textContentType="telephoneNumber" />
           <Field label="Email (optional)" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" textContentType="emailAddress" />
-          <Field label="Location" value={area} onChangeText={setArea} autoComplete="postal-address-locality" maxLength={80} />
+          <Field label="Location (your area, e.g. East Legon)" value={area} onChangeText={setArea} onBlur={() => setArea((v) => canonicalArea(delivery, v))} autoComplete="postal-address-locality" maxLength={80} />
+          {areaSuggestions.length > 0 ? (
+            <View style={styles.chips} accessibilityLabel="Matching areas">
+              {areaSuggestions.map((name) => (
+                <Pressable key={name} onPress={() => setArea(name)} accessibilityRole="button" accessibilityLabel={`Use ${name}`} style={styles.chip}>
+                  <AppText size={13} weight="semibold">
+                    {name}
+                  </AppText>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+          {nothingPriced ? (
+            <Notice>We can’t price delivery to “{area.trim()}” yet. Pick the nearest area from the suggestions, or check the spelling.</Notice>
+          ) : null}
           <Field label="Directions (optional)" value={directions} onChangeText={setDirections} multiline />
           <Field label="GhanaPost GPS (optional)" value={gps} onChangeText={setGps} autoCapitalize="characters" />
         </Card>
@@ -334,9 +355,12 @@ function Details({
         <Card>
           <Row label="Subtotal" value={formatPrice(subtotal)} />
           <Row label="Delivery" value={fee === null ? 'To be confirmed' : fee === 0 ? 'Free' : formatPrice(fee)} />
-          <Row label="Total" value={fee === null ? 'To be confirmed' : formatPrice(subtotal + fee)} bold />
+          {promo.trim() ? <Row label={`Promo code ${promo.trim()}`} value="Taken off when you order" /> : null}
+          <Row label={promo.trim() ? 'Total before promo code' : 'Total'} value={fee === null ? 'To be confirmed' : formatPrice(subtotal + fee)} bold />
           <AppText size={12} color={colors.textMuted}>
-            The final total is worked out by the store when you place the order; any promo code is taken off then.
+            {promo.trim()
+              ? 'We check your promo code when you place the order. The exact amount to pay is shown on the next step, and nothing is charged until you approve it.'
+              : 'The exact amount to pay is shown on the next step, and nothing is charged until you approve it.'}
           </AppText>
         </Card>
 
@@ -478,4 +502,7 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
   line: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   thumb: { width: 48, height: 48, borderRadius: 6 },
   total: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  hidden: { display: 'none' },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: { minHeight: 44, paddingHorizontal: 14, justifyContent: 'center', borderRadius: 22, borderWidth: 1, borderColor: colors.lineStrong, backgroundColor: colors.canvas },
 });
