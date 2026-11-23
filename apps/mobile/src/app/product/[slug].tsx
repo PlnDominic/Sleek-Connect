@@ -8,7 +8,8 @@ import { Icon } from '@/components/Icon';
 import { ProductImage } from '@/components/ProductImage';
 import { EmptyState, ErrorState, Skeleton } from '@/components/States';
 import { BackButton, BottomBar, IconButton, TrustChip, useScreenTop } from '@/components/ui';
-import { getProduct } from '@/lib/catalog';
+import { getAllProducts, getProduct } from '@/lib/catalog';
+import { ProductTile } from '@/components/ProductTile';
 import { getDeliveryConfig } from '@/lib/checkout';
 import { getProductReviews } from '@/lib/reviews';
 import { useQuery } from '@/lib/query';
@@ -87,6 +88,8 @@ function ProductView({ product }: { product: Product }) {
   const compliance = product.compliance;
   const batches = product.currentBatches ?? [];
   const rating = reviews.data;
+  const all = useQuery('products:all', getAllProducts);
+  const related = (all.data ?? []).filter((p) => p.slug !== product.slug && p.category === product.category).slice(0, 6);
 
   // The cheapest standard delivery fee and how long it takes, so the price isn't a surprise at checkout.
   const config = delivery.data;
@@ -228,6 +231,20 @@ function ProductView({ product }: { product: Product }) {
               : `Unopened and sealed items can be returned. Damaged or not genuine items are refunded in full.${product.returnNote ? ` ${product.returnNote}` : ''}`}
           </Accordion>
         </View>
+        {related.length > 0 && (
+          <View style={styles.related}>
+            <AppText weight="bold" size={18} accessibilityRole="header">
+              You may also like
+            </AppText>
+            <View style={styles.relatedGrid}>
+              {related.map((p) => (
+                <View key={p.slug} style={styles.relatedCell}>
+                  <ProductTile product={p} />
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
       </ScrollView>
 
       <BottomBar style={styles.bar}>
@@ -491,6 +508,9 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     alignItems: 'center',
     minHeight: 44,
   },
+  related: { paddingHorizontal: 20, paddingTop: 8, gap: 14 },
+  relatedGrid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 18, columnGap: 14 },
+  relatedCell: { width: '47.6%', flexGrow: 1 },
   reviews: { gap: 14 },
   review: { gap: 2 },
   accordionBody: {

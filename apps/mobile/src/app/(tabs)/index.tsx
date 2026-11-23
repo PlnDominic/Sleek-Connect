@@ -39,6 +39,7 @@ export default function HomeScreen() {
   const shownDepartments = categories.data ? departmentIds.filter((d) => categories.data?.some((c) => c.department === d)) : departmentIds;
   const deptCategories = (categories.data ?? []).filter((c) => dept === 'all' || c.department === dept).slice(0, 12);
   const arrivals = (all.data ?? []).filter((p) => dept === 'all' || p.department === dept).slice(0, 6);
+  const deals = (all.data ?? []).filter((p) => (dept === 'all' || p.department === dept) && p.was !== undefined && p.was > p.price).slice(0, 6);
   const shopDepartment = dept === 'all' ? undefined : dept;
   // Only when nothing at all could be loaded: one failing request (say the banners) must not hide the rest of the screen.
   const failed = Boolean(home.error && !home.data && all.error && !all.data && categories.error && !categories.data);
@@ -153,6 +154,19 @@ export default function HomeScreen() {
                   </Pressable>
                 ))}
               </ScrollView>
+            </View>
+          )}
+
+          {deals.length > 0 && (
+            <View style={styles.section}>
+              <SectionHeader title="Deals" onSeeAll={() => router.push({ pathname: '/shop', params: { sort: 'saving' } })} />
+              <View style={styles.grid}>
+                {deals.map((p) => (
+                  <View key={p.slug} style={styles.gridCell}>
+                    <ProductTile product={p} />
+                  </View>
+                ))}
+              </View>
             </View>
           )}
 

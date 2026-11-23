@@ -13,23 +13,27 @@ import { useDebounced } from '@/lib/useDebounced';
 import { fonts } from '@/theme/fonts';
 import { useColors, useStyles, type Palette } from '@/theme/theme';
 
-type Sort = 'newest' | 'price-asc' | 'price-desc';
+type Sort = 'newest' | 'price-asc' | 'price-desc' | 'saving';
 const sorts: { id: Sort; label: string }[] = [
   { id: 'newest', label: 'Newest' },
   { id: 'price-asc', label: 'Price: low' },
   { id: 'price-desc', label: 'Price: high' },
+  { id: 'saving', label: 'Biggest saving' },
 ];
+
+/** The share taken off the old price (0 when the product isn't discounted). */
+const saving = (p: { price: number; was?: number }) => (p.was !== undefined && p.was > p.price ? (p.was - p.price) / p.was : 0);
 
 export default function ShopScreen() {
   const colors = useColors();
   const styles = useStyles(makeStyles);
   const top = useScreenTop();
-  const params = useLocalSearchParams<{ department?: string; category?: string; focus?: string }>();
+  const params = useLocalSearchParams<{ department?: string; category?: string; focus?: string; sort?: string }>();
   const input = useRef<TextInputInstance>(null);
   const department: Department | undefined = isDepartment(params.department) ? params.department : undefined;
   const category = params.category;
   const [text, setText] = useState('');
-  const [sort, setSort] = useState<Sort>('newest');
+  const [sort, setSort] = useState<Sort>(params.sort === 'saving' ? 'saving' : 'newest');
 
   // Arriving from the home page's search bar puts the cursor straight in the search field.
   useEffect(() => {
@@ -55,6 +59,7 @@ export default function ShopScreen() {
       list = list.filter((p) => rank.has(p.slug)).sort((a, b) => rank.get(a.slug)! - rank.get(b.slug)!);
     } else if (sort === 'price-asc') list = [...list].sort((a, b) => a.price - b.price);
     else if (sort === 'price-desc') list = [...list].sort((a, b) => b.price - a.price);
+    else if (sort === 'saving') list = [...list].sort((a, b) => saving(b) - saving(a));
     if (department) list = list.filter((p) => p.department === department);
     if (category) list = list.filter((p) => p.category === category);
     return list;
