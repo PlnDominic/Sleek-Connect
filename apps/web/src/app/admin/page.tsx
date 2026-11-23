@@ -28,8 +28,7 @@ export default async function Dashboard({ searchParams }: PageProps<'/admin'>) {
   const today = new Date(`${dayKey(now)}T00:00:00Z`);
   const since30 = new Date(today.getTime() - 29 * DAY);
 
-  const [toConfirm, toPack, ready, out, failed, review, refunds, returnsToReview, returnRefunds, openCases, stock, expiring, recent, paid] = await Promise.all([
-    count(orders().eq('status', 'pending_payment').eq('payment_method', 'cod')),
+  const [toPack, ready, out, failed, review, refunds, returnsToReview, returnRefunds, openCases, stock, expiring, recent, paid] = await Promise.all([
     count(orders().in('status', ['paid', 'packing'])),
     count(orders().eq('status', 'packed')),
     count(orders().eq('status', 'out_for_delivery')),
@@ -50,6 +49,15 @@ export default async function Dashboard({ searchParams }: PageProps<'/admin'>) {
       .not('status', 'in', '(cancelled,returned)')
       .limit(5000),
   ]);
+  // First-run checklist for admins: a delivery option with no standard fee can't be priced at checkout, and an empty shop sells nothing.
+  const isAdmin = can(staff.role, 'settings.edit');
+  const [noFee, published] = isAdmin
+    ? await Promise.all([count(db.from('delivery_options').select('id', { count: 'exact', head: true }).is('fee_ghs', null)), count(db.from('products').select('id', { count: 'exact', head: true }).eq('is_published', true))])
+    : [0, 1];
+  const setupSteps = [
+    ...(noFee > 0 ? [{ text: 'Set the delivery fee. Shoppers can’t check out until every delivery option has one.', href: '/admin/delivery', cta: 'Set delivery fees' }] : []),
+    ...(published === 0 ? [{ text: 'Add and publish your first product.', href: '/admin/products/new', cta: 'Add a product' }] : []),
+  ];
   const low = (stock.data ?? []).filter((l) => l.is_low);
   const expiringCount = (expiring.data ?? []).length;
   const reviewsPending = can(staff.role, 'reviews.moderate') ? ((await db.rpc('admin_review_counts').maybeSingle()).data?.pending ?? 0) : null;
@@ -101,19 +109,27 @@ export default async function Dashboard({ searchParams }: PageProps<'/admin'>) {
         <p>Sales, orders and what needs doing today.</p>
       </div>
 
+      {setupSteps.length > 0 && (
+        <section className={styles.notice} aria-labelledby="setup-title">
+          <h2 id="setup-title">Finish setting up your store</h2>
+          <ul>
+            {setupSteps.map((s) => (
+              <li key={s.href}>
+                {s.text} <Link href={s.href}>{s.cta} →</Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <div className={dash.stats}>
         <section className={dash.stat} aria-labelledby="stat-today">
           <h2 id="stat-today" className={dash.statLabel}>
             Sales today
           </h2>
           <strong className={dash.statValue}>{formatPrice(todaySales.total)}</strong>
-          <p className={dash.statNote}>Orders to fulfil</p>
+          <p className={dash.statNote}>Orders waiting for you (tap to open)</p>
           <div className={dash.segments}>
-            {toConfirm > 0 && (
-              <Link href="/admin/orders?view=confirm" data-on>
-                To confirm <b>{toConfirm}</b>
-              </Link>
-            )}
             <Link href="/admin/orders?view=to_pack" data-on={toPack > 0 || undefined}>
               To pack <b>{toPack}</b>
             </Link>
@@ -145,7 +161,7 @@ export default async function Dashboard({ searchParams }: PageProps<'/admin'>) {
             {last7.reduce((n, d) => n + d.orders, 0)} paid orders · {toFulfil} still to deliver
           </p>
           <Link href="/admin/finance" className={dash.more}>
-            See more details →
+            Open Finance →
           </Link>
         </section>
 
@@ -165,7 +181,7 @@ export default async function Dashboard({ searchParams }: PageProps<'/admin'>) {
             {sales.length} paid orders · <b>{deliveredShare}% delivered</b>
           </p>
           <Link href="/admin/finance" className={dash.more}>
-            See more details →
+            Open Finance →
           </Link>
         </section>
       </div>

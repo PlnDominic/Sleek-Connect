@@ -81,7 +81,7 @@ export function ContentView({ banners, slots, products, edit, tab, done, now }: 
     <>
       <div className={admin.pageHead}>
         <div>
-          <h1>Content</h1>
+          <h1>Home page banners</h1>
           <p className={admin.muted}>Home page banners and featured products.</p>
         </div>
         <Link href="/" target="_blank" className={admin.secondary}>

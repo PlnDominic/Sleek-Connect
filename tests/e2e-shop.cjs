@@ -40,7 +40,7 @@ const statusPanel = (page) => page.locator('aside:visible').getByRole('status').
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   const errors = []; page.on('pageerror', e => errors.push(e.message));
-  // Checkout needs a signed-in shopper, who confirmed 18+ and the terms when creating the account.
+  // Checkout needs a signed-in shopper, who accepted the terms when creating the account.
   const buyerEmail = `shop-buyer+${Date.now()}@example.com`;
   await createUser(buyerEmail);
   const buyer = await staffSession(buyerEmail);
@@ -199,14 +199,14 @@ const statusPanel = (page) => page.locator('aside:visible').getByRole('status').
   assert((await page.getByRole('radio', { name: /Pay on delivery/ }).count()) === 0, 'pay on delivery is not offered at checkout');
   assert(await page.getByRole('radio', { name: /Debit or credit card/ }).count() === 1, 'card is offered');
 
-  // Signed-out visitors can check out as a guest: a banner says so, and they confirm they are 18 or older.
+  // Signed-out visitors can check out as a guest: a banner says so, and they confirm they accept the terms.
   const visitor = await (await browser.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
   await go(visitor, BASE + '/checkout');
   await visitor.getByText('Checkout as guest').waitFor();
   assert(await visitor.getByText(/You don.t need an account to buy/).isVisible(), 'guest checkout shows its tagline');
-  assert(await visitor.getByLabel(/18 or older/).count() === 1, 'a guest confirms they are 18 or older');
+  assert(await visitor.getByLabel(/accept the Terms of Service/).count() === 1, 'a guest confirms they accept the terms');
   await go(page, BASE + '/checkout');
-  assert((await page.getByLabel(/18 or older/).count()) === 0, 'the checkout page has no 18+ box');
+  assert((await page.getByLabel(/accept the Terms of Service/).count()) === 0, 'the checkout page has no terms box');
 
   assert(errors.length === 0, 'no page errors ' + errors.join(' | '));
   await browser.close();

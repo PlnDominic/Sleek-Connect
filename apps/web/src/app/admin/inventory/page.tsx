@@ -40,9 +40,6 @@ export default async function InventoryPage({ searchParams }: PageProps<'/admin/
         </div>
         <div className={styles.buttons}>
           <Link href="/admin/inventory/count" className={styles.secondary}>Stock count</Link>
-          <Link href="/admin/purchasing" className={styles.secondary}>Purchasing</Link>
-          <Link href="/admin/inventory/reorder" className={styles.secondary}>Reorder suggestions</Link>
-          <Link href="/admin/suppliers" className={styles.secondary}>Suppliers</Link>
           <Link href="/admin/inventory/movements" className={styles.secondary}>Stock movements</Link>
           <a href="/admin/inventory/export?type=alerts" className={styles.secondary} download>Export alerts (CSV)</a>
         </div>

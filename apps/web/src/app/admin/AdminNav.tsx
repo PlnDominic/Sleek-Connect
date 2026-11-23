@@ -17,56 +17,51 @@ interface NavGroup {
   label: string;
   icon: IconName;
   adminOnly?: boolean;
+  collapsed?: boolean;
   links: NavLink[];
 }
 
 const groups: NavGroup[] = [
   {
-    label: 'Sales',
+    label: 'Daily',
     icon: 'bag',
     links: [
       { href: '/admin/orders', label: 'Orders' },
       { href: '/admin/returns', label: 'Returns' },
-      { href: '/admin/finance', label: 'Finance' },
-      { href: '/admin/promotions', label: 'Promotions' },
-      { href: '/admin/profit', label: 'Profit' },
-    ],
-  },
-  {
-    label: 'Customers',
-    icon: 'headset',
-    links: [
       { href: '/admin/support', label: 'Support' },
       { href: '/admin/reviews', label: 'Reviews' },
-      { href: '/admin/notifications', label: 'Notifications' },
     ],
   },
   {
-    label: 'Catalogue',
+    label: 'Shop',
     icon: 'box',
     links: [
       { href: '/admin/products', label: 'Products' },
-      { href: '/admin/categories', label: 'Categories' },
-      { href: '/admin/searches', label: 'Searches' },
       { href: '/admin/inventory', label: 'Inventory' },
-      { href: '/admin/purchasing', label: 'Purchasing' },
-      { href: '/admin/suppliers', label: 'Suppliers' },
-      { href: '/admin/content', label: 'Content' },
+      { href: '/admin/categories', label: 'Categories' },
+      { href: '/admin/promotions', label: 'Promotions' },
+      { href: '/admin/content', label: 'Home page banners' },
     ],
   },
   {
-    label: 'Delivery',
+    label: 'Money and delivery',
     icon: 'truck',
     links: [
+      { href: '/admin/finance', label: 'Finance' },
       { href: '/admin/riders', label: 'Riders' },
       { href: '/admin/delivery', label: 'Areas and fees' },
     ],
   },
   {
-    label: 'Settings',
+    // Used now and then, so folded away until opened.
+    label: 'More',
     icon: 'sliders',
-    adminOnly: true,
+    collapsed: true,
     links: [
+      { href: '/admin/purchasing', label: 'Purchasing' },
+      { href: '/admin/suppliers', label: 'Suppliers' },
+      { href: '/admin/searches', label: 'Missed searches' },
+      { href: '/admin/notifications', label: 'Messages sent' },
       { href: '/admin/settings', label: 'Store settings' },
       { href: '/admin/staff', label: 'Staff' },
       { href: '/admin/audit', label: 'Audit log' },
@@ -75,7 +70,7 @@ const groups: NavGroup[] = [
 ];
 
 /** Pages only admins may open (the database enforces the same rule). */
-const adminOnlyLinks = new Set(['/admin/delivery']);
+const adminOnlyLinks = new Set(['/admin/delivery', '/admin/settings', '/admin/staff', '/admin/audit']);
 
 /** The sidebar: Dashboard, then sections that fold open. The section holding the current page starts open. */
 export function AdminNav({ role }: { role: StaffRole }) {
@@ -86,7 +81,8 @@ export function AdminNav({ role }: { role: StaffRole }) {
     .map((g) => ({ ...g, links: g.links.filter((l) => isAdmin || !adminOnlyLinks.has(l.href)) }))
     .filter((g) => g.links.length > 0);
   const activeGroup = visible.find((g) => g.links.some((l) => pathname.startsWith(l.href)))?.label;
-  const [open, setOpen] = useState<Set<string>>(() => new Set(activeGroup ? [activeGroup] : []));
+  // The everyday sections start open; "More" stays folded until opened (or until you are on one of its pages).
+  const [open, setOpen] = useState<Set<string>>(() => new Set(visible.filter((g) => !g.collapsed).map((g) => g.label)));
   const isOpen = (label: string) => open.has(label) || label === activeGroup;
 
   return (

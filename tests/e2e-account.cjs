@@ -59,7 +59,7 @@ async function sessionCookies(email, password) {
   const google = ap.getByRole('button', { name: 'Continue with Google' });
   await google.waitFor();
   assert(await google.isDisabled(), 'Google button disabled until consent is ticked');
-  await ap.getByLabel(/18 or older/).check();
+  await ap.getByLabel(/accept the Terms of Service/).check();
   assert(await google.isEnabled(), 'ticking consent enables Google sign-in');
   await ap.screenshot({ path: OUT + '/account-signed-out.png' });
   await google.click();
@@ -85,7 +85,7 @@ async function sessionCookies(email, password) {
   const confirm = pa.getByRole('button', { name: 'Confirm' });
   assert(await confirm.isDisabled(), 'confirm disabled until consent ticked');
   assert(savedBag(userId) === '', 'nothing saved to the account before consent');
-  await pa.getByLabel(/18 or older/).check();
+  await pa.getByLabel(/accept the Terms of Service/).check();
   await confirm.click();
   await pa.getByText('Your bag is saved to this account').waitFor();
   assert(await pa.getByRole('link', { name: 'Pending reviews' }).isVisible() && await pa.getByRole('link', { name: 'Address book' }).first().isVisible(), 'the account has a menu on the left, like a marketplace');
@@ -123,7 +123,7 @@ async function sessionCookies(email, password) {
   // --- Signed-in checkout links the order to the account --------------------------
   await go(pa, BASE + '/checkout');
   await pa.getByLabel('Full name').fill('Esi Mensah');
-  { const age = pa.getByRole('checkbox', { name: /18 or older/ }); if (await age.count()) await age.check(); }
+  { const age = pa.getByRole('checkbox', { name: /accept the Terms of Service/ }); if (await age.count()) await age.check(); }
   await pa.getByLabel('Phone number').fill('024 555 0000');
   await pa.getByRole('radio', { name: /Same day/ }).check();
   await pa.getByLabel('Wallet number').fill('024 555 0000');

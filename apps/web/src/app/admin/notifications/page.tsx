@@ -5,7 +5,7 @@ import { requireStaffPage } from '@/lib/admin/session';
 import { formatDateTime } from '@/lib/orders';
 import styles from '../admin.module.css';
 
-export const metadata: Metadata = { title: 'Notifications' };
+export const metadata: Metadata = { title: 'Messages sent' };
 
 type NotificationStatus = 'all' | 'queued' | 'sending' | 'sent' | 'failed' | 'not_sent';
 const statuses: NotificationStatus[] = ['all', 'queued', 'sending', 'sent', 'failed', 'not_sent'];
@@ -32,7 +32,7 @@ export default async function NotificationsPage({ searchParams }: PageProps<'/ad
     <>
       <div className={styles.pageHead}>
         <div>
-          <h1>Notifications</h1>
+          <h1>Messages sent</h1>
           <p className={styles.muted}>SMS and email delivery. Failed messages retry up to five times.</p>
         </div>
         <a className={styles.secondary} href={`/admin/notifications/export?status=${status}`} download>Export CSV</a>

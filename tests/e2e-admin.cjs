@@ -103,7 +103,7 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   assert(true, 'signing out returns to the sign-in');
 
   // --- Customer places and pays --------------------------------------------------------------
-  // Checkout needs a signed-in shopper, who confirmed 18+ and the terms when creating the account.
+  // Checkout needs a signed-in shopper, who accepted the terms when creating the account.
   await createUser(`checkout-buyer+${stamp}@example.com`);
   const checkoutBuyer = await staffSession(`checkout-buyer+${stamp}@example.com`);
   await checkoutBuyer.client.rpc('record_signup_consent');
@@ -112,7 +112,7 @@ const shot = (page, name) => page.screenshot({ path: `${OUT}/${name}.png`, fullP
   await shopper.getByRole('button', { name: 'Add to bag' }).click();
   await go(shopper, BASE + '/checkout');
   await shopper.getByLabel('Full name').fill('Ama Owusu');
-  { const age = shopper.getByRole('checkbox', { name: /18 or older/ }); if (await age.count()) await age.check(); }
+  { const age = shopper.getByRole('checkbox', { name: /accept the Terms of Service/ }); if (await age.count()) await age.check(); }
   await shopper.getByLabel('Phone number').fill('024 123 4567');
   await shopper.getByLabel('Location', { exact: true }).fill('Osu');
   await shopper.getByRole('radio', { name: /Same day/ }).check();

@@ -105,7 +105,13 @@ function Details({
   const { user, consented, appleAvailable, signInWithApple, signInWithGoogle, recordConsent } = useAuth();
   const [adult, setAdult] = useState(false);
   const [signingIn, setSigningIn] = useState(false);
+  // The sign-in buttons stay tappable; tapping one before the box is ticked says what to do instead of doing nothing.
+  const [agreeHint, setAgreeHint] = useState(false);
   async function signInThen(method: () => Promise<boolean>) {
+    if (!adult) {
+      setAgreeHint(true);
+      return;
+    }
     setSigningIn(true);
     setError(null);
     try {
@@ -178,6 +184,8 @@ function Details({
   // Listed areas that match what has been typed; tapping one fills in the exact spelling the store prices by.
   const areaSuggestions = useMemo(() => suggestAreas(delivery, area), [delivery, area]);
   const nothingPriced = area.trim() !== '' && !quotes.some((x) => x.q.available);
+  // Any location can be typed. One that isn't on our list is delivered to at the option's standard fee.
+  const areaListed = delivery.areas.some((a) => a.name === canonicalArea(delivery, area));
 
   // Pay on delivery needs a known total, and may be capped by the store.
   const codSetting = delivery.payOnDelivery;
@@ -194,7 +202,7 @@ function Details({
     if (name.trim().length < 2) return setError('Enter the name of the person receiving the order.');
     if (phone.replace(/\D/g, '').length < 9) return setError('Enter a phone number we can call for delivery.');
     // Shoppers who signed in confirmed this when they created their account; everyone else confirms it here.
-    if (!(user && consented) && !adult) return setError('Please confirm that you are 18 or older and accept the terms.');
+    if (!(user && consented) && !adult) return setError('Please accept the terms to continue.');
     if (email.trim() && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) return setError('Check the email address, or leave it empty.');
     if (!cod && !cardPay && wallet.replace(/\D/g, '').length < 9) return setError('Enter the Mobile Money number you will pay from.');
     setBusy(true);
@@ -240,7 +248,7 @@ function Details({
             ) : null}
             <Checkbox checked={adult} onChange={setAdult}>
               <AppText size={13}>
-                I’m 18 or older and I accept the{' '}
+                I accept the{' '}
                 <AppText size={13} weight="semibold" onPress={() => void Linking.openURL(siteAddress('/terms'))}>
                   Terms of Service
                 </AppText>{' '}
@@ -251,13 +259,18 @@ function Details({
                 .
               </AppText>
             </Checkbox>
+            {agreeHint && !adult ? (
+              <AppText size={13} weight="semibold" color={colors.danger}>
+                Tick the box above first, then sign in.
+              </AppText>
+            ) : null}
             {!user ? (
               <>
                 <AppText weight="bold" size={14}>
                   Or sign in
                 </AppText>
-                {appleAvailable ? <AppleButton disabled={!adult || signingIn} onPress={() => void signInThen(signInWithApple)} /> : null}
-                <GoogleButton disabled={!adult || signingIn} onPress={() => void signInThen(signInWithGoogle)} />
+                {appleAvailable ? <AppleButton disabled={signingIn} onPress={() => void signInThen(signInWithApple)} /> : null}
+                <GoogleButton disabled={signingIn} onPress={() => void signInThen(signInWithGoogle)} />
               </>
             ) : null}
           </Card>
@@ -284,7 +297,16 @@ function Details({
 
         <Card title="Delivery details">
           <Field label="Full name" value={name} onChangeText={setName} autoComplete="name" textContentType="name" />
-          <Field label="Phone number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" autoComplete="tel" textContentType="telephoneNumber" />
+          <Field
+            label="Phone number"
+            value={phone}
+            onChangeText={setPhone}
+            // Most shoppers pay from the number they gave for delivery, so offer it for Mobile Money once they leave this field.
+            onBlur={() => setWallet((v) => v || phone.trim())}
+            keyboardType="phone-pad"
+            autoComplete="tel"
+            textContentType="telephoneNumber"
+          />
           <Field label="Email (optional)" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" textContentType="emailAddress" />
           <Field label="Location (your area, e.g. East Legon)" value={area} onChangeText={setArea} onBlur={() => setArea((v) => canonicalArea(delivery, v))} autoComplete="postal-address-locality" maxLength={80} />
           {areaSuggestions.length > 0 ? (
@@ -299,7 +321,11 @@ function Details({
             </View>
           ) : null}
           {nothingPriced ? (
-            <Notice>We can’t price delivery to “{area.trim()}” yet. Pick the nearest area from the suggestions, or check the spelling.</Notice>
+            <Notice>We can’t price delivery to “{area.trim()}” right now. Please contact us and we’ll arrange it.</Notice>
+          ) : area.trim() !== '' && !areaListed ? (
+            <AppText size={13} color={colors.textMuted}>
+              Not on our list? That’s fine: we deliver to your location at the standard rate.
+            </AppText>
           ) : null}
           <Field label="Directions (optional)" value={directions} onChangeText={setDirections} multiline />
           <Field label="GhanaPost GPS (optional)" value={gps} onChangeText={setGps} autoCapitalize="characters" />
@@ -313,7 +339,7 @@ function Details({
             options={quotes.map(({ option, q }) => ({
               id: option.id,
               label: option.label,
-              sub: q.available ? `${q.free ? 'Free' : q.fee === null ? 'Fee to be confirmed' : formatPrice(q.fee)} · ${estimate(option, new Date())}` : 'Not available for this area',
+              sub: q.available ? `${q.free ? 'Free' : q.fee === null ? 'Fee to be confirmed' : formatPrice(q.fee)} · ${estimate(option, new Date())}` : 'Not available here right now',
               disabled: !q.available,
             }))}
           />
@@ -326,7 +352,7 @@ function Details({
               value={cod ? 'cod' : cardPay ? 'card' : 'momo'}
               onChange={setPayWith}
               options={[
-                { id: 'momo', label: 'Mobile Money', sub: 'Approve a prompt on your phone' },
+                { id: 'momo', label: 'Mobile Money', sub: 'You confirm on your phone, sometimes with a code first, then your Mobile Money PIN' },
                 ...(card ? [{ id: 'card' as const, label: 'Card', sub: 'Visa or Mastercard, on our payment partner’s secure page' }] : []),
                 ...(codSetting.enabled
                   ? [{ id: 'cod' as const, label: 'Pay on delivery', sub: codBlocked ?? 'Pay cash to the rider. We call you to confirm first.', disabled: codBlocked !== null }]
@@ -346,6 +372,13 @@ function Details({
             <>
               <Choices label="Network" value={network} onChange={setNetwork} options={momoNetworks.map((n) => ({ id: n.id, label: n.label }))} />
               <Field label="Mobile Money number" value={wallet} onChangeText={setWallet} keyboardType="phone-pad" />
+              {phone.trim() && wallet.trim() !== phone.trim() ? (
+                <Pressable accessibilityRole="button" onPress={() => setWallet(phone.trim())} style={styles.sameAsPhone}>
+                  <AppText size={13} weight="semibold" color={colors.accent}>
+                    Use my phone number
+                  </AppText>
+                </Pressable>
+              ) : null}
             </>
           )}
           <Field label="Promo code (optional)" value={promo} onChangeText={setPromo} autoCapitalize="characters" />
@@ -464,7 +497,7 @@ function Waiting({ placed, onRetryDetails }: { placed: Placed; onRetryDetails: (
           <>
             <AppText size={14} color={colors.textMuted}>
               {checkoutUrl
-                ? 'Finish paying on our payment partner’s page. This screen updates by itself once the payment goes through.'
+                ? 'Finish paying on our payment partner’s page. You may be asked for a code we send to your phone, then your Mobile Money PIN. This screen updates by itself once the payment goes through.'
                 : 'Check your phone and approve the Mobile Money prompt. This screen updates by itself.'}
             </AppText>
             {checkoutUrl ? <Button label="Open the payment page" onPress={() => void openPaymentPage(checkoutUrl)} /> : null}
@@ -503,6 +536,7 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
   thumb: { width: 48, height: 48, borderRadius: 6 },
   total: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   hidden: { display: 'none' },
+  sameAsPhone: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { minHeight: 44, paddingHorizontal: 14, justifyContent: 'center', borderRadius: 22, borderWidth: 1, borderColor: colors.lineStrong, backgroundColor: colors.canvas },
 });

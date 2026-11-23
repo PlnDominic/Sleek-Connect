@@ -120,22 +120,29 @@ function SignedOut() {
     }
   }
 
-  const google = () =>
+  // The buttons stay tappable: before the box is ticked they say what to do, instead of looking broken.
+  const needAgreement = 'Tick the box above to accept the terms, then sign in.';
+
+  const google = () => {
+    if (!agreed) return setError(needAgreement);
     void run(async () => {
       if (await signInWithGoogle()) await recordConsent().catch(() => {});
     }, 'We couldn’t sign you in with Google. Please try again.');
+  };
 
-  const apple = () =>
+  const apple = () => {
+    if (!agreed) return setError(needAgreement);
     void run(async () => {
       if (await signInWithApple()) await recordConsent().catch(() => {});
     }, 'We couldn’t sign you in with Apple. Please try again.');
+  };
 
   return (
     <Card title="Sign in">
       <AppText size={13} color={colors.textMuted} style={styles.lh}>
         Sign in to check out, see your orders on every phone and get your delivery code.
       </AppText>
-      <Checkbox checked={agreed} onChange={setAgreed} label="I’m 18 or older and accept the Terms of Service and Privacy Notice." />
+      <Checkbox checked={agreed} onChange={setAgreed} label="I accept the Terms of Service and Privacy Notice." />
       <View style={styles.inlineLinks}>
         <Pressable accessibilityRole="link" onPress={() => void openSite('/terms')}>
           <AppText size={13} weight="semibold" color={colors.accent}>
@@ -148,8 +155,8 @@ function SignedOut() {
           </AppText>
         </Pressable>
       </View>
-      {appleAvailable ? <AppleButton onPress={apple} disabled={!agreed || busy} /> : null}
-      <GoogleButton onPress={google} disabled={!agreed || busy} />
+      {appleAvailable ? <AppleButton onPress={apple} disabled={busy} /> : null}
+      <GoogleButton onPress={google} disabled={busy} />
       {error ? <Notice>{error}</Notice> : null}
     </Card>
   );
@@ -187,7 +194,7 @@ function SignedIn() {
 
       {!consented && (
         <Card title="One more step">
-          <Checkbox checked={agreed} onChange={setAgreed} label="I’m 18 or older and accept the Terms of Service and Privacy Notice." />
+          <Checkbox checked={agreed} onChange={setAgreed} label="I accept the Terms of Service and Privacy Notice." />
           <Button label="Confirm" onPress={() => void recordConsent().catch(() => setError('We couldn’t save that. Please try again.'))} disabled={!agreed} />
         </Card>
       )}
@@ -253,6 +260,9 @@ function AccountActions() {
     <View style={styles.actions}>
       {error ? <Notice>{error}</Notice> : null}
       <Button label="Sign out" kind="secondary" onPress={confirmSignOut} />
+      <AppText size={12} color={colors.textMuted} style={styles.deleteNote}>
+        You can delete your account once any orders in progress have been delivered or cancelled.
+      </AppText>
       <Pressable accessibilityRole="button" disabled={busy} onPress={confirmDelete} style={({ pressed }) => [styles.deleteLink, (pressed || busy) && { opacity: 0.6 }]}>
         <AppText weight="semibold" size={14} color={colors.danger}>
           {busy ? 'Deleting…' : 'Delete my account'}
@@ -306,5 +316,6 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
   avatar: { width: 52, height: 52, borderRadius: radii.pill, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
   actions: { gap: 6, marginTop: 10 },
   deleteLink: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  deleteNote: { textAlign: 'center' },
   icon: { width: 44, height: 44, borderRadius: radii.lg, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
 });

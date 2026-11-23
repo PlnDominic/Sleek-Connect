@@ -205,7 +205,7 @@ export default async function PrivacyPage() {
       title: 'Children',
       body: (
         <p>
-          The store is for adults. We sell products for children but don’t knowingly collect personal data from anyone under 18, and
+          We sell products for children but don’t knowingly collect personal data from children, and
           you shouldn’t give us a child’s details other than a delivery name where needed.
         </p>
       ),

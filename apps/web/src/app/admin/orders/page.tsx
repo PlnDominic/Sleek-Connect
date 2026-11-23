@@ -26,8 +26,6 @@ export default async function OrdersPage({ searchParams }: PageProps<'/admin/ord
   if ('statuses' in config) query = query.in('status', [...config.statuses]);
   if ('cancelReasons' in config) query = query.eq('status', 'cancelled').in('cancel_reason', [...config.cancelReasons]);
   if ('flag' in config) query = query.eq(config.flag, true);
-  if ('method' in config) query = query.eq('payment_method', config.method);
-  if ('notMethod' in config) query = query.neq('payment_method', config.notMethod);
   if (q) {
     const term = q.replace(/[^\p{L}\p{N} +-]/gu, '');
     query = query.or(`order_number.ilike.%${term}%,customer_name.ilike.%${term}%,phone.ilike.%${term}%`);
@@ -99,7 +97,7 @@ export default async function OrdersPage({ searchParams }: PageProps<'/admin/ord
       <div className={styles.pageHead}>
         <div>
           <h1>Orders</h1>
-          <p className={styles.muted}>Oldest first in each queue.</p>
+          <p className={styles.muted}>{config.hint}</p>
         </div>
         <div className={styles.buttons}>
           <form className={styles.search} role="search">
@@ -123,9 +121,6 @@ export default async function OrdersPage({ searchParams }: PageProps<'/admin/ord
         {bulk ? (
           <ActionForm action={bulkOrders}>
             <div className={styles.buttons}>
-              <button type="submit" name="op" value="start" className={styles.secondary} disabled={orders.length === 0}>
-                Start packing selected
-              </button>
               <button type="submit" name="op" value="pack" className={styles.primary} disabled={orders.length === 0}>
                 Mark selected as packed
               </button>

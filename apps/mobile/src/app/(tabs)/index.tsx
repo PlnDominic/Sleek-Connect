@@ -29,15 +29,17 @@ export default function HomeScreen() {
   const styles = useStyles(makeStyles);
   const top = useScreenTop();
   const { count } = useBag();
-  const [dept, setDept] = useState<Department>('beauty');
+  // Opens on everything, so a shopper looking for groceries or fashion isn't shown skincare first.
+  const [dept, setDept] = useState<Department | 'all'>('all');
   const home = useQuery('home', getHome);
   const all = useQuery('products:all', getAllProducts);
   const categories = useQuery('categories', getCategories);
 
   // A department shows once it has a category, so a new one doesn't appear empty.
   const shownDepartments = categories.data ? departmentIds.filter((d) => categories.data?.some((c) => c.department === d)) : departmentIds;
-  const deptCategories = (categories.data ?? []).filter((c) => c.department === dept);
-  const arrivals = (all.data ?? []).filter((p) => p.department === dept).slice(0, 6);
+  const deptCategories = (categories.data ?? []).filter((c) => dept === 'all' || c.department === dept).slice(0, 12);
+  const arrivals = (all.data ?? []).filter((p) => dept === 'all' || p.department === dept).slice(0, 6);
+  const shopDepartment = dept === 'all' ? undefined : dept;
   // Only when nothing at all could be loaded: one failing request (say the banners) must not hide the rest of the screen.
   const failed = Boolean(home.error && !home.data && all.error && !all.data && categories.error && !categories.data);
   const emptyShop = !all.loading && !all.error && (all.data?.length ?? 0) === 0;
@@ -114,7 +116,7 @@ export default function HomeScreen() {
       ) : (
         <>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.depts} accessibilityRole="tablist">
-            {shownDepartments.map((d) => {
+            {(['all', ...shownDepartments] as const).map((d) => {
               const on = d === dept;
               return (
                 <Pressable
@@ -125,7 +127,7 @@ export default function HomeScreen() {
                   style={[styles.dept, on && styles.deptOn]}
                 >
                   <AppText weight="bold" size={14} color={on ? colors.canvas : colors.ink}>
-                    {departmentLabels[d]}
+                    {d === 'all' ? 'All' : departmentLabels[d]}
                   </AppText>
                 </Pressable>
               );
@@ -134,14 +136,14 @@ export default function HomeScreen() {
 
           {deptCategories.length > 0 && (
             <View style={styles.section}>
-              <SectionHeader title="Categories" onSeeAll={() => openShop({ department: dept })} />
+              <SectionHeader title="Categories" onSeeAll={() => openShop({ department: shopDepartment })} />
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categories}>
                 {deptCategories.map((c) => (
                   <Pressable
                     key={c.id}
                     accessibilityRole="link"
                     accessibilityLabel={c.name}
-                    onPress={() => openShop({ department: dept, category: c.id })}
+                    onPress={() => openShop({ department: c.department, category: c.id })}
                     style={styles.category}
                   >
                     <ProductImage image={c.image} photo={c.photo} tint={c.tint} kind={c.kind} style={styles.categoryImage} iconSize={26} />
@@ -155,7 +157,7 @@ export default function HomeScreen() {
           )}
 
           <View style={styles.section}>
-            <SectionHeader title="New arrivals" onSeeAll={arrivals.length ? () => openShop({ department: dept }) : undefined} />
+            <SectionHeader title="New arrivals" onSeeAll={arrivals.length ? () => openShop({ department: shopDepartment }) : undefined} />
             {all.loading ? (
               <ProductGridSkeleton count={4} />
             ) : all.error && !all.data ? (
@@ -163,7 +165,7 @@ export default function HomeScreen() {
               <ErrorState onRetry={() => void all.refetch()} />
             ) : arrivals.length === 0 ? (
               <AppText size={14} color={colors.textMuted}>
-                {emptyShop ? 'We’re stocking the shop. New products are coming very soon.' : `Nothing in ${departmentLabels[dept]} yet. Check back soon.`}
+                {emptyShop ? 'We’re stocking the shop. New products are coming very soon.' : `Nothing in ${dept === 'all' ? 'the shop' : departmentLabels[dept]} yet. Check back soon.`}
               </AppText>
             ) : (
               <View style={styles.grid}>

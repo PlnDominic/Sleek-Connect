@@ -7,7 +7,7 @@ import { ActionForm } from '../ActionForm';
 import { clearSearchMiss } from './actions';
 import styles from '../admin.module.css';
 
-export const metadata: Metadata = { title: 'Searches' };
+export const metadata: Metadata = { title: 'Missed searches' };
 
 const ranges = { '7': 'Last 7 days', '30': 'Last 30 days', '90': 'Last 90 days' } as const;
 
@@ -25,7 +25,7 @@ export default async function SearchesPage({ searchParams }: PageProps<'/admin/s
     <>
       <div className={styles.pageHead}>
         <div>
-          <h1>Searches</h1>
+          <h1>Missed searches</h1>
           <p className={styles.muted}>
             Words shoppers searched for on the website and found nothing, most often first. Only the words and a daily count are kept, never who
             searched. Add a product for the popular ones, then remove the word.

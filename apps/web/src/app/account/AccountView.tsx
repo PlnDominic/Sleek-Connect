@@ -50,7 +50,7 @@ export function AccountView({ mode = 'overview' }: { mode?: 'overview' | 'detail
     <label className={styles.consent}>
       <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
       <span>
-        I&apos;m 18 or older and I accept the <Link href="/terms" target="_blank">Terms of Service</Link> and{' '}
+        I accept the <Link href="/terms" target="_blank">Terms of Service</Link> and{' '}
         <Link href="/privacy" target="_blank">Privacy Notice</Link>.
       </span>
     </label>

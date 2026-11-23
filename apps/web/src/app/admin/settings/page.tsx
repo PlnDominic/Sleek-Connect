@@ -72,30 +72,6 @@ export default async function SettingsPage() {
         </section>
 
         <section className={styles.panel}>
-          <h2>Pay on delivery</h2>
-          <p className={styles.muted}>
-            Shoppers pay the rider in cash. You confirm each order (usually with a call) before it is packed, and the cash is
-            recorded when the rider hands the order over.
-          </p>
-          <label className={styles.check}>
-            <input type="checkbox" name="pay_on_delivery_enabled" defaultChecked={s.pay_on_delivery_enabled} />
-            Offer pay on delivery at checkout
-          </label>
-          <div className={styles.row}>
-            <label className={styles.field}>
-              <span>Hold for confirmation (hours)</span>
-              <input name="pay_on_delivery_hold_hours" type="number" min={1} max={168} required defaultValue={s.pay_on_delivery_hold_hours} />
-              <small>An order you haven’t confirmed by then is cancelled and its stock goes back on sale.</small>
-            </label>
-            <label className={styles.field}>
-              <span>Largest order (GH₵)</span>
-              <input name="pay_on_delivery_max_ghs" type="number" min={1} step="0.01" defaultValue={s.pay_on_delivery_max_ghs ?? ''} />
-              <small>Leave empty for no limit. Bigger orders must be paid online.</small>
-            </label>
-          </div>
-        </section>
-
-        <section className={styles.panel}>
           <h2>Stock alerts</h2>
           <div className={styles.row}>
             <label className={styles.field}>
@@ -109,6 +85,8 @@ export default async function SettingsPage() {
               <small>Flag batches expiring within this many days.</small>
             </label>
           </div>
+          <details>
+            <summary>Reorder suggestions (advanced)</summary>
           <div className={styles.row}>
             <label className={styles.field}>
               <span>Supplier lead time (days)</span>
@@ -121,6 +99,7 @@ export default async function SettingsPage() {
               <small>How many days of sales one order should last, after it arrives.</small>
             </label>
           </div>
+          </details>
           <div className={styles.buttons}>
             <button type="submit" className={styles.primary}>
               Save settings

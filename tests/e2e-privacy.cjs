@@ -64,7 +64,7 @@ async function placeAndPay(client, slug, { deliverIt = true } = {}) {
   assert((await main(guest).textContent()).includes('Data Protection Act, 2012') && await main(guest).getByRole('link', { name: 'Privacy and your data' }).isVisible(), 'the privacy notice names the law and links to the data tools');
   assert((await guest.locator('footer').getByRole('link', { name: 'Terms of service' }).getAttribute('href')) === '/terms' && (await guest.locator('footer').getByRole('link', { name: 'Privacy notice' }).getAttribute('href')) === '/privacy', 'the footer links to both');
   await go(guest, BASE + '/account');
-  const consent = main(guest).locator('label', { hasText: 'I\'m 18 or older' });
+  const consent = main(guest).locator('label', { hasText: 'I accept the' });
   assert((await consent.getByRole('link', { name: 'Terms of Service' }).getAttribute('href')) === '/terms' && (await consent.getByRole('link', { name: 'Privacy Notice' }).getAttribute('href')) === '/privacy', 'the sign-in consent links to them');
   await shot(guest, 'privacy-notice');
 
@@ -89,7 +89,7 @@ async function placeAndPay(client, slug, { deliverIt = true } = {}) {
   await pe.getByRole('button', { name: 'Add to bag' }).click();
   await go(pe, BASE + '/checkout');
   await pe.getByLabel('Full name').fill('Esi Mensah');
-  { const age = pe.getByRole('checkbox', { name: /18 or older/ }); if (await age.count()) await age.check(); }
+  { const age = pe.getByRole('checkbox', { name: /accept the Terms of Service/ }); if (await age.count()) await age.check(); }
   await pe.getByLabel('Phone number').fill('024 555 0000');
   assert(await until(async () => (await pe.getByLabel('Wallet number').inputValue()) === '024 765 4321'), 'checkout fills in the default saved number');
   const picker = pe.getByLabel('Saved numbers');

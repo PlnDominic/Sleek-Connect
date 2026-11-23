@@ -187,10 +187,11 @@ export function ProductForm({ product, categories, sizeGuideId, problems, canEdi
               )}
           </div>
           {field('description', 'Description', <textarea name="description" rows={3} defaultValue={product?.description} />)}
-          <div className={styles.row}>
-            {field('brand', 'Brand (optional)', <input name="brand" defaultValue={product?.brand} />)}
-          </div>
-          {cosmetic && field('ingredients', 'Ingredients (optional)', <textarea name="ingredients" rows={2} defaultValue={product?.ingredients} />, 'As printed on the pack')}
+          <details open={Boolean(product?.brand || (cosmetic && product?.ingredients)) || undefined}>
+            <summary>More details (optional)</summary>
+            {field('brand', 'Brand', <input name="brand" defaultValue={product?.brand} />)}
+            {cosmetic && field('ingredients', 'Ingredients', <textarea name="ingredients" rows={2} defaultValue={product?.ingredients} />, 'As printed on the pack')}
+          </details>
           <input type="hidden" name="regulatory_reference" value={product?.regulatory_reference ?? ''} />
           {!cosmetic && <input type="hidden" name="ingredients" value={product?.ingredients ?? ''} />}
         </section>

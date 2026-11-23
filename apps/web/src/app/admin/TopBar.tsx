@@ -13,15 +13,15 @@ const titles: Record<string, [string, string]> = {
   finance: ['Finance', 'Payments and refunds'],
   support: ['Support', 'Messages from customers'],
   reviews: ['Reviews', 'Check reviews before they go live'],
-  notifications: ['Notifications', 'Texts and emails to customers'],
+  notifications: ['Messages sent', 'Texts and emails to customers'],
   products: ['Products', 'Your catalogue'],
   inventory: ['Inventory', 'Stock, batches and expiry'],
-  content: ['Content', 'Home page banners and featured products'],
+  content: ['Home page banners', 'Home page banners and featured products'],
   riders: ['Riders', 'Who delivers your orders'],
   delivery: ['Delivery', 'Areas, fees and delivery times'],
   purchasing: ['Purchasing', 'Orders to suppliers and receiving goods'],
   profit: ['Profit', 'Sales against what the stock cost'],
-  searches: ['Searches', 'What shoppers look for and don’t find'],
+  searches: ['Missed searches', 'What shoppers look for and don’t find'],
   categories: ['Categories', 'The picture shoppers see for each category'],
   suppliers: ['Suppliers', 'Who we buy from, and what they delivered'],
   settings: ['Settings', 'Store-wide rules'],
@@ -89,9 +89,6 @@ export function TopBar({
         <input ref={search} name="q" type="search" placeholder="Search anything…" aria-label="Search the admin" autoComplete="off" />
         <kbd aria-hidden="true">⌘K</kbd>
       </form>
-      <Link href="/admin/notifications" className={styles.iconButton} aria-label="Notifications">
-        <Icon name="bell" size={19} />
-      </Link>
       <Link href="/" className={styles.iconButton} aria-label="Open the store in a new tab" target="_blank">
         <Icon name="store" size={19} />
       </Link>

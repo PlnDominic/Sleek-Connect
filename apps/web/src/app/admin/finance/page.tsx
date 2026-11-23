@@ -78,9 +78,12 @@ export default async function FinancePage({ searchParams }: PageProps<'/admin/fi
           <h1>Finance</h1>
           <p className={styles.muted}>Payments, reconciliation and refunds.</p>
         </div>
-        <a className={styles.secondary} href={`/admin/finance/export?from=${from}&to=${to}`} download>
-          Export CSV
-        </a>
+        <div className={styles.buttons}>
+          <Link href="/admin/profit" className={styles.secondary}>Profit report</Link>
+          <a className={styles.secondary} href={`/admin/finance/export?from=${from}&to=${to}`} download>
+            Export CSV
+          </a>
+        </div>
       </div>
 
       <form className={styles.periodBar} method="get" aria-label="Reporting period">

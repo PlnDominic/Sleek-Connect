@@ -22,13 +22,6 @@ export async function bulkOrders(_: ActionState, form: FormData): Promise<Action
   if (ids.length === 0) return { ok: false, message: 'Select at least one order.' };
   const supabase = await createUserSupabase();
 
-  if (form.get('op') === 'start') {
-    const { data, error } = await supabase.rpc('admin_start_packing', { p_order_ids: ids });
-    if (error) return failed(error);
-    refresh();
-    return done(`${data} ${data === 1 ? 'order' : 'orders'} moved to packing.`);
-  }
-
   const { data, error } = await supabase.rpc('admin_pack_orders', { p_order_ids: ids });
   if (error) return failed(error);
   afterStatusChange();
@@ -52,14 +45,6 @@ export async function packOrder(orderId: string, orderNumber: string, _: ActionS
   flash(orderPage(orderNumber), 'Packed. The batches were taken off the shelf, earliest expiry first.');
 }
 
-export async function startPacking(orderId: string, orderNumber: string, _: ActionState, form: FormData): Promise<ActionState> {
-  void form;
-  const supabase = await createUserSupabase();
-  const { error } = await supabase.rpc('admin_start_packing', { p_order_ids: [orderId] });
-  if (error) return failed(error);
-  flash(orderPage(orderNumber), 'Moved to packing.');
-}
-
 export async function dispatchOrder(orderId: string, orderNumber: string, _: ActionState, form: FormData): Promise<ActionState> {
   const supabase = await createUserSupabase();
   const { error } = await supabase.rpc('admin_dispatch_order', {
@@ -71,16 +56,6 @@ export async function dispatchOrder(orderId: string, orderNumber: string, _: Act
   if (error) return failed(error);
   afterStatusChange();
   flash(orderPage(orderNumber), 'Out for delivery. The customer has been sent their delivery code.');
-}
-
-/** Pay on delivery: staff confirm the order (usually after a call), so it can be packed. */
-export async function confirmCodOrder(orderId: string, orderNumber: string, _: ActionState, form: FormData): Promise<ActionState> {
-  const supabase = await createUserSupabase();
-  const { error } = await supabase.rpc('admin_confirm_cod_order', { p_order_id: orderId, p_note: text(form, 'note') || undefined });
-  if (error) return failed(error);
-  afterStatusChange();
-  after(() => captureServerEvent('cod_confirmed', orderNumber));
-  flash(orderPage(orderNumber), 'Order confirmed. It is in the to-pack queue, and the customer has been told.');
 }
 
 export async function markDelivered(orderId: string, orderNumber: string, _: ActionState, form: FormData): Promise<ActionState> {

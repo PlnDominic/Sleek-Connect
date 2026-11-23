@@ -88,6 +88,8 @@ export default async function DeliveryPage({ searchParams }: PageProps<'/admin/d
         </ActionForm>
       </section>
 
+      <details className={styles.panel} open={addingArea || Boolean(editingArea) || undefined}>
+        <summary><strong>Different fees for some places (optional)</strong></summary>
       <section className={styles.panel} aria-labelledby="zones-title">
         <h2 id="zones-title">Zones</h2>
         <p className={styles.muted}>Areas that cost more or less to reach. An empty fee uses the standard fee.</p>
@@ -267,6 +269,7 @@ export default async function DeliveryPage({ searchParams }: PageProps<'/admin/d
           </div>
         )}
       </section>
+      </details>
     </>
   );
 }

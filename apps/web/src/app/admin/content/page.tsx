@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { can, requireStaffPage } from '@/lib/admin/session';
 import { ContentView, type ContentTab } from './ContentView';
 
-export const metadata: Metadata = { title: 'Content' };
+export const metadata: Metadata = { title: 'Home page banners' };
 
 export default async function ContentPage({ searchParams }: PageProps<'/admin/content'>) {
   const staff = await requireStaffPage();

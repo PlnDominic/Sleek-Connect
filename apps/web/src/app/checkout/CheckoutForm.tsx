@@ -107,7 +107,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
 
   // Signed-in shoppers can pick a saved address; the default one fills the form.
   const signedIn = Boolean(user && consented);
-  // Anyone can check out as a guest. Guests confirm they are 18 or older and accept the terms here; signed-in shoppers did that when they signed up.
+  // Anyone can check out as a guest. Guests accept the terms here (`adult` is the old name of this flag); signed-in shoppers did that when they signed up.
   const [adult, setAdult] = useState(false);
   useEffect(() => {
     if (!signedIn) return;
@@ -184,7 +184,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
     const text = (name: string) => String(form.get(name) ?? '').trim();
     const orderedItems = bag.items;
     if (!signedIn && !adult) {
-      setError('Please confirm that you are 18 or older and accept the terms.');
+      setError('Please accept the terms to continue.');
       return;
     }
     track('checkout_submitted', { payment_method: method, items: orderedItems.reduce((n, i) => n + i.qty, 0) });
@@ -287,7 +287,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
             <label className={styles.giftCheck}>
               <input type="checkbox" checked={adult} onChange={(e) => setAdult(e.target.checked)} />
               <span>
-                I&apos;m 18 or older and accept the <Link href="/terms" target="_blank">Terms of Service</Link> and{' '}
+                I accept the <Link href="/terms" target="_blank">Terms of Service</Link> and{' '}
                 <Link href="/privacy" target="_blank">Privacy Notice</Link>.
               </span>
             </label>
@@ -323,7 +323,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
                   <input id="fn" name="name" type="text" autoComplete="name" required />
                 </Field>
                 <Field id="ph" label="Phone number">
-                  <input id="ph" name="phone" type="tel" autoComplete="tel" required />
+                  <input id="ph" name="phone" type="tel" autoComplete="tel" required onBlur={(e) => setWallet((v) => v || e.target.value.trim())} />
                 </Field>
                 <Field id="em" label="Email (optional)">
                   <input
@@ -355,6 +355,9 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
                       <option key={a.name} value={a.name} />
                     ))}
                   </datalist>
+                  {area.trim() !== '' && !delivery.areas.some((a) => a.name === canonicalArea(delivery, area)) && (
+                    <p className={styles.note}>Not on our list? That’s fine: we deliver to your location at the standard rate.</p>
+                  )}
                 </Field>
                 <Field id="gps" label="GhanaPost GPS address">
                   <input id="gps" name="gps" type="text" maxLength={20} />
@@ -424,7 +427,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
                   <input type="radio" name="pay" checked={method === 'momo'} onChange={() => choosePayment('momo')} />
                   <span className={styles.payText}>
                     <strong>Mobile Money</strong>
-                    <span>Approve the payment prompt on your phone</span>
+                    <span>Confirm on your phone, sometimes with a code first, then your Mobile Money PIN</span>
                   </span>
                   <span className={styles.payIcon}>
                     <Icon name="phone" size={22} />
