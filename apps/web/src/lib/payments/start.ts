@@ -13,6 +13,11 @@ export type OnlinePaymentStart =
 /** Pay on delivery has nothing to start: staff confirm the order and the rider collects the cash. */
 export type PaymentStart = OnlinePaymentStart | { kind: 'cod' };
 
+export async function resumeOrderPayment(token: string): Promise<string | null> {
+  const { data } = await createAdminSupabase().rpc('get_payment_checkout', { p_order_token: token });
+  return data ?? null;
+}
+
 /**
  * Starts payment for a freshly placed order: records the attempt, then asks the provider to charge the amount the
  * database priced. If the provider can't be reached the attempt is marked failed, which releases the reserved stock.
@@ -32,6 +37,10 @@ export async function startOrderPayment(
   const provider = getPaymentProvider();
   if (!provider) return cancel('Online payment isn’t available right now. Please try again shortly or choose pay on delivery.', 'online payment unavailable');
   if (order.total === null) return cancel('We can’t price delivery to that area yet, so your order wasn’t placed. Please contact us.', 'delivery fee not set');
+  if (provider.hostedCheckout) {
+    const checkoutUrl = await resumeOrderPayment(order.token);
+    if (checkoutUrl) return { kind: 'requested', checkoutUrl };
+  }
 
   const reference = `${order.number}-${randomUUID().replace(/-/g, '').slice(0, 12)}`;
   const { data: amount, error } = await admin.rpc('start_payment', {
@@ -71,5 +80,10 @@ export async function startOrderPayment(
     return { kind: 'failed', reason: 'We couldn’t send the payment prompt. Please try again.' };
   }
 
-  return { kind: 'requested', checkoutUrl: instructions?.checkoutUrl };
+  const checkoutUrl = instructions?.checkoutUrl;
+  if (checkoutUrl?.startsWith('https://')) {
+    const { error: saveError } = await admin.rpc('save_payment_checkout', { p_provider: provider.name, p_reference: reference, p_url: checkoutUrl });
+    if (saveError) console.error('Could not save the hosted payment session', saveError.code);
+  }
+  return { kind: 'requested', checkoutUrl };
 }

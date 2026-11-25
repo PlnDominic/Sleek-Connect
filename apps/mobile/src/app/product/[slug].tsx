@@ -1,24 +1,26 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState, type ReactNode } from 'react';
-import { FlatList, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
-import { estimate, formatPrice, getSize, isAvailable, quote, radii, unitPrice, type IconName, type Product } from '@sleek/shared';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { FlatList, Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollViewInstance } from 'react-native';
+import { canonicalArea, estimate, formatPrice, getSize, isAvailable, quote, radii, suggestAreas, unitPrice, type IconName, type Product } from '@sleek/shared';
 import { useBag } from '@sleek/shared/bag';
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
 import { ProductImage } from '@/components/ProductImage';
+import { Button, Field } from '@/components/Form';
 import { EmptyState, ErrorState, Skeleton } from '@/components/States';
 import { BackButton, BottomBar, IconButton, TrustChip, useScreenTop } from '@/components/ui';
-import { getAllProducts, getProduct } from '@/lib/catalog';
+import { getAllProducts, getProduct, getProductBatches, getSizeGuide } from '@/lib/catalog';
 import { ProductTile } from '@/components/ProductTile';
 import { getDeliveryConfig } from '@/lib/checkout';
-import { getProductReviews } from '@/lib/reviews';
+import { getProductReviews, REVIEWS_PER_PAGE } from '@/lib/reviews';
+import { readDeliveryArea, rememberDeliveryArea } from '@/lib/delivery-area';
 import { useQuery } from '@/lib/query';
 import { useSaved } from '@/lib/saved';
 import { useColors, useStyles, type Palette } from '@/theme/theme';
 
 export default function ProductScreen() {
   const styles = useStyles(makeStyles);
-  const { slug } = useLocalSearchParams<{ slug: string }>();
+  const { slug, chooseSize } = useLocalSearchParams<{ slug: string; chooseSize?: string }>();
   const top = useScreenTop();
   const { data: product, error, loading, refetch } = useQuery(slug ? `product:${slug}` : null, () => getProduct(slug));
 
@@ -54,25 +56,33 @@ export default function ProductScreen() {
       </View>
     );
   }
-  return <ProductView product={product} />;
+  return <ProductView key={`${slug}:${chooseSize ?? ''}`} product={product} chooseSize={chooseSize === '1'} />;
 }
 
-function ProductView({ product }: { product: Product }) {
+function ProductView({ product, chooseSize }: { product: Product; chooseSize: boolean }) {
   const colors = useColors();
   const styles = useStyles(makeStyles);
   const top = useScreenTop();
   const { add, count } = useBag();
   const { slugs, toggle } = useSaved();
   const saved = slugs.includes(product.slug);
+  const scroll = useRef<ScrollViewInstance>(null);
+  const positioned = useRef(false);
   // Start on the default size, or the first one that can be bought.
   const [sizeId, setSizeId] = useState(() => {
+    if (chooseSize && product.sizes?.length) return undefined;
     const preferred = product.defaultSize;
     if (preferred && isAvailable(product, preferred)) return preferred;
     return product.sizes?.find((s) => s.inStock !== false)?.id ?? preferred;
   });
   const [added, setAdded] = useState(false);
-  const reviews = useQuery(`reviews:${product.slug}`, () => getProductReviews(product.slug));
+  const [reviewPage, setReviewPage] = useState(0);
+  const reviews = useQuery(`reviews:${product.slug}:${reviewPage}`, () => getProductReviews(product.slug, reviewPage));
+  const batchesQuery = useQuery(`product-batches:${product.slug}`, () => getProductBatches(product.slug));
+  const guide = useQuery(product.sizes?.length ? `size-guide:${product.slug}` : null, () => getSizeGuide(product.slug));
   const delivery = useQuery('delivery-config', getDeliveryConfig, 5 * 60_000);
+  const [area, setArea] = useState(readDeliveryArea);
+  const [quotedArea, setQuotedArea] = useState(readDeliveryArea);
 
   useEffect(() => {
     if (!added) return;
@@ -83,26 +93,30 @@ function ProductView({ product }: { product: Product }) {
   const details = product.details;
   const highlights = details?.highlights ?? [product.tag];
   const sizeLabel = getSize(product, sizeId)?.label;
-  const available = isAvailable(product, sizeId);
+  const needsSize = chooseSize && !sizeId && Boolean(product.sizes?.length);
+  const available = !needsSize && isAvailable(product, sizeId);
   const price = unitPrice(product, sizeId);
   const compliance = product.compliance;
-  const batches = product.currentBatches ?? [];
+  const batches = (batchesQuery.data ?? []).filter((batch) => !batch.sizeId || batch.sizeId === sizeId);
   const rating = reviews.data;
   const all = useQuery('products:all', getAllProducts);
   const related = (all.data ?? []).filter((p) => p.slug !== product.slug && p.category === product.category).slice(0, 6);
 
-  // The cheapest standard delivery fee and how long it takes, so the price isn't a surprise at checkout.
   const config = delivery.data;
-  const fees = (config?.options ?? []).map((o) => ({ option: o, fee: quote(config!, '', o.id, price).fee })).filter((o) => o.fee !== null);
-  const cheapest = fees.sort((a, b) => a.fee! - b.fee!)[0];
-  const deliveryTitle = cheapest ? `Delivery from ${formatPrice(cheapest.fee!)}` : 'Delivery';
-  const deliveryText = cheapest
-    ? `${estimate(cheapest.option, new Date())}${config?.freeThreshold ? `. Free on orders of ${formatPrice(config.freeThreshold)} or more.` : ''}`
-    : 'The delivery fee is shown at checkout.';
+  const quotes = config && quotedArea ? config.options.flatMap((option) => {
+    const q = quote(config, quotedArea, option.id, price);
+    return q.available && q.fee !== null ? [{ option, fee: q.fee }] : [];
+  }) : [];
+  const updateArea = (value: string) => {
+    const name = config ? canonicalArea(config, value) : value.trim();
+    setArea(name);
+    setQuotedArea(name);
+    rememberDeliveryArea(name);
+  };
 
   return (
     <View style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView ref={scroll} contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <Gallery product={product} />
         <View style={[styles.mediaActions, { top }]}>
           <BackButton fallback="/" />
@@ -115,7 +129,12 @@ function ProductView({ product }: { product: Product }) {
           />
         </View>
 
-        <View style={styles.body}>
+        <View style={styles.body} onLayout={(event) => {
+          if (chooseSize && !positioned.current) {
+            positioned.current = true;
+            scroll.current?.scrollTo({ y: event.nativeEvent.layout.y, animated: false });
+          }
+        }}>
           <View style={styles.titleBlock}>
             {product.brand && (
               <AppText weight="bold" size={12} color={colors.textMuted} style={styles.brand}>
@@ -149,7 +168,8 @@ function ProductView({ product }: { product: Product }) {
             </View>
           )}
 
-          {product.sizes && product.sizes.length > 1 && (
+          {needsSize && <AppText weight="bold" accessibilityRole="header">Choose a size</AppText>}
+          {product.sizes && product.sizes.length > 0 && (
             <View style={styles.sizes} accessibilityRole="radiogroup" accessibilityLabel="Size">
               {product.sizes.map((s) => {
                 const on = s.id === sizeId;
@@ -165,17 +185,29 @@ function ProductView({ product }: { product: Product }) {
                     style={[styles.size, on && styles.sizeOn, out && styles.sizeOut]}
                   >
                     <AppText weight="semibold" size={14} color={on ? colors.canvas : out ? colors.textDisabled : colors.ink}>
-                      {s.label}
+                      {s.label} · {formatPrice(s.price)}
                     </AppText>
                   </Pressable>
                 );
               })}
             </View>
           )}
+          {guide.data && (
+            <Accordion title={guide.data.title || 'Size guide'}>
+              <View style={styles.reviews}>
+                {guide.data.intro && <AppText>{guide.data.intro}</AppText>}
+                {guide.data.rows.map((row, index) => (
+                  <AppText key={index}>
+                    {row.map((cell, column) => `${guide.data!.columns[column] ?? ''} ${cell}`.trim()).join(' · ')}
+                  </AppText>
+                ))}
+              </View>
+            </Accordion>
+          )}
 
           <View style={styles.facts}>
-            <Fact icon="truck" title={deliveryTitle}>
-              {deliveryText}
+            <Fact icon="truck" title="Delivery estimate">
+              {quotedArea && quotes.length ? `${quotedArea} · Estimate for this item` : 'Enter your area to check delivery before checkout.'}
             </Fact>
             <Fact icon="shieldCheck" iconColor={colors.teal} title="Checked before dispatch" last={batches.length === 0}>
               We check every order before it leaves us
@@ -186,6 +218,18 @@ function ProductView({ product }: { product: Product }) {
               </Fact>
             )}
           </View>
+          <Field label="Delivery area" value={area} maxLength={80} onChangeText={(value) => { setArea(value); setQuotedArea(''); }} onSubmitEditing={() => updateArea(area)} />
+          {config && !quotedArea && suggestAreas(config, area).map((name) => (
+            <Button key={name} label={name} kind="secondary" onPress={() => updateArea(name)} />
+          ))}
+          <Button label={delivery.error ? 'Retry delivery estimate' : 'Check delivery'} kind="secondary" disabled={!area.trim()} onPress={() => {
+            updateArea(area);
+            if (delivery.error) void delivery.refetch();
+          }} />
+          {quotedArea && (delivery.loading ? <AppText>Checking delivery…</AppText> : delivery.error ? <AppText>Delivery information couldn’t load.</AppText>
+            : quotes.length ? quotes.map(({ option, fee }) => (
+              <AppText key={option.id}>{option.label} · {fee ? formatPrice(fee) : 'Free'} · {estimate(option, new Date())}</AppText>
+            )) : <AppText>Delivery couldn’t be priced for {quotedArea}.</AppText>)}
 
           {(details?.description || product.summary) && (
             <Accordion title="About this product" initiallyOpen>
@@ -195,21 +239,26 @@ function ProductView({ product }: { product: Product }) {
           {compliance?.ingredients && <Accordion title="Ingredients">{compliance.ingredients}</Accordion>}
           {details?.howToUse && <Accordion title="How to use">{details.howToUse}</Accordion>}
           {details?.warnings && <Accordion title="Safety & warnings">{details.warnings}</Accordion>}
-          {(batches.length > 0 || compliance?.periodAfterOpening || compliance?.countryOfOrigin) && (
+          {(batchesQuery.error || batches.length > 0 || compliance?.periodAfterOpening || compliance?.countryOfOrigin) && (
             <Accordion title="Batch, origin & expiry">
-              {[
+              <View style={styles.reviews}>
+                <AppText>{[
                 ...batches.map((b) => `Batch ${b.batch}${b.expiresOn ? `, expires ${b.expiresOn}` : ''}`),
                 compliance?.periodAfterOpening ? `Period after opening: ${compliance.periodAfterOpening}` : null,
                 compliance?.countryOfOrigin ? `Made in ${compliance.countryOfOrigin}` : null,
               ]
                 .filter(Boolean)
-                .join('\n')}
+                .join('\n')}</AppText>
+                {batchesQuery.error && <Button label="Retry batch and expiry details" kind="secondary" onPress={() => void batchesQuery.refetch()} />}
+              </View>
             </Accordion>
           )}
-          {rating && rating.count > 0 && (
-            <Accordion title={`Reviews (${rating.count})`}>
+          <Accordion title={rating ? `Reviews (${rating.count})` : 'Reviews'}>
               <View style={styles.reviews}>
-                {rating.reviews.map((r) => (
+                {reviews.loading && <AppText>Loading reviews…</AppText>}
+                {reviews.error && <Button label="Retry reviews" kind="secondary" onPress={() => void reviews.refetch()} />}
+                {rating?.count === 0 && <AppText>No reviews yet.</AppText>}
+                {rating?.reviews.map((r) => (
                   <View key={r.id} style={styles.review}>
                     <AppText weight="bold" size={13}>
                       {'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)} {r.title ?? ''}
@@ -222,9 +271,12 @@ function ProductView({ product }: { product: Product }) {
                     </AppText>
                   </View>
                 ))}
+                {reviewPage > 0 && <Button label="Previous reviews" kind="secondary" onPress={() => setReviewPage(reviewPage - 1)} />}
+                {rating && (reviewPage + 1) * REVIEWS_PER_PAGE < rating.count && (
+                  <Button label={reviewPage === 0 ? 'See all reviews' : 'Next reviews'} kind="secondary" onPress={() => setReviewPage(reviewPage + 1)} />
+                )}
               </View>
             </Accordion>
-          )}
           <Accordion title="Returns" last>
             {product.returnable === false
               ? `Can't be returned once delivered, unless it arrives damaged, wrong or expired.${product.returnNote ? ` ${product.returnNote}` : ''}`
@@ -285,7 +337,7 @@ function ProductView({ product }: { product: Product }) {
           >
             <Icon name="bag" size={18} color={available ? colors.canvas : colors.textMuted} strokeWidth={2} />
             <AppText weight="bold" size={16} color={available ? colors.canvas : colors.textMuted}>
-              {available ? 'Add to bag' : 'Sold out'}
+              {needsSize ? 'Choose a size above' : available ? 'Add to bag' : 'Sold out'}
             </AppText>
           </Pressable>
         )}
@@ -299,27 +351,27 @@ function Gallery({ product }: { product: Product }) {
   const styles = useStyles(makeStyles);
   const { width } = useWindowDimensions();
   const [index, setIndex] = useState(0);
-  const photos = product.photos?.map((p) => p.url) ?? [];
+  const photos = product.photos ?? [];
   const slides = photos.length ? photos : [undefined];
   const onEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => setIndex(Math.round(e.nativeEvent.contentOffset.x / width));
   return (
     <View style={[styles.media, { backgroundColor: product.tint }]}>
       <FlatList
         data={slides}
-        keyExtractor={(item, i) => item ?? `slide-${i}`}
+        keyExtractor={(item, i) => `${item?.url ?? 'slide'}-${i}`}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={onEnd}
-        renderItem={({ item }) => (
+        renderItem={({ item, index: position }) => (
           <ProductImage
             image={product.image}
-            photo={item}
+            photo={item?.url}
             tint={product.tint}
             kind={product.kind}
             iconSize={64}
             style={{ width, height: styles.media.height }}
-            label={product.name}
+            label={`${item?.alt?.trim() || product.name}. Photo ${position + 1} of ${slides.length}`}
           />
         )}
       />

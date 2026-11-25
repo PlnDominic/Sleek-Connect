@@ -81,6 +81,7 @@ reset_db; suite "database: pay on delivery" db-pay-on-delivery.cjs
 reset_db; suite "database: the 18+ rule at checkout" db-age-rule.cjs
 reset_db; suite "database: typed delivery areas" db-free-area.cjs
 reset_db; suite "database: late payment after timeout" db-late-payment.cjs
+reset_db; suite "database: checkout recovery and shopper order details" db-checkout-resume.cjs
 reset_db; suite "database: bulk editing, reorder suggestions, size guides" db-catalogue-tools.cjs
 reset_db; suite "database: account pages, and the seller side removed" db-account-extras.cjs
 reset_db; suite "database: promo code management" db-promotions.cjs

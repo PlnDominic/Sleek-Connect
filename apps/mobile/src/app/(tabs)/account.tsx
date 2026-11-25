@@ -140,7 +140,7 @@ function SignedOut() {
   return (
     <Card title="Sign in">
       <AppText size={13} color={colors.textMuted} style={styles.lh}>
-        Sign in to check out, see your orders on every phone and get your delivery code.
+        You can check out and track orders as a guest. Sign in to save your details and see your orders and saved items across devices.
       </AppText>
       <Checkbox checked={agreed} onChange={setAgreed} label="I accept the Terms of Service and Privacy Notice." />
       <View style={styles.inlineLinks}>
@@ -207,10 +207,16 @@ function SignedIn() {
           <Button
             label="Turn off"
             kind="secondary"
-            onPress={() => void unregisterPush().then(() => setNotifying(false))}
+            onPress={() => void unregisterPush().then((removed) => {
+              setNotifying(false);
+              setError(removed ? null : 'Updates are off in the app. We’ll retry disconnecting this phone when it’s online.');
+            }).catch(() => setError('We couldn’t update your notification preference. Try again.'))}
           />
         ) : (
-          <Button label="Turn on" kind="secondary" onPress={() => void registerForPush().then((r) => setNotifying(r === 'granted'))} />
+          <Button label="Turn on" kind="secondary" onPress={() => void registerForPush(undefined, { enable: true }).then((result) => {
+            setNotifying(result === 'granted');
+            setError(result === 'granted' ? null : result === 'denied' ? 'Allow notifications in your phone settings to receive order updates.' : 'We couldn’t turn on order updates. Try again.');
+          }).catch(() => setError('We couldn’t update your notification preference. Try again.'))} />
         )}
       </Card>
 

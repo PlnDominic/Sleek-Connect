@@ -4,12 +4,23 @@ import * as Notifications from 'expo-notifications';
 import { AndroidImportance } from 'expo-notifications';
 import { router } from 'expo-router';
 import { useEffect } from 'react';
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import { useAuth } from './auth';
 import { UUID_PATTERN } from './orders';
 import { supabase } from './supabase';
+import { deviceStorage } from './storage';
 
 export type PushResult = 'granted' | 'denied' | 'unsupported';
+const preferenceKey = 'sleek-connect:order-push';
+const tokenKey = 'sleek-connect:order-push-token';
+const removalKey = 'sleek-connect:order-push-remove';
+let queued: Promise<unknown> = Promise.resolve();
+
+function enqueue<T>(work: () => Promise<T>) {
+  const result = queued.then(work, work);
+  queued = result.catch(() => {});
+  return result;
+}
 
 // Show order updates as banners even while the app is open.
 Notifications.setNotificationHandler({
@@ -21,9 +32,18 @@ Notifications.setNotificationHandler({
  * `ask: false` only refreshes a registration the shopper already allowed. Remote push needs a real phone and a build
  * with an EAS project (Expo Go on Android can't receive it), so anything else is "unsupported", never an error.
  */
-export async function registerForPush(orderToken?: string, { ask = true }: { ask?: boolean } = {}): Promise<PushResult> {
+export function registerForPush(orderToken?: string, { ask = true, enable = false }: { ask?: boolean; enable?: boolean } = {}): Promise<PushResult> {
+  if (enable) deviceStorage.setItem(preferenceKey, 'on');
+  return enqueue(() => register(orderToken, ask));
+}
+
+async function register(orderToken: string | undefined, ask: boolean): Promise<PushResult> {
   if (Platform.OS === 'web' || !Device.isDevice) return 'unsupported';
   try {
+    if (deviceStorage.getItem(preferenceKey) === 'off') {
+      if (deviceStorage.getItem(removalKey)) await removeRegistration();
+      return 'denied';
+    }
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('default', { name: 'Order updates', importance: AndroidImportance.DEFAULT });
     }
@@ -42,6 +62,8 @@ export async function registerForPush(orderToken?: string, { ask = true }: { ask
       p_order_token: orderToken ?? null,
     });
     if (error) throw error;
+    deviceStorage.setItem(tokenKey, token);
+    deviceStorage.setItem(removalKey, '');
     return 'granted';
   } catch {
     return 'unsupported';
@@ -49,21 +71,36 @@ export async function registerForPush(orderToken?: string, { ask = true }: { ask
 }
 
 /** Stops order updates on this phone. */
-export async function unregisterPush(): Promise<void> {
+export function unregisterPush(): Promise<boolean> {
+  deviceStorage.setItem(preferenceKey, 'off');
+  deviceStorage.setItem(removalKey, 'pending');
+  return enqueue(removeRegistration);
+}
+
+async function removeRegistration(): Promise<boolean> {
   try {
-    const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
-    if (!projectId) return;
-    const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId });
-    await supabase.rpc('unregister_push_device', { p_token: token });
+    let token = deviceStorage.getItem(tokenKey);
+    if (!token && Platform.OS !== 'web' && Device.isDevice) {
+      const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
+      if (projectId) token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+    }
+    if (token) {
+      const { error } = await supabase.rpc('unregister_push_device', { p_token: token });
+      if (error) return false;
+    }
+    deviceStorage.setItem(tokenKey, '');
+    deviceStorage.setItem(removalKey, '');
+    return true;
   } catch {
-    // Not registered, or offline: nothing to undo.
+    return false;
   }
 }
 
 export async function pushAllowed(): Promise<boolean> {
   if (Platform.OS === 'web' || !Device.isDevice) return false;
   try {
-    return (await Notifications.getPermissionsAsync()).status === 'granted';
+    return deviceStorage.getItem(preferenceKey) !== 'off' && Boolean(deviceStorage.getItem(tokenKey)) &&
+      (await Notifications.getPermissionsAsync()).status === 'granted';
   } catch {
     return false;
   }
@@ -77,6 +114,10 @@ export function PushSetup() {
   // Signing in or out moves the phone's registration to the right account; the shopper has already said yes.
   useEffect(() => {
     void registerForPush(undefined, { ask: false });
+    const listener = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void registerForPush(undefined, { ask: false });
+    });
+    return () => listener.remove();
   }, [userId]);
 
   useEffect(() => {

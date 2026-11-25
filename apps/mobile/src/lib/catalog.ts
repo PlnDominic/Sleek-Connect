@@ -93,17 +93,31 @@ export async function getAllProducts(): Promise<Product[]> {
 }
 
 export async function getProduct(slug: string): Promise<Product | null> {
-  const [row, batches] = await Promise.all([
-    supabase.from('products').select(productSelect).eq('slug', slug).maybeSingle(),
-    supabase.rpc('product_current_batches', { p_slug: slug }),
-  ]);
-  const data = check(row);
-  if (!data) return null;
-  const list = (check(batches) ?? []) as { size_code: string; batch_code: string; expires_on: string | null }[];
-  return {
-    ...toProduct(data),
-    currentBatches: list.map((b) => ({ sizeId: b.size_code || undefined, batch: b.batch_code, expiresOn: b.expires_on ?? undefined })),
-  };
+  const data = check(await supabase.from('products').select(productSelect).eq('slug', slug).maybeSingle());
+  return data ? toProduct(data) : null;
+}
+
+export async function getProductBatches(slug: string) {
+  const rows = check(await supabase.rpc('product_current_batches', { p_slug: slug })) as { size_code: string; batch_code: string; expires_on: string | null }[] | null;
+  return (rows ?? []).map((b) => ({ sizeId: b.size_code || undefined, batch: b.batch_code, expiresOn: b.expires_on ?? undefined }));
+}
+
+export async function getSizeGuide(slug: string) {
+  const product = check(await supabase.from('products').select('size_guide_id').eq('slug', slug).maybeSingle()) as { size_guide_id: string | null } | null;
+  if (!product?.size_guide_id) return null;
+  const guide = check(await supabase.from('size_guides').select('title, intro, columns, rows').eq('id', product.size_guide_id).maybeSingle());
+  return guide as { title: string; intro: string | null; columns: string[]; rows: string[][] } | null;
+}
+
+export async function getBagProducts(slugs: string[]): Promise<Product[]> {
+  const pages: Promise<Product[]>[] = [];
+  for (let i = 0; i < slugs.length; i += 50) {
+    pages.push((async () => {
+      const rows = check(await supabase.from('products').select(productSelect).in('slug', slugs.slice(i, i + 50)));
+      return (rows as unknown[]).map(toProduct);
+    })());
+  }
+  return (await Promise.all(pages)).flat();
 }
 
 /** Slugs matching a search, best first (typos and synonyms allowed: the same ranking as the website). */

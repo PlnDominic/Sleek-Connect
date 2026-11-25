@@ -52,13 +52,14 @@ export interface PlaceOrderInput {
   payment: { network: MomoNetwork; wallet: string } | { card: true } | { cod: true };
   items: { slug: string; size?: string; quantity: number }[];
   promoCode?: string;
-  signedIn: boolean;
+  saveAddress?: boolean;
 }
 
 export interface PlacedOrder {
   orderNumber: string;
   orderToken: string;
   reservedUntil: string;
+  subtotal: number;
   total: number | null;
   deliveryFee: number | null;
   discount: number;
@@ -93,7 +94,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlacedOrder> {
   const { data, error } = await supabase.rpc('place_order', promoCode ? { ...args, p_promo_code: promoCode } : args).single();
   const order = data as {
     order_number: string; order_token: string; reserved_until: string;
-    total_ghs: number | null; delivery_fee_ghs: number | null; discount_ghs?: number;
+    subtotal_ghs: number; total_ghs: number | null; delivery_fee_ghs: number | null; discount_ghs?: number;
   } | null;
   if (error || !order) {
     // place_order raises 22023 with a message written for shoppers; anything else is unexpected.
@@ -101,7 +102,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlacedOrder> {
     throw new Error(error?.code === '22023' ? error.message : 'We couldn’t place your order. Please try again.');
   }
 
-  if (input.signedIn) {
+  if (input.saveAddress) {
     // Best effort: the order is placed either way.
     await supabase.rpc('save_address', {
       p: {
@@ -115,7 +116,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlacedOrder> {
   }
   return {
     orderNumber: order.order_number, orderToken: order.order_token, reservedUntil: order.reserved_until,
-    total: order.total_ghs, deliveryFee: order.delivery_fee_ghs, discount: Number(order.discount_ghs ?? 0),
+    subtotal: order.subtotal_ghs, total: order.total_ghs, deliveryFee: order.delivery_fee_ghs, discount: Number(order.discount_ghs ?? 0),
   };
 }
 
@@ -165,6 +166,18 @@ export async function getPaymentOptions(): Promise<PaymentOptions> {
 /** Opens the payment partner's page in the in-app browser. Resolves when the shopper closes it. */
 export async function openPaymentPage(url: string): Promise<void> {
   await WebBrowser.openBrowserAsync(url);
+}
+
+export async function getPaymentPage(orderToken: string): Promise<string | null> {
+  if (!siteConfigured) return null;
+  const response = await fetch(siteAddress('/api/payments/start'), {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ orderToken, resume: true }),
+  });
+  if (!response.ok) throw new Error('Couldn’t check for a payment session. Please try again.');
+  const result = await response.json() as { checkoutUrl?: string | null };
+  return result.checkoutUrl ?? null;
 }
 
 /** Asks the website to send the Mobile Money prompt for an order that has been placed. */

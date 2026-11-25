@@ -16,6 +16,8 @@ export interface BagItem {
   tint: string;
   kind: ProductKind;
   qty: number;
+  /** Local identifiers for the units in the mobile bag. */
+  purchaseUnits?: string[];
   /** False when the server reports the item is sold out. */
   inStock?: boolean;
   /** Safety warning to show with the line (e.g. "Not suitable for children under 3"). */
@@ -45,12 +47,15 @@ interface BagValue {
   subtotal: number;
   /** True while a signed-in shopper's saved bag is being loaded and merged. */
   syncing: boolean;
+  ready: boolean;
   add: (product: Product, sizeId?: string, qty?: number) => void;
   setQty: (slug: string, sizeId: string | undefined, qty: number) => void;
   remove: (slug: string, sizeId: string | undefined) => void;
   clear: () => void;
   /** Reloads the saved bag (e.g. after another device changed it). */
   refresh: () => Promise<void>;
+  replaceDetails: (lines: BagItem[]) => void;
+  removePurchased: (units: string[]) => void;
 }
 
 export const MAX_ITEM_QTY = 20;
@@ -85,6 +90,30 @@ function writeSync(storage: (() => BagStorage | undefined) | undefined, state: S
 
 const lineKey = (slug: string, sizeId?: string) => `${slug}|${sizeId ?? ''}`;
 const clampQty = (qty: number) => Math.min(MAX_ITEM_QTY, Math.max(1, Math.round(qty)));
+let nextBatch = 0;
+const newBatch = () => `${Date.now().toString(36)}-${(nextBatch++).toString(36)}-${Math.random().toString(36).slice(2)}`;
+
+export function purchaseUnits(item: Pick<BagItem, 'slug' | 'sizeId' | 'qty' | 'purchaseUnits'>): string[] {
+  return item.purchaseUnits?.length === item.qty
+    ? item.purchaseUnits
+    : Array.from({ length: item.qty }, (_, index) => `legacy:${lineKey(item.slug, item.sizeId)}:${index}`);
+}
+
+function changeQuantity(item: BagItem, qty: number, batch?: string): BagItem {
+  if (!batch) return { ...item, qty };
+  const units = purchaseUnits(item).slice(0, qty);
+  while (units.length < qty) units.push(`${batch}:${units.length}`);
+  return { ...item, qty, purchaseUnits: units };
+}
+
+export function removePurchasedUnits(items: BagItem[], units: string[]): BagItem[] {
+  const purchased = new Set(units);
+  return items.flatMap((item) => {
+    const remaining = purchaseUnits(item).filter((id) => !purchased.has(id));
+    if (remaining.length === item.qty) return [item];
+    return remaining.length ? [{ ...item, qty: remaining.length, purchaseUnits: remaining }] : [];
+  });
+}
 
 export function bagItemFrom(product: Product, sizeId = product.defaultSize, qty = 1): BagItem {
   return {
@@ -139,9 +168,10 @@ interface BagProviderProps {
   remote?: BagRemote | null;
   /** Called after a product is added (for analytics). */
   onAdd?: (product: Product, sizeId: string | undefined, qty: number) => void;
+  trackPurchaseUnits?: boolean;
 }
 
-export function BagProvider({ children, initialItems = [], storage, remote = null, onAdd }: BagProviderProps) {
+export function BagProvider({ children, initialItems = [], storage, remote = null, onAdd, trackPurchaseUnits = false }: BagProviderProps) {
   const [items, setItems] = useState<BagItem[]>(initialItems);
   // Nothing is saved until the stored bag has been read, so it is never overwritten.
   const [restored, setRestored] = useState(!storage);
@@ -263,21 +293,37 @@ export function BagProvider({ children, initialItems = [], storage, remote = nul
     return {
       add: (product: Product, sizeId = product.defaultSize, qty = 1) => {
         onAddRef.current?.(product, sizeId, qty);
+        const batch = trackPurchaseUnits ? newBatch() : undefined;
         setItems((current) => {
           const existing = current.find((i) => matches(i, product.slug, sizeId));
           if (existing) {
-            return current.map((i) => (i === existing ? { ...i, qty: clampQty(i.qty + qty) } : i));
+            return current.map((i) => (i === existing ? changeQuantity(i, clampQty(i.qty + qty), batch) : i));
           }
-          return [...current, bagItemFrom(product, sizeId, qty)];
+          const item = bagItemFrom(product, sizeId, qty);
+          if (batch) item.purchaseUnits = Array.from({ length: item.qty }, (_, index) => `${batch}:${index}`);
+          return [...current, item];
         });
       },
-      setQty: (slug: string, sizeId: string | undefined, qty: number) =>
-        setItems((current) => current.map((i) => (matches(i, slug, sizeId) ? { ...i, qty: clampQty(qty) } : i))),
+      setQty: (slug: string, sizeId: string | undefined, qty: number) => {
+        const batch = trackPurchaseUnits ? newBatch() : undefined;
+        setItems((current) => current.map((i) => (matches(i, slug, sizeId) ? changeQuantity(i, clampQty(qty), batch) : i)));
+      },
       remove: (slug: string, sizeId: string | undefined) =>
         setItems((current) => current.filter((i) => !matches(i, slug, sizeId))),
       clear: () => setItems((current) => (current.length === 0 ? current : [])),
+      replaceDetails: (lines: BagItem[]) => {
+        const byKey = new Map(lines.map((line) => [lineKey(line.slug, line.sizeId), line]));
+        setItems((current) => current.map((item) => {
+          const line = byKey.get(lineKey(item.slug, item.sizeId));
+          return line ? { ...line, qty: item.qty, purchaseUnits: item.purchaseUnits } : item;
+        }));
+      },
+      removePurchased: (units: string[]) => setItems((current) => {
+        const next = removePurchasedUnits(current, units);
+        return next.length !== current.length || next.some((item, index) => item !== current[index]) ? next : current;
+      }),
     };
-  }, []);
+  }, [trackPurchaseUnits]);
 
   const value = useMemo<BagValue>(() => {
     const resolved = items.map((item) => ({ ...item, lineTotal: item.unitPrice * item.qty }));
@@ -286,10 +332,11 @@ export function BagProvider({ children, initialItems = [], storage, remote = nul
       count: resolved.reduce((sum, i) => sum + i.qty, 0),
       subtotal: resolved.reduce((sum, i) => sum + i.lineTotal, 0),
       syncing: remote !== null && syncedKey !== remote.key,
+      ready: restored,
       ...actions,
       refresh,
     };
-  }, [items, remote, syncedKey, actions, refresh]);
+  }, [items, remote, restored, syncedKey, actions, refresh]);
 
   return <BagContext value={value}>{children}</BagContext>;
 }

@@ -267,7 +267,8 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     paddingRight: 20,
   },
   chip: {
-    height: 40,
+    minHeight: 48,
+    minWidth: 48,
     paddingHorizontal: 16,
     borderRadius: radii.pill,
     borderWidth: 1,
@@ -277,7 +278,6 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
     justifyContent: 'center',
   },
   chipSmall: {
-    height: 34,
     paddingHorizontal: 13,
   },
   chipOn: {

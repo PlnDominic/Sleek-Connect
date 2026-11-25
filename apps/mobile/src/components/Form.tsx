@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, TextInput, View, type StyleProp, type TextInputProps, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, TextInput, View, type StyleProp, type TextInputInstance, type TextInputProps, type ViewStyle } from 'react-native';
 import { radii } from '@sleek/shared';
 import { fonts } from '@/theme/fonts';
 import { AppText } from './AppText';
 import { useColors, useStyles, type Palette } from '@/theme/theme';
 
 /** A labelled text box. */
-export function Field({ label, hint, style, ...input }: { label: string; hint?: string; style?: StyleProp<ViewStyle> } & TextInputProps) {
+export function Field({ label, hint, error, inputRef, style, ...input }: { label: string; hint?: string; error?: string; inputRef?: { current: TextInputInstance | null }; style?: StyleProp<ViewStyle> } & TextInputProps) {
   const colors = useColors();
   const styles = useStyles(makeStyles);
   return (
@@ -15,12 +15,14 @@ export function Field({ label, hint, style, ...input }: { label: string; hint?: 
         {label}
       </AppText>
       <TextInput
+        ref={inputRef}
         accessibilityLabel={label}
+        accessibilityHint={error ?? hint}
         placeholderTextColor={colors.textPlaceholder}
         {...input}
-        style={[styles.input, input.multiline && styles.multiline]}
+        style={[styles.input, input.multiline && styles.multiline, error && { borderColor: colors.danger }]}
       />
-      {hint ? (
+      {error ? <AppText accessibilityRole="alert" size={12} color={colors.danger}>{error}</AppText> : hint ? (
         <AppText size={12} color={colors.textMuted}>
           {hint}
         </AppText>

@@ -5,7 +5,9 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { BagProvider } from '@sleek/shared/bag';
 import { AuthProvider } from '@/lib/auth';
+import { BagPurchaseSync } from '@/lib/bag-purchases';
 import { PushSetup } from '@/lib/push';
+import { SavedSetup } from '@/lib/saved';
 import { getDeviceStorage } from '@/lib/storage';
 import { UpdateGate } from '@/lib/update-gate';
 import { fontFiles } from '@/theme/fonts';
@@ -26,7 +28,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <BagProvider storage={getDeviceStorage}>
+        <BagProvider storage={getDeviceStorage} trackPurchaseUnits>
           <ThemedShell />
         </BagProvider>
       </AuthProvider>
@@ -41,6 +43,8 @@ function ThemedShell() {
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <UpdateGate>
         <PushSetup />
+        <SavedSetup />
+        <BagPurchaseSync />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }}>
           {/* The bag is a drawer: it slides in from the right over a dimmed page. */}
           <Stack.Screen name="bag" options={{ presentation: 'transparentModal', animation: 'slide_from_right', contentStyle: { backgroundColor: 'transparent' } }} />

@@ -1,4 +1,4 @@
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { memo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { formatPrice, radii, type Product } from '@sleek/shared';
@@ -31,8 +31,13 @@ export const ProductTile = memo(function ProductTile({ product }: { product: Pro
             {soldOut ? null : (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Add ${product.name} to bag`}
-                onPress={() => add(product)}
+                accessibilityLabel={product.sizes?.length ? `Choose size for ${product.name}` : `Add ${product.name} to bag`}
+                onPress={(event) => {
+                  event.stopPropagation();
+                  if (product.sizes?.length) {
+                    router.push({ pathname: '/product/[slug]', params: { slug: product.slug, chooseSize: '1' } });
+                  } else add(product);
+                }}
                 hitSlop={6}
                 style={styles.cart}
               >

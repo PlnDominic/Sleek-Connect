@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
+import { useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { formatPrice, radii } from '@sleek/shared';
@@ -10,6 +11,8 @@ import { ProductImage } from '@/components/ProductImage';
 import { EmptyState } from '@/components/States';
 import { BackButton, BottomBar } from '@/components/ui';
 import { getDeliveryConfig } from '@/lib/checkout';
+import { bagLineChanges, refreshBagLines } from '@/lib/bag-checkout';
+import { Notice } from '@/components/Form';
 import { useQuery } from '@/lib/query';
 import { useColors, useStyles, type Palette } from '@/theme/theme';
 
@@ -34,11 +37,36 @@ function BagPanel() {
   const colors = useColors();
   const styles = useStyles(makeStyles);
   const top = 16; // the drawer already starts below the status bar
-  const { items, count, subtotal, setQty, remove } = useBag();
+  const { items, count, subtotal, setQty, remove, replaceDetails } = useBag();
+  const [checking, setChecking] = useState(false);
+  const [message, setMessage] = useState<string>();
+  const checkingRef = useRef(false);
   const soldOut = items.filter((i) => i.inStock === false);
   const delivery = useQuery('delivery-config', getDeliveryConfig, 5 * 60_000).data;
   // Only worth showing when some delivery option really becomes free at the threshold.
   const threshold = delivery?.options.some((o) => o.freeEligible) ? delivery.freeThreshold : null;
+
+  async function goToCheckout() {
+    if (checkingRef.current) return;
+    checkingRef.current = true;
+    setChecking(true);
+    setMessage(undefined);
+    try {
+      const latest = await refreshBagLines(items);
+      const changes = bagLineChanges(items, latest);
+      replaceDetails(latest);
+      if (changes.length) {
+        setMessage(changes.map((line) => line.unavailable ? `${line.name} is unavailable.` : `${line.name} is now ${formatPrice(line.price)}.`).join('\n'));
+      } else if (!latest.some((item) => item.inStock === false)) {
+        router.push('/checkout');
+      }
+    } catch {
+      setMessage('We couldn’t check current prices and stock. Check your connection and try again.');
+    } finally {
+      checkingRef.current = false;
+      setChecking(false);
+    }
+  }
 
   if (items.length === 0) {
     return (
@@ -80,6 +108,7 @@ function BagPanel() {
             </AppText>
           </View>
         )}
+        {message && <Notice>{message}</Notice>}
 
         <View style={styles.list}>
           {items.map((item) => (
@@ -115,13 +144,13 @@ function BagPanel() {
       <BottomBar>
         <Pressable
           accessibilityRole="button"
-          accessibilityState={{ disabled: soldOut.length > 0 }}
-          disabled={soldOut.length > 0}
-          onPress={() => router.push('/checkout')}
-          style={({ pressed }) => [styles.cta, soldOut.length > 0 && styles.ctaOff, pressed && { opacity: 0.85 }]}
+          accessibilityState={{ disabled: checking, busy: checking }}
+          disabled={checking}
+          onPress={() => void goToCheckout()}
+          style={({ pressed }) => [styles.cta, checking && styles.ctaOff, pressed && { opacity: 0.85 }]}
         >
-          <AppText weight="bold" size={16} color={soldOut.length > 0 ? colors.textMuted : colors.canvas}>
-            Checkout · {formatPrice(subtotal)}
+          <AppText weight="bold" size={16} color={checking ? colors.textMuted : colors.canvas}>
+            {checking ? 'Checking your bag…' : `Checkout · ${formatPrice(subtotal)}`}
           </AppText>
         </Pressable>
       </BottomBar>

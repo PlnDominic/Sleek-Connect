@@ -16,6 +16,13 @@ export const supabase = createClient(url ?? 'https://not-configured.invalid', ke
   auth: { storage: authStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, flowType: 'pkce' },
 });
 
+/** Keeps an in-flight account operation bound to the session that started it. */
+export function shopperClient(accessToken: string) {
+  return createClient(url ?? 'https://not-configured.invalid', key ?? 'not-configured', {
+    accessToken: async () => accessToken,
+  });
+}
+
 /** Public address of a photo in the product-images Storage bucket. */
 export function photoUrl(path: string): string {
   return `${url}/storage/v1/object/public/product-images/${path}`;

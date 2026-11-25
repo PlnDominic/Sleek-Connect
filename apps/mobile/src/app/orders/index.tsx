@@ -4,7 +4,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { formatPriceOr, radii, statusShort } from '@sleek/shared';
 import { AppText } from '@/components/AppText';
 import { Button, Card, Field, Notice } from '@/components/Form';
-import { EmptyState } from '@/components/States';
+import { EmptyState, ErrorState } from '@/components/States';
 import { TrackingBar } from '@/components/TrackingBar';
 import { BackButton, useScreenTop } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
@@ -61,6 +61,8 @@ export default function OrdersScreen() {
             <AppText size={14} color={colors.textMuted}>
               Loading…
             </AppText>
+          ) : mine.error && !mine.data?.length ? (
+            <ErrorState onRetry={() => void mine.refetch()} />
           ) : (mine.data ?? []).length === 0 ? (
             <EmptyState
               icon="box"
@@ -69,7 +71,11 @@ export default function OrdersScreen() {
               action={{ label: 'Start shopping', onPress: () => router.push('/shop') }}
             />
           ) : (
-            (mine.data ?? []).map((o) => <OrderRow key={o.order_token} order={o} />)
+            <>
+              {mine.error && <Notice>Showing your last loaded orders. Check your connection and refresh for updates.</Notice>}
+              <Button label="Refresh orders" kind="secondary" busy={mine.refreshing} onPress={() => void mine.refetch()} />
+              {(mine.data ?? []).map((o) => <OrderRow key={o.order_token} order={o} />)}
+            </>
           )}
         </>
       )}

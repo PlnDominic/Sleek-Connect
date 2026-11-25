@@ -2,7 +2,7 @@ import { after } from 'next/server';
 import { momoNetworks, type MomoNetwork } from '@sleek/shared';
 import { alertStoreNewOrder, dispatchNotifications } from '@/lib/notifications/dispatch';
 import { getPaymentProvider } from '@/lib/payments';
-import { startOrderPayment } from '@/lib/payments/start';
+import { resumeOrderPayment, startOrderPayment } from '@/lib/payments/start';
 import { UUID_PATTERN } from '@/lib/orders';
 import { logger, requestId, withRequestId } from '@/lib/observability';
 import { clientAddress, rateLimit, rateLimitResponse } from '@/lib/rate-limit';
@@ -19,8 +19,12 @@ export async function POST(request: Request) {
   const limit = await rateLimit({ key: `payment-start:${clientAddress(request)}`, limit: 20, windowMs: 10 * 60_000 });
   if (!limit.allowed) return rateLimitResponse(limit.retryAfter, id);
 
-  const body = (await request.json().catch(() => null)) as { orderToken?: unknown; method?: unknown; network?: unknown; wallet?: unknown } | null;
+  const body = (await request.json().catch(() => null)) as { orderToken?: unknown; method?: unknown; network?: unknown; wallet?: unknown; resume?: boolean } | null;
   const token = typeof body?.orderToken === 'string' ? body.orderToken : '';
+  if (body?.resume === true && UUID_PATTERN.test(token)) {
+    const checkoutUrl = await resumeOrderPayment(token);
+    return withRequestId(Response.json({ checkoutUrl }, { headers: { 'Cache-Control': 'no-store' } }), id);
+  }
   const provider = getPaymentProvider();
   const card = body?.method === 'card';
   const network = momoNetworks.find((n) => n.id === body?.network)?.id as MomoNetwork | undefined;

@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { BlurView } from 'expo-blur';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Animated, Easing, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Animated, AppState, Easing, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { buildTimeline, expectedDelivery, finalStatuses, formatPrice, formatPriceOr, momoNetworks, networkNames, payOnDeliveryLabels, statusLabels, trackingProgress, trackingStages, type IconName, type MomoNetwork } from '@sleek/shared';
 import { AppText } from '@/components/AppText';
 import { Button, Card, Choices, Field, Notice } from '@/components/Form';
@@ -11,7 +11,8 @@ import { Reveal, useReduceMotion, usePulse } from '@/components/motion';
 import { BackButton, IconButton, useScreenTop } from '@/components/ui';
 import { ProductImage } from '@/components/ProductImage';
 import { getAllProducts } from '@/lib/catalog';
-import { getDeliveryConfig, getPaymentOptions, openPaymentPage, requestPayment } from '@/lib/checkout';
+import { getDeliveryConfig, getPaymentOptions, getPaymentPage, openPaymentPage, requestPayment } from '@/lib/checkout';
+import { markPurchasePaid } from '@/lib/bag-purchases';
 import { cancelOrder, checkoutPaymentState, formatDate, formatDateTime, getOrder, getOrderStatus, rememberOrder, type CustomerOrder } from '@/lib/orders';
 import { useAuth } from '@/lib/auth';
 import { pushAllowed, registerForPush } from '@/lib/push';
@@ -21,6 +22,13 @@ import { useColors, useStyles, type Palette } from '@/theme/theme';
 
 const REFRESH_MS = 15_000;
 const RECONCILIATION_MS = 3 * 24 * 60 * 60_000;
+const returnLabels = {
+  requested: 'Awaiting review',
+  approved: 'Return approved',
+  rejected: 'Return declined',
+  received: 'Item received',
+  refunded: 'Refunded',
+};
 
 export default function OrderScreen() {
   const styles = useStyles(makeStyles);
@@ -53,8 +61,14 @@ export default function OrderScreen() {
   }, [token, finished, paymentWindowEnd, refresh]);
 
   useEffect(() => {
+    const listener = AppState.addEventListener('change', (state) => { if (state === 'active') void refresh(); });
+    return () => listener.remove();
+  }, [refresh]);
+
+  useEffect(() => {
     if (order && token) {
       rememberOrder({ token, orderNumber: order.order_number });
+      if (order.paid_at) markPurchasePaid(token);
       // If the shopper already allowed notifications, this phone follows this order.
       void registerForPush(token, { ask: false });
     }
@@ -85,6 +99,7 @@ export default function OrderScreen() {
     paymentReceived={paymentState === 'review'}
     canStartPayment={paymentOpen && payment.data?.status === 'pending_payment' && payment.data.paymentStatus === null && !payment.error}
     checkingStatus={payment.loading || payment.refreshing}
+    canResume={paymentOpen && payment.data?.status === 'pending_payment' && payment.data.paymentStatus === 'pending'}
   />;
 }
 
@@ -209,7 +224,7 @@ function SectionTitle({ children }: { children: string }) {
   );
 }
 
-function OrderView({ order, token, onChanged, checkingPayment, paymentReceived, canStartPayment, checkingStatus }: {
+function OrderView({ order, token, onChanged, checkingPayment, paymentReceived, canStartPayment, checkingStatus, canResume }: {
   order: CustomerOrder;
   token: string;
   onChanged: () => void;
@@ -217,6 +232,7 @@ function OrderView({ order, token, onChanged, checkingPayment, paymentReceived, 
   paymentReceived: boolean;
   canStartPayment: boolean;
   checkingStatus: boolean;
+  canResume: boolean;
 }) {
   const colors = useColors();
   const { user, loading: authLoading } = useAuth();
@@ -230,10 +246,13 @@ function OrderView({ order, token, onChanged, checkingPayment, paymentReceived, 
   const timeline = buildTimeline(order);
   const payOnDelivery = order.payment_method === 'cod';
   const dispatchFrom = order.paid_at ?? order.cod_confirmed_at;
-  const arrival = dispatchFrom ? expectedDelivery(delivery.data?.options.find((o) => o.id === order.delivery_option), dispatchFrom) : null;
+  const option = delivery.data?.options.find((entry) => order.delivery_option_id ? entry.id === order.delivery_option_id : entry.label === order.delivery_option);
+  const arrival = dispatchFrom ? expectedDelivery(option, dispatchFrom) : null;
   const [notifying, setNotifying] = useState<'unknown' | 'on' | 'off'>('unknown');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [resumeBusy, setResumeBusy] = useState(false);
+  const [resumeMessage, setResumeMessage] = useState<string>();
   const headerHeight = top + 44;
   const heroPulse = usePulse(progress.current !== null && !progress.problem);
   const statusIcon: IconName = order.status === 'delivered' ? 'smile' : progress.problem ? 'alert' : stageIcons[progress.current ?? 3] ?? 'box';
@@ -334,6 +353,18 @@ function OrderView({ order, token, onChanged, checkingPayment, paymentReceived, 
                   : 'If you approved a payment, check this order or contact us before trying again.'}
               </Notice>
               <Button label="Check payment status" kind="secondary" busy={checkingStatus} onPress={onChanged} />
+              {canResume && <Button label="Resume payment" busy={resumeBusy} onPress={() => {
+                setResumeBusy(true);
+                setResumeMessage(undefined);
+                void getPaymentPage(token).then(async (url) => {
+                  if (url) await openPaymentPage(url);
+                  else setResumeMessage('There’s no payment page available to reopen. Check your payment status if you already approved a payment.');
+                }).catch(() => setResumeMessage('We couldn’t reopen the payment page. Check your connection and try again.')).finally(() => {
+                  setResumeBusy(false);
+                  onChanged();
+                });
+              }} />}
+              {resumeMessage && <Notice>{resumeMessage}</Notice>}
             </Card>
           </Reveal>
         )}
@@ -429,12 +460,43 @@ function OrderView({ order, token, onChanged, checkingPayment, paymentReceived, 
             <View style={[styles.totals, styles.hairlineTop]}>
               <Total label="Subtotal" value={formatPrice(order.subtotal_ghs)} />
               <Total label="Delivery" value={order.delivery_fee_ghs === null ? 'To be confirmed' : order.delivery_fee_ghs === 0 ? 'Free' : formatPrice(order.delivery_fee_ghs)} />
+              {!!order.discount_ghs && <Total label={order.promo_code ? `Discount (${order.promo_code})` : 'Discount'} value={`−${formatPrice(order.discount_ghs)}`} />}
+              {!order.discount_ghs && order.promo_code && <Total label="Promo code" value={order.promo_code} />}
               <View style={styles.grand}>
                 <Total label="Total" value={formatPriceOr(order.total_ghs, 'To be confirmed')} bold />
               </View>
             </View>
           </View>
         </Reveal>
+
+        {(order.refund_due || order.refund_recorded_at) && (
+          <Reveal scrollY={scrollY} index={reveal++}>
+            <Card title={order.refund_due ? 'Refund due' : 'Refund recorded'}>
+              <AppText>{order.refund_due
+                ? 'A refund is due for this order. Contact us with your order number if you need an update.'
+                : `The store marked your refund as completed on ${formatDateTime(order.refund_recorded_at!)}.`}</AppText>
+              <Button label="Refresh refund status" kind="secondary" onPress={onChanged} />
+            </Card>
+          </Reveal>
+        )}
+
+        {(order.return_open || Boolean(order.returns?.length)) && (
+          <Reveal scrollY={scrollY} index={reveal++}>
+            <Card title="Returns">
+              {order.return_open && order.return_until && <AppText>Request a return by {formatDateTime(order.return_until)}.</AppText>}
+              {order.returns?.map((entry) => (
+                <View key={entry.case_number} style={styles.actions}>
+                  <AppText weight="bold">{entry.case_number} · {returnLabels[entry.status] ?? entry.status}</AppText>
+                  <AppText>{entry.items.map((item) => `${item.quantity} × ${item.name}${item.size_label ? ` (${item.size_label})` : ''}`).join(', ')}</AppText>
+                  {entry.refund_amount_ghs !== null && <AppText>Refund amount {formatPrice(entry.refund_amount_ghs)}</AppText>}
+                  {entry.decision_note && <AppText>{entry.decision_note}</AppText>}
+                </View>
+              ))}
+              {order.return_open && <Button label="Request a return on our website" kind="secondary" onPress={() => void openSite(`/orders/${token}/return`)} />}
+              <Button label="Refresh returns" kind="secondary" onPress={onChanged} />
+            </Card>
+          </Reveal>
+        )}
 
         <Reveal scrollY={scrollY} index={reveal++}>
           <SectionTitle>Details</SectionTitle>
@@ -460,11 +522,13 @@ function OrderView({ order, token, onChanged, checkingPayment, paymentReceived, 
             <Button
               label="Tell me when it moves"
               kind="secondary"
-              onPress={() => void registerForPush(token).then((r) => setNotifying(r === 'granted' ? 'on' : 'off'))}
+              onPress={() => void registerForPush(token, { enable: true }).then((r) => {
+                setNotifying(r === 'granted' ? 'on' : 'off');
+                if (r !== 'granted') setMessage(r === 'denied' ? 'Allow notifications in your phone settings to receive order updates.' : 'Order updates couldn’t be turned on. Try again later.');
+              })}
             />
           )}
           {order.can_cancel && <Button label="Cancel this order" kind="danger" busy={busy} onPress={confirmCancel} style={styles.cancel} />}
-          {order.return_open && <Button label="Return an item (opens our website)" kind="secondary" onPress={() => void openSite(`/orders/${token}/return`)} />}
           <Pressable accessibilityRole="link" onPress={() => void openSite(`/orders/${token}/receipt`)} style={styles.link}>
             <AppText weight="semibold" size={14} color={colors.accent}>
               View receipt on our website

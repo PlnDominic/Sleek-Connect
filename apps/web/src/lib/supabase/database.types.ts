@@ -353,6 +353,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"payment_checkout_sessions": {
+                  Row: {
+                    "checkout_url": string,"payment_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "checkout_url": string,"payment_id": string
+                  }
+                  Update: {
+                    "checkout_url"?: string,"payment_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "payment_checkout_sessions_payment_id_fkey"
+      columns: ["payment_id"]
+isOneToOne: true
+      referencedRelation: "payments"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"payments": {
                   Row: {
                     "amount_ghs": number,"created_at": string,"id": string,"last_event": Json | null,"order_id": string,"provider": string,"provider_reference": string,"status": Database["public"]['Enums']["payment_status"],"updated_at": string
@@ -1074,6 +1094,9 @@ isOneToOne: false
 "get_order":
 { Args: { "p_order_token": string }; Returns: Json
                            },
+"get_payment_checkout":
+{ Args: { "p_order_token": string }; Returns: string
+                           },
 "get_order_status":
 { Args: { "p_order_token": string }; Returns: {
               "order_number": string,"payment_status": Database["public"]['Enums']["payment_status"],"reserved_until": string,"status": Database["public"]['Enums']["order_status"],"total_ghs": number
@@ -1214,6 +1237,9 @@ isOneToOne: false
                            },
 "save_address":
 { Args: { "p": Json }; Returns: string
+                           },
+"save_payment_checkout":
+{ Args: { "p_provider": string,"p_reference": string,"p_url": string }; Returns: undefined
                            },
 "save_payment_method":
 { Args: { "p": Json }; Returns: string

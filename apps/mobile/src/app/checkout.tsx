@@ -1,8 +1,8 @@
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, View, type ScrollViewInstance, type TextInputInstance } from 'react-native';
 import { canonicalArea, estimate, formatPrice, momoNetworks, quote, suggestAreas, type DeliveryConfig, type MomoNetwork } from '@sleek/shared';
-import { useBag } from '@sleek/shared/bag';
+import { purchaseUnits, useBag } from '@sleek/shared/bag';
 import { AppleButton, GoogleButton } from '@/components/SocialButtons';
 import { AppText } from '@/components/AppText';
 import { Button, Card, Checkbox, Choices, Field, Notice } from '@/components/Form';
@@ -10,6 +10,9 @@ import { ProductImage } from '@/components/ProductImage';
 import { EmptyState, ErrorState, Skeleton } from '@/components/States';
 import { BackButton, BottomBar, useScreenTop } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
+import { bagLineChanges, refreshBagLines } from '@/lib/bag-checkout';
+import { markPurchasePaid, rememberPurchase } from '@/lib/bag-purchases';
+import { readDeliveryArea, rememberDeliveryArea } from '@/lib/delivery-area';
 import { getDeliveryConfig, getPaymentOptions, notifyCodOrder, openPaymentPage, placeOrder, requestPayment, selectDeliveryQuote, type PaymentOptions, type PaymentRequest, type PlacedOrder } from '@/lib/checkout';
 import { checkoutPaymentState, getOrderStatus, rememberOrder } from '@/lib/orders';
 import { registerForPush } from '@/lib/push';
@@ -21,9 +24,11 @@ import { useColors, useStyles, type Palette } from '@/theme/theme';
 const POLL_MS = 3000;
 
 interface SavedAddress {
+  id: string;
+  label: string | null;
   recipient_name: string;
   phone: string;
-  area: string;
+  area: string | null;
   ghanapost_gps: string | null;
   directions: string | null;
 }
@@ -32,12 +37,12 @@ interface SavedAddress {
 export default function CheckoutScreen() {
   const styles = useStyles(makeStyles);
   const top = useScreenTop();
-  const { items, count, subtotal } = useBag();
+  const { items, count, subtotal, ready } = useBag();
   const delivery = useQuery('delivery-config', getDeliveryConfig, 5 * 60_000);
   const payments = useQuery('payment-options', getPaymentOptions, 60_000);
   const [placed, setPlaced] = useState<Placed | null>(null);
 
-  if (items.length === 0 && !placed) {
+  if (ready && items.length === 0 && !placed) {
     return (
       <View style={[styles.screen, { paddingTop: top, paddingHorizontal: 20 }]}>
         <Header />
@@ -45,7 +50,7 @@ export default function CheckoutScreen() {
       </View>
     );
   }
-  if (!delivery.data) {
+  if (!delivery.data || !ready) {
     return (
       <View style={[styles.screen, { paddingTop: top, paddingHorizontal: 20, gap: 16 }]}>
         <Header />
@@ -124,49 +129,81 @@ function Details({
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState(user?.email ?? '');
-  const [area, setArea] = useState('');
+  const [area, setArea] = useState(readDeliveryArea);
   const [directions, setDirections] = useState('');
   const [gps, setGps] = useState('');
   const [preferredOption, setPreferredOption] = useState('');
   const [payWith, setPayWith] = useState<'momo' | 'card' | 'cod'>('momo');
   const [network, setNetwork] = useState<MomoNetwork>('mtn');
   const [wallet, setWallet] = useState('');
-  const { clear } = useBag();
+  const { replaceDetails, removePurchased } = useBag();
   const [promo, setPromo] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const soldOut = items.some((i) => i.inStock === false);
-  const filled = useRef(false);
+  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+  const [selectedAddress, setSelectedAddress] = useState('');
+  const [saveAddress, setSaveAddress] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<'name' | 'phone' | 'email' | 'area' | 'wallet' | 'terms', string>>>({});
+  const nameInput = useRef<TextInputInstance>(null);
+  const phoneInput = useRef<TextInputInstance>(null);
+  const emailInput = useRef<TextInputInstance>(null);
+  const areaInput = useRef<TextInputInstance>(null);
+  const walletInput = useRef<TextInputInstance>(null);
+  const scroll = useRef<ScrollViewInstance>(null);
+  const editedAddress = useRef(false);
+  const submitting = useRef(false);
+
+  function chooseAddress(id: string) {
+    editedAddress.current = true;
+    setSelectedAddress(id);
+    setSaveAddress(false);
+    setFieldErrors({});
+    const address = addresses.find((entry) => entry.id === id);
+    setName(address?.recipient_name ?? '');
+    setPhone(address?.phone ?? '');
+    setArea(address?.area ?? readDeliveryArea());
+    setDirections(address?.directions ?? '');
+    setGps(address?.ghanapost_gps ?? '');
+    if (address?.area) rememberDeliveryArea(address.area);
+  }
 
   // Signed-in shoppers start with their saved address and Mobile Money number.
   useEffect(() => {
-    if (!user || filled.current) return;
-    filled.current = true;
+    if (!user) return;
+    let cancelled = false;
     void (async () => {
       const [address, method] = await Promise.all([
         supabase
           .from('customer_addresses')
-          .select('recipient_name, phone, area, ghanapost_gps, directions')
+          .select('id, label, recipient_name, phone, area, ghanapost_gps, directions')
           .order('is_default', { ascending: false })
           .order('updated_at', { ascending: false })
-          .limit(1)
-          .maybeSingle(),
+          .limit(20),
         supabase.from('saved_payment_methods').select('network, wallet_number').order('is_default', { ascending: false }).limit(1).maybeSingle(),
       ]);
-      const a = address.data as SavedAddress | null;
-      if (a) {
+      if (cancelled) return;
+      const saved = (address.data ?? []) as SavedAddress[];
+      setAddresses(saved);
+      const a = saved[0];
+      const preferredArea = readDeliveryArea();
+      if (a && !editedAddress.current && (!preferredArea || preferredArea === a.area)) {
+        setSelectedAddress(a.id);
         setName((v) => v || a.recipient_name);
         setPhone((v) => v || a.phone);
-        setArea((v) => v || a.area);
+        setArea((v) => v || a.area || '');
         setDirections((v) => v || (a.directions ?? ''));
         setGps((v) => v || (a.ghanapost_gps ?? ''));
       }
       const m = method.data as { network: MomoNetwork; wallet_number: string } | null;
       if (m) {
-        setNetwork(m.network);
-        setWallet((v) => v || m.wallet_number);
+        if (!editedAddress.current) {
+          setNetwork(m.network);
+          setWallet((v) => v || m.wallet_number);
+        }
       }
     })();
+    return () => { cancelled = true; };
   }, [user]);
 
   // A window with no fee set can't be priced, so it can't be chosen (otherwise the order is placed and then cancelled at payment).
@@ -201,23 +238,37 @@ function Details({
   const canPlace = !soldOut && !busy && !!chosen && paymentReady;
 
   async function submit() {
-    if (!canPlace) return;
+    if (!canPlace || submitting.current) return;
     setError(null);
-    if (name.trim().length < 2) return setError('Enter the name of the person receiving the order.');
-    if (phone.replace(/\D/g, '').length < 9) return setError('Enter a phone number we can call for delivery.');
-    // Shoppers who signed in confirmed this when they created their account; everyone else confirms it here.
-    if (!(user && consented) && !adult) return setError('Please accept the terms to continue.');
-    if (email.trim() && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) return setError('Check the email address, or leave it empty.');
-    if (!cod && !cardPay && wallet.replace(/\D/g, '').length < 9) return setError('Enter the Mobile Money number you will pay from.');
+    const errors: typeof fieldErrors = {};
+    if (!(user && consented) && !adult) errors.terms = 'Accept the terms to continue.';
+    if (name.trim().length < 2) errors.name = 'Enter the name of the person receiving the order.';
+    if (phone.replace(/\D/g, '').length < 9) errors.phone = 'Enter a phone number we can call for delivery.';
+    if (email.trim() && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) errors.email = 'Check the email address, or leave it empty.';
+    if (area.trim().length < 2) errors.area = 'Enter the area where you want delivery.';
+    if (!cod && !cardPay && wallet.replace(/\D/g, '').length < 9) errors.wallet = 'Enter the Mobile Money number you will pay from.';
+    setFieldErrors(errors);
+    if (errors.terms) return scroll.current?.scrollTo({ y: 0 });
+    const first = errors.name ? nameInput : errors.phone ? phoneInput : errors.email ? emailInput : errors.area ? areaInput : errors.wallet ? walletInput : null;
+    if (first) return first.current?.focus();
+    submitting.current = true;
     setBusy(true);
     try {
+      const latest = await refreshBagLines(items);
+      const changes = bagLineChanges(items, latest);
+      if (changes.length) {
+        replaceDetails(latest);
+        setError(changes.map((line) => line.unavailable ? `${line.name} is unavailable. Remove it from your bag to continue.` : `${line.name} is now ${formatPrice(line.price)}. Check your updated total and continue when ready.`).join('\n'));
+        return;
+      }
+      rememberDeliveryArea(canonicalArea(delivery, area));
       const order = await placeOrder({
         customer: { name: name.trim(), phone: phone.trim(), email: email.trim() || undefined, area: canonicalArea(delivery, area), ghanapostGps: gps.trim() || undefined, directions: directions.trim() || undefined, adultConfirmed: !!(user && consented) || adult },
         deliveryOption: optionId,
         payment: cod ? { cod: true } : cardPay ? { card: true } : { network, wallet: wallet.trim() },
         items: items.map((i) => ({ slug: i.slug, size: i.sizeId, quantity: i.qty })),
         promoCode: promo,
-        signedIn: !!user,
+        saveAddress: Boolean(user && saveAddress),
       });
       rememberOrder({ token: order.orderToken, orderNumber: order.orderNumber });
       // Asking now is the moment shoppers expect updates; "no" never blocks the order.
@@ -225,22 +276,24 @@ function Details({
       if (cod) {
         // Nothing to charge: staff call to confirm, and the rider collects the cash.
         void notifyCodOrder(order.orderToken);
-        clear();
+        removePurchased(items.flatMap(purchaseUnits));
         router.replace({ pathname: '/orders/[token]', params: { token: order.orderToken } });
         return;
       }
+      rememberPurchase(order.orderToken, items);
       const payer = cardPay ? ({ card: true } as const) : { network, wallet: wallet.trim() };
-      onPlaced({ order, payer, prompt: promo.trim() ? null : await requestPayment(order.orderToken, payer) });
+      onPlaced({ order, payer, prompt: null });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'We couldn’t place your order. Please try again.');
     } finally {
+      submitting.current = false;
       setBusy(false);
     }
   }
 
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={[styles.content, { paddingTop: top }]} keyboardShouldPersistTaps="handled">
+      <ScrollView ref={scroll} contentContainerStyle={[styles.content, { paddingTop: top }]} keyboardShouldPersistTaps="handled">
         <Header />
 
         {payments.loading || payments.refreshing ? (
@@ -271,6 +324,7 @@ function Details({
                 .
               </AppText>
             </Checkbox>
+            {fieldErrors.terms && <Notice>{fieldErrors.terms}</Notice>}
             {agreeHint && !adult ? (
               <AppText size={13} weight="semibold" color={colors.danger}>
                 Tick the box above first, then sign in.
@@ -308,23 +362,31 @@ function Details({
         </Card>
 
         <Card title="Delivery details">
-          <Field label="Full name" value={name} onChangeText={setName} autoComplete="name" textContentType="name" />
+          {user && addresses.length > 0 && (
+            <Choices label="Delivery address" value={selectedAddress} onChange={chooseAddress} options={[
+              ...addresses.map((address) => ({ id: address.id, label: address.label || address.recipient_name, sub: address.area ?? undefined })),
+              { id: '', label: 'Use a new address' },
+            ]} />
+          )}
+          <Field label="Full name" inputRef={nameInput} error={fieldErrors.name} value={name} onChangeText={(value) => { editedAddress.current = true; setName(value); setFieldErrors((current) => ({ ...current, name: undefined })); }} autoComplete="name" textContentType="name" />
           <Field
             label="Phone number"
+            inputRef={phoneInput}
+            error={fieldErrors.phone}
             value={phone}
-            onChangeText={setPhone}
+            onChangeText={(value) => { editedAddress.current = true; setPhone(value); setFieldErrors((current) => ({ ...current, phone: undefined })); }}
             // Most shoppers pay from the number they gave for delivery, so offer it for Mobile Money once they leave this field.
             onBlur={() => setWallet((v) => v || phone.trim())}
             keyboardType="phone-pad"
             autoComplete="tel"
             textContentType="telephoneNumber"
           />
-          <Field label="Email (optional)" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" textContentType="emailAddress" />
-          <Field label="Location (your area, e.g. East Legon)" value={area} onChangeText={setArea} onBlur={() => setArea((v) => canonicalArea(delivery, v))} autoComplete="postal-address-locality" maxLength={80} />
+          <Field label="Email (optional)" inputRef={emailInput} error={fieldErrors.email} value={email} onChangeText={(value) => { setEmail(value); setFieldErrors((current) => ({ ...current, email: undefined })); }} keyboardType="email-address" autoCapitalize="none" autoComplete="email" textContentType="emailAddress" />
+          <Field label="Location (your area, e.g. East Legon)" inputRef={areaInput} error={fieldErrors.area} value={area} onChangeText={(value) => { editedAddress.current = true; setArea(value); setFieldErrors((current) => ({ ...current, area: undefined })); }} onBlur={() => setArea((v) => canonicalArea(delivery, v))} autoComplete="postal-address-locality" maxLength={80} />
           {areaSuggestions.length > 0 ? (
             <View style={styles.chips} accessibilityLabel="Matching areas">
               {areaSuggestions.map((name) => (
-                <Pressable key={name} onPress={() => setArea(name)} accessibilityRole="button" accessibilityLabel={`Use ${name}`} style={styles.chip}>
+                <Pressable key={name} onPress={() => { editedAddress.current = true; setArea(name); setFieldErrors((current) => ({ ...current, area: undefined })); }} accessibilityRole="button" accessibilityLabel={`Use ${name}`} style={styles.chip}>
                   <AppText size={13} weight="semibold">
                     {name}
                   </AppText>
@@ -339,8 +401,9 @@ function Details({
               Not on our list? That’s fine: we deliver to your location at the standard rate.
             </AppText>
           ) : null}
-          <Field label="Directions (optional)" value={directions} onChangeText={setDirections} multiline />
-          <Field label="GhanaPost GPS (optional)" value={gps} onChangeText={setGps} autoCapitalize="characters" />
+          <Field label="Directions (optional)" value={directions} onChangeText={(value) => { editedAddress.current = true; setDirections(value); }} multiline />
+          <Field label="GhanaPost GPS (optional)" value={gps} onChangeText={(value) => { editedAddress.current = true; setGps(value); }} autoCapitalize="characters" />
+          {user && !selectedAddress && <Checkbox checked={saveAddress} onChange={setSaveAddress}><AppText>Save this address for next time</AppText></Checkbox>}
         </Card>
 
         <Card title="Delivery">
@@ -389,7 +452,7 @@ function Details({
           ) : online && payWith === 'momo' ? (
             <>
               <Choices label="Network" value={network} onChange={setNetwork} options={momoNetworks.map((n) => ({ id: n.id, label: n.label }))} />
-              <Field label="Mobile Money number" value={wallet} onChangeText={setWallet} keyboardType="phone-pad" />
+              <Field label="Mobile Money number" inputRef={walletInput} error={fieldErrors.wallet} value={wallet} onChangeText={(value) => { setWallet(value); setFieldErrors((current) => ({ ...current, wallet: undefined })); }} keyboardType="phone-pad" />
               {phone.trim() && wallet.trim() !== phone.trim() ? (
                 <Pressable accessibilityRole="button" onPress={() => setWallet(phone.trim())} style={styles.sameAsPhone}>
                   <AppText size={13} weight="semibold" color={colors.accent}>
@@ -419,7 +482,7 @@ function Details({
         {error && <Notice>{error}</Notice>}
       </ScrollView>
       <BottomBar>
-        <Button label={busy ? 'Placing your order…' : cod ? 'Place order, pay on delivery' : promo.trim() ? 'Review discounted total' : cardPay ? 'Place order and pay by card' : 'Place order and pay'} onPress={() => void submit()} disabled={!canPlace} busy={busy} />
+        <Button label={busy ? 'Checking your order…' : cod ? 'Place order, pay on delivery' : 'Review order total'} onPress={() => void submit()} disabled={!canPlace} busy={busy} />
       </BottomBar>
     </KeyboardAvoidingView>
   );
@@ -446,7 +509,6 @@ function Waiting({ placed, onRetryDetails }: { placed: Placed; onRetryDetails: (
   const styles = useStyles(makeStyles);
   const { order, payer } = placed;
   const top = useScreenTop();
-  const { clear } = useBag();
   const [prompt, setPrompt] = useState(placed.prompt);
   const [sending, setSending] = useState(false);
   const lookup = useCallback(() => getOrderStatus(order.orderToken), [order.orderToken]);
@@ -455,13 +517,13 @@ function Waiting({ placed, onRetryDetails }: { placed: Placed; onRetryDetails: (
 
   useEffect(() => {
     if (outcome === 'confirmed') {
-      clear();
+      markPurchasePaid(order.orderToken);
       router.replace({ pathname: '/orders/[token]', params: { token: order.orderToken } });
     }
     if (outcome === 'confirmed' || outcome === 'expired') return;
     const timer = setInterval(() => void refetch(), POLL_MS);
     return () => clearInterval(timer);
-  }, [order.orderToken, clear, outcome, refetch]);
+  }, [order.orderToken, outcome, refetch]);
 
   const checkoutUrl = prompt?.kind === 'requested' ? prompt.checkoutUrl : undefined;
   const opened = useRef(false);
@@ -515,6 +577,7 @@ function Waiting({ placed, onRetryDetails }: { placed: Placed; onRetryDetails: (
           </Notice>
         ) : !prompt ? (
           <>
+            <Row label="Subtotal" value={formatPrice(order.subtotal)} />
             <Row label="Delivery" value={order.deliveryFee === null ? 'To be confirmed' : order.deliveryFee === 0 ? 'Free' : formatPrice(order.deliveryFee)} />
             {order.discount > 0 && <Row label="Discount" value={`−${formatPrice(order.discount)}`} />}
             <AppText size={13} color={colors.textMuted}>We are holding your items until {until}.</AppText>

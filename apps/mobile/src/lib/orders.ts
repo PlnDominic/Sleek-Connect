@@ -14,6 +14,7 @@ export interface CustomerOrder {
   customer_name: string;
   area: string;
   delivery_option: string;
+  delivery_option_id?: string;
   is_gift: boolean;
   payment_method: 'momo' | 'card' | 'cod';
   momo_network: 'mtn' | 'telecel' | 'at' | null;
@@ -21,13 +22,24 @@ export interface CustomerOrder {
   subtotal_ghs: number;
   delivery_fee_ghs: number | null;
   total_ghs: number | null;
+  discount_ghs?: number;
+  promo_code?: string | null;
   delivery_code: string | null;
   rider: { name: string; vehicle: string } | null;
   courier_reference: string | null;
   delivered_at: string | null;
   refund_due: boolean;
+  refund_recorded_at?: string | null;
   can_cancel: boolean;
   return_open: boolean;
+  return_until?: string | null;
+  returns?: {
+    case_number: string;
+    status: 'requested' | 'approved' | 'rejected' | 'received' | 'refunded';
+    decision_note: string | null;
+    refund_amount_ghs: number | null;
+    items: { name: string; size_label: string | null; quantity: number }[];
+  }[];
   items: {
     id: string;
     name: string;

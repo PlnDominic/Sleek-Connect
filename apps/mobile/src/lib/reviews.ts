@@ -16,11 +16,15 @@ export interface ReviewData {
 }
 
 /** Published reviews and the average rating for a product (the same functions the website uses). */
-export async function getProductReviews(slug: string): Promise<ReviewData> {
+export const REVIEWS_PER_PAGE = 5;
+
+export async function getProductReviews(slug: string, page = 0): Promise<ReviewData> {
   const [list, summary] = await Promise.all([
-    supabase.rpc('get_product_reviews', { p_slug: slug, p_limit: 5 }),
+    supabase.rpc('get_product_reviews_page', { p_slug: slug, p_limit: REVIEWS_PER_PAGE, p_offset: page * REVIEWS_PER_PAGE, p_min_rating: 0 }),
     supabase.rpc('get_review_summary', { p_slug: slug }).single(),
   ]);
+  if (list.error) throw list.error;
+  if (summary.error) throw summary.error;
   const rows = (list.data ?? []) as { id: string; rating: number; title: string | null; body: string; display_name: string; created_at: string }[];
   const s = summary.data as { review_count: number; average: number } | null;
   return {

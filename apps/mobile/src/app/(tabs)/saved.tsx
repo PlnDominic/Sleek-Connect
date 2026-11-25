@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/AppText';
+import { Button, Notice } from '@/components/Form';
 import { ProductTile } from '@/components/ProductTile';
 import { EmptyState, ErrorState, ProductGridSkeleton } from '@/components/States';
 import { useScreenTop } from '@/components/ui';
@@ -13,12 +14,13 @@ export default function SavedScreen() {
   const colors = useColors();
   const styles = useStyles(makeStyles);
   const top = useScreenTop();
-  const { slugs } = useSaved();
+  const saved = useSaved();
+  const { slugs } = saved;
   const all = useQuery('products:all', getAllProducts);
   const bySlug = new Map((all.data ?? []).map((p) => [p.slug, p]));
   // Newest saved first; items that are no longer in the shop are left out.
   const items = slugs.flatMap((slug) => bySlug.get(slug) ?? []);
-  const waiting = slugs.length > 0 && all.loading;
+  const waiting = (slugs.length > 0 && all.loading) || (slugs.length === 0 && saved.loading);
 
   return (
     <FlatList
@@ -43,12 +45,18 @@ export default function SavedScreen() {
               {items.length} {items.length === 1 ? 'item' : 'items'}
             </AppText>
           )}
+          {saved.error && <>
+            <Notice>{saved.error.message === 'Your saved list is full. Remove an item to sync more.'
+              ? saved.error.message
+              : 'Saved items couldn’t sync. Any changes on this phone will retry when you reconnect.'}</Notice>
+            <Button label="Retry saved items sync" kind="secondary" onPress={() => void saved.refetch()} />
+          </>}
         </View>
       }
       ListEmptyComponent={
         waiting ? (
           <ProductGridSkeleton count={4} />
-        ) : all.error && slugs.length > 0 && !all.data ? (
+        ) : saved.error ? undefined : all.error && slugs.length > 0 && !all.data ? (
           <ErrorState onRetry={() => void all.refetch()} />
         ) : (
           <EmptyState
@@ -59,8 +67,8 @@ export default function SavedScreen() {
           />
         )
       }
-      refreshing={all.refreshing}
-      onRefresh={() => void all.refetch()}
+      refreshing={all.refreshing || saved.refreshing}
+      onRefresh={() => { void all.refetch(); void saved.refetch(); }}
       initialNumToRender={8}
       windowSize={7}
     />
