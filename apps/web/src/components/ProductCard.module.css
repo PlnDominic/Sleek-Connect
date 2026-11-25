@@ -212,11 +212,27 @@
   min-height: 16px;
 }
 
+/* The name's link is stretched over the whole card, so the photo and price open the product too. */
+.productCardName::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* Heart and compare stay clickable above that link (the add button already has z-index 2). */
+.productCard .saveButton,
+.productCard > label {
+  position: relative;
+  z-index: 2;
+}
+
 .ratingBadge {
   position: absolute;
   left: 8px;
   bottom: 8px;
   z-index: 2;
+  pointer-events: none;
   padding: 3px 8px;
   border-radius: 999px;
   font-size: 12px;

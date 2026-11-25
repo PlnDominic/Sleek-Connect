@@ -57,6 +57,20 @@ const statusPanel = (page) => page.locator('aside:visible').getByRole('status').
   await page.getByRole('button', { name: 'Add to bag' }).click();
   assert((await bag.getAttribute('aria-label')) === 'Bag, 1 item', 'add to bag from a product page');
 
+  // --- Tapping a product card's photo opens the product ---------------------
+  await go(page, BASE + '/shop');
+  const card = page.locator('main article').first();
+  const productLink = await card.locator('a[href^="/products/"]').getAttribute('href');
+  // The heart sits above the stretched link: saving (then unsaving) stays on the listing.
+  await card.getByRole('button', { name: /^Save / }).click();
+  await card.getByRole('button', { name: /^Remove / }).click();
+  assert(new URL(page.url()).pathname === '/shop', 'the heart on a card does not open the product');
+  // A mouse click on the photo's position: the stretched link lies over the image.
+  const photo = await card.boundingBox();
+  await page.mouse.click(photo.x + photo.width / 2, photo.y + 110);
+  await page.waitForURL('**' + productLink, { timeout: 5000 }).catch(() => {});
+  assert(new URL(page.url()).pathname === productLink, 'tapping a card photo opens the product');
+
   // --- Sold out on the product page ----------------------------------------
   await go(page, BASE + '/products/gentle-baby-wash-shampoo');
   await page.getByRole('button', { name: '400 ml (sold out)' }).click();
