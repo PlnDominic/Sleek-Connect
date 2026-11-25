@@ -76,11 +76,24 @@ export async function cancelOrder(token: string): Promise<void> {
   if (error) throw new Error(error.code === '22023' ? error.message : 'We could not cancel the order. Please try again.');
 }
 
-export async function getOrderStatus(token: string): Promise<{ status: OrderStatus; paymentStatus: string | null } | null> {
+interface OrderPaymentStatus {
+  status: OrderStatus;
+  paymentStatus: string | null;
+}
+
+export async function getOrderStatus(token: string): Promise<OrderPaymentStatus | null> {
   const { data, error } = await supabase.rpc('get_order_status', { p_order_token: token }).maybeSingle();
   if (error) throw new Error(error.message);
   const row = data as { status: OrderStatus; payment_status: string | null } | null;
   return row ? { status: row.status, paymentStatus: row.payment_status } : null;
+}
+
+export function checkoutPaymentState(order: OrderPaymentStatus | null | undefined) {
+  if (!order) return 'waiting';
+  if (order.status !== 'pending_payment' && order.status !== 'cancelled') return 'confirmed';
+  if (order.paymentStatus === 'succeeded') return 'review';
+  if (order.status === 'cancelled') return order.paymentStatus ? 'verifying' : 'expired';
+  return 'waiting';
 }
 
 // --- Orders opened on this phone, so guests can find them again without typing anything ---------------------------

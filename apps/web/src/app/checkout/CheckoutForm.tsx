@@ -71,7 +71,6 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
   const [cardNotice, setCardNotice] = useState(false);
   const [placed, setPlaced] = useState<PlacedOrder | null>(null);
   const [promoCode, setPromoCode] = useState('');
-  const [promoMessage, setPromoMessage] = useState<string | null>(null);
   const [isGift, setIsGift] = useState(false);
   const [giftMessage, setGiftMessage] = useState('');
   const [placing, startPlacing] = useTransition();
@@ -536,10 +535,8 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
               <label htmlFor="promo" className="visually-hidden">
                 Promo code
               </label>
-              <input id="promo" type="text" placeholder="Promo code" value={promoCode} onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoMessage(null); }} />
-              <button type="button" onClick={() => setPromoMessage(promoCode.trim() ? 'We check this code when you place your order. The exact amount to pay is shown next, and nothing is charged until you approve it.' : 'Enter a promo code first.')}>Apply</button>
+              <input id="promo" type="text" placeholder="Promo code" value={promoCode} onChange={(e) => setPromoCode(e.target.value.toUpperCase())} />
             </div>
-            {promoMessage && <p className={styles.note} role="status">{promoMessage}</p>}
             <label className={styles.giftCheck}>
               <input type="checkbox" name="gift" form="checkout-form" checked={isGift} onChange={(e) => setIsGift(e.target.checked)} />
               This is a gift (wrap it and hide prices)
@@ -565,7 +562,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
           {!placed && promoCode.trim() && (
             <div>
               <dt>Promo code <span className={styles.muted}>({promoCode.trim()})</span></dt>
-              <dd>Taken off when you order</dd>
+              <dd>Applied when you review the total</dd>
             </div>
           )}
           <div className={styles.totalRow}>
@@ -581,11 +578,26 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
             live={live}
             prompt={`Approve the ${networkLabel} prompt sent to ${walletDisplay} with your PIN. We never see your PIN.`}
             onRetry={() => setPlaced(null)}
+            onPay={async () => {
+              const response = await fetch('/api/payments/start', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ orderToken: placed.orderToken, method, network, wallet }),
+              });
+              const result = await response.json().catch(() => null) as { kind?: string; reason?: unknown; checkoutUrl?: unknown } | null;
+              if (!response.ok || result?.kind !== 'requested') {
+                throw new Error(typeof result?.reason === 'string' ? result.reason : 'We couldn’t start payment. Check your order status.');
+              }
+              const checkoutUrl = typeof result.checkoutUrl === 'string' ? result.checkoutUrl : undefined;
+              setPlaced((current) => current?.orderToken === placed.orderToken
+                ? { ...current, payment: { kind: 'requested', checkoutUrl } }
+                : current);
+            }}
           />
         ) : (
           <>
             <button type="submit" form="checkout-form" className={styles.payButton} disabled={items.length === 0 || placing || deliveryId === ''}>
-              {placing ? 'Placing your order...' : method === 'momo' ? `Pay with ${networkLabel}` : 'Pay by card'}
+              {placing ? 'Placing your order...' : promoCode.trim() ? 'Review discounted total' : method === 'momo' ? `Pay with ${networkLabel}` : 'Pay by card'}
             </button>
             {error && (
               <p role="alert" className={styles.error}>
@@ -620,13 +632,16 @@ interface OrderProgressProps {
   prompt: string;
   signedIn: boolean;
   onRetry: () => void;
+  onPay: () => Promise<void>;
 }
 
 /** What happened to the order after it was placed, kept up to date from the server. */
-function OrderProgress({ order, live, prompt, signedIn, onRetry }: OrderProgressProps) {
+function OrderProgress({ order, live, prompt, signedIn, onRetry, onPay }: OrderProgressProps) {
   const status = live?.status ?? 'pending_payment';
+  const [starting, setStarting] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
   // With a hosted payment page, the shopper is sent there straight away (the button is there if the browser blocks it).
-  const checkoutUrl = order.payment.kind === 'requested' ? order.payment.checkoutUrl : undefined;
+  const checkoutUrl = order.payment?.kind === 'requested' ? order.payment.checkoutUrl : undefined;
   useEffect(() => {
     if (checkoutUrl) window.location.assign(checkoutUrl);
   }, [checkoutUrl]);
@@ -667,17 +682,41 @@ function OrderProgress({ order, live, prompt, signedIn, onRetry }: OrderProgress
   }
 
   if (status === 'cancelled') {
-    const message =
-      paymentStatus === 'failed'
-        ? `The payment for order ${order.orderNumber} didn’t go through, so the order was cancelled. You haven’t been charged.`
-        : `Order ${order.orderNumber} wasn’t paid in time, so it was cancelled and the items were released.`;
     return (
       <div role="status" className={styles.statusPanel} data-tone="problem">
-        <strong>{paymentStatus === 'failed' ? 'Payment not completed' : 'Order expired'}</strong>
-        <span>{message} Your bag still has everything in it.</span>
-        <button type="button" className={styles.retry} onClick={onRetry}>
-          Try again
+        <strong>{paymentStatus ? 'Checking your payment' : 'Order expired'}</strong>
+        <span>{paymentStatus
+          ? 'If you approved a payment, check this order or contact us before trying again.'
+          : `Order ${order.orderNumber} expired before payment started. Your bag is still here.`}</span>
+        {paymentStatus ? (
+          <Link href={`/orders/${order.orderToken}`} className={styles.retry}>Check payment status</Link>
+        ) : (
+          <button type="button" className={styles.retry} onClick={onRetry}>Try again</button>
+        )}
+      </div>
+    );
+  }
+
+  if (!order.payment) {
+    return (
+      <div role="status" className={styles.statusPanel}>
+        <strong>Review your total</strong>
+        <span>Promo code {order.promoCode} applied. Your items are held until {heldUntil}.</span>
+        <button type="button" className={styles.retry} disabled={starting || !live || !!paymentStatus} onClick={async () => {
+          setStarting(true);
+          setPaymentError(null);
+          try {
+            await onPay();
+          } catch (cause) {
+            setPaymentError(cause instanceof Error ? cause.message : 'We couldn’t start payment. Check your order status.');
+          } finally {
+            setStarting(false);
+          }
+        }}>
+          {starting ? 'Starting payment…' : `Pay ${formatPriceOr(order.total, 'now')}`}
         </button>
+        {paymentError && <span role="alert">{paymentError}</span>}
+        <Link href={`/orders/${order.orderToken}`} className={styles.statusLink}>Check payment status</Link>
       </div>
     );
   }

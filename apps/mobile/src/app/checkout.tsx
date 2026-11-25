@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { canonicalArea, estimate, formatPrice, momoNetworks, quote, suggestAreas, type DeliveryConfig, type MomoNetwork } from '@sleek/shared';
 import { useBag } from '@sleek/shared/bag';
@@ -10,11 +10,11 @@ import { ProductImage } from '@/components/ProductImage';
 import { EmptyState, ErrorState, Skeleton } from '@/components/States';
 import { BackButton, BottomBar, useScreenTop } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
-import { getDeliveryConfig, getPaymentOptions, notifyCodOrder, openPaymentPage, placeOrder, requestPayment, type PaymentRequest, type PlacedOrder } from '@/lib/checkout';
-import { getOrderStatus, rememberOrder } from '@/lib/orders';
+import { getDeliveryConfig, getPaymentOptions, notifyCodOrder, openPaymentPage, placeOrder, requestPayment, selectDeliveryQuote, type PaymentOptions, type PaymentRequest, type PlacedOrder } from '@/lib/checkout';
+import { checkoutPaymentState, getOrderStatus, rememberOrder } from '@/lib/orders';
 import { registerForPush } from '@/lib/push';
 import { siteAddress } from '@/lib/site';
-import { useQuery } from '@/lib/query';
+import { useQuery, type QueryResult } from '@/lib/query';
 import { supabase } from '@/lib/supabase';
 import { useColors, useStyles, type Palette } from '@/theme/theme';
 
@@ -57,7 +57,7 @@ export default function CheckoutScreen() {
   return (
     <>
       <View style={placed ? styles.hidden : styles.screen}>
-        <Details delivery={delivery.data} card={payments.data?.card ?? false} items={items} count={count} subtotal={subtotal} onPlaced={setPlaced} />
+        <Details delivery={delivery.data} payments={payments} items={items} count={count} subtotal={subtotal} onPlaced={setPlaced} />
       </View>
       {placed ? <Waiting placed={placed} onRetryDetails={() => setPlaced(null)} /> : null}
     </>
@@ -68,7 +68,7 @@ export default function CheckoutScreen() {
 interface Placed {
   order: PlacedOrder;
   payer: { network: MomoNetwork; wallet: string } | { card: true };
-  prompt: PaymentRequest;
+  prompt: PaymentRequest | null;
 }
 
 function Header({ title = 'Checkout' }: { title?: string }) {
@@ -85,15 +85,14 @@ function Header({ title = 'Checkout' }: { title?: string }) {
 
 function Details({
   delivery,
-  card,
+  payments,
   items,
   count,
   subtotal,
   onPlaced,
 }: {
   delivery: DeliveryConfig;
-  /** The payment provider takes cards. */
-  card: boolean;
+  payments: QueryResult<PaymentOptions>;
   items: ReturnType<typeof useBag>['items'];
   count: number;
   subtotal: number;
@@ -128,7 +127,7 @@ function Details({
   const [area, setArea] = useState('');
   const [directions, setDirections] = useState('');
   const [gps, setGps] = useState('');
-  const [optionId, setOptionId] = useState(delivery.options[0]?.id ?? '');
+  const [preferredOption, setPreferredOption] = useState('');
   const [payWith, setPayWith] = useState<'momo' | 'card' | 'cod'>('momo');
   const [network, setNetwork] = useState<MomoNetwork>('mtn');
   const [wallet, setWallet] = useState('');
@@ -179,7 +178,8 @@ function Details({
       }),
     [delivery, area, subtotal],
   );
-  const chosen = quotes.find((x) => x.option.id === optionId);
+  const chosen = selectDeliveryQuote(quotes, preferredOption);
+  const optionId = chosen?.option.id ?? '';
   const fee = chosen?.q.available ? chosen.q.fee : null;
   // Listed areas that match what has been typed; tapping one fills in the exact spelling the store prices by.
   const areaSuggestions = useMemo(() => suggestAreas(delivery, area), [delivery, area]);
@@ -193,11 +193,15 @@ function Details({
   const codBlocked =
     total === null ? 'Enter your location first.' : codSetting.maxGhs !== null && total > codSetting.maxGhs ? `Available for orders up to ${formatPrice(codSetting.maxGhs)}.` : null;
   const cod = payWith === 'cod' && codSetting.enabled && codBlocked === null;
+  const online = payments.data?.online === true && !payments.error && !payments.refreshing;
+  const card = online && payments.data?.card === true;
   const cardPay = payWith === 'card' && card;
+  const paymentReady = cod || (online && (payWith === 'momo' || cardPay));
 
-  const canPlace = !soldOut && !busy && !!chosen?.q.available;
+  const canPlace = !soldOut && !busy && !!chosen && paymentReady;
 
   async function submit() {
+    if (!canPlace) return;
     setError(null);
     if (name.trim().length < 2) return setError('Enter the name of the person receiving the order.');
     if (phone.replace(/\D/g, '').length < 9) return setError('Enter a phone number we can call for delivery.');
@@ -226,7 +230,7 @@ function Details({
         return;
       }
       const payer = cardPay ? ({ card: true } as const) : { network, wallet: wallet.trim() };
-      onPlaced({ order, payer, prompt: await requestPayment(order.orderToken, payer) });
+      onPlaced({ order, payer, prompt: promo.trim() ? null : await requestPayment(order.orderToken, payer) });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'We couldn’t place your order. Please try again.');
     } finally {
@@ -239,6 +243,14 @@ function Details({
       <ScrollView contentContainerStyle={[styles.content, { paddingTop: top }]} keyboardShouldPersistTaps="handled">
         <Header />
 
+        {payments.loading || payments.refreshing ? (
+          <AppText size={13} color={colors.textMuted} accessibilityLiveRegion="polite">Checking payment options…</AppText>
+        ) : !online ? (
+          <>
+            <Notice>{payments.error ? 'We couldn’t check payment options. Your checkout details are still here.' : 'Online payments are temporarily unavailable.'}</Notice>
+            <Button label="Check payment options again" kind="secondary" onPress={() => void payments.refetch()} />
+          </>
+        ) : null}
         {!(user && consented) ? (
           <Card title={user ? 'One more step' : 'Checkout as guest'}>
             {!user ? (
@@ -335,7 +347,7 @@ function Details({
           <Choices
             label="How soon"
             value={optionId}
-            onChange={setOptionId}
+            onChange={setPreferredOption}
             options={quotes.map(({ option, q }) => ({
               id: option.id,
               label: option.label,
@@ -346,13 +358,19 @@ function Details({
         </Card>
 
         <Card title="Payment">
+          {online && payWith === 'card' && !card ? (
+            <>
+              <Notice>Card payment is currently unavailable.</Notice>
+              <Button label="Switch to Mobile Money" kind="secondary" onPress={() => setPayWith('momo')} />
+            </>
+          ) : null}
           {codSetting.enabled || card ? (
             <Choices
               label="How you pay"
-              value={cod ? 'cod' : cardPay ? 'card' : 'momo'}
+              value={payWith}
               onChange={setPayWith}
               options={[
-                { id: 'momo', label: 'Mobile Money', sub: 'You confirm on your phone, sometimes with a code first, then your Mobile Money PIN' },
+                { id: 'momo', label: 'Mobile Money', sub: 'You confirm on your phone, sometimes with a code first, then your Mobile Money PIN', disabled: !online },
                 ...(card ? [{ id: 'card' as const, label: 'Card', sub: 'Visa or Mastercard, on our payment partner’s secure page' }] : []),
                 ...(codSetting.enabled
                   ? [{ id: 'cod' as const, label: 'Pay on delivery', sub: codBlocked ?? 'Pay cash to the rider. We call you to confirm first.', disabled: codBlocked !== null }]
@@ -362,13 +380,13 @@ function Details({
           ) : null}
           {cod ? (
             <AppText size={13} color={colors.textMuted}>
-              We’ll call you to confirm the order before we pack it. Have {total === null ? 'the total' : formatPrice(total)} in cash ready for the rider. Not available for items from independent stores.
+              We’ll call you to confirm the order before we pack it. Have {total === null ? 'the total' : formatPrice(total)} in cash ready for the rider.
             </AppText>
           ) : cardPay ? (
             <AppText size={13} color={colors.textMuted}>
               You’ll enter your card on our payment partner’s secure page. We never see or store your card details.
             </AppText>
-          ) : (
+          ) : online && payWith === 'momo' ? (
             <>
               <Choices label="Network" value={network} onChange={setNetwork} options={momoNetworks.map((n) => ({ id: n.id, label: n.label }))} />
               <Field label="Mobile Money number" value={wallet} onChangeText={setWallet} keyboardType="phone-pad" />
@@ -380,7 +398,7 @@ function Details({
                 </Pressable>
               ) : null}
             </>
-          )}
+          ) : null}
           <Field label="Promo code (optional)" value={promo} onChangeText={setPromo} autoCapitalize="characters" />
         </Card>
 
@@ -401,7 +419,7 @@ function Details({
         {error && <Notice>{error}</Notice>}
       </ScrollView>
       <BottomBar>
-        <Button label={busy ? 'Placing your order…' : cod ? 'Place order, pay on delivery' : cardPay ? 'Place order and pay by card' : 'Place order and pay'} onPress={() => void submit()} disabled={!canPlace} busy={busy} />
+        <Button label={busy ? 'Placing your order…' : cod ? 'Place order, pay on delivery' : promo.trim() ? 'Review discounted total' : cardPay ? 'Place order and pay by card' : 'Place order and pay'} onPress={() => void submit()} disabled={!canPlace} busy={busy} />
       </BottomBar>
     </KeyboardAvoidingView>
   );
@@ -429,56 +447,52 @@ function Waiting({ placed, onRetryDetails }: { placed: Placed; onRetryDetails: (
   const { order, payer } = placed;
   const top = useScreenTop();
   const { clear } = useBag();
-  const [outcome, setOutcome] = useState<'waiting' | 'paid' | 'lapsed'>('waiting');
   const [prompt, setPrompt] = useState(placed.prompt);
-  const [resending, setResending] = useState(false);
+  const [sending, setSending] = useState(false);
+  const lookup = useCallback(() => getOrderStatus(order.orderToken), [order.orderToken]);
+  const { data, refetch, refreshing, loading, error } = useQuery(`payment-status:${order.orderToken}`, lookup, 0);
+  const outcome = checkoutPaymentState(data);
 
   useEffect(() => {
-    let stopped = false;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const check = async () => {
-      try {
-        const status = await getOrderStatus(order.orderToken);
-        if (stopped) return;
-        if (status && status.status !== 'pending_payment') {
-          if (status.status === 'cancelled') setOutcome('lapsed');
-          else {
-            setOutcome('paid');
-            clear();
-            router.replace({ pathname: '/orders/[token]', params: { token: order.orderToken } });
-          }
-          return;
-        }
-      } catch {
-        // Offline for a moment: keep trying.
-      }
-      timer = setTimeout(check, POLL_MS);
-    };
-    void check();
-    return () => {
-      stopped = true;
-      clearTimeout(timer);
-    };
-  }, [order.orderToken, clear]);
+    if (outcome === 'confirmed') {
+      clear();
+      router.replace({ pathname: '/orders/[token]', params: { token: order.orderToken } });
+    }
+    if (outcome === 'confirmed' || outcome === 'expired') return;
+    const timer = setInterval(() => void refetch(), POLL_MS);
+    return () => clearInterval(timer);
+  }, [order.orderToken, clear, outcome, refetch]);
 
-  // With the payment partner's own page, the shopper pays there: open it once, and again on request.
-  const checkoutUrl = prompt.kind === 'requested' ? prompt.checkoutUrl : undefined;
+  const checkoutUrl = prompt?.kind === 'requested' ? prompt.checkoutUrl : undefined;
   const opened = useRef(false);
   useEffect(() => {
-    if (checkoutUrl && !opened.current) {
+    if (checkoutUrl && !opened.current && outcome === 'waiting') {
       opened.current = true;
       void openPaymentPage(checkoutUrl);
     }
-  }, [checkoutUrl]);
+  }, [checkoutUrl, outcome]);
+
+  async function send() {
+    if (sending || error || data?.status !== 'pending_payment' || data.paymentStatus !== null) return;
+    setSending(true);
+    try {
+      setPrompt(await requestPayment(order.orderToken, payer));
+      await refetch();
+    } finally {
+      setSending(false);
+    }
+  }
 
   const until = new Date(order.reservedUntil).toLocaleTimeString('en-GH', { hour: 'numeric', minute: '2-digit', timeZone: 'Africa/Accra' });
+  const verifying = outcome === 'verifying' || outcome === 'review';
+  const canSend = !error && data?.status === 'pending_payment' && data.paymentStatus === null;
 
   return (
     <View style={[styles.screen, { paddingTop: top, paddingHorizontal: 20, gap: 16 }]}>
       <View style={styles.titleRow}>
         <BackButton fallback="/bag" />
         <AppText weight="semibold" size={22} accessibilityRole="header">
-          {outcome === 'lapsed' ? 'Payment didn’t go through' : checkoutUrl ? 'Complete the payment' : 'Approve the payment'}
+          {outcome === 'expired' ? 'Order expired' : verifying ? 'Checking your payment' : !prompt ? 'Review your total' : 'Complete the payment'}
         </AppText>
       </View>
       <Card>
@@ -486,18 +500,31 @@ function Waiting({ placed, onRetryDetails }: { placed: Placed; onRetryDetails: (
           Order {order.orderNumber}
           {order.total !== null ? ` · ${formatPrice(order.total)}` : ''}
         </AppText>
-        {outcome === 'lapsed' ? (
+        {outcome === 'expired' ? (
           <>
             <AppText size={14} color={colors.textMuted}>
-              The payment failed or ran out of time, so your items were released. Your bag is still here.
+              The hold expired before payment started. Your bag is still here and you can return to checkout.
             </AppText>
             <Button label="Back to checkout" onPress={onRetryDetails} />
+          </>
+        ) : verifying ? (
+          <Notice>
+            {outcome === 'review'
+              ? 'We received your payment and are checking it. Contact us with your order number if you need help.'
+              : 'The item hold ended while we were waiting for your payment status. If you approved a payment, check this order or contact us before trying again.'}
+          </Notice>
+        ) : !prompt ? (
+          <>
+            <Row label="Delivery" value={order.deliveryFee === null ? 'To be confirmed' : order.deliveryFee === 0 ? 'Free' : formatPrice(order.deliveryFee)} />
+            {order.discount > 0 && <Row label="Discount" value={`−${formatPrice(order.discount)}`} />}
+            <AppText size={13} color={colors.textMuted}>We are holding your items until {until}.</AppText>
+            <Button label={order.total === null ? 'Continue to payment' : `Pay ${formatPrice(order.total)}`} onPress={() => void send()} busy={sending} disabled={!canSend} />
           </>
         ) : prompt.kind === 'requested' ? (
           <>
             <AppText size={14} color={colors.textMuted}>
               {checkoutUrl
-                ? 'Finish paying on our payment partner’s page. You may be asked for a code we send to your phone, then your Mobile Money PIN. This screen updates by itself once the payment goes through.'
+                ? 'Finish paying on our payment partner’s page. This screen updates by itself once the payment goes through.'
                 : 'Check your phone and approve the Mobile Money prompt. This screen updates by itself.'}
             </AppText>
             {checkoutUrl ? <Button label="Open the payment page" onPress={() => void openPaymentPage(checkoutUrl)} /> : null}
@@ -508,18 +535,12 @@ function Waiting({ placed, onRetryDetails }: { placed: Placed; onRetryDetails: (
         ) : (
           <>
             <Notice>{prompt.reason}</Notice>
-            <Button
-              label="Send the prompt again"
-              kind="secondary"
-              busy={resending}
-              onPress={() => {
-                setResending(true);
-                void requestPayment(order.orderToken, payer)
-                  .then(setPrompt)
-                  .finally(() => setResending(false));
-              }}
-            />
+            {canSend && <Button label="Try payment for this order" kind="secondary" busy={sending} onPress={() => void send()} />}
           </>
+        )}
+        {error && <Notice>We couldn’t check the payment status. Check your connection and try again.</Notice>}
+        {outcome !== 'expired' && (
+          <Button label="Check payment status" kind="secondary" busy={loading || refreshing} onPress={() => void refetch()} />
         )}
         <Button label="View this order" kind="secondary" onPress={() => router.replace({ pathname: '/orders/[token]', params: { token: order.orderToken } })} />
       </Card>

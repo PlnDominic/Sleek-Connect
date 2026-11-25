@@ -178,18 +178,20 @@ const statusPanel = (page) => page.locator('aside:visible').getByRole('status').
   await statusPanel(page).filter({ hasText: 'Check your phone' }).waitFor();
   const order2 = (await statusPanel(page).textContent()).match(/SC-\d+/)?.[0];
   console.log('   simulate:', simulate(order2, 'failed'));
-  await statusPanel(page).filter({ hasText: 'Payment not completed' }).waitFor({ timeout: 10000 });
+  await statusPanel(page).filter({ hasText: 'Checking your payment' }).waitFor({ timeout: 10000 });
   assert(stock('vitamin-c-brightening-serum', '30') === serumBefore, `failed payment releases stock (${serumBefore})`);
   assert(await bagCount(page) === 1, 'bag kept after failed payment');
   await page.screenshot({ path: OUT + '/checkout-failed.png' });
-  await page.getByRole('button', { name: 'Try again' }).click();
-  assert(await page.getByRole('button', { name: 'Pay with MTN MoMo' }).isEnabled(), 'try again re-opens the form');
+  assert(await page.getByRole('link', { name: 'Check payment status' }).isVisible(), 'an attempted payment links to the original order');
+  assert((await page.getByRole('button', { name: 'Try again' }).count()) === 0, 'checkout does not prompt for a second payment');
 
   // Wrong amount: flagged for review, not marked paid
+  await go(page, BASE + '/checkout');
+  await fillDetails(page);
   await page.getByRole('button', { name: 'Pay with MTN MoMo' }).click();
   await statusPanel(page).filter({ hasText: 'Check your phone' }).waitFor();
   const order3 = (await statusPanel(page).textContent()).match(/SC-\d+/)?.[0];
-  assert(order3 && order3 !== order2, `retry places a new order (${order3})`);
+  assert(order3 && order3 !== order2, `the next checkout places a new order (${order3})`);
   console.log('   simulate:', simulate(order3, 'succeeded', '--amount 1'));
   await statusPanel(page).filter({ hasText: 'checking your payment' }).waitFor({ timeout: 10000 });
   assert(sql(`select status || ' ' || needs_review from public.orders where order_number = '${order3}'`) === 'pending_payment true', 'amount mismatch is flagged for review, not paid');
@@ -201,16 +203,17 @@ const statusPanel = (page) => page.locator('aside:visible').getByRole('status').
   await statusPanel(page).filter({ hasText: 'Check your phone' }).waitFor();
   const order4 = (await statusPanel(page).textContent()).match(/SC-\d+/)?.[0];
   sql(`update public.orders set reservation_expires_at = now() - interval '1 second' where order_number = '${order4}'`);
+  sql(`update public.payments set created_at = now() - interval '1 hour' where order_id = (select id from public.orders where order_number = '${order4}')`);
   sql('select public.expire_unpaid_orders()');
-  await statusPanel(page).filter({ hasText: 'Order expired' }).waitFor({ timeout: 10000 });
+  await statusPanel(page).filter({ hasText: 'Checking your payment' }).waitFor({ timeout: 10000 });
   assert(sql(`select o.status || ' ' || p.status from public.orders o join public.payments p on p.order_id = o.id where o.order_number = '${order4}'`) === 'cancelled expired', 'expired order cancelled, payment expired');
   assert(simulate(order4, 'succeeded').startsWith('ERR'), 'no pending payment left to simulate after expiry');
 
-  // Delivery option with no fee yet: the order is refused with a clear message and nothing is charged.
-  await page.getByRole('button', { name: 'Try again' }).click();
-  await page.getByRole('radio', { name: /Standard/ }).check();
-  await page.getByRole('button', { name: 'Pay with MTN MoMo' }).click();
-  await page.getByRole('alert').filter({ hasText: /not configured yet|can’t price delivery/ }).waitFor();
+  // Checkout keeps the priced option selected and prevents shoppers from choosing an unpriced one.
+  await go(page, BASE + '/checkout');
+  await fillDetails(page);
+  assert(await page.getByRole('radio', { name: /Standard/ }).isDisabled(), 'an unpriced delivery option is disabled');
+  assert(await page.getByRole('radio', { name: /Same day/ }).isChecked(), 'the priced delivery option remains selected');
   assert(sql(`select count(*) from public.payments p join public.orders o on o.id = p.order_id where o.status = 'pending_payment' and o.total_ghs is null`) === '0', 'no payment is started without a total');
 
   // Pay on delivery is no longer offered.

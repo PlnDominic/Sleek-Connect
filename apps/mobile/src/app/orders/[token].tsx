@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { BlurView } from 'expo-blur';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert, Animated, Easing, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { buildTimeline, expectedDelivery, finalStatuses, formatPrice, formatPriceOr, momoNetworks, networkNames, payOnDeliveryLabels, statusLabels, trackingProgress, trackingStages, type IconName, type MomoNetwork } from '@sleek/shared';
 import { AppText } from '@/components/AppText';
@@ -12,7 +12,7 @@ import { BackButton, IconButton, useScreenTop } from '@/components/ui';
 import { ProductImage } from '@/components/ProductImage';
 import { getAllProducts } from '@/lib/catalog';
 import { getDeliveryConfig, getPaymentOptions, openPaymentPage, requestPayment } from '@/lib/checkout';
-import { cancelOrder, formatDate, formatDateTime, getOrder, rememberOrder, type CustomerOrder } from '@/lib/orders';
+import { cancelOrder, checkoutPaymentState, formatDate, formatDateTime, getOrder, getOrderStatus, rememberOrder, type CustomerOrder } from '@/lib/orders';
 import { useAuth } from '@/lib/auth';
 import { pushAllowed, registerForPush } from '@/lib/push';
 import { useQuery } from '@/lib/query';
@@ -20,20 +20,37 @@ import { openSite } from '@/lib/site';
 import { useColors, useStyles, type Palette } from '@/theme/theme';
 
 const REFRESH_MS = 15_000;
+const RECONCILIATION_MS = 3 * 24 * 60 * 60_000;
 
 export default function OrderScreen() {
   const styles = useStyles(makeStyles);
   const { token } = useLocalSearchParams<{ token: string }>();
   const top = useScreenTop();
-  const { data: order, error, loading, refetch } = useQuery(token ? `order:${token}` : null, () => getOrder(token), 5_000);
+  const lookup = useCallback(() => getOrder(token), [token]);
+  const lookupPayment = useCallback(() => getOrderStatus(token), [token]);
+  const { data: order, error, loading, refetch } = useQuery(token ? `order:${token}` : null, lookup, 5_000);
+  const paymentOpen = !!order && order.payment_method !== 'cod' && !order.paid_at &&
+    (order.status === 'pending_payment' || order.status === 'cancelled');
+  const payment = useQuery(paymentOpen ? `payment-status:${token}` : null, lookupPayment, 0);
+  const { refetch: refetchPayment } = payment;
+  const refresh = useCallback(async () => {
+    await Promise.all([refetch(), refetchPayment()]);
+  }, [refetch, refetchPayment]);
+  const paymentState = checkoutPaymentState(payment.data);
+  const paymentWindowEnd = paymentOpen && paymentState !== 'expired'
+    ? new Date(order.created_at).getTime() + RECONCILIATION_MS
+    : 0;
 
   // Follows the order while it is still moving.
   const finished = order ? finalStatuses.includes(order.status) : false;
   useEffect(() => {
-    if (!token || finished) return;
-    const timer = setInterval(() => void refetch(), REFRESH_MS);
+    if (!token || (finished && Date.now() >= paymentWindowEnd)) return;
+    const timer = setInterval(() => {
+      if (finished && Date.now() >= paymentWindowEnd) clearInterval(timer);
+      else void refresh();
+    }, REFRESH_MS);
     return () => clearInterval(timer);
-  }, [token, finished, refetch]);
+  }, [token, finished, paymentWindowEnd, refresh]);
 
   useEffect(() => {
     if (order && token) {
@@ -57,7 +74,18 @@ export default function OrderScreen() {
       </View>
     );
   }
-  return <OrderView order={order} token={token} onChanged={() => void refetch()} />;
+  const checkingPayment = paymentOpen && (paymentState === 'verifying' || paymentState === 'review' ||
+    payment.loading || Boolean(payment.error) ||
+    order.status === 'pending_payment' && Boolean(payment.data?.paymentStatus));
+  return <OrderView
+    order={order}
+    token={token}
+    onChanged={() => void refresh()}
+    checkingPayment={checkingPayment}
+    paymentReceived={paymentState === 'review'}
+    canStartPayment={paymentOpen && payment.data?.status === 'pending_payment' && payment.data.paymentStatus === null && !payment.error}
+    checkingStatus={payment.loading || payment.refreshing}
+  />;
 }
 
 function Header({ title = 'Your order' }: { title?: string }) {
@@ -181,7 +209,15 @@ function SectionTitle({ children }: { children: string }) {
   );
 }
 
-function OrderView({ order, token, onChanged }: { order: CustomerOrder; token: string; onChanged: () => void }) {
+function OrderView({ order, token, onChanged, checkingPayment, paymentReceived, canStartPayment, checkingStatus }: {
+  order: CustomerOrder;
+  token: string;
+  onChanged: () => void;
+  checkingPayment: boolean;
+  paymentReceived: boolean;
+  canStartPayment: boolean;
+  checkingStatus: boolean;
+}) {
   const colors = useColors();
   const { user, loading: authLoading } = useAuth();
   const styles = useStyles(makeStyles);
@@ -270,7 +306,7 @@ function OrderView({ order, token, onChanged }: { order: CustomerOrder; token: s
               </View>
               <View style={styles.flex}>
                 <AppText weight="bold" size={22} style={styles.heroTitle}>
-                  {(payOnDelivery && payOnDeliveryLabels[order.status]) || statusLabels[order.status]}
+                  {checkingPayment ? 'Checking your payment' : (payOnDelivery && payOnDeliveryLabels[order.status]) || statusLabels[order.status]}
                 </AppText>
                 {arrival && order.status !== 'delivered' && order.status !== 'cancelled' && order.status !== 'returned' ? (
                   <AppText size={14} color={colors.textMuted}>
@@ -284,12 +320,24 @@ function OrderView({ order, token, onChanged }: { order: CustomerOrder; token: s
                 ) : null}
               </View>
             </View>
-            <Journey status={order.status} />
-            {progress.problem ? <Notice>{progress.problem}</Notice> : null}
+            {!checkingPayment && <Journey status={order.status} />}
+            {!checkingPayment && progress.problem ? <Notice>{progress.problem}</Notice> : null}
           </Animated.View>
         </Reveal>
 
-        {order.status === 'pending_payment' && !payOnDelivery && (
+        {checkingPayment && (
+          <Reveal scrollY={scrollY} index={reveal++}>
+            <Card title="Payment status">
+              <Notice>
+                {paymentReceived
+                  ? 'We received your payment and are checking it. Contact us with your order number if you need help.'
+                  : 'If you approved a payment, check this order or contact us before trying again.'}
+              </Notice>
+              <Button label="Check payment status" kind="secondary" busy={checkingStatus} onPress={onChanged} />
+            </Card>
+          </Reveal>
+        )}
+        {canStartPayment && (
           <Reveal scrollY={scrollY} index={reveal++}>
             <PayAgain token={token} reservedUntil={order.reserved_until} onChanged={onChanged} />
           </Reveal>
@@ -498,8 +546,10 @@ function PayAgain({ token, reservedUntil, onChanged }: { token: string; reserved
   const until = reservedUntil ? new Date(reservedUntil).toLocaleTimeString('en-GH', { hour: 'numeric', minute: '2-digit', timeZone: 'Africa/Accra' }) : null;
 
   const payments = useQuery('payment-options', getPaymentOptions, 60_000);
+  const online = payments.data?.online === true && !payments.error;
 
   async function send(card = false) {
+    if (!online || busy) return;
     if (!card && wallet.replace(/\D/g, '').length < 9) return setResult({ ok: false, text: 'Enter the Mobile Money number to charge.' });
     setBusy(true);
     const r = await requestPayment(token, card ? { card: true } : { network, wallet: wallet.trim() });
@@ -523,11 +573,20 @@ function PayAgain({ token, reservedUntil, onChanged }: { token: string; reserved
       <AppText size={13} color={colors.textMuted}>
         {until ? `We are holding your items until ${until}.` : 'We are holding your items for a short time.'}
       </AppText>
-      <Choices label="Network" value={network} onChange={setNetwork} options={momoNetworks.map((n) => ({ id: n.id, label: n.label }))} />
-      <Field label="Mobile Money number" value={wallet} onChangeText={setWallet} keyboardType="phone-pad" />
       {result ? <Notice tone={result.ok ? 'good' : 'warn'}>{result.text}</Notice> : null}
-      <Button label={payments.data?.hosted ? 'Pay with Mobile Money' : 'Send the payment prompt'} onPress={() => void send()} busy={busy} />
-      {payments.data?.card ? <Button label="Pay by card" kind="secondary" onPress={() => void send(true)} busy={busy} /> : null}
+      {online ? (
+        <>
+          <Choices label="Network" value={network} onChange={setNetwork} options={momoNetworks.map((n) => ({ id: n.id, label: n.label }))} />
+          <Field label="Mobile Money number" value={wallet} onChangeText={setWallet} keyboardType="phone-pad" />
+          <Button label={payments.data?.hosted ? 'Pay with Mobile Money' : 'Send the payment prompt'} onPress={() => void send()} busy={busy} />
+          {payments.data?.card ? <Button label="Pay by card" kind="secondary" onPress={() => void send(true)} busy={busy} /> : null}
+        </>
+      ) : (
+        <>
+          <Notice>{payments.loading || payments.refreshing ? 'Checking payment options…' : 'Online payment options are unavailable right now.'}</Notice>
+          <Button label="Check payment options again" kind="secondary" busy={payments.loading || payments.refreshing} onPress={() => void payments.refetch()} />
+        </>
+      )}
     </Card>
   );
 }

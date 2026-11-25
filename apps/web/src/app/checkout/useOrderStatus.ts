@@ -11,7 +11,7 @@ export interface OrderStatus {
 
 const POLL_MS = 3000;
 
-/** Follows an order until it leaves "pending payment": paid, or cancelled after a failed or expired payment. */
+/** Follows an order through payment, including a late confirmation after the item hold ends. */
 export function useOrderStatus(orderToken: string | null): OrderStatus | null {
   const [latest, setLatest] = useState<{ token: string; status: OrderStatus } | null>(null);
 
@@ -25,7 +25,9 @@ export function useOrderStatus(orderToken: string | null): OrderStatus | null {
       const { data } = await supabase.rpc('get_order_status', { p_order_token: orderToken }).maybeSingle();
       if (stopped) return;
       if (data) setLatest({ token: orderToken, status: { status: data.status, paymentStatus: data.payment_status ?? null } });
-      if (!data || data.status === 'pending_payment') timer = setTimeout(check, POLL_MS);
+      if (!data || data.status === 'pending_payment' || (data.status === 'cancelled' && data.payment_status)) {
+        timer = setTimeout(check, POLL_MS);
+      }
     };
     void check();
 

@@ -5,7 +5,7 @@ import { departmentIds, departmentLabels, isDepartment, radii, type Department, 
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
 import { ProductTile } from '@/components/ProductTile';
-import { EmptyState, ErrorState, ProductGridSkeleton } from '@/components/States';
+import { EmptyState, ProductGridSkeleton } from '@/components/States';
 import { useScreenTop } from '@/components/ui';
 import { getAllProducts, getCategories, searchSlugs } from '@/lib/catalog';
 import { useQuery } from '@/lib/query';
@@ -14,6 +14,7 @@ import { fonts } from '@/theme/fonts';
 import { useColors, useStyles, type Palette } from '@/theme/theme';
 
 type Sort = 'newest' | 'price-asc' | 'price-desc' | 'saving' | 'rating' | 'popular';
+type SearchSort = Sort | 'relevance';
 const sorts: { id: Sort; label: string }[] = [
   { id: 'newest', label: 'Newest' },
   { id: 'price-asc', label: 'Price: low' },
@@ -22,20 +23,28 @@ const sorts: { id: Sort; label: string }[] = [
   { id: 'rating', label: 'Top rated' },
   { id: 'saving', label: 'Biggest saving' },
 ];
+const relevance = { id: 'relevance', label: 'Relevance' } as const;
 
 /** The share taken off the old price (0 when the product isn't discounted). */
 const saving = (p: { price: number; was?: number }) => (p.was !== undefined && p.was > p.price ? (p.was - p.price) / p.was : 0);
 
+type ShopParams = { department?: string; category?: string; focus?: string; sort?: string; sale?: string; entry?: string };
+
 export default function ShopScreen() {
+  const params = useLocalSearchParams<ShopParams>();
+  return <ShopResults key={params.entry} params={params} />;
+}
+
+function ShopResults({ params }: { params: ShopParams }) {
   const colors = useColors();
   const styles = useStyles(makeStyles);
   const top = useScreenTop();
-  const params = useLocalSearchParams<{ department?: string; category?: string; focus?: string; sort?: string }>();
   const input = useRef<TextInputInstance>(null);
   const department: Department | undefined = isDepartment(params.department) ? params.department : undefined;
   const category = params.category;
+  const sale = params.sale === '1';
   const [text, setText] = useState('');
-  const [sort, setSort] = useState<Sort>(params.sort === 'saving' ? 'saving' : 'newest');
+  const [searchSort, setSearchSort] = useState<SearchSort>('relevance');
 
   // Arriving from the home page's search bar puts the cursor straight in the search field.
   useEffect(() => {
@@ -45,6 +54,7 @@ export default function ShopScreen() {
   // Searching waits for a short pause in typing, so each letter doesn't send a request.
   const query = useDebounced(text.trim(), 250);
   const searching = query.length >= 2;
+  const sort = searching ? searchSort : sorts.find((option) => option.id === params.sort)?.id ?? 'newest';
 
   const all = useQuery('products:all', getAllProducts);
   const categories = useQuery('categories', getCategories);
@@ -55,30 +65,36 @@ export default function ShopScreen() {
   }, []);
 
   const shown = useMemo(() => {
-    let list: Product[] = all.data ?? [];
-    if (searching && matches.data) {
+    let list: Product[] = (all.data ?? []).filter((p) =>
+      (!department || p.department === department) && (!category || p.category === category) && (!sale || saving(p) > 0),
+    );
+    if (searching) {
+      if (!matches.data) return [];
       const rank = new Map(matches.data.map((slug, i) => [slug, i] as const));
-      list = list.filter((p) => rank.has(p.slug)).sort((a, b) => rank.get(a.slug)! - rank.get(b.slug)!);
-    } else if (sort === 'price-asc') list = [...list].sort((a, b) => a.price - b.price);
-    else if (sort === 'price-desc') list = [...list].sort((a, b) => b.price - a.price);
-    else if (sort === 'popular') list = [...list].sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0));
-    else if (sort === 'rating') list = [...list].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0) || (b.reviewCount ?? 0) - (a.reviewCount ?? 0));
-    else if (sort === 'saving') list = [...list].sort((a, b) => saving(b) - saving(a));
-    if (department) list = list.filter((p) => p.department === department);
-    if (category) list = list.filter((p) => p.category === category);
+      list = list.filter((p) => rank.has(p.slug));
+      if (sort === 'relevance') list.sort((a, b) => rank.get(a.slug)! - rank.get(b.slug)!);
+    }
+    if (sort === 'price-asc') list.sort((a, b) => a.price - b.price);
+    else if (sort === 'price-desc') list.sort((a, b) => b.price - a.price);
+    else if (sort === 'popular') list.sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0));
+    else if (sort === 'rating') list.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0) || (b.reviewCount ?? 0) - (a.reviewCount ?? 0));
+    else if (sort === 'saving') list.sort((a, b) => saving(b) - saving(a));
+    else if (sort === 'newest') list.sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
     return list;
-  }, [all.data, matches.data, searching, sort, department, category]);
+  }, [all.data, matches.data, searching, sort, department, category, sale]);
 
   // A department shows once it has a category, so a new one doesn't appear empty.
   const shownDepartments = categories.data ? departmentIds.filter((d) => categories.data?.some((c) => c.department === d)) : departmentIds;
   const deptCategories = (categories.data ?? []).filter((c) => c.department === department);
   const waitingForSearch = searching && matches.loading;
-  const failed = all.error && !all.data;
+  const searchFailed = searching && Boolean(matches.error) && !matches.data;
+  const catalogueFailed = Boolean(all.error) && !all.data;
+  const failed = catalogueFailed || searchFailed;
 
   const header = (
     <View style={styles.header}>
       <AppText weight="semibold" size={22} accessibilityRole="header">
-        Shop
+        {sale ? 'Deals' : 'Shop'}
       </AppText>
       <View style={styles.search}>
         <Icon name="search" size={18} color={colors.textMuted} strokeWidth={2} />
@@ -109,6 +125,9 @@ export default function ShopScreen() {
           <Chip key={d} label={departmentLabels[d]} on={d === department} onPress={() => setFilters({ department: d })} />
         ))}
       </ScrollView>
+      <View style={styles.deals}>
+        <Chip label="Deals only" small on={sale} onPress={() => router.setParams({ sale: sale ? '' : '1', sort: sale ? '' : 'saving' })} />
+      </View>
       {department && deptCategories.length > 0 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips} keyboardShouldPersistTaps="handled">
           <Chip small label={`All ${departmentLabels[department]}`} on={!category} onPress={() => setFilters({ department })} />
@@ -120,16 +139,16 @@ export default function ShopScreen() {
 
       <View style={styles.meta}>
         <AppText size={13} color={colors.textMuted} accessibilityLiveRegion="polite">
-          {all.loading || waitingForSearch ? 'Loading…' : `${shown.length} ${shown.length === 1 ? 'product' : 'products'}${searching ? ` for “${query}”` : ''}`}
+          {failed ? '' : all.loading || waitingForSearch ? 'Loading…' : `${shown.length} ${shown.length === 1 ? 'product' : 'products'}${searching ? ` for “${query}”` : ''}`}
         </AppText>
-        {!searching && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View style={styles.sorts} accessibilityRole="radiogroup" accessibilityLabel="Sort by">
-            {sorts.map((s) => (
+            {(searching ? [relevance, ...sorts] : sorts).map((s) => (
               <Pressable
                 key={s.id}
                 accessibilityRole="radio"
                 accessibilityState={{ checked: s.id === sort }}
-                onPress={() => setSort(s.id)}
+                onPress={() => searching ? setSearchSort(s.id) : router.setParams({ sort: s.id })}
                 hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
               >
                 <AppText weight={s.id === sort ? 'bold' : 'regular'} size={13} color={s.id === sort ? colors.accent : colors.textMuted}>
@@ -138,7 +157,7 @@ export default function ShopScreen() {
               </Pressable>
             ))}
           </View>
-        )}
+        </ScrollView>
       </View>
     </View>
   );
@@ -159,20 +178,34 @@ export default function ShopScreen() {
       ListHeaderComponent={header}
       ListEmptyComponent={
         failed ? (
-          <ErrorState onRetry={() => void all.refetch()} />
+          <EmptyState
+            icon="alert"
+            title={searchFailed ? 'Search is temporarily unavailable' : 'Couldn’t load the shop'}
+            message="Check your connection and try again."
+            action={{ label: 'Try again', onPress: () => {
+              if (catalogueFailed) void all.refetch();
+              if (searchFailed) void matches.refetch();
+            } }}
+          />
         ) : all.loading || waitingForSearch ? (
           <ProductGridSkeleton />
         ) : (
           <EmptyState
             icon="search"
             title="Nothing found"
-            message={searching ? `No products match “${query}”. Try another word or clear the filters.` : 'There are no products here yet.'}
-            action={department || category || text ? { label: 'Clear filters', onPress: () => { setText(''); setFilters({}); } } : undefined}
+            message={searching ? `No products match “${query}”. Try another word or clear the filters.` : sale ? 'There are no deals in this selection right now.' : 'There are no products here yet.'}
+            action={department || category || text || sale ? { label: 'Clear search and filters', onPress: () => {
+              setText('');
+              router.setParams({ department: '', category: '', sale: '', sort: '' });
+            } } : undefined}
           />
         )
       }
-      refreshing={all.refreshing}
-      onRefresh={() => void all.refetch()}
+      refreshing={all.refreshing || matches.refreshing}
+      onRefresh={() => {
+        void all.refetch();
+        if (searching) void matches.refetch();
+      }}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
       initialNumToRender={8}
@@ -254,9 +287,13 @@ const makeStyles = (colors: Palette) => StyleSheet.create({
   meta: {
     gap: 8,
   },
+  deals: {
+    alignSelf: 'flex-start',
+  },
   sorts: {
     flexDirection: 'row',
     gap: 18,
+    paddingVertical: 8,
   },
   row: {
     columnGap: 14,

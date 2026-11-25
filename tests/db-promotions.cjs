@@ -58,6 +58,34 @@ const stamp = Date.now();
   const off = await anon.rpc('apply_order_promotion', { p_order_token: order2.order_token, p_code: code });
   assert(off.error?.message.includes('invalid or has expired'), 'a switched-off code stops working');
 
+  // The new checkout entry point must roll back even the last unit if the code is rejected.
+  const guestPhone = '0245550123';
+  const checkout = {
+    p_customer: { adult_confirmed: true, name: 'Promo Checkout Test', phone: guestPhone, area: 'Osu', email: 'promo-checkout@example.com' },
+    p_delivery_option: 'standard', p_payment: { method: 'momo', network: 'mtn', wallet: guestPhone },
+    p_items: [{ slug: 'wooden-stacking-blocks', quantity: 1 }], p_is_gift: false,
+  };
+  const stockFilter = "product_id = (select id from public.products where slug = 'wooden-stacking-blocks') and size_code = ''";
+  const previousStock = sql(`select on_hand from public.inventory_levels where ${stockFilter}`);
+  sql(`update public.inventory_levels set on_hand = 1 where ${stockFilter}`);
+  const rejected = await anon.rpc('place_order', { ...checkout, p_promo_code: code }).single();
+  assert(rejected.error?.code === '22023', 'a rejected code returns the shopper-friendly error from checkout');
+  assert(sql(`select count(*) from public.orders where phone = '${guestPhone}'`) === '0', 'the rejected checkout creates no order');
+  assert(sql("select count(*) from public.notifications where recipient = 'promo-checkout@example.com'") === '0', 'the rejected checkout queues no order email');
+  const retry = await anon.rpc('place_order', { ...checkout, p_promo_code: '' }).single();
+  assert(!retry.error && retry.data?.discount_ghs === 0, 'the same shopper can buy the last unit immediately without the code');
+  const cancelled = await anon.rpc('cancel_my_order', { p_order_token: retry.data.order_token });
+  assert(!cancelled.error, 'the test releases its first reservation');
+
+  await roles.finance.rpc('admin_set_promotion_active', { p_id: id, p_active: true });
+  const discounted = await anon.rpc('place_order', { ...checkout, p_promo_code: code.toLowerCase() }).single();
+  assert(!discounted.error && discounted.data?.discount_ghs > 0 && discounted.data?.promo_code === code, 'checkout returns the applied discount and code');
+  const priced = discounted.data;
+  assert(priced.total_ghs === priced.subtotal_ghs + priced.delivery_fee_ghs - priced.discount_ghs, 'the final charge matches the discounted total');
+  assert(Number(sql(`select n.payload->>'total_ghs' from public.notifications n join public.orders o on o.id = n.order_id where o.order_number = '${priced.order_number}' and n.template = 'order_received'`)) === priced.total_ghs, 'the order email has the same discounted total');
+  await anon.rpc('cancel_my_order', { p_order_token: priced.order_token });
+  sql(`update public.inventory_levels set on_hand = ${Number(previousStock)} where ${stockFilter}`);
+
   // A code nobody used can be deleted
   const { data: spare } = await roles.finance.rpc('admin_save_promotion', { p: { ...base, code: `S${stamp}`.slice(0, 12).toUpperCase() } });
   assert(!(await roles.finance.rpc('admin_delete_promotion', { p_id: spare })).error, 'an unused code can be deleted');

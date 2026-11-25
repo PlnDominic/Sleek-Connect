@@ -1166,6 +1166,10 @@ isOneToOne: false
 { Args: { "p_customer": Json,"p_delivery_option": string,"p_is_gift"?: boolean,"p_items": Json,"p_payment": Json }; Returns: {
               "delivery_fee_ghs": number,"order_number": string,"order_token": string,"reserved_until": string,"subtotal_ghs": number,"total_ghs": number
             }[]
+                           } |
+{ Args: { "p_customer": Json,"p_delivery_option": string,"p_is_gift": boolean,"p_items": Json,"p_payment": Json,"p_promo_code": string }; Returns: {
+              "delivery_fee_ghs": number,"discount_ghs": number,"order_number": string,"order_token": string,"promo_code": string,"reserved_until": string,"subtotal_ghs": number,"total_ghs": number
+            }[]
                            },
 "product_current_batches":
 { Args: { "p_slug": string }; Returns: {

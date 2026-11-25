@@ -46,7 +46,7 @@ export default function HomeScreen() {
   const emptyShop = !all.loading && !all.error && (all.data?.length ?? 0) === 0;
 
   const openShop = (params: { department?: Department; category?: string } = {}) =>
-    router.push({ pathname: '/shop', params: { department: params.department ?? '', category: params.category ?? '' } });
+    router.push(appHref(['/shop', params.department, params.category].filter(Boolean).join('/'), String(Date.now())));
 
   return (
     <ScrollView
@@ -81,7 +81,10 @@ export default function HomeScreen() {
       <Pressable
         accessibilityRole="search"
         accessibilityLabel="Search products or brands"
-        onPress={() => router.push({ pathname: '/shop', params: { focus: String(Date.now()) } })}
+        onPress={() => {
+          const entry = String(Date.now());
+          router.push({ pathname: '/shop', params: { entry, focus: entry, department: '', category: '', sale: '', sort: '' } });
+        }}
         style={styles.search}
       >
         <Icon name="search" size={18} color={colors.textMuted} strokeWidth={2} />
@@ -159,7 +162,7 @@ export default function HomeScreen() {
 
           {deals.length > 0 && (
             <View style={styles.section}>
-              <SectionHeader title="Deals" onSeeAll={() => router.push({ pathname: '/shop', params: { sort: 'saving' } })} />
+              <SectionHeader title="Deals" onSeeAll={() => router.push(appHref(`/shop${shopDepartment ? `/${shopDepartment}` : ''}?sale=1`, String(Date.now())))} />
               <View style={styles.grid}>
                 {deals.map((p) => (
                   <View key={p.slug} style={styles.gridCell}>
@@ -218,7 +221,7 @@ function HeroCard({ banner }: { banner: Banner }) {
         {banner.title.replace(/\n/g, ' ')}
       </AppText>
       {banner.ctaLabel && (
-        <Pressable accessibilityRole="button" onPress={() => router.push(appHref(banner.ctaHref))} style={styles.heroCta}>
+        <Pressable accessibilityRole="button" onPress={() => router.push(appHref(banner.ctaHref, String(Date.now())))} style={styles.heroCta}>
           <AppText weight="bold" size={14} color={colors.ink}>
             {banner.ctaLabel}
           </AppText>
@@ -236,7 +239,7 @@ function PromoCard({ banner }: { banner: Banner }) {
     <Pressable
       accessibilityRole="link"
       accessibilityLabel={banner.title.replace(/\n/g, ' ')}
-      onPress={() => router.push(appHref(banner.ctaHref))}
+      onPress={() => router.push(appHref(banner.ctaHref, String(Date.now())))}
       style={[styles.promo, { backgroundColor: theme.background }]}
     >
       <View style={styles.flex}>

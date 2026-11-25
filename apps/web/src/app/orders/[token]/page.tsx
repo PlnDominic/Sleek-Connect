@@ -23,6 +23,7 @@ import { getPaymentProvider } from '@/lib/payments';
 import { expectedDelivery } from '@/lib/tracking';
 import { TrackingBar } from '@/components/TrackingBar';
 import { photoUrl } from '@/lib/photos';
+import { createSupabase } from '@/lib/supabase/server';
 import { AutoRefresh } from './AutoRefresh';
 import { BuyAgain, CancelOrder, PayNow } from './OrderActions';
 import { TrackingTools } from './TrackingTools';
@@ -53,11 +54,19 @@ async function OrderDetails({ params }: { params: PageProps<'/orders/[token]'>['
   const order = await getCustomerOrder(token);
   if (!order) notFound();
 
-  const headline = orderHeadline(order);
+  const cancelledUnpaid = order.status === 'cancelled' && !order.paid_at && order.payment_method !== 'cod';
+  const payment = cancelledUnpaid ? await createSupabase().rpc('get_order_status', { p_order_token: token }).maybeSingle() : null;
+  const checkingPayment = !!(payment?.data?.payment_status || payment?.error);
+  const headline = checkingPayment ? {
+    title: 'Checking your payment',
+    body: payment?.data?.payment_status === 'succeeded'
+      ? 'We received your payment and are checking it. Contact us with your order number if you need help.'
+      : 'If you approved a payment, check this order or contact us before trying again.',
+  } : orderHeadline(order);
   const timeline = buildTimeline(order);
   const live = !finalStatuses.includes(order.status);
   const canReturn = order.return_open && order.items.some((i) => i.quantity > i.return_requested);
-  const reorderable = ['delivered', 'cancelled', 'returned'].includes(order.status);
+  const reorderable = !checkingPayment && ['delivered', 'cancelled', 'returned'].includes(order.status);
   const slugs = order.items.flatMap((i) => (i.slug ? [i.slug] : []));
   const [products, delivery, store] = await Promise.all([
     reorderable && slugs.length ? getProductsBySlugs(slugs) : Promise.resolve([]),
@@ -80,7 +89,7 @@ async function OrderDetails({ params }: { params: PageProps<'/orders/[token]'>['
           <p className={styles.muted}>Placed {formatDateTime(order.created_at)}</p>
         </div>
         <span className={styles.badge} data-status={order.status}>
-          {statusShort[order.status]}
+          {checkingPayment ? 'Payment verification' : statusShort[order.status]}
         </span>
       </div>
 
@@ -114,6 +123,7 @@ async function OrderDetails({ params }: { params: PageProps<'/orders/[token]'>['
         <div>
           <h2 id="order-headline">{headline.title}</h2>
           <p>{headline.body}</p>
+          {checkingPayment && <AutoRefresh seconds={30} className={styles.secondary} />}
         </div>
         {order.delivery_code && (
           <div className={styles.code}>

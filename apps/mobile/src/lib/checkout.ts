@@ -1,5 +1,5 @@
 import * as WebBrowser from 'expo-web-browser';
-import type { DeliveryConfig, MomoNetwork } from '@sleek/shared';
+import type { DeliveryConfig, DeliveryOption, DeliveryQuote, MomoNetwork } from '@sleek/shared';
 import { siteAddress, siteConfigured } from './site';
 import { supabase } from './supabase';
 
@@ -41,6 +41,11 @@ export async function getDeliveryConfig(): Promise<DeliveryConfig> {
   };
 }
 
+export function selectDeliveryQuote(quotes: { option: DeliveryOption; q: DeliveryQuote }[], preferredId: string) {
+  const available = quotes.filter(({ q }) => q.available && q.fee !== null);
+  return available.find(({ option }) => option.id === preferredId) ?? available[0];
+}
+
 export interface PlaceOrderInput {
   customer: { name: string; phone: string; email?: string; area: string; ghanapostGps?: string; directions?: string; adultConfirmed: boolean };
   deliveryOption: string;
@@ -55,6 +60,7 @@ export interface PlacedOrder {
   orderToken: string;
   reservedUntil: string;
   total: number | null;
+  deliveryFee: number | null;
   discount: number;
 }
 
@@ -63,45 +69,36 @@ export interface PlacedOrder {
  * quantities are sent. Signed-in shoppers' orders are linked to their account.
  */
 export async function placeOrder(input: PlaceOrderInput): Promise<PlacedOrder> {
-  const { data, error } = await supabase
-    .rpc('place_order', {
-      p_customer: {
-        name: input.customer.name,
-        phone: input.customer.phone,
-        email: input.customer.email ?? null,
-        area: input.customer.area,
-        ghanapost_gps: input.customer.ghanapostGps ?? null,
-        directions: input.customer.directions ?? null,
-        adult_confirmed: input.customer.adultConfirmed,
-      },
-      p_delivery_option: input.deliveryOption,
-      p_payment:
-        'cod' in input.payment
-          ? { method: 'cod' }
-          : 'card' in input.payment
-            ? { method: 'card' }
-            : { method: 'momo', network: input.payment.network, wallet: input.payment.wallet },
-      p_items: input.items.map((i) => ({ slug: i.slug, size: i.size ?? null, quantity: i.quantity })),
-      p_is_gift: false,
-    })
-    .single();
-  const order = data as { order_number: string; order_token: string; reserved_until: string; total_ghs: number | null } | null;
+  const args = {
+    p_customer: {
+      name: input.customer.name,
+      phone: input.customer.phone,
+      email: input.customer.email ?? null,
+      area: input.customer.area,
+      ghanapost_gps: input.customer.ghanapostGps ?? null,
+      directions: input.customer.directions ?? null,
+      adult_confirmed: input.customer.adultConfirmed,
+    },
+    p_delivery_option: input.deliveryOption,
+    p_payment:
+      'cod' in input.payment
+        ? { method: 'cod' }
+        : 'card' in input.payment
+          ? { method: 'card' }
+          : { method: 'momo', network: input.payment.network, wallet: input.payment.wallet },
+    p_items: input.items.map((i) => ({ slug: i.slug, size: i.size ?? null, quantity: i.quantity })),
+    p_is_gift: false,
+  };
+  const promoCode = input.promoCode?.trim();
+  const { data, error } = await supabase.rpc('place_order', promoCode ? { ...args, p_promo_code: promoCode } : args).single();
+  const order = data as {
+    order_number: string; order_token: string; reserved_until: string;
+    total_ghs: number | null; delivery_fee_ghs: number | null; discount_ghs?: number;
+  } | null;
   if (error || !order) {
     // place_order raises 22023 with a message written for shoppers; anything else is unexpected.
+    if (promoCode && error?.code === 'PGRST202') throw new Error('Promo codes are temporarily unavailable. Remove the code to continue.');
     throw new Error(error?.code === '22023' ? error.message : 'We couldn’t place your order. Please try again.');
-  }
-
-  let total = order.total_ghs ?? null;
-  let discount = 0;
-  if (input.promoCode?.trim()) {
-    const { data: promotion, error: promotionError } = await supabase.rpc('apply_order_promotion', {
-      p_order_token: order.order_token,
-      p_code: input.promoCode.trim(),
-    });
-    const row = (promotion as { discount_ghs: number; total_ghs: number }[] | null)?.[0];
-    if (promotionError || !row) throw new Error(promotionError?.message ?? 'That promo code could not be applied.');
-    discount = Number(row.discount_ghs ?? 0);
-    total = Number(row.total_ghs ?? total);
   }
 
   if (input.signedIn) {
@@ -116,7 +113,10 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlacedOrder> {
       },
     });
   }
-  return { orderNumber: order.order_number, orderToken: order.order_token, reservedUntil: order.reserved_until, total, discount };
+  return {
+    orderNumber: order.order_number, orderToken: order.order_token, reservedUntil: order.reserved_until,
+    total: order.total_ghs, deliveryFee: order.delivery_fee_ghs, discount: Number(order.discount_ghs ?? 0),
+  };
 }
 
 /** Tells the website a pay on delivery order was placed, so the shopper's email and the store's alert go out now. */
@@ -147,12 +147,18 @@ export interface PaymentOptions {
 export async function getPaymentOptions(): Promise<PaymentOptions> {
   const off = { online: false, card: false, hosted: false };
   if (!siteConfigured) return off;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
   try {
-    const response = await fetch(siteAddress('/api/payments/options'));
-    const body = (await response.json()) as Partial<PaymentOptions>;
-    return { online: body.online === true, card: body.card === true, hosted: body.hosted === true };
-  } catch {
-    return off;
+    const response = await fetch(siteAddress('/api/payments/options'), { signal: controller.signal });
+    if (!response.ok) throw new Error('Could not check payment options.');
+    const body = (await response.json()) as Partial<PaymentOptions> | null;
+    if (typeof body?.online !== 'boolean' || typeof body.card !== 'boolean' || typeof body.hosted !== 'boolean') {
+      throw new Error('Could not check payment options.');
+    }
+    return { online: body.online, card: body.online && body.card, hosted: body.online && body.hosted };
+  } finally {
+    clearTimeout(timeout);
   }
 }
 

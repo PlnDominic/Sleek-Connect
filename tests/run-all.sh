@@ -66,6 +66,7 @@ if [ "$ONLY" != "db" ]; then
   fresh; start; suite "delivery, photos, wishlist, addresses, cancel, buy again" e2e-shopper.cjs; server_errors
   fresh; start; suite "terms, saved numbers, reviews, data export and deletion" e2e-privacy.cjs; server_errors
   fresh; start; suite "mobile app: payment prompt endpoint" e2e-mobile-api.cjs; server_errors
+  fresh; start; suite "checkout: promo review and late payment recovery" e2e-checkout-recovery.cjs; server_errors
   stop
 fi
 
@@ -100,6 +101,7 @@ suite "privacy: no trackers, no cookies of our own" unit-privacy-guard.cjs
 suite "safety: test payment and console messages are off on the live site" unit-dev-modes.cjs
 suite "safety: caller address and mobile sign-in return address" unit-address-and-mobile-return.cjs
 suite "checkout: typed delivery areas match the listed ones" unit-delivery-area.cjs
+suite "mobile shopping: search, deals, delivery and payment states" unit-mobile-shopping.cjs
 suite "security: sign-in redirects stay on this site" unit-safe-redirect.cjs
 suite "build: server action files export only async functions" unit-server-actions.cjs
 suite "admin: the settings page shows error reporting first" unit-admin-settings.cjs
