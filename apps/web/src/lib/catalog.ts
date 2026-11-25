@@ -1,6 +1,6 @@
 import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
-import { categoryFromRow, productFromRow, productSelect, type Category, type Product } from '@sleek/shared';
+import { categoryFromRow, departmentIds, productFromRow, productSelect, type Category, type Product } from '@sleek/shared';
 import type { DeliveryConfig } from './delivery';
 import { photoUrl } from './photos';
 import { createSupabase } from './supabase/server';
@@ -210,6 +210,15 @@ export async function getCategories(): Promise<Category[]> {
 
   const rows = unwrap(await createSupabase().from('categories').select('*').order('sort_order'));
   return rows.map((r) => categoryFromRow(r, photoBase));
+}
+
+/** The departments and categories the menus offer: only those with a published product, so no link leads to an empty page. */
+export async function getShopMenu() {
+  const [categories, products] = await Promise.all([getCategories(), allPublishedProducts()]);
+  return {
+    categories: categories.filter((c) => products.some((p) => p.category === c.id && p.department === c.department)),
+    departments: departmentIds.filter((d) => products.some((p) => p.department === d)),
+  };
 }
 
 export interface StoreInfo {

@@ -63,7 +63,7 @@ export default async function ProductPage({ params, searchParams }: PageProps<'/
   if (!product) notFound();
 
   const details = product.details;
-  const highlights = details?.highlights ?? [product.tag];
+  const highlights = (details?.highlights ?? [product.tag]).filter(Boolean);
   const base = siteUrl();
   const url = `${base}/products/${product.slug}`;
   const prices = (product.sizes?.length ? product.sizes.map((s) => s.price) : [product.price]).filter((n) => Number.isFinite(n));
@@ -181,7 +181,7 @@ export default async function ProductPage({ params, searchParams }: PageProps<'/
               <Icon name="truck" size={22} />
               <span>
                 <strong>
-                  {cheapestFee === undefined ? 'Delivery' : `Delivery from ${formatPrice(cheapestFee)}`}
+                  {cheapestFee === undefined ? 'Delivery' : cheapestFee === 0 ? 'Free delivery available' : `Delivery from ${formatPrice(cheapestFee)}`}
                 </strong>{' '}
                 <Link href="/help#delivery" className={styles.serviceLink}>
                   Where we deliver

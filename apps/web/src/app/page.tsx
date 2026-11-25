@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { colors, departmentIds, departmentLabels, formatPrice, type Category, type IconName, type Product } from '@sleek/shared';
+import { colors, departmentLabels, formatPrice, type Category, type Department, type IconName, type Product } from '@sleek/shared';
 import { AddToBagButton } from '@/components/AddToBagButton';
 import { Icon } from '@/components/Icon';
 import { JsonLd } from '@/components/JsonLd';
@@ -11,7 +11,7 @@ import { ProductImage } from '@/components/ProductImage';
 import { SiteFooter } from '@/components/SiteFooter';
 import { AnnouncementBar, SiteHeader } from '@/components/SiteHeader';
 import { Countdown } from '@/components/Countdown';
-import { getHomeCatalog } from '@/lib/catalog';
+import { getHomeCatalog, getShopMenu } from '@/lib/catalog';
 import { getHomeContent, type Banner } from '@/lib/content';
 import { images } from '@/lib/images';
 import { siteName, siteUrl } from '@/lib/site';
@@ -20,8 +20,9 @@ import styles from './home.module.css';
 export const metadata: Metadata = { alternates: { canonical: '/' } };
 
 export default async function HomePage() {
-  const [{ categories, newArrivals, bestSellers, deals }, { hero, promos, heroProducts }] = await Promise.all([
+  const [{ newArrivals, bestSellers, deals }, { categories, departments }, { hero, promos, heroProducts }] = await Promise.all([
     getHomeCatalog(),
+    getShopMenu(),
     getHomeContent(),
   ]);
 
@@ -75,7 +76,7 @@ export default async function HomePage() {
           </div>
         </div>
         <Hero banner={hero ?? defaultHero} products={heroProducts} />
-        <Departments categories={categories} />
+        <Departments departments={departments} />
         <Categories categories={categories} />
         {deals.length > 0 && <Deals products={deals} />}
         <NewArrivals products={newArrivals} />
@@ -192,9 +193,8 @@ function SectionHeader({ title, linkLabel, href = '#' }: { title: string; linkLa
   );
 }
 
-/** Quick links to each department that has categories, so the home page reads as a store for everything. */
-function Departments({ categories }: { categories: Category[] }) {
-  const shown = departmentIds.filter((d) => categories.some((c) => c.department === d));
+/** Quick links to each department that has products, so the home page reads as a store for everything. */
+function Departments({ departments: shown }: { departments: Department[] }) {
   if (shown.length < 2) return null;
   return (
     <nav aria-label="Departments" className={`container ${styles.deptStrip}`}>

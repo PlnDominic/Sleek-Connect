@@ -34,6 +34,8 @@ async function SearchResults({ searchParams }: { searchParams: PageProps<'/searc
     getListingData(),
     q.length >= 2 ? searchProducts(q) : Promise.resolve([] as string[]),
   ]);
+  // Only categories with something in them are offered.
+  const stocked = categories.filter((c) => products.some((p) => p.category === c.id));
   const rank = new Map(slugs.map((slug, i) => [slug, i] as [string, number]));
   const matches = products.filter((p) => rank.has(p.slug));
   const filters = readFilters(params, 'relevance');
@@ -63,7 +65,7 @@ async function SearchResults({ searchParams }: { searchParams: PageProps<'/searc
               <h3>What are you looking for?</h3>
               <p>Search by product, brand or category, for example “blender”, “sneakers” or “shea butter”.</p>
               <div className={styles.chips}>
-                {categories.map((c) => (
+                {stocked.map((c) => (
                   <Link key={c.id} href={`/shop/${c.department}/${c.id}`}>
                     {c.name}
                   </Link>
@@ -95,7 +97,7 @@ async function SearchResults({ searchParams }: { searchParams: PageProps<'/searc
                 )}
                 <p>Check the spelling, try a shorter word, or browse a category:</p>
                 <div className={styles.chips}>
-                  {categories.map((c) => (
+                  {stocked.map((c) => (
                     <Link key={c.id} href={`/shop/${c.department}/${c.id}`}>
                       {c.name}
                     </Link>

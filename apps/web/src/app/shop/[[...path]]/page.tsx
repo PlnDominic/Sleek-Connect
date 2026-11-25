@@ -7,7 +7,7 @@ import { ListingView } from '@/components/listing/ListingView';
 import styles from '@/components/listing/listing.module.css';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SiteHeader } from '@/components/SiteHeader';
-import { getCategories } from '@/lib/catalog';
+import { getCategories, getShopMenu } from '@/lib/catalog';
 import { buildListing, getListingData, readFilters } from '@/lib/listing';
 import { defaultShareImage } from '@/lib/site';
 
@@ -50,7 +50,7 @@ export async function generateMetadata({ params }: PageProps<'/shop/[[...path]]'
 export default async function ShopPage({ params, searchParams }: PageProps<'/shop/[[...path]]'>) {
   const scope = await resolveScope((await params).path);
   if (!scope) notFound();
-  const categories = await getCategories();
+  const { categories, departments: stocked } = await getShopMenu();
   const title = scope.category?.name ?? (scope.department ? departments[scope.department].name : 'Shop all products');
   const path = `/shop${scope.department ? `/${scope.department}` : ''}${scope.category ? `/${scope.category.id}` : ''}`;
   const siblings = categories.filter((c) => !scope.department || c.department === scope.department);
@@ -70,7 +70,7 @@ export default async function ShopPage({ params, searchParams }: PageProps<'/sho
               )}
             </nav>
             <h1>{title}</h1>
-            <p>{scope.department ? departments[scope.department].blurb : 'Everything you need, from beauty and baby care to home, fashion and electronics.'}</p>
+            <p>{scope.department ? departments[scope.department].blurb : 'Everything you need, from beauty and baby care to home and fashion.'}</p>
             <nav aria-label={scope.department ? 'Categories' : 'Departments'} className={styles.subnav}>
               {scope.department ? (
                 <>
@@ -84,7 +84,7 @@ export default async function ShopPage({ params, searchParams }: PageProps<'/sho
                   ))}
                 </>
               ) : (
-                departmentIds.filter((d) => categories.some((c) => c.department === d)).map((d) => (
+                stocked.map((d) => (
                   <Link key={d} href={`/shop/${d}`}>
                     {departments[d].name}
                   </Link>
@@ -126,11 +126,19 @@ async function Results({ scope, path, searchParams }: { scope: Scope; path: stri
       filters={filters}
       sorts={['featured', 'newest', 'rating', 'popular', 'saving', 'price-asc', 'price-desc']}
       empty={
-        <>
-          <h3>No products match these filters</h3>
-          <p>Try removing a filter, or browse everything we have.</p>
-          <Link href={path}>Clear all filters</Link>
-        </>
+        inScope.length === 0 ? (
+          <>
+            <h3>Nothing here yet</h3>
+            <p>We haven’t added products to this section.</p>
+            <Link href="/shop">Browse all products</Link>
+          </>
+        ) : (
+          <>
+            <h3>No products match these filters</h3>
+            <p>Try removing a filter, or browse everything we have.</p>
+            <Link href={path}>Clear all filters</Link>
+          </>
+        )
       }
     />
   );

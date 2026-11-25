@@ -57,6 +57,11 @@ const statusPanel = (page) => page.locator('aside:visible').getByRole('status').
   await page.getByRole('button', { name: 'Add to bag' }).click();
   assert((await bag.getAttribute('aria-label')) === 'Bag, 1 item', 'add to bag from a product page');
 
+  // --- Menus offer only stocked departments (the seed has no electronics) ---
+  assert((await page.locator('a[href="/shop/electronics"], a[href^="/shop/electronics/"]').count()) === 0, 'an empty department is not offered in menus');
+  await go(page, BASE + '/shop/electronics');
+  assert(await page.getByRole('heading', { name: 'Nothing here yet' }).isVisible(), 'an empty department says so, without blaming filters');
+
   // --- Tapping a product card's photo opens the product ---------------------
   await go(page, BASE + '/shop');
   const card = page.locator('main article').first();

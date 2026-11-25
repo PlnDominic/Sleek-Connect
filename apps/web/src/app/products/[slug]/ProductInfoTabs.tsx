@@ -26,7 +26,8 @@ export function ProductInfoTabs({ product }: { product: Product }) {
     safety: Boolean(
       details?.recommendedAge || compliance?.countryOfOrigin || details?.warnings,
     ),
-    batch: batches.length > 0 || Boolean(compliance?.periodAfterOpening),
+    // A bare stock batch number (clothes, bags) tells a shopper nothing; an expiry date does.
+    batch: batches.some((b) => b.expiresOn) || Boolean(compliance?.periodAfterOpening),
     use: Boolean(details?.howToUse),
   };
   const visible = tabs.filter((t) => hasContent[t.id]);

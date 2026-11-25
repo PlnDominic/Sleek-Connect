@@ -281,6 +281,7 @@ export function CheckoutForm({ delivery, payments }: CheckoutFormProps) {
                     </button>
                   )}
                 </div>
+                {!adult && <span>Tick the terms box below to sign in.</span>}
               </div>
             </div>
             ) : null}

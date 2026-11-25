@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { departmentIds, departmentLabels, formatPrice, type Category, type Department } from '@sleek/shared';
-import { getCategories, getStoreInfo } from '@/lib/catalog';
+import { departmentLabels, formatPrice, type Category, type Department } from '@sleek/shared';
+import { getShopMenu, getStoreInfo } from '@/lib/catalog';
 import { BagButton } from './BagButton';
 import { Icon } from './Icon';
 import { Logo } from './Logo';
@@ -66,10 +66,8 @@ function DepartmentMenu({ id, categories, current }: { id: Department; categorie
  * underneath. Phones: one row with a menu button that opens a drawer. Stays at the top of the page as you scroll.
  */
 export async function SiteHeader({ current }: { current?: string }) {
-  const categories = await getCategories();
+  const { categories, departments: shownDepartments } = await getShopMenu();
   const byDepartment = (d: Department) => categories.filter((c) => c.department === d);
-  // A department shows in the menus once it has a category, so a new department doesn't appear empty.
-  const shownDepartments = departmentIds.filter((d) => byDepartment(d).length > 0);
   return (
     <header className={styles.header}>
       <div className={`container ${styles.top}`}>
