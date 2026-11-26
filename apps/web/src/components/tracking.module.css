@@ -1,0 +1,142 @@
+/* The four-step order progress bar. */
+
+.bar ol,
+.compact ol {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bar li,
+.compact li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+/* The line joining each step to the next. */
+.bar li + li::before,
+.compact li + li::before {
+  content: '';
+  position: absolute;
+  top: 15px;
+  right: 50%;
+  width: 100%;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--c-line);
+  z-index: 0;
+}
+
+.bar li + li[data-state='done']::before,
+.bar li + li[data-state='current']::before,
+.compact li + li[data-state='done']::before,
+.compact li + li[data-state='current']::before {
+  background: var(--c-accent);
+}
+
+.dot {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--c-line-strong);
+  background: var(--c-canvas);
+  color: var(--c-text-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+li[data-state='done'] .dot {
+  border-color: var(--c-accent);
+  background: var(--c-accent);
+  color: var(--c-canvas);
+}
+
+li[data-state='current'] .dot {
+  border-color: var(--c-accent);
+  color: var(--c-accent);
+  box-shadow: 0 0 0 5px var(--c-teal-soft);
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-text-subtle);
+}
+
+li[data-state='done'] .label,
+li[data-state='current'] .label {
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
+.bar[data-problem] li[data-state='current'] .dot {
+  border-color: var(--c-accent-deep);
+  color: var(--c-accent-deep);
+  box-shadow: 0 0 0 5px var(--c-blush);
+}
+
+.problem {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: var(--r-lg);
+  background: var(--c-blush);
+  color: var(--c-accent-deep);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Small version for order lists: just the bar, labels hidden. */
+.compact li {
+  gap: 0;
+}
+
+.compact .dot {
+  width: 14px;
+  height: 14px;
+  border-width: 2px;
+  font-size: 0;
+}
+
+.compact li + li::before {
+  top: 6px;
+  height: 2px;
+}
+
+.compact li[data-state='current'] .dot {
+  box-shadow: 0 0 0 3px var(--c-teal-soft);
+}
+
+.compact .label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 420px) {
+  .bar .label {
+    font-size: 11.5px;
+  }
+
+  .bar .dot {
+    width: 28px;
+    height: 28px;
+  }
+
+  .bar li + li::before {
+    top: 13px;
+  }
+}

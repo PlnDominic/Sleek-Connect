@@ -1,0 +1,62 @@
+import Link from 'next/link';
+import { colors, formatPrice, type Product } from '@sleek/shared';
+import { AddToBagButton } from './AddToBagButton';
+import { Icon } from './Icon';
+import { ProductImage } from './ProductImage';
+import { SaveButton } from './SaveButton';
+import { CompareButton } from './CompareButton';
+import styles from './ProductCard.module.css';
+
+/** Product tile used in the home page rails and listing grids. */
+export function ProductCard({ product, showCompare = true }: { product: Product; showCompare?: boolean }) {
+  const soldOut = product.inStock === false;
+  return (
+    <article className={styles.productCard}>
+      <div className={styles.productCardTop}>
+        {product.badge ? (
+          <span className={styles.badge} style={{ background: product.badge === 'New' ? colors.ink : colors.accent }}>
+            {product.badge}
+          </span>
+        ) : (
+          <span />
+        )}
+        <SaveButton slug={product.slug} name={product.name} className={styles.saveButton} />
+      </div>
+      <div className={styles.media}>
+        <ProductImage
+          image={product.image}
+          photo={product.photos?.[0]?.url}
+          tint={colors.surfaceSunken}
+          kind={product.kind}
+          alt={product.name}
+          sizes="(max-width: 600px) 50vw, 200px"
+          className={styles.productCardImage}
+        />
+        {product.reviewCount ? (
+          <span className={styles.ratingBadge} aria-label={`Rated ${product.rating?.toFixed(1)} out of 5 from ${product.reviewCount} reviews`}>
+            ★ {product.rating?.toFixed(1)} <span>({product.reviewCount})</span>
+          </span>
+        ) : null}
+        <AddToBagButton
+          product={product}
+          disabled={soldOut}
+          label={soldOut ? `${product.name} is sold out` : `Add ${product.name} to bag`}
+          className={styles.roundAdd}
+        >
+          <Icon name="bag" size={15} strokeWidth={2} />
+        </AddToBagButton>
+      </div>
+      <Link href={`/products/${product.slug}`} className={styles.productCardName}>
+        {product.name}
+      </Link>
+      <span className={styles.priceRow}>
+        <strong>{formatPrice(product.price)}</strong>
+        {product.was && <s>{formatPrice(product.was)}</s>}
+      </span>
+      <div className={styles.productCardFooter}>
+        {soldOut ? <span className={styles.soldOut}>Sold out</span> : <span>{product.tag}</span>}
+      </div>
+      {showCompare && <CompareButton product={product} />}
+    </article>
+  );
+}

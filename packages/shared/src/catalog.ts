@@ -1,3 +1,8 @@
+/**
+ * Starter catalogue from the design handoff.
+ * The web store reads the catalogue from Supabase; this file generates supabase/seed.sql
+ * (`npm run db:seed:generate`) and is what the mobile app reads until it moves to Supabase.
+ */
 import { colors } from './tokens';
 
 /** Photos shipped in `assets/images`. Each app maps these keys to its own image source. */
@@ -20,27 +25,21 @@ export const imageFiles: Record<ImageKey, string> = {
   giftCollection: 'gift-collection.jpg',
 };
 
-export type Department = 'beauty' | 'kids';
-
-/** Shape used for the tinted placeholder when a product has no photo yet. */
-export type ProductKind = 'bottle' | 'jar' | 'tube' | 'garment' | 'toy' | 'gift';
-
-export type AgeBandId = '0-6m' | '6-12m' | '1-2y' | '3-5y' | '6-8y' | '9-12y';
-
-export interface AgeBand {
-  id: AgeBandId;
-  label: string;
-  stage: string;
+/** Narrows a stored image key to one the apps have a photo for. */
+export function asImageKey(key: string | null | undefined): ImageKey | undefined {
+  return key && key in imageFiles ? (key as ImageKey) : undefined;
 }
 
-export const ageBands: AgeBand[] = [
-  { id: '0-6m', label: '0–6m', stage: 'Newborn' },
-  { id: '6-12m', label: '6–12m', stage: 'Crawlers' },
-  { id: '1-2y', label: '1–2y', stage: 'Toddlers' },
-  { id: '3-5y', label: '3–5y', stage: 'Pre-school' },
-  { id: '6-8y', label: '6–8y', stage: 'Early school' },
-  { id: '9-12y', label: '9–12y', stage: 'Big kids' },
-];
+/** The shop's departments, in the order they appear in menus. Each is also its web path, /shop/<department>. */
+export const departmentIds = ['beauty', 'kids', 'home', 'fashion', 'electronics', 'sports', 'general'] as const;
+export type Department = (typeof departmentIds)[number];
+
+export function isDepartment(value: string | null | undefined): value is Department {
+  return (departmentIds as readonly string[]).includes(value ?? '');
+}
+
+/** Shape used for the tinted placeholder when a product has no photo yet. */
+export type ProductKind = 'bottle' | 'jar' | 'tube' | 'garment' | 'toy' | 'gift' | 'box';
 
 export type KidsFilter = 'bath' | 'toys' | 'clothing' | 'gifts';
 
@@ -48,6 +47,8 @@ export interface ProductSize {
   id: string;
   label: string;
   price: number;
+  /** Undefined when stock isn't known (e.g. the bundled catalogue). */
+  inStock?: boolean;
 }
 
 export interface Product {
@@ -55,6 +56,8 @@ export interface Product {
   name: string;
   brand?: string;
   department: Department;
+  /** Category id from `categories`. */
+  category: string;
   kidsFilter?: KidsFilter;
   /** Price in GHS for the default size. */
   price: number;
@@ -69,10 +72,39 @@ export interface Product {
   kind: ProductKind;
   sizes?: ProductSize[];
   defaultSize?: string;
-  ageBands?: AgeBandId[];
+  /** False when no size can be bought right now; undefined when stock isn't known. */
+  inStock?: boolean;
   /** Sub-collection shown in the breadcrumb, e.g. "Bath time". */
   collection?: string;
   details?: ProductDetails;
+  /** Regulatory and pack information (PRD FR-014). Missing values render as placeholders. */
+  compliance?: ProductCompliance;
+  /** The batch a shopper would receive next for each size (earliest expiry first). */
+  currentBatches?: { sizeId?: string; batch: string; expiresOn?: string }[];
+  /** Photos uploaded in the admin console, main photo first. They take precedence over `image`. */
+  photos?: { url: string; alt?: string }[];
+  /** Prominent safety warning shown above "Add to bag" and in the bag (PRD FR-017). */
+  warningLabel?: string;
+  /** False for items that can't be returned unless they arrive damaged, wrong or expired (e.g. opened cosmetics). */
+  returnable?: boolean;
+  /** Extra return terms shown on the product page. */
+  returnNote?: string;
+  /** Category-specific filter values (PRD FR-013). */
+  skinTypes?: string[];
+  shades?: string[];
+  /** When the product was added, for "newest" sorting. */
+  createdAt?: string;
+  /** Public discovery metrics; never includes customer data. */
+  rating?: number;
+  reviewCount?: number;
+  popularity?: number;
+}
+
+export interface ProductCompliance {
+  ingredients?: string;
+  countryOfOrigin?: string;
+  regulatoryReference?: string;
+  periodAfterOpening?: string;
 }
 
 /** Product-page content. Fields the catalogue team hasn't supplied render as placeholders. */
@@ -99,6 +131,7 @@ export const products: Product[] = [
     name: 'Gentle Baby Wash & Shampoo',
     brand: 'Little Nest',
     department: 'kids',
+    category: 'baby-care',
     kidsFilter: 'bath',
     price: 85,
     badge: 'New',
@@ -112,7 +145,6 @@ export const products: Product[] = [
       { id: '400', label: '400 ml', price: 85 },
     ],
     defaultSize: '400',
-    ageBands: ['0-6m', '6-12m', '1-2y'],
     collection: 'Bath time',
     details: {
       description: 'A mild, tear-free wash for hair and body. Fragrance-free and pH balanced for newborn skin.',
@@ -134,6 +166,7 @@ export const products: Product[] = [
     slug: 'vitamin-c-brightening-serum',
     name: 'Vitamin C Brightening Serum',
     department: 'beauty',
+    category: 'skincare',
     price: 220,
     was: 260,
     badge: '-15%',
@@ -149,6 +182,7 @@ export const products: Product[] = [
     slug: 'whipped-shea-body-butter',
     name: 'Whipped Shea Body Butter',
     department: 'beauty',
+    category: 'skincare',
     price: 145,
     badge: 'New',
     tag: 'Fragrance-free',
@@ -161,6 +195,7 @@ export const products: Product[] = [
     slug: 'velvet-matte-lip-colour',
     name: 'Velvet Matte Lip Colour',
     department: 'beauty',
+    category: 'makeup',
     price: 75,
     was: 90,
     badge: '-15%',
@@ -174,6 +209,7 @@ export const products: Product[] = [
     slug: 'organic-cotton-bodysuits',
     name: 'Organic Cotton Bodysuits, 3-pack',
     department: 'kids',
+    category: 'baby-care',
     kidsFilter: 'clothing',
     price: 160,
     badge: 'New',
@@ -181,12 +217,12 @@ export const products: Product[] = [
     summary: 'Soft organic cotton with easy snap fastenings.',
     tint: colors.tealPale,
     kind: 'garment',
-    ageBands: ['0-6m', '6-12m'],
   },
   {
     slug: 'wooden-stacking-blocks',
     name: 'Wooden Stacking Blocks',
     department: 'kids',
+    category: 'kids-toys',
     kidsFilter: 'toys',
     price: 120,
     was: 135,
@@ -195,24 +231,24 @@ export const products: Product[] = [
     summary: 'Chunky, smooth-edged blocks finished with non-toxic paint.',
     tint: colors.blush,
     kind: 'toy',
-    ageBands: ['1-2y', '3-5y'],
   },
   {
     slug: 'wooden-number-puzzle',
     name: 'Wooden Number Puzzle',
     department: 'kids',
+    category: 'kids-toys',
     kidsFilter: 'toys',
     price: 135,
     tag: 'Ages 2–5 · Chunky pieces',
     summary: 'Bright, non-toxic pieces for learning numbers, colours and shapes.',
     tint: colors.tealSoft,
     kind: 'toy',
-    ageBands: ['1-2y', '3-5y'],
   },
   {
     slug: 'newborn-gift-hamper',
     name: 'Newborn Gift Hamper',
     department: 'kids',
+    category: 'baby-care',
     kidsFilter: 'gifts',
     price: 450,
     tag: 'Ages 0–6m',
@@ -220,12 +256,12 @@ export const products: Product[] = [
     image: 'giftCollection',
     tint: colors.surface,
     kind: 'gift',
-    ageBands: ['0-6m'],
   },
   {
     slug: 'argan-hair-oil',
     name: 'Argan Hair Oil, 250 ml',
     department: 'beauty',
+    category: 'hair-care',
     price: 130,
     badge: 'New',
     tag: 'All hair types',
@@ -237,6 +273,7 @@ export const products: Product[] = [
     slug: 'shea-cocoa-body-butter',
     name: 'Shea & Cocoa Body Butter',
     department: 'beauty',
+    category: 'skincare',
     price: 145,
     tag: 'Fragrance-free · 200 g',
     summary: 'Rich, fast-absorbing moisture made with Ghanaian shea.',
@@ -258,9 +295,31 @@ export function unitPrice(product: Product, sizeId?: string): number {
   return getSize(product, sizeId)?.price ?? product.price;
 }
 
+/** Whether a size (or a one-size product) can be bought; true when stock isn't known. */
+export function isAvailable(product: Product, sizeId?: string): boolean {
+  if (product.sizes?.length) return getSize(product, sizeId)?.inStock !== false;
+  return product.inStock !== false;
+}
+
 export const departmentLabels: Record<Department, string> = {
   beauty: 'Beauty',
   kids: 'Baby & Kids',
+  home: 'Home & Groceries',
+  fashion: 'Fashion & Accessories',
+  electronics: 'Electronics',
+  sports: 'Sports & Outdoors',
+  general: 'More',
+};
+
+/** One line under each department's name on its shop page and in search results. */
+export const departmentBlurbs: Record<Department, string> = {
+  beauty: 'Authentic skincare, beauty and makeup kits, hair care, hair accessories and fragrance.',
+  kids: 'Safe, age-appropriate essentials, toys and clothing for little ones.',
+  home: 'Groceries, kitchen and home appliances for everyday life.',
+  fashion: 'Jewellery, bags and accessories.',
+  electronics: 'Phones, gadgets, appliances and accessories.',
+  sports: 'Sports gear, fitness and outdoor essentials.',
+  general: 'Everything else, from gifts to everyday needs.',
 };
 
 function pick(slugs: string[]): Product[] {
@@ -276,34 +335,20 @@ export interface Category {
   name: string;
   department: Department;
   image?: ImageKey;
+  /** A photo staff uploaded for the category (Admin → Categories); used instead of `image`. */
+  photo?: string;
   tint: string;
   kind: ProductKind;
 }
 
 export const categories: Category[] = [
-  { id: 'skincare', name: 'Skincare', department: 'beauty', image: 'vitaminCSerum', tint: colors.blush, kind: 'bottle' },
-  { id: 'makeup', name: 'Makeup', department: 'beauty', image: 'matteLipColour', tint: colors.blush, kind: 'tube' },
+  { id: 'skincare', name: 'Skincare', department: 'beauty', tint: colors.blush, kind: 'bottle' },
+  { id: 'makeup', name: 'Makeup', department: 'beauty', tint: colors.blush, kind: 'tube' },
   { id: 'hair-care', name: 'Hair Care', department: 'beauty', tint: colors.surface, kind: 'bottle' },
   { id: 'fragrance', name: 'Fragrance', department: 'beauty', tint: colors.blush, kind: 'bottle' },
-  { id: 'baby-care', name: 'Baby Care', department: 'kids', image: 'babyWash', tint: colors.tealSoft, kind: 'bottle' },
+  { id: 'baby-care', name: 'Baby Care', department: 'kids', tint: colors.tealSoft, kind: 'bottle' },
   { id: 'kids-toys', name: 'Kids & Toys', department: 'kids', tint: colors.tealPale, kind: 'toy' },
 ];
-
-/** Category shortcuts on the mobile home screen, per department. */
-export const appCategories: Record<Department, Category[]> = {
-  beauty: [
-    categories[0],
-    categories[1],
-    { ...categories[2], name: 'Hair' },
-    categories[3],
-  ],
-  kids: [
-    { id: 'bath', name: 'Bath', department: 'kids', image: 'babyWash', tint: colors.tealSoft, kind: 'bottle' },
-    { id: 'clothing', name: 'Clothing', department: 'kids', tint: colors.tealPale, kind: 'garment' },
-    { id: 'toys', name: 'Toys', department: 'kids', tint: colors.blush, kind: 'toy' },
-    { id: 'gifts', name: 'Gifts', department: 'kids', image: 'giftCollection', tint: colors.surface, kind: 'gift' },
-  ],
-};
 
 export const newArrivals = pick([
   'gentle-baby-wash-shampoo',
@@ -319,6 +364,11 @@ export const bestSellers = pick(['shea-cocoa-body-butter', 'gentle-baby-wash-sha
 export const appNewArrivals: Record<Department, Product[]> = {
   beauty: pick(['vitamin-c-brightening-serum', 'whipped-shea-body-butter', 'velvet-matte-lip-colour', 'argan-hair-oil']),
   kids: pick(['gentle-baby-wash-shampoo', 'organic-cotton-bodysuits', 'wooden-stacking-blocks', 'wooden-number-puzzle']),
+  home: [],
+  fashion: [],
+  electronics: [],
+  sports: [],
+  general: [],
 };
 
 export const relatedProducts = pick([
@@ -327,14 +377,6 @@ export const relatedProducts = pick([
   'wooden-number-puzzle',
   'newborn-gift-hamper',
 ]);
-
-export function productsForAgeBand(band: AgeBandId, filter?: KidsFilter): Product[] {
-  return products.filter(
-    (p) => p.ageBands?.includes(band) && (filter === undefined || p.kidsFilter === filter),
-  );
-}
-
-export const deliveryAreas = ['East Legon', 'Osu', 'Airport Residential', 'Spintex', 'Dansoman'];
 
 export type MomoNetwork = 'mtn' | 'telecel' | 'at';
 

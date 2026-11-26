@@ -1,0 +1,369 @@
+/* The admin dashboard, laid out after the owner's reference: three figures, a sales chart, what needs attention. */
+
+.head h1 {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.head p {
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--c-text-subtle);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.stat,
+.card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 26px 24px 22px;
+  border: 1px solid color-mix(in srgb, var(--c-line) 70%, transparent);
+  border-radius: 20px;
+  background: var(--c-canvas);
+  box-shadow: 0 1px 2px rgb(11 31 58 / 0.04), 0 8px 24px -18px rgb(11 31 58 / 0.18);
+}
+
+.statTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.statLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-text-subtle);
+}
+
+.statValue {
+  display: block;
+  margin-top: 14px;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.statNote {
+  margin-top: auto;
+  padding-top: 28px;
+  font-size: 12.5px;
+  color: var(--c-text-subtle);
+}
+
+.statNote b {
+  color: var(--c-accent);
+  font-weight: 700;
+}
+
+/* "To pack | Ready | Out" segmented control. */
+.segments {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  margin-top: 10px;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--c-surface);
+}
+
+.segments a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 6px;
+  border-radius: 9px;
+  color: var(--c-text-subtle);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.segments a[data-on] {
+  background: var(--c-accent);
+  color: var(--c-canvas);
+}
+
+.segments a:hover {
+  filter: brightness(0.97);
+}
+
+.spark {
+  flex: none;
+  width: 70px;
+  height: 52px;
+  fill: var(--c-accent);
+}
+
+.ring {
+  --share: 0%;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: conic-gradient(var(--c-accent) var(--share), var(--c-ink) 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent 72%, #000 73%);
+  mask: radial-gradient(farthest-side, transparent 72%, #000 73%);
+}
+
+.ring span {
+  display: none;
+}
+
+.more {
+  align-self: center;
+  margin-top: 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--c-text-subtle);
+  text-decoration: none;
+}
+
+.more:hover {
+  color: var(--c-accent);
+}
+
+/* Second and third rows */
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 24px;
+}
+
+.card h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
+.cardHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.analyticsValue {
+  margin-top: 8px;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--c-ink);
+}
+
+.analyticsValue span {
+  margin-left: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--c-accent);
+}
+
+.range {
+  display: flex;
+  padding: 3px;
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+}
+
+.range a {
+  padding: 6px 12px;
+  border-radius: 7px;
+  color: var(--c-text-subtle);
+  font-size: 12.5px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.range a[aria-current='page'] {
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font-weight: 700;
+}
+
+.chart {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  min-height: 240px;
+  padding-top: 8px;
+}
+
+.barCol {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+.bar {
+  width: min(100%, 36px);
+  border-radius: 8px 8px 3px 3px;
+  background: color-mix(in srgb, var(--c-accent) 30%, var(--c-canvas));
+  transition: background-color 0.15s ease;
+}
+
+.bar[data-today] {
+  background: var(--c-accent);
+}
+
+.barCol:hover .bar {
+  background: var(--c-ink);
+}
+
+.barLabel {
+  height: 16px;
+  font-size: 11.5px;
+  color: var(--c-text-muted);
+}
+
+.attention {
+  gap: 4px;
+}
+
+.attentionTotal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 18px 0 14px;
+}
+
+.attentionTotal strong {
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--c-ink);
+}
+
+.attentionTotal span {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--c-text-subtle);
+}
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legend a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 4px;
+  border-bottom: 1px solid var(--c-line);
+  color: var(--c-text-subtle);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.legend a:hover {
+  color: var(--c-ink);
+}
+
+.legend b {
+  color: var(--c-ink);
+  font-weight: 700;
+}
+
+.legendLabel {
+  flex: 1;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  background: var(--c-line-strong);
+}
+
+.dot[data-on] {
+  background: var(--c-accent);
+}
+
+.viewAll {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-accent);
+  text-decoration: none;
+}
+
+.stockList {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stockList li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--c-line);
+  font-size: 13.5px;
+}
+
+.stockList a {
+  font-weight: 600;
+  color: var(--c-ink);
+  text-decoration: none;
+}
+
+.stockList b {
+  flex: none;
+  color: var(--c-accent-deep);
+}
+
+@media (max-width: 1180px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .stats {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .row {
+    gap: 14px;
+  }
+
+  .statValue {
+    font-size: 28px;
+  }
+
+  .chart {
+    min-height: 180px;
+    gap: 3px;
+  }
+}

@@ -1,0 +1,30 @@
+name: Notification dispatch
+
+# Retries queued customer messages every 5 minutes. Vercel Hobby limits cron jobs to once a day,
+# so the schedule lives here. The bearer token must match CRON_SECRET on Vercel.
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: production-notification-dispatch
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Call the dispatch endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "The CRON_SECRET repository secret is required." >&2
+            exit 1
+          fi
+          curl --fail-with-body --silent --show-error --max-time 90 \
+            --write-out '\nDispatch HTTP %{http_code}\n' \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "https://www.sleekconnectstore.com/api/notifications/dispatch"

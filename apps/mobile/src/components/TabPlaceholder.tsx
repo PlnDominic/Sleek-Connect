@@ -1,11 +1,14 @@
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { colors, radii, type IconName } from '@sleek/shared';
+import { radii, type IconName } from '@sleek/shared';
 import { AppText } from './AppText';
 import { Icon } from './Icon';
 import { useScreenTop } from './ui';
+import { useColors, useStyles, type Palette } from '@/theme/theme';
 
 /** Simple titled screen for tabs the design doesn't cover yet. */
 export function TabPlaceholder({ title, icon, message }: { title: string; icon: IconName; message: string }) {
+  const colors = useColors();
+  const styles = useStyles(makeStyles);
   const top = useScreenTop();
   return (
     <ScrollView style={styles.screen} contentContainerStyle={[styles.content, { paddingTop: top }]}>
@@ -24,7 +27,7 @@ export function TabPlaceholder({ title, icon, message }: { title: string; icon: 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.canvas,
