@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
@@ -50,9 +50,6 @@ jobs:
           PUSH_PROVIDER=console
           CRON_SECRET=ci-cron-secret
           ENV
-
-      - name: Build the production web app
-        run: npm run build:web
 
       - name: Run all test suites (builds the web app)
         run: npm test
